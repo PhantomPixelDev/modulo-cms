@@ -570,6 +570,75 @@ export default function Dashboard({ adminStats, adminSection, users, roles, post
                         </Card>
                     </div>
                 );
+            case 'roles.create':
+                return (
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-4">
+                            <Link href={route('dashboard.admin.roles.index')}>
+                                <Button variant="outline" size="sm">
+                                    <ArrowLeft className="h-4 w-4 mr-2" />
+                                    Back to Roles
+                                </Button>
+                            </Link>
+                            <h2 className="text-2xl font-bold">Create New Role</h2>
+                        </div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Role Information</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleCreateRole} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="role-name">Role Name</Label>
+                                        <Input
+                                            id="role-name"
+                                            value={roleData.name}
+                                            onChange={(e) => setRoleData('name', e.target.value)}
+                                            required
+                                        />
+                                        {roleErrors.name && (
+                                            <p className="text-sm text-red-600">{roleErrors.name}</p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-4">
+                                        <Label>Permissions</Label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {permissions?.map((permission) => (
+                                                <div key={permission.id} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={`perm-${permission.id}`}
+                                                        checked={roleData.permissions.includes(permission.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            if (checked) {
+                                                                setRoleData('permissions', [...roleData.permissions, permission.id]);
+                                                            } else {
+                                                                setRoleData('permissions', roleData.permissions.filter(id => id !== permission.id));
+                                                            }
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={`perm-${permission.id}`} className="text-sm">
+                                                        {permission.name}
+                                                    </Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end gap-4">
+                                        <Link href={route('dashboard.admin.roles.index')}>
+                                            <Button variant="outline" type="button">
+                                                Cancel
+                                            </Button>
+                                        </Link>
+                                        <Button type="submit" disabled={roleProcessing}>
+                                            <Save className="h-4 w-4 mr-2" />
+                                            {roleProcessing ? 'Creating...' : 'Create Role'}
+                                        </Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
+                );
 
             case 'posts':
                 return (
@@ -1025,222 +1094,12 @@ export default function Dashboard({ adminStats, adminSection, users, roles, post
                                         </CardContent>
                                     </Card>
                                 </div>
-
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center justify-between">
-                                                <span>User Management</span>
-                                                <Link href={route('dashboard.admin.users.index')}>
-                                                    <Button size="sm">
-                                                        <Plus className="h-4 w-4 mr-2" />
-                                                        Manage Users
-                                                    </Button>
-                                                </Link>
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="space-y-4">
-                                                {users?.data && users.data.length > 0 ? (
-                                                    <div className="space-y-3">
-                                                        {users.data.slice(0, 5).map((user) => (
-                                                            <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                                                <div>
-                                                                    <div className="font-medium">{user.name}</div>
-                                                                    <div className="text-sm text-gray-500">{user.email}</div>
-                                                                    <div className="flex gap-1 mt-1">
-                                                                        {user.roles.map((role) => (
-                                                                            <Badge key={role.id} variant="secondary" className="text-xs">
-                                                                                {role.name}
-                                                                            </Badge>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex gap-1">
-                                                                    <Link href={route('dashboard.admin.users.edit', user.id)}>
-                                                                        <Button variant="outline" size="sm">
-                                                                            <Edit className="h-3 w-3" />
-                                                                        </Button>
-                                                                    </Link>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        {users.total > 5 && (
-                                                            <div className="text-center">
-                                                                <Link href={route('dashboard.admin.users.index')}>
-                                                                    <Button variant="outline" size="sm">
-                                                                        View All Users ({users.total})
-                                                                    </Button>
-                                                                </Link>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-gray-500 text-center py-4">No users found</p>
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center justify-between">
-                                                <span>Role Management</span>
-                                                <Link href={route('dashboard.admin.roles.index')}>
-                                                    <Button size="sm">
-                                                        <Plus className="h-4 w-4 mr-2" />
-                                                        Manage Roles
-                                                    </Button>
-                                                </Link>
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="space-y-4">
-                                                {roles?.data && roles.data.length > 0 ? (
-                                                    <div className="space-y-3">
-                                                        {roles.data.slice(0, 5).map((role) => (
-                                                            <div key={role.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                                                <div>
-                                                                    <div className="font-medium">{role.name}</div>
-                                                                    <div className="flex gap-1 mt-1">
-                                                                        {role.permissions.slice(0, 3).map((permission) => (
-                                                                            <Badge key={permission.id} variant="outline" className="text-xs">
-                                                                                {permission.name}
-                                                                            </Badge>
-                                                                        ))}
-                                                                        {role.permissions.length > 3 && (
-                                                                            <Badge variant="outline" className="text-xs">
-                                                                                +{role.permissions.length - 3} more
-                                                                            </Badge>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex gap-1">
-                                                                    <Link href={route('dashboard.admin.roles.edit', role.id)}>
-                                                                        <Button variant="outline" size="sm">
-                                                                            <Edit className="h-3 w-3" />
-                                                                        </Button>
-                                                                    </Link>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        {roles.total > 5 && (
-                                                            <div className="text-center">
-                                                                <Link href={route('dashboard.admin.roles.index')}>
-                                                                    <Button variant="outline" size="sm">
-                                                                        View All Roles ({roles.total})
-                                                                    </Button>
-                                                                </Link>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-gray-500 text-center py-4">No roles found</p>
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center justify-between">
-                                                <span>Content Management</span>
-                                                <Link href={route('dashboard.admin.posts.index')}>
-                                                    <Button size="sm">
-                                                        <Plus className="h-4 w-4 mr-2" />
-                                                        Manage Posts
-                                                    </Button>
-                                                </Link>
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="space-y-4">
-                                                {posts?.data && posts.data.length > 0 ? (
-                                                    <div className="space-y-3">
-                                                        {posts.data.slice(0, 5).map((post) => (
-                                                            <div key={post.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                                                <div>
-                                                                    <div className="font-medium">{post.title}</div>
-                                                                    <div className="text-sm text-gray-500">{post.post_type}</div>
-                                                                    <div className="flex gap-1 mt-1">
-                                                                        <Badge variant={post.status === 'published' ? 'default' : 'secondary'} className="text-xs">
-                                                                            {post.status}
-                                                                        </Badge>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex gap-1">
-                                                                    <Link href={route('dashboard.admin.posts.edit', post.id)}>
-                                                                        <Button variant="outline" size="sm">
-                                                                            <Edit className="h-3 w-3" />
-                                                                        </Button>
-                                                                    </Link>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        {posts.total > 5 && (
-                                                            <div className="text-center">
-                                                                <Link href={route('dashboard.admin.posts.index')}>
-                                                                    <Button variant="outline" size="sm">
-                                                                        View All Posts ({posts.total})
-                                                                    </Button>
-                                                                </Link>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-gray-500 text-center py-4">No posts found</p>
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
                             </>
                         )}
                     </>
                 ) : (
                     // Regular User Dashboard Content
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">My Content</CardTitle>
-                                    <Activity className="h-4 w-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold">12</div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Published articles
-                                    </p>
-                                </CardContent>
-                            </Card>
-
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">Drafts</CardTitle>
-                                    <Activity className="h-4 w-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold">3</div>
-                                    <p className="text-xs text-muted-foreground">
-                                        In progress
-                                    </p>
-                                </CardContent>
-                            </Card>
-
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">Profile</CardTitle>
-                                    <User className="h-4 w-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold">Active</div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Account verified
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <Card>
                                 <CardHeader>
