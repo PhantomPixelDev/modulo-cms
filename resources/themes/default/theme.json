@@ -1,0 +1,81 @@
+{
+  "name": "Default Theme",
+  "slug": "default",
+  "version": "1.0.0",
+  "description": "Default CMS theme with modern design and responsive layout",
+  "author": "Modulo CMS",
+  "author_url": "https://github.com/PhantomPixelDev/modulo-cms",
+  "screenshot": "screenshot.png",
+  "tags": ["responsive", "modern", "default"],
+  "supports": {
+    "post_thumbnails": true,
+    "menus": true,
+    "widgets": true,
+    "custom_header": true,
+    "custom_background": true,
+    "post_formats": ["standard", "gallery", "video", "audio"]
+  },
+  "templates": {
+    "layout": "templates/layout.blade.php",
+    "header": "templates/header.blade.php",
+    "footer": "templates/footer.blade.php",
+    "post": "templates/post.blade.php",
+    "page": "templates/page.blade.php",
+    "news": "templates/news.blade.php",
+    "index": "templates/index.blade.php",
+    "archive": "templates/archive.blade.php",
+    "search": "templates/search.blade.php",
+    "404": "templates/404.blade.php"
+  },
+  "partials": {
+    "navigation": "partials/navigation.blade.php",
+    "sidebar": "partials/sidebar.blade.php",
+    "post-meta": "partials/post-meta.blade.php",
+    "comments": "partials/comments.blade.php"
+  },
+  "assets": {
+    "css": [
+      "assets/css/style.css",
+      "assets/css/responsive.css"
+    ],
+    "js": [
+      "assets/js/theme.js"
+    ],
+    "images": {
+      "logo": "assets/images/logo.png",
+      "favicon": "assets/images/favicon.ico",
+      "default_thumbnail": "assets/images/default-thumbnail.jpg"
+    }
+  },
+  "customizer": {
+    "colors": {
+      "primary": "#3b82f6",
+      "secondary": "#64748b",
+      "accent": "#f59e0b",
+      "background": "#ffffff",
+      "text": "#1f2937"
+    },
+    "typography": {
+      "font_family": "Inter, sans-serif",
+      "heading_font": "Inter, sans-serif",
+      "font_size": "16px",
+      "line_height": "1.6"
+    },
+    "layout": {
+      "container_width": "1200px",
+      "sidebar_width": "300px",
+      "header_height": "80px"
+    }
+  },
+  "menus": {
+    "primary": "Primary Navigation",
+    "footer": "Footer Links",
+    "social": "Social Media Links"
+  },
+  "widget_areas": {
+    "sidebar": "Main Sidebar",
+    "footer-1": "Footer Column 1",
+    "footer-2": "Footer Column 2",
+    "footer-3": "Footer Column 3"
+  }
+}

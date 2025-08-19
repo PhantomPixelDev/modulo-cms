@@ -6,18 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
+    public function __construct()
+    {
+        // Laravel 12 uses route middleware instead of controller middleware
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         $query = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
+            ->whereHas('postType', function ($q) {
+                $q->where('name', '!=', 'page');
+            })
             ->orderBy('created_at', 'desc');
 
         // Filter by post type
@@ -37,10 +46,42 @@ class PostController extends Controller
 
         $posts = $query->paginate(15);
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'adminSection' => 'posts',
-            'posts' => $posts,
-            'postTypes' => PostType::all(),
+            'posts' => $posts->through(function ($post) {
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'status' => $post->status,
+                    'author_id' => $post->author_id,
+                    'published_at' => $post->published_at?->format('Y-m-d H:i:s'),
+                    'created_at' => $post->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $post->updated_at->format('Y-m-d H:i:s'),
+                    'post_type' => [
+                        'id' => $post->postType->id,
+                        'name' => $post->postType->name,
+                        'label' => $post->postType->label,
+                    ],
+                    'author' => $post->author ? [
+                        'id' => $post->author->id,
+                        'name' => $post->author->name,
+                    ] : null,
+                    'taxonomy_terms' => $post->taxonomyTerms->map(function ($term) {
+                        return [
+                            'id' => $term->id,
+                            'name' => $term->name,
+                            'taxonomy' => [
+                                'id' => $term->taxonomy->id,
+                                'name' => $term->taxonomy->name,
+                            ]
+                        ];
+                    }),
+                ];
+            }),
+            // Exclude 'page' from selectable post types in the Posts area
+            'postTypes' => PostType::where('name', '!=', 'page')->get(),
+            'authors' => User::orderBy('name')->get(['id','name']),
             'adminStats' => [
                 'users' => \App\Models\User::count(),
                 'roles' => \Spatie\Permission\Models\Role::count(),
@@ -55,14 +96,42 @@ class PostController extends Controller
      */
     public function create(Request $request)
     {
-        $postTypes = PostType::all();
+        // Exclude 'page' from Posts create form options
+        $postTypes = PostType::where('name', '!=', 'page')->get();
         $taxonomyTerms = TaxonomyTerm::with('taxonomy')->get();
         
         // Group taxonomy terms by taxonomy
         $groupedTerms = $taxonomyTerms->groupBy('taxonomy.name');
 
-        return Inertia::render('dashboard', [
+        // Return empty post data for the create form
+        $postData = [
+            'id' => null,
+            'post_type_id' => $postTypes->first()?->id,
+            'title' => '',
+            'slug' => '',
+            'excerpt' => '',
+            'content' => '',
+            'status' => 'draft',
+            'featured_image' => null,
+            'published_at' => null,
+            'meta_title' => '',
+            'meta_description' => '',
+            'post_type' => $postTypes->first() ? [
+                'id' => $postTypes->first()->id,
+                'name' => $postTypes->first()->name,
+                'label' => $postTypes->first()->label,
+            ] : null,
+            'author' => [
+                'id' => auth()->id(),
+                'name' => auth()->user()->name,
+            ],
+            'taxonomy_terms' => [],
+            'selected_terms' => [],
+        ];
+
+        return Inertia::render('Dashboard', [
             'adminSection' => 'posts.create',
+            'editPost' => $postData,
             'postTypes' => $postTypes,
             'groupedTerms' => $groupedTerms,
             'adminStats' => [
@@ -82,6 +151,7 @@ class PostController extends Controller
         $request->validate([
             'post_type_id' => 'required|exists:post_types,id',
             'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:posts,slug',
             'content' => 'required|string',
             'excerpt' => 'nullable|string',
             'status' => 'required|in:draft,published,private,archived',
@@ -95,7 +165,8 @@ class PostController extends Controller
             'post_type_id' => $request->post_type_id,
             'author_id' => auth()->id(),
             'title' => $request->title,
-            'slug' => Str::slug($request->title),
+            // Use provided slug if present; otherwise derive from title
+            'slug' => Str::slug($request->slug ?: $request->title),
             'excerpt' => $request->excerpt,
             'content' => $request->content,
             'featured_image' => $request->featured_image,
@@ -120,9 +191,43 @@ class PostController extends Controller
     {
         $post->load(['postType', 'author', 'taxonomyTerms.taxonomy']);
         
-        return Inertia::render('dashboard', [
+        $postData = [
+            'id' => $post->id,
+            'title' => $post->title,
+            'slug' => $post->slug,
+            'excerpt' => $post->excerpt,
+            'content' => $post->content,
+            'status' => $post->status,
+            'featured_image' => $post->featured_image,
+            'published_at' => $post->published_at?->format('Y-m-d H:i:s'),
+            'created_at' => $post->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $post->updated_at->format('Y-m-d H:i:s'),
+            'meta_title' => $post->meta_title,
+            'meta_description' => $post->meta_description,
+            'post_type' => [
+                'id' => $post->postType->id,
+                'name' => $post->postType->name,
+                'label' => $post->postType->label,
+            ],
+            'author' => $post->author ? [
+                'id' => $post->author->id,
+                'name' => $post->author->name,
+            ] : null,
+            'taxonomy_terms' => $post->taxonomyTerms->map(function ($term) {
+                return [
+                    'id' => $term->id,
+                    'name' => $term->name,
+                    'taxonomy' => [
+                        'id' => $term->taxonomy->id,
+                        'name' => $term->taxonomy->name,
+                    ]
+                ];
+            }),
+        ];
+
+        return Inertia::render('Dashboard', [
             'adminSection' => 'posts.show',
-            'post' => $post,
+            'post' => $postData,
             'adminStats' => [
                 'users' => \App\Models\User::count(),
                 'roles' => \Spatie\Permission\Models\Role::count(),
@@ -138,15 +243,52 @@ class PostController extends Controller
     public function edit(Post $post)
     {
         $post->load(['postType', 'author', 'taxonomyTerms.taxonomy']);
-        $postTypes = PostType::all();
+        // Exclude 'page' from Posts edit form options
+        $postTypes = PostType::where('name', '!=', 'page')->get();
         $taxonomyTerms = TaxonomyTerm::with('taxonomy')->get();
         
         // Group taxonomy terms by taxonomy
         $groupedTerms = $taxonomyTerms->groupBy('taxonomy.name');
 
-        return Inertia::render('dashboard', [
+        $postData = [
+            'id' => $post->id,
+            'post_type_id' => $post->post_type_id,
+            'title' => $post->title,
+            'slug' => $post->slug,
+            'excerpt' => $post->excerpt,
+            'content' => $post->content,
+            'status' => $post->status,
+            'featured_image' => $post->featured_image,
+            'published_at' => $post->published_at?->format('Y-m-d H:i:s'),
+            'created_at' => $post->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $post->updated_at->format('Y-m-d H:i:s'),
+            'meta_title' => $post->meta_title,
+            'meta_description' => $post->meta_description,
+            'post_type' => [
+                'id' => $post->postType->id,
+                'name' => $post->postType->name,
+                'label' => $post->postType->label,
+            ],
+            'author' => $post->author ? [
+                'id' => $post->author->id,
+                'name' => $post->author->name,
+            ] : null,
+            'taxonomy_terms' => $post->taxonomyTerms->map(function ($term) {
+                return [
+                    'id' => $term->id,
+                    'name' => $term->name,
+                    'taxonomy' => [
+                        'id' => $term->taxonomy->id,
+                        'name' => $term->taxonomy->name,
+                    ]
+                ];
+            }),
+            'selected_terms' => $post->taxonomyTerms->pluck('id')->toArray(),
+        ];
+
+        return Inertia::render('Dashboard', [
             'adminSection' => 'posts.edit',
-            'editPost' => $post,
+            'editPost' => $postData,
             'postTypes' => $postTypes,
             'groupedTerms' => $groupedTerms,
             'adminStats' => [
@@ -166,6 +308,7 @@ class PostController extends Controller
         $request->validate([
             'post_type_id' => 'required|exists:post_types,id',
             'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:posts,slug,' . $post->id,
             'content' => 'required|string',
             'excerpt' => 'nullable|string',
             'status' => 'required|in:draft,published,private,archived',
@@ -175,15 +318,25 @@ class PostController extends Controller
             'meta_description' => 'nullable|string',
         ]);
 
+        // Determine published_at based on status transition
+        $newStatus = $request->status;
+        $publishedAt = $post->published_at;
+        if ($post->status !== 'published' && $newStatus === 'published') {
+            $publishedAt = now();
+        } elseif ($post->status === 'published' && $newStatus !== 'published') {
+            $publishedAt = null;
+        }
+
         $post->update([
             'post_type_id' => $request->post_type_id,
             'title' => $request->title,
-            'slug' => Str::slug($request->title),
+            // Preserve or update slug: use provided slug if present; otherwise derive from title
+            'slug' => Str::slug($request->slug ?: $request->title),
             'excerpt' => $request->excerpt,
             'content' => $request->content,
             'featured_image' => $request->featured_image,
-            'status' => $request->status,
-            'published_at' => $request->status === 'published' ? now() : null,
+            'status' => $newStatus,
+            'published_at' => $publishedAt,
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
         ]);

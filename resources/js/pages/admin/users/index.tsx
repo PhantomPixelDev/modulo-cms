@@ -91,7 +91,7 @@ export default function UsersIndex({ users }: Props) {
                                 </thead>
                                 <tbody>
                                     {users.data.map((user) => (
-                                        <tr key={user.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <tr key={user.id} className="border-b hover:bg-accent dark:hover:bg-gray-800">
                                             <td className="py-3 px-4">
                                                 <div className="font-medium">{user.name}</div>
                                             </td>

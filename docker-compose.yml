@@ -1,0 +1,59 @@
+## docker-compose for LOCAL DEVELOPMENT only
+## ----------------------------------------
+## This setup mounts your working directory into the container,
+## runs `php artisan serve` for the app, and a separate Vite dev server
+## for HMR. Not intended for production use.
+services:
+  app:
+    container_name: modulo-cms
+    build:
+      context: .
+      target: development
+      args:
+        NODE_VERSION: 22
+        PHP_VERSION: 8.4
+    labels:
+      - purpose=development-only
+    ports:
+      - "0.0.0.0:8080:8000"
+    env_file:
+      - env.development
+    volumes:
+      - ./env.development:/var/www/html/.env:z,ro
+      - ./:/var/www/html:z,cached
+      - node_modules_app:/var/www/html/node_modules
+      - storage_data:/var/www/html/storage
+      - cache_data:/var/www/html/bootstrap/cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  vite:
+    container_name: modulo-cms-vite
+    image: node:22-alpine3.20
+    labels:
+      - purpose=development-only
+    environment:
+      - VITE_DEV_SERVER_URL=http://vite:5173
+    command: sh -lc 'npm ci --prefer-offline --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort'
+    ports:
+      - "5173:5173"
+    expose:
+      - "5173"
+    working_dir: /var/www/html
+    volumes:
+      - ./env.development:/var/www/html/.env:z,ro
+      - ./:/var/www/html:z,cached
+      - node_modules_vite:/var/www/html/node_modules
+    restart: unless-stopped
+    user: "1000:1000"
+
+volumes:
+  node_modules_app:
+  node_modules_vite:
+  storage_data:
+  cache_data:

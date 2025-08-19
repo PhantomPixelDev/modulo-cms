@@ -4,12 +4,12 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Users, Shield, Settings, FileText, Folder, Tag, Plus } from 'lucide-react';
+import { LayoutGrid, Users, Shield, Settings, FileText, Folder, Tag, Plus, Palette, List, MenuSquare } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Panel',
         href: '/dashboard',
         icon: LayoutGrid,
     },
@@ -33,6 +33,11 @@ const adminNavItems: NavItem[] = [
         icon: FileText,
     },
     {
+        title: 'Pages',
+        href: '/dashboard/admin/pages',
+        icon: FileText,
+    },
+    {
         title: 'Post Types',
         href: '/dashboard/admin/post-types',
         icon: Plus,
@@ -41,6 +46,16 @@ const adminNavItems: NavItem[] = [
         title: 'Taxonomies',
         href: '/dashboard/admin/taxonomies',
         icon: Folder,
+    },
+    {
+        title: 'Menus',
+        href: '/dashboard/admin/menus',
+        icon: List,
+    },
+    {
+        title: 'Themes',
+        href: '/dashboard/admin/themes',
+        icon: Palette,
     },
     {
         title: 'Settings',

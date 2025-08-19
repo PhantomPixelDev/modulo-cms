@@ -15,11 +15,20 @@ class PostTypeController extends Controller
      */
     public function index()
     {
-        $postTypes = PostType::orderBy('menu_position')->paginate(15);
+        // Hide the built-in 'page' type from the Post Types list
+        $postTypesPaginated = PostType::where('name', '!=', 'page')
+            ->orderBy('menu_position')
+            ->paginate(15);
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'adminSection' => 'post-types',
-            'postTypes' => $postTypes,
+            'postTypes' => $postTypesPaginated->items(), // Extract the actual array from pagination
+            'postTypesPagination' => [
+                'current_page' => $postTypesPaginated->currentPage(),
+                'last_page' => $postTypesPaginated->lastPage(),
+                'per_page' => $postTypesPaginated->perPage(),
+                'total' => $postTypesPaginated->total(),
+            ],
             'adminStats' => [
                 'users' => \App\Models\User::count(),
                 'roles' => \Spatie\Permission\Models\Role::count(),
@@ -34,7 +43,7 @@ class PostTypeController extends Controller
      */
     public function create()
     {
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.create',
             'adminStats' => [
                 'users' => \App\Models\User::count(),
@@ -55,6 +64,10 @@ class PostTypeController extends Controller
             'label' => 'required|string|max:255',
             'plural_label' => 'required|string|max:255',
             'description' => 'nullable|string',
+            // Prevent using root ('/') as a route prefix to avoid conflicts
+            'route_prefix' => 'nullable|string|max:255|not_in:/',
+            'single_template_id' => 'nullable|exists:templates,id',
+            'archive_template_id' => 'nullable|exists:templates,id',
             'has_taxonomies' => 'boolean',
             'has_featured_image' => 'boolean',
             'has_excerpt' => 'boolean',
@@ -72,6 +85,9 @@ class PostTypeController extends Controller
             'label' => $request->label,
             'plural_label' => $request->plural_label,
             'description' => $request->description,
+            'route_prefix' => $request->route_prefix,
+            'single_template_id' => $request->single_template_id,
+            'archive_template_id' => $request->archive_template_id,
             'has_taxonomies' => $request->has_taxonomies ?? true,
             'has_featured_image' => $request->has_featured_image ?? true,
             'has_excerpt' => $request->has_excerpt ?? true,
@@ -95,7 +111,7 @@ class PostTypeController extends Controller
     {
         $postType->load('posts');
         
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.show',
             'postType' => $postType,
             'adminStats' => [
@@ -112,7 +128,7 @@ class PostTypeController extends Controller
      */
     public function edit(PostType $postType)
     {
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.edit',
             'editPostType' => $postType,
             'adminStats' => [
@@ -134,6 +150,10 @@ class PostTypeController extends Controller
             'label' => 'required|string|max:255',
             'plural_label' => 'required|string|max:255',
             'description' => 'nullable|string',
+            // Prevent using root ('/') as a route prefix to avoid conflicts
+            'route_prefix' => 'nullable|string|max:255|not_in:/',
+            'single_template_id' => 'nullable|exists:templates,id',
+            'archive_template_id' => 'nullable|exists:templates,id',
             'has_taxonomies' => 'boolean',
             'has_featured_image' => 'boolean',
             'has_excerpt' => 'boolean',
@@ -151,6 +171,9 @@ class PostTypeController extends Controller
             'label' => $request->label,
             'plural_label' => $request->plural_label,
             'description' => $request->description,
+            'route_prefix' => $request->route_prefix,
+            'single_template_id' => $request->single_template_id,
+            'archive_template_id' => $request->archive_template_id,
             'has_taxonomies' => $request->has_taxonomies ?? true,
             'has_featured_image' => $request->has_featured_image ?? true,
             'has_excerpt' => $request->has_excerpt ?? true,
@@ -174,10 +197,14 @@ class PostTypeController extends Controller
     {
         // Prevent deleting default post types
         if (in_array($postType->name, ['post', 'page'])) {
-            return back()->with('error', 'Cannot delete default post types.');
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'postType' => 'Cannot delete default post types.',
+            ]);
         }
 
         $postType->delete();
-        return back()->with('success', 'Post type deleted successfully.');
+        // Redirect back to the index to refresh list after deletion
+        return redirect()->route('dashboard.admin.post-types.index')
+            ->with('success', 'Post type deleted successfully.');
     }
 }

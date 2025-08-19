@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PostType extends Model
 {
@@ -15,6 +16,9 @@ class PostType extends Model
         'label',
         'plural_label',
         'description',
+        'route_prefix',
+        'single_template_id',
+        'archive_template_id',
         'has_taxonomies',
         'has_featured_image',
         'has_excerpt',
@@ -42,6 +46,16 @@ class PostType extends Model
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
+    }
+
+    public function singleTemplate(): BelongsTo
+    {
+        return $this->belongsTo(Template::class, 'single_template_id');
+    }
+
+    public function archiveTemplate(): BelongsTo
+    {
+        return $this->belongsTo(Template::class, 'archive_template_id');
     }
 
     public function getSupportsAttribute($value)

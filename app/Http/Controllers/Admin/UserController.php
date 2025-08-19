@@ -21,8 +21,14 @@ class UserController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return Inertia::render('admin/users/index', [
+        $permissions = auth()->user()?->getAllPermissions()->map(function ($permission) {
+            return ['id' => $permission->id, 'name' => $permission->name];
+        });
+
+        return Inertia::render('Dashboard', [
+            'adminSection' => 'users',
             'users' => $users,
+            'permissions' => $permissions,
         ]);
     }
 
@@ -32,9 +38,14 @@ class UserController extends Controller
     public function create(): Response
     {
         $roles = Role::all();
+        $permissions = auth()->user()?->getAllPermissions()->map(function ($permission) {
+            return ['id' => $permission->id, 'name' => $permission->name];
+        });
 
-        return Inertia::render('admin/users/create', [
-            'roles' => $roles,
+        return Inertia::render('Dashboard', [
+            'adminSection' => 'users.create',
+            'allRoles' => $roles,
+            'permissions' => $permissions,
         ]);
     }
 
@@ -48,6 +59,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'roles' => 'array',
+            'roles.*' => 'integer|exists:roles,id',
         ]);
 
         $user = User::create([
@@ -57,10 +69,19 @@ class UserController extends Controller
         ]);
 
         if ($request->has('roles')) {
-            $user->assignRole($request->roles);
+            // Frontend sends role IDs; convert to role names for Spatie
+            $roleNames = Role::whereIn('id', (array) $request->roles)->pluck('name')->all();
+            // Prevent non-super-admins from assigning super-admin role
+            if (in_array('super-admin', $roleNames, true) && !auth()->user()->hasRole('super-admin')) {
+                return redirect()->route('dashboard.admin.users.index')
+                    ->with('error', 'You cannot assign the super-admin role.');
+            }
+            if ($roleNames) {
+                $user->assignRole($roleNames);
+            }
         }
 
-        return redirect()->route('admin.users.index')
+        return redirect()->route('dashboard.admin.users.index')
             ->with('success', 'User created successfully.');
     }
 
@@ -69,12 +90,18 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
+        $this->authorize('update', $user);
         $roles = Role::all();
         $user->load('roles');
+        $permissions = auth()->user()?->getAllPermissions()->map(function ($permission) {
+            return ['id' => $permission->id, 'name' => $permission->name];
+        });
 
-        return Inertia::render('admin/users/edit', [
-            'user' => $user,
-            'roles' => $roles,
+        return Inertia::render('Dashboard', [
+            'adminSection' => 'users.edit',
+            'editUser' => $user->load('roles'),
+            'allRoles' => $roles,
+            'permissions' => $permissions,
         ]);
     }
 
@@ -83,10 +110,12 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $this->authorize('update', $user);
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'roles' => 'array',
+            'roles.*' => 'integer|exists:roles,id',
         ]);
 
         $user->update([
@@ -95,10 +124,17 @@ class UserController extends Controller
         ]);
 
         if ($request->has('roles')) {
-            $user->syncRoles($request->roles);
+            // Convert role IDs to names for Spatie
+            $roleNames = Role::whereIn('id', (array) $request->roles)->pluck('name')->all();
+            // Prevent non-super-admins from assigning super-admin role
+            if (in_array('super-admin', $roleNames, true) && !auth()->user()->hasRole('super-admin')) {
+                return redirect()->route('dashboard.admin.users.index')
+                    ->with('error', 'You cannot assign the super-admin role.');
+            }
+            $user->syncRoles($roleNames);
         }
 
-        return redirect()->route('admin.users.index')
+        return redirect()->route('dashboard.admin.users.index')
             ->with('success', 'User updated successfully.');
     }
 
@@ -119,7 +155,7 @@ class UserController extends Controller
 
         $user->delete();
 
-        return redirect()->route('admin.users.index')
+        return redirect()->route('dashboard.admin.users.index')
             ->with('success', 'User deleted successfully.');
     }
 } 

@@ -12,13 +12,29 @@ use Illuminate\Support\Str;
 class TaxonomyController extends Controller
 {
     /**
+     * Generate a unique slug for Taxonomy across all records.
+     */
+    protected function makeUniqueSlug(string $base, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($base);
+        $original = $slug;
+        $i = 2;
+        while (Taxonomy::where('slug', $slug)
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+            ->exists()) {
+            $slug = $original . '-' . $i;
+            $i++;
+        }
+        return $slug;
+    }
+    /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $taxonomies = Taxonomy::orderBy('menu_position')->paginate(15);
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies',
             'taxonomies' => $taxonomies,
             'adminStats' => [
@@ -37,7 +53,7 @@ class TaxonomyController extends Controller
     {
         $postTypes = PostType::all();
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies.create',
             'postTypes' => $postTypes,
             'adminStats' => [
@@ -64,7 +80,7 @@ class TaxonomyController extends Controller
             'post_types' => 'array',
             'show_in_menu' => 'boolean',
             'menu_icon' => 'nullable|string',
-            'menu_position' => 'integer',
+            'menu_position' => 'integer|min:0|max:100',
         ]);
 
         Taxonomy::create([
@@ -72,11 +88,11 @@ class TaxonomyController extends Controller
             'label' => $request->label,
             'plural_label' => $request->plural_label,
             'description' => $request->description,
-            'slug' => Str::slug($request->name),
-            'is_hierarchical' => $request->is_hierarchical ?? false,
-            'is_public' => $request->is_public ?? true,
+            'slug' => $this->makeUniqueSlug($request->name),
+            'is_hierarchical' => (bool) ($request->is_hierarchical ?? false),
+            'is_public' => (bool) ($request->is_public ?? true),
             'post_types' => $request->post_types ?? [],
-            'show_in_menu' => $request->show_in_menu ?? true,
+            'show_in_menu' => (bool) ($request->show_in_menu ?? true),
             'menu_icon' => $request->menu_icon,
             'menu_position' => $request->menu_position ?? 5,
         ]);
@@ -91,7 +107,7 @@ class TaxonomyController extends Controller
     {
         $taxonomy->load(['terms', 'terms.posts']);
         
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies.show',
             'taxonomy' => $taxonomy,
             'adminStats' => [
@@ -110,7 +126,7 @@ class TaxonomyController extends Controller
     {
         $postTypes = PostType::all();
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies.edit',
             'editTaxonomy' => $taxonomy,
             'postTypes' => $postTypes,
@@ -138,7 +154,7 @@ class TaxonomyController extends Controller
             'post_types' => 'array',
             'show_in_menu' => 'boolean',
             'menu_icon' => 'nullable|string',
-            'menu_position' => 'integer',
+            'menu_position' => 'integer|min:0|max:100',
         ]);
 
         $taxonomy->update([
@@ -146,11 +162,11 @@ class TaxonomyController extends Controller
             'label' => $request->label,
             'plural_label' => $request->plural_label,
             'description' => $request->description,
-            'slug' => Str::slug($request->name),
-            'is_hierarchical' => $request->is_hierarchical ?? false,
-            'is_public' => $request->is_public ?? true,
+            'slug' => $this->makeUniqueSlug($request->name, $taxonomy->id),
+            'is_hierarchical' => (bool) ($request->is_hierarchical ?? false),
+            'is_public' => (bool) ($request->is_public ?? true),
             'post_types' => $request->post_types ?? [],
-            'show_in_menu' => $request->show_in_menu ?? true,
+            'show_in_menu' => (bool) ($request->show_in_menu ?? true),
             'menu_icon' => $request->menu_icon,
             'menu_position' => $request->menu_position ?? 5,
         ]);

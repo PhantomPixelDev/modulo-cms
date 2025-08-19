@@ -89,7 +89,7 @@ export default function RolesIndex({ roles }: Props) {
                                 </thead>
                                 <tbody>
                                     {roles.data.map((role) => (
-                                        <tr key={role.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <tr key={role.id} className="border-b hover:bg-accent dark:hover:bg-gray-800">
                                             <td className="py-3 px-4">
                                                 <div className="font-medium">{role.name}</div>
                                             </td>

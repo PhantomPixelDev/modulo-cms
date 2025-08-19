@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+vendor
+
+# Build output
+public/build
+
+# VCS
+.git
+.gitignore
+.github
+
+# Local env
+.env
+.env.*
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests and coverage
+coverage
+.phpunit.result.cache

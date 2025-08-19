@@ -1,0 +1,163 @@
+// Define base interfaces to avoid dependency on @/types
+export interface BaseEntity {
+  id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface User extends BaseEntity {
+  name: string;
+  email: string;
+  avatar?: string;
+  email_verified_at: string | null;
+  roles?: Role[];
+}
+
+export interface Role extends BaseEntity {
+  name: string;
+  permissions?: Permission[];
+  // Add other required Role properties here
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Permission extends BaseEntity {
+  name: string;
+  description?: string;
+}
+
+export interface Post extends BaseEntity {
+  title: string;
+  content: string;
+  excerpt?: string;
+  status: string;
+  post_type_id: number;
+  author_id?: number;
+  author?: User;
+  post_type?: PostType;
+  taxonomy_terms?: TaxonomyTerm[];
+}
+
+export interface PostType extends BaseEntity {
+  name: string;
+  label: string;
+  plural_label: string;
+  description?: string;
+  route_prefix?: string;
+  has_taxonomies: boolean;
+  has_featured_image: boolean;
+  has_excerpt: boolean;
+  has_comments: boolean;
+  supports: string[];
+  taxonomies: string[];
+  slug: string;
+  is_public: boolean;
+  is_hierarchical: boolean;
+  menu_icon?: string;
+  menu_position: number;
+}
+
+export interface Taxonomy extends BaseEntity {
+  name: string;
+  label: string;
+  plural_label: string;
+  description?: string;
+  slug: string;
+  is_hierarchical: boolean;
+  is_public: boolean;
+  post_types: string[];
+  show_in_menu: boolean;
+  menu_icon?: string;
+  menu_position: number;
+}
+
+export interface TaxonomyTerm extends BaseEntity {
+  name: string;
+  slug: string;
+  description?: string;
+  parent_id?: number;
+  term_order: number;
+  meta_title?: string;
+  meta_description?: string;
+  taxonomy?: Taxonomy;
+}
+
+export interface Template extends BaseEntity {
+  name: string;
+  slug: string;
+  type: string;
+  description?: string;
+  content: string;
+  variables: string[];
+  is_default: boolean;
+  is_active: boolean;
+  creator?: User;
+}
+
+export interface AuthUser extends User {
+  can: (permission: string) => boolean;
+}
+
+interface Auth {
+  user: AuthUser | null;
+}
+
+export interface DashboardProps {
+  adminStats?: {
+    users: number;
+    roles: number;
+    posts: number;
+    postTypes: number;
+    taxonomies: number;
+    taxonomyTerms: number;
+  };
+  adminSection?: string;
+  users?: {
+    data: User[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  roles?: {
+    data: Role[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  posts?: Post[] | { data: Post[] };
+  postTypes?: PostType[];
+  taxonomies?: Taxonomy[] | { data: Taxonomy[] };
+  templates?: Template[];
+  templateTypes?: Record<string, string>;
+  allRoles?: Role[];
+  permissions?: Array<{ id: number; name: string }>;
+  groupedTerms?: Record<string, any>;
+  authors?: Array<{ id: number; name: string }>;
+  post?: Post; // single post for show view
+  editPost?: Post;
+  editPostType?: PostType;
+  editTaxonomy?: Taxonomy;
+  editUser?: User;
+  editRole?: Role;
+  editTemplate?: Template;
+  template?: Template;
+  themes?: any[];
+  activeTheme?: any;
+  discoveredThemes?: any[];
+  theme?: any;
+  // Theme details/customizer specific
+  themeConfig?: any;
+  themeAssets?: any;
+  customizerSettings?: Record<string, any>;
+  availableMenus?: Record<string, any>;
+  widgetAreas?: Record<string, any>;
+  auth: Auth;
+}
+
+// Normalize paginated objects or arrays to arrays
+export function asArray<T>(val?: T[] | { data: T[] } | null): T[] {
+  if (!val) return [];
+  return Array.isArray(val) ? val : val.data || [];
+}

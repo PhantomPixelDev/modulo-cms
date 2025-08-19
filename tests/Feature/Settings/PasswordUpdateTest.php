@@ -10,8 +10,10 @@ test('password can be updated', function () {
 
     $response = $this
         ->actingAs($user)
+        ->withSession(['_token' => csrf_token()])
         ->from('/settings/password')
         ->put('/settings/password', [
+            '_token' => csrf_token(),
             'current_password' => 'password',
             'password' => 'new-password',
             'password_confirmation' => 'new-password',
@@ -29,8 +31,10 @@ test('correct password must be provided to update password', function () {
 
     $response = $this
         ->actingAs($user)
+        ->withSession(['_token' => csrf_token()])
         ->from('/settings/password')
         ->put('/settings/password', [
+            '_token' => csrf_token(),
             'current_password' => 'wrong-password',
             'password' => 'new-password',
             'password_confirmation' => 'new-password',

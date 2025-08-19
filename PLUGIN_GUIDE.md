@@ -236,7 +236,7 @@ interface Props {
 const Index: Page<Props> = ({ data }) => {
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">My Plugin</h1>
+      <h1 className="text-xl font-semibold tracking-tight mb-4">My Plugin</h1>
       <p>{data}</p>
     </div>
   );

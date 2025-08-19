@@ -16,14 +16,17 @@ class DatabaseSeeder extends Seeder
         // Call the role and permission seeder first
         $this->call([
             RolePermissionSeeder::class,
-        ]);
-
-        // Create additional test users if needed
-        // User::factory(10)->create();
-
-        $this->call([
-            ContentSeeder::class,
             ContentPermissionsSeeder::class,
+            PostTypeRoutePrefixSeeder::class,
+            ContentSeeder::class,
+            ExampleContentSeeder::class,
+            NewsSeeder::class,
+            MenuSeeder::class,
         ]);
+
+        // Seed dev user accounts if the seeder exists (guard against missing class)
+        if (class_exists(\Database\Seeders\DEVUserAccountsSeeder::class)) {
+            $this->call([DEVUserAccountsSeeder::class]);
+        }
     }
 }

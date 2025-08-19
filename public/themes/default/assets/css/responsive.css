@@ -1,0 +1,107 @@
+/* Responsive Styles for Default Theme */
+
+/* Tablet Styles */
+@media (max-width: 1024px) {
+  .container {
+    padding: 0 15px;
+  }
+  
+  .site-main {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .sidebar {
+    order: -1;
+  }
+  
+  .main-navigation ul {
+    gap: 20px;
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  :root {
+    --header-height: 60px;
+  }
+  
+  .site-header {
+    padding: 0 15px;
+  }
+  
+  .site-logo {
+    font-size: 20px;
+  }
+  
+  .main-navigation {
+    display: none;
+  }
+  
+  .mobile-menu-toggle {
+    display: block;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-color);
+    margin-left: auto;
+  }
+  
+  .main-navigation.mobile-open {
+    display: block;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--background-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px;
+  }
+  
+  .main-navigation.mobile-open ul {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .post {
+    padding: 20px;
+  }
+  
+  .post-title {
+    font-size: 24px;
+  }
+  
+  .sidebar {
+    padding: 20px;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 10px;
+  }
+  
+  .site-main {
+    padding: 20px 0;
+  }
+  
+  .post {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .post-title {
+    font-size: 20px;
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}

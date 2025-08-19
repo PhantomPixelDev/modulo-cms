@@ -20,7 +20,8 @@ class RoleController extends Controller
             ->orderBy('name')
             ->paginate(15);
 
-        return Inertia::render('admin/roles/index', [
+        return Inertia::render('Dashboard', [
+            'adminSection' => 'roles',
             'roles' => $roles,
         ]);
     }
@@ -32,7 +33,8 @@ class RoleController extends Controller
     {
         $permissions = Permission::orderBy('name')->get();
 
-        return Inertia::render('admin/roles/create', [
+        return Inertia::render('Dashboard', [
+            'adminSection' => 'roles.create',
             'permissions' => $permissions,
         ]);
     }
@@ -55,7 +57,7 @@ class RoleController extends Controller
             $role->givePermissionTo($request->permissions);
         }
 
-        return redirect()->route('admin.roles.index')
+        return redirect()->route('dashboard.admin.roles.index')
             ->with('success', 'Role created successfully.');
     }
 
@@ -67,8 +69,9 @@ class RoleController extends Controller
         $permissions = Permission::orderBy('name')->get();
         $role->load('permissions');
 
-        return Inertia::render('admin/roles/edit', [
-            'role' => $role,
+        return Inertia::render('Dashboard', [
+            'adminSection' => 'roles.edit',
+            'editRole' => $role->load('permissions'),
             'permissions' => $permissions,
         ]);
     }
@@ -91,7 +94,7 @@ class RoleController extends Controller
             $role->syncPermissions($request->permissions);
         }
 
-        return redirect()->route('admin.roles.index')
+        return redirect()->route('dashboard.admin.roles.index')
             ->with('success', 'Role updated successfully.');
     }
 
@@ -106,7 +109,7 @@ class RoleController extends Controller
 
         $role->delete();
 
-        return redirect()->route('admin.roles.index')
+        return redirect()->route('dashboard.admin.roles.index')
             ->with('success', 'Role deleted successfully.');
     }
 } 
