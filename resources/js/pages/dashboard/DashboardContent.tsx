@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 // Ziggy exposes a global `route()` when @routes is included; declare it for TS
 declare const route: (name: string, params?: any) => string;
 import { Button } from '@/components/ui/button';
@@ -21,9 +21,11 @@ import { InstalledThemesGrid } from './components/themes/InstalledThemesGrid';
 import { DiscoveredThemesList } from './components/themes/DiscoveredThemesList';
 import { ThemeDetails } from './components/themes/ThemeDetails';
 import { ThemeCustomizerForm } from './components/themes/ThemeCustomizerForm';
+import { SitemapSettingsForm } from './components/sitemap/SitemapSettingsForm';
 import { DashboardProps, asArray, type User as DashboardUser, type Permission } from './types';
 import { SectionHeader } from '@/components/ui/section-header';
 import { ROUTE } from './routes';
+import { MediaLibrary } from './components/media/MediaLibrary';
 
 export default function DashboardContent({
   adminStats,
@@ -48,7 +50,10 @@ export default function DashboardContent({
   editPost,
   post,
   authors,
+  parentsByType,
   groupedTerms,
+  sitemapSettings,
+  media,
   editUser,
   editRole,
   editPostType,
@@ -80,6 +85,21 @@ export default function DashboardContent({
       updated_at: 'updated_at' in permission ? (permission as any).updated_at : new Date().toISOString(),
     };
   });
+
+  // Helper: check capability from permissions array; fallback to auth.user?.can.
+  // If no permissions are provided at all, default to true so dev environments still show actions.
+  const can = (perm: string) => {
+    // Admin/super-admin override
+    const isAdmin = Array.isArray(auth?.user?.roles) && auth.user.roles.some((r: any) => ['admin', 'super-admin'].includes(r.name));
+    if (isAdmin) return true;
+    // If no permissions provided at all, default allow in dev
+    if (permissionsWithTimestamps.length === 0) return true;
+    // Check provided permissions or fallback to auth.user.can
+    return permissionsWithTimestamps.some(p => p.name === perm) || Boolean(auth?.user?.can?.(perm));
+  };
+
+  // Admins or users with relevant permissions can edit post author
+  const canEditAuthorFlag = can('assign posts author') || can('edit posts');
   // Handle page form submission
   const handlePageSubmit = async (formData: any, editId?: number) => {
     const url = editId ? ROUTE.pages.update(editId) : ROUTE.pages.store();
@@ -176,17 +196,7 @@ export default function DashboardContent({
     }
   };
 
-  // Helper: check capability from permissions array; fallback to auth.user?.can.
-  // If no permissions are provided at all, default to true so dev environments still show actions.
-  const can = (perm: string) => {
-    // Admin/super-admin override
-    const isAdmin = Array.isArray(auth?.user?.roles) && auth.user.roles.some((r: any) => ['admin', 'super-admin'].includes(r.name));
-    if (isAdmin) return true;
-    // If no permissions provided at all, default allow in dev
-    if (permissionsWithTimestamps.length === 0) return true;
-    // Check provided permissions or fallback to auth.user.can
-    return permissionsWithTimestamps.some(p => p.name === perm) || Boolean(auth?.user?.can?.(perm));
-  };
+  
 
   // Handle user form submission
   const handleUserSubmit = async (formData: any) => {
@@ -245,6 +255,19 @@ export default function DashboardContent({
         canEdit={can('edit posts')}
         onCreate={() => router.visit(ROUTE.posts.create())}
       />
+    </SectionWrapper>
+  );
+
+  const renderMedia = () => (
+    <SectionWrapper
+      title="Media"
+      actions={
+        <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.misc.dashboard())}>
+          Back to Dashboard
+        </Button>
+      }
+    >
+      <MediaLibrary items={asArray(media as any)} canUpload={can('upload media')} />
     </SectionWrapper>
   );
 
@@ -420,6 +443,9 @@ export default function DashboardContent({
         isEditing={false}
         postTypes={(postTypes as any) || []}
         groupedTerms={(groupedTerms as any) || {}}
+        authors={(authors as any) || []}
+        parentsByType={(parentsByType as any) || {}}
+        canEditAuthor={canEditAuthorFlag}
         onSubmit={handlePostSubmit}
         onCancel={() => router.visit(ROUTE.posts.index())}
       />
@@ -436,6 +462,9 @@ export default function DashboardContent({
         post={editPost as any}
         postTypes={(postTypes as any) || []}
         groupedTerms={(groupedTerms as any) || {}}
+        authors={(authors as any) || []}
+        parentsByType={(parentsByType as any) || {}}
+        canEditAuthor={canEditAuthorFlag}
         isEditing={true}
         onSubmit={(data) => handlePostSubmit(data, (editPost as any)?.id)}
         onCancel={() => router.visit(ROUTE.posts.index())}
@@ -905,14 +934,34 @@ export default function DashboardContent({
       'roles': renderRolesList,
       'roles.create': renderRoleCreateEdit,
       'roles.edit': renderRoleCreateEdit,
+      // Sitemap
+      'sitemap': renderSitemap,
+      // Media
+      'media': renderMedia,
     };
 
     return sectionsMap[section]?.() ?? <div>Section not found</div>;
   };
 
+  const renderSitemap = () => (
+    <SectionWrapper
+      title="Sitemap"
+      actions={
+        <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.misc.dashboard())}>
+          Back to Dashboard
+        </Button>
+      }
+    >
+      <SitemapSettingsForm
+        postTypes={(postTypes as any) || []}
+        settings={(sitemapSettings as any) || { include_taxonomies: true, enable_cache: true, cache_ttl: 3600 }}
+        canEdit={can('edit settings')}
+      />
+    </SectionWrapper>
+  );
+
   return (
     <>
-      <Head title="Dashboard" />
       {renderSection()}
     </>
   );

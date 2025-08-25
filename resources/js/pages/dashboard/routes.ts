@@ -67,6 +67,19 @@ export const ROUTE = {
     update: (id: number | string) => route('dashboard.admin.roles.update', id),
     edit: (id: number | string) => route('dashboard.admin.roles.edit', id),
   },
+  sitemap: {
+    index: () => route('dashboard.admin.sitemap.index'),
+    update: () => route('dashboard.admin.sitemap.update'),
+    regenerate: () => route('dashboard.admin.sitemap.regenerate'),
+  },
+  media: {
+    index: () => route('dashboard.admin.media.index'),
+    store: () => route('dashboard.admin.media.store'),
+    update: (id: number | string) => route('dashboard.admin.media.update', id),
+    destroy: (id: number | string) => route('dashboard.admin.media.destroy', id),
+    regenerate: (id?: number | string) =>
+      id ? route('dashboard.admin.media.regenerate', id) : route('dashboard.admin.media.regenerate'),
+  },
   misc: {
     dashboard: () => route('dashboard.admin.index'),
   },

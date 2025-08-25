@@ -57,6 +57,12 @@ class ContentPermissionsSeeder extends Seeder
             'edit menu items',
             'delete menu items',
 
+            // Media permissions
+            'view media',
+            'upload media',
+            'edit media',
+            'delete media',
+
             // User management permissions (aligns with routes/admin.php)
             'view users',
             'create users',

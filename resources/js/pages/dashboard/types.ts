@@ -82,6 +82,24 @@ export interface TaxonomyTerm extends BaseEntity {
   taxonomy?: Taxonomy;
 }
 
+export interface SitemapSettings {
+  included_post_type_ids?: number[] | null;
+  include_taxonomies: boolean;
+  enable_cache: boolean;
+  cache_ttl: number;
+  last_generated_at?: string | null;
+}
+
+export interface MediaItem extends BaseEntity {
+  name: string;
+  file_name: string;
+  mime_type: string;
+  size: number;
+  url: string;
+  thumb?: string;
+  custom_properties?: Record<string, any>;
+}
+
 export interface Template extends BaseEntity {
   name: string;
   slug: string;
@@ -135,6 +153,8 @@ export interface DashboardProps {
   permissions?: Array<{ id: number; name: string }>;
   groupedTerms?: Record<string, any>;
   authors?: Array<{ id: number; name: string }>;
+  parentsByType?: Record<number | string, Array<{ id: number; title: string }>>;
+  sitemapSettings?: SitemapSettings;
   post?: Post; // single post for show view
   editPost?: Post;
   editPostType?: PostType;
@@ -154,6 +174,8 @@ export interface DashboardProps {
   availableMenus?: Record<string, any>;
   widgetAreas?: Record<string, any>;
   auth: Auth;
+  // Media library
+  media?: MediaItem[];
 }
 
 // Normalize paginated objects or arrays to arrays

@@ -12,6 +12,8 @@ use App\Http\Controllers\Content\PagesController;
 use App\Http\Controllers\Content\MenuController;
 use App\Http\Controllers\Content\MenuItemController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\SitemapController as AdminSitemapController;
+use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use Inertia\Inertia;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
@@ -189,4 +191,32 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard/admin')->name('dashbo
     Route::post('/menu-items', [MenuItemController::class, 'store'])->middleware('permission:create menu items')->name('menu-items.store');
     Route::put('/menu-items/{menuItem}', [MenuItemController::class, 'update'])->middleware('permission:edit menu items')->name('menu-items.update');
     Route::delete('/menu-items/{menuItem}', [MenuItemController::class, 'destroy'])->middleware('permission:delete menu items')->name('menu-items.destroy');
+
+    // Sitemap management
+    Route::get('/sitemap', [AdminSitemapController::class, 'index'])
+        ->middleware('permission:view settings')
+        ->name('sitemap.index');
+    Route::put('/sitemap', [AdminSitemapController::class, 'update'])
+        ->middleware('permission:edit settings')
+        ->name('sitemap.update');
+    Route::post('/sitemap/regenerate', [AdminSitemapController::class, 'regenerate'])
+        ->middleware('permission:edit settings')
+        ->name('sitemap.regenerate');
+
+    // Media library
+    Route::get('/media', [AdminMediaController::class, 'index'])
+        ->middleware('permission:view media')
+        ->name('media.index');
+    Route::post('/media', [AdminMediaController::class, 'store'])
+        ->middleware('permission:upload media')
+        ->name('media.store');
+    Route::put('/media/{id}', [AdminMediaController::class, 'update'])
+        ->middleware('permission:edit media')
+        ->name('media.update');
+    Route::delete('/media/{id}', [AdminMediaController::class, 'destroy'])
+        ->middleware('permission:delete media')
+        ->name('media.destroy');
+    Route::post('/media/{id?}/regenerate', [AdminMediaController::class, 'regenerate'])
+        ->middleware('permission:edit media')
+        ->name('media.regenerate');
 });

@@ -99,6 +99,15 @@ class PostController extends Controller
         // Exclude 'page' from Posts create form options
         $postTypes = PostType::where('name', '!=', 'page')->get();
         $taxonomyTerms = TaxonomyTerm::with('taxonomy')->get();
+        $authors = User::orderBy('name')->get(['id','name']);
+
+        // Build parentsByType map for hierarchical selection
+        $allPosts = Post::orderBy('title')->get(['id','title','post_type_id']);
+        $parentsByType = $allPosts->groupBy('post_type_id')->map(function ($items) {
+            return $items->map(function ($p) {
+                return ['id' => $p->id, 'title' => $p->title];
+            })->values();
+        });
         
         // Group taxonomy terms by taxonomy
         $groupedTerms = $taxonomyTerms->groupBy('taxonomy.name');
@@ -116,6 +125,9 @@ class PostController extends Controller
             'published_at' => null,
             'meta_title' => '',
             'meta_description' => '',
+            'parent_id' => null,
+            'menu_order' => 0,
+            'meta_data' => new \stdClass(),
             'post_type' => $postTypes->first() ? [
                 'id' => $postTypes->first()->id,
                 'name' => $postTypes->first()->name,
@@ -134,6 +146,8 @@ class PostController extends Controller
             'editPost' => $postData,
             'postTypes' => $postTypes,
             'groupedTerms' => $groupedTerms,
+            'authors' => $authors,
+            'parentsByType' => $parentsByType,
             'adminStats' => [
                 'users' => \App\Models\User::count(),
                 'roles' => \Spatie\Permission\Models\Role::count(),
@@ -159,11 +173,28 @@ class PostController extends Controller
             'taxonomy_terms' => 'array',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
+            'published_at' => 'nullable|date',
+            'author_id' => 'nullable|exists:users,id',
+            'parent_id' => 'nullable|exists:posts,id',
+            'menu_order' => 'nullable|integer',
+            'meta_data' => 'nullable|array',
         ]);
+
+        // Determine published_at
+        $publishedAt = null;
+        if ($request->filled('published_at')) {
+            try {
+                $publishedAt = \Carbon\Carbon::parse($request->published_at);
+            } catch (\Exception $e) {
+                $publishedAt = null;
+            }
+        } else {
+            $publishedAt = $request->status === 'published' ? now() : null;
+        }
 
         $post = Post::create([
             'post_type_id' => $request->post_type_id,
-            'author_id' => auth()->id(),
+            'author_id' => $request->author_id ?: auth()->id(),
             'title' => $request->title,
             // Use provided slug if present; otherwise derive from title
             'slug' => Str::slug($request->slug ?: $request->title),
@@ -171,9 +202,12 @@ class PostController extends Controller
             'content' => $request->content,
             'featured_image' => $request->featured_image,
             'status' => $request->status,
-            'published_at' => $request->status === 'published' ? now() : null,
+            'published_at' => $publishedAt,
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
+            'parent_id' => $request->parent_id,
+            'menu_order' => $request->menu_order ?? 0,
+            'meta_data' => $request->meta_data ?? [],
         ]);
 
         // Attach taxonomy terms
@@ -204,6 +238,9 @@ class PostController extends Controller
             'updated_at' => $post->updated_at->format('Y-m-d H:i:s'),
             'meta_title' => $post->meta_title,
             'meta_description' => $post->meta_description,
+            'parent_id' => $post->parent_id,
+            'menu_order' => $post->menu_order,
+            'meta_data' => $post->meta_data,
             'post_type' => [
                 'id' => $post->postType->id,
                 'name' => $post->postType->name,
@@ -246,6 +283,14 @@ class PostController extends Controller
         // Exclude 'page' from Posts edit form options
         $postTypes = PostType::where('name', '!=', 'page')->get();
         $taxonomyTerms = TaxonomyTerm::with('taxonomy')->get();
+        $authors = User::orderBy('name')->get(['id','name']);
+        // Build parentsByType map
+        $allPosts = Post::orderBy('title')->get(['id','title','post_type_id']);
+        $parentsByType = $allPosts->groupBy('post_type_id')->map(function ($items) use ($post) {
+            return $items->filter(fn ($p) => $p->id !== $post->id)->map(function ($p) {
+                return ['id' => $p->id, 'title' => $p->title];
+            })->values();
+        });
         
         // Group taxonomy terms by taxonomy
         $groupedTerms = $taxonomyTerms->groupBy('taxonomy.name');
@@ -291,6 +336,8 @@ class PostController extends Controller
             'editPost' => $postData,
             'postTypes' => $postTypes,
             'groupedTerms' => $groupedTerms,
+            'authors' => $authors,
+            'parentsByType' => $parentsByType,
             'adminStats' => [
                 'users' => \App\Models\User::count(),
                 'roles' => \Spatie\Permission\Models\Role::count(),
@@ -316,19 +363,33 @@ class PostController extends Controller
             'taxonomy_terms' => 'array',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
+            'published_at' => 'nullable|date',
+            'author_id' => 'nullable|exists:users,id',
+            'parent_id' => 'nullable|exists:posts,id',
+            'menu_order' => 'nullable|integer',
+            'meta_data' => 'nullable|array',
         ]);
 
-        // Determine published_at based on status transition
+        // Determine published_at based on input or status transition
         $newStatus = $request->status;
         $publishedAt = $post->published_at;
-        if ($post->status !== 'published' && $newStatus === 'published') {
-            $publishedAt = now();
-        } elseif ($post->status === 'published' && $newStatus !== 'published') {
-            $publishedAt = null;
+        if ($request->filled('published_at')) {
+            try {
+                $publishedAt = \Carbon\Carbon::parse($request->published_at);
+            } catch (\Exception $e) {
+                // ignore parse error, keep previous
+            }
+        } else {
+            if ($post->status !== 'published' && $newStatus === 'published') {
+                $publishedAt = now();
+            } elseif ($post->status === 'published' && $newStatus !== 'published') {
+                $publishedAt = null;
+            }
         }
 
         $post->update([
             'post_type_id' => $request->post_type_id,
+            'author_id' => $request->author_id ?: $post->author_id,
             'title' => $request->title,
             // Preserve or update slug: use provided slug if present; otherwise derive from title
             'slug' => Str::slug($request->slug ?: $request->title),
@@ -339,6 +400,9 @@ class PostController extends Controller
             'published_at' => $publishedAt,
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
+            'parent_id' => $request->parent_id,
+            'menu_order' => $request->menu_order ?? $post->menu_order,
+            'meta_data' => $request->meta_data ?? $post->meta_data,
         ]);
 
         // Sync taxonomy terms

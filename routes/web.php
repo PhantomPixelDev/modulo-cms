@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Schema;
 
 Route::get('/', [\App\Http\Controllers\FrontendController::class, 'home'])->name('home');
 
+// SEO: sitemap
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 // Taxonomy archives
 Route::get('/tag/{slug}', [\App\Http\Controllers\FrontendController::class, 'listByTaxonomyTerm'])
     ->name('tag.show')

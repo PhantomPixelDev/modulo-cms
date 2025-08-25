@@ -37,7 +37,7 @@ class TemplateRenderingService
             'taxonomy' => $taxonomy,
             'term' => $term,
             'posts' => $posts,
-        ], $common);
+        ], $common, $this->buildSeoForTaxonomy($taxonomy, $term));
 
         $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
         // Try specific templates first, then generic archive
@@ -86,7 +86,7 @@ class TemplateRenderingService
         $data = array_merge([
             // Provide objects expected by theme templates
             'post' => $post,
-        ], $this->getPostData($post), $common, $additionalData);
+        ], $this->getPostData($post), $common, $additionalData, $this->buildSeoForPost($post));
         
         // Try theme template first (inject header/footer so layout partials have data)
         \Log::info('renderPost:attemptThemeTemplate', ['postId' => $post->id, 'slug' => $post->slug]);
@@ -129,7 +129,7 @@ class TemplateRenderingService
             'page' => $page,
             // Also provide 'post' alias for backward compatibility with templates using $post
             'post' => $page,
-        ], $this->getPageData($page), $common, $additionalData);
+        ], $this->getPageData($page), $common, $additionalData, $this->buildSeoForPage($page));
         
         // Try theme templates in order of specificity:
         // 1) pages/{slug}.blade.php
@@ -176,7 +176,7 @@ class TemplateRenderingService
             'title' => $additionalData['title'] ?? ($postType?->plural_label ?? config('app.name', 'CMS')),
             'meta_description' => $additionalData['description'] ?? ($postType?->description ?? ''),
         ];
-        $data = array_merge($this->getIndexData($posts, $postType), $common, $additionalData);
+        $data = array_merge($this->getIndexData($posts, $postType), $common, $additionalData, $this->buildSeoForIndex($postType, $additionalData));
         
         // Dynamic per post type: {route_prefix} -> index
         $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
@@ -429,6 +429,136 @@ class TemplateRenderingService
             'contact_info' => '',
             'footer_extra' => '',
         ];
+    }
+
+    /**
+     * Build SEO data for a post (article type)
+     */
+    private function buildSeoForPost(Post $post): array
+    {
+        $title = $post->meta_title ?: $post->title;
+        $description = $post->meta_description ?: ($post->excerpt ?? '');
+        $url = $this->canonicalUrlForPost($post);
+        $image = $post->featured_image ?: '';
+
+        return [
+            'meta_title' => $title,
+            'meta_description' => $description,
+            'canonical_url' => $url,
+            'og_title' => $title,
+            'og_description' => $description,
+            'og_type' => 'article',
+            'og_image' => $image,
+            'og_url' => $url,
+            'og_site_name' => config('app.name', 'CMS'),
+            'twitter_card' => $image ? 'summary_large_image' : 'summary',
+            'twitter_title' => $title,
+            'twitter_description' => $description,
+            'twitter_image' => $image,
+        ];
+    }
+
+    /**
+     * Build SEO data for a page (website type)
+     */
+    private function buildSeoForPage(Post $page): array
+    {
+        $title = $page->meta_title ?: $page->title;
+        $description = $page->meta_description ?: ($page->excerpt ?? '');
+        $url = $this->canonicalUrlForPost($page);
+        $image = $page->featured_image ?: '';
+
+        return [
+            'meta_title' => $title,
+            'meta_description' => $description,
+            'canonical_url' => $url,
+            'og_title' => $title,
+            'og_description' => $description,
+            'og_type' => 'website',
+            'og_image' => $image,
+            'og_url' => $url,
+            'og_site_name' => config('app.name', 'CMS'),
+            'twitter_card' => $image ? 'summary_large_image' : 'summary',
+            'twitter_title' => $title,
+            'twitter_description' => $description,
+            'twitter_image' => $image,
+        ];
+    }
+
+    /**
+     * Build SEO data for an index/archive listing
+     */
+    private function buildSeoForIndex(PostType $postType = null, array $additionalData = []): array
+    {
+        $title = $additionalData['title'] ?? ($postType?->plural_label ?? config('app.name', 'CMS'));
+        $description = $additionalData['description'] ?? ($postType?->description ?? '');
+        // Canonical selection precedence: explicit canonical_url > basePath > prefer_index(home) > postType index
+        if (!empty($additionalData['canonical_url'])) {
+            $url = $additionalData['canonical_url'];
+        } elseif (!empty($additionalData['basePath'])) {
+            $url = url($additionalData['basePath']);
+        } elseif (!empty($additionalData['prefer_index'])) {
+            $url = url('/');
+        } else {
+            $url = $this->canonicalUrlForIndex($postType);
+        }
+
+        return [
+            'meta_title' => $title,
+            'meta_description' => $description,
+            'canonical_url' => $url,
+            'og_title' => $title,
+            'og_description' => $description,
+            'og_type' => 'website',
+            'og_url' => $url,
+            'og_site_name' => config('app.name', 'CMS'),
+            'twitter_card' => 'summary',
+            'twitter_title' => $title,
+            'twitter_description' => $description,
+        ];
+    }
+
+    /**
+     * Build SEO data for taxonomy term archive
+     */
+    private function buildSeoForTaxonomy(Taxonomy $taxonomy, TaxonomyTerm $term): array
+    {
+        $title = ($taxonomy->label ?: ucfirst($taxonomy->slug)) . ': ' . $term->name;
+        $description = $term->description ?? '';
+        $url = url('/' . trim($taxonomy->slug, '/') . '/' . $term->slug);
+
+        return [
+            'meta_title' => $title,
+            'meta_description' => $description,
+            'canonical_url' => $url,
+            'og_title' => $title,
+            'og_description' => $description,
+            'og_type' => 'website',
+            'og_url' => $url,
+            'og_site_name' => config('app.name', 'CMS'),
+            'twitter_card' => 'summary',
+            'twitter_title' => $title,
+            'twitter_description' => $description,
+        ];
+    }
+
+    /**
+     * Helpers to compute canonical URLs
+     */
+    private function canonicalUrlForPost(Post $post): string
+    {
+        $prefix = $post->postType?->route_prefix;
+        $prefix = ($prefix === null || $prefix === '' || $prefix === '/') ? '' : '/' . ltrim($prefix, '/');
+        return url($prefix . '/' . ltrim((string)$post->slug, '/'));
+    }
+
+    private function canonicalUrlForIndex(PostType $postType = null): string
+    {
+        if ($postType && !in_array(($postType->route_prefix ?? null), [null, '', '/'], true)) {
+            return url('/' . ltrim((string)$postType->route_prefix, '/'));
+        }
+        // Generic posts index fallback
+        return url('/posts');
     }
 
     private function calculateReadTime(string $content)

@@ -238,6 +238,44 @@ MAIL_FROM_ADDRESS=noreply@your-domain.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
+## 🔎 SEO & Sitemap
+
+### Inertia SPA pages
+- Use the reusable `SEOHead` component to set dynamic meta tags.
+- Example usage:
+
+```tsx
+import SEOHead from '@/components/SEOHead';
+
+export default function ExamplePage() {
+  return (
+    <>
+      <SEOHead
+        title="My Page Title"
+        description="Concise page description."
+        canonicalUrl="https://example.com/path"
+        og={{ type: 'article', image: 'https://example.com/img/cover.jpg' }}
+        twitter={{ card: 'summary_large_image' }}
+      />
+      {/* page content */}
+    </>
+  );
+}
+```
+
+Notes:
+- The canonical URL defaults to window location if omitted.
+- `og:*` and `twitter:*` tags are supported; provide absolute URLs for images.
+- Admin pages use `AdminLayout`, which injects `<SEOHead noindex />` to prevent indexing.
+
+### Blade-rendered theme pages
+- Theme layout at `resources/themes/flexia/templates/layout.blade.php` renders SEO meta server-side using data from `TemplateRenderingService` (title, description, canonical, OpenGraph, Twitter).
+
+### Sitemap and robots.txt
+- Dynamic sitemap: `/sitemap.xml` (covers public content).
+- Robots file: `public/robots.txt` includes `Sitemap: /sitemap.xml`.
+- Ensure `APP_URL` is set correctly so absolute URLs are generated where required (e.g., images).
+
 ## 📈 Roadmap
 
 ### Phase 1: Core CMS (Current)

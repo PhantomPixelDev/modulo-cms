@@ -103,6 +103,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
         mbstring \
         bcmath \
         gd \
+        exif \
+        fileinfo \
         intl \
         zip \
         opcache
