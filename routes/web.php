@@ -7,6 +7,26 @@ use Illuminate\Support\Facades\Schema;
 
 Route::get('/', [\App\Http\Controllers\FrontendController::class, 'home'])->name('home');
 
+// Taxonomy archives
+Route::get('/tag/{slug}', [\App\Http\Controllers\FrontendController::class, 'listByTaxonomyTerm'])
+    ->name('tag.show')
+    ->defaults('taxonomySlug', 'tags')
+    ->where('slug', '[a-zA-Z0-9\-_]+');
+// Plural alias for tags
+Route::get('/tags/{slug}', [\App\Http\Controllers\FrontendController::class, 'listByTaxonomyTerm'])
+    ->name('tags.show')
+    ->defaults('taxonomySlug', 'tags')
+    ->where('slug', '[a-zA-Z0-9\-_]+');
+Route::get('/category/{slug}', [\App\Http\Controllers\FrontendController::class, 'listByTaxonomyTerm'])
+    ->name('category.show')
+    ->defaults('taxonomySlug', 'categories')
+    ->where('slug', '[a-zA-Z0-9\-_]+');
+// Plural alias for categories
+Route::get('/categories/{slug}', [\App\Http\Controllers\FrontendController::class, 'listByTaxonomyTerm'])
+    ->name('categories.show')
+    ->defaults('taxonomySlug', 'categories')
+    ->where('slug', '[a-zA-Z0-9\-_]+');
+
 // Public API endpoints for menus (place before dynamic catch-all)
 Route::prefix('api/menus')->group(function () {
     Route::get('slug/{slug}', [MenuApiController::class, 'showBySlug'])->name('api.menus.slug');
@@ -38,6 +58,10 @@ if (Schema::hasTable('post_types')) {
         // During early app boot or tests before migrations, skip dynamic route registration
     }
 }
+
+// Explicit archive route for generic posts listing (independent of DB post_types)
+Route::get('/posts', [\App\Http\Controllers\FrontendController::class, 'listPosts'])
+    ->name('posts.index');
 
 // Fallback for pages without a route_prefix (like the home page)
 if (Schema::hasTable('post_types')) {

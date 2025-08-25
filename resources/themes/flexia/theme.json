@@ -1,0 +1,49 @@
+{
+  "name": "Flexia",
+  "slug": "flexia",
+  "version": "1.0.0",
+  "description": "Lightweight, flexible theme with a11y-first layout and modern SCSS architecture.",
+  "author": "Modulo CMS",
+  "author_url": "https://github.com/PhantomPixelDev/modulo-cms",
+  "tags": ["flexible", "accessible", "modern"],
+  "supports": {
+    "post_thumbnails": true,
+    "menus": true,
+    "widgets": true
+  },
+  "templates": {
+    "layout": "templates/layout.blade.php",
+    "header": "templates/header.blade.php",
+    "footer": "templates/footer.blade.php",
+    "post": "templates/post.blade.php",
+    "posts": "templates/posts.blade.php",
+    "page": "templates/page.blade.php",
+    "index": "templates/index.blade.php",
+    "archive": "templates/archive.blade.php",
+    "search": "templates/search.blade.php",
+    "404": "templates/404.blade.php"
+  },
+  "partials": {
+    "navigation": "partials/navigation.blade.php",
+    "sidebar": "partials/sidebar.blade.php",
+    "post-meta": "partials/post-meta.blade.php",
+    "comments": "partials/comments.blade.php"
+  },
+  "assets": {
+    "css": [
+      "assets/css/style.min.css?v=20250821-1418"
+    ],
+    "js": [
+      "assets/js/theme.js?v=20250821-1418"
+    ]
+  },
+  "menus": {
+    "primary": "Primary Navigation",
+    "footer": "Footer Links"
+  },
+  "widget_areas": {
+    "sidebar": "Main Sidebar",
+    "footer-1": "Footer Column 1",
+    "footer-2": "Footer Column 2"
+  }
+}

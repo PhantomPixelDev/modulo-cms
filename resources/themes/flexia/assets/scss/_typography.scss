@@ -1,0 +1,17 @@
+/* Typography scale and elements */
+h1,h2,h3,h4,h5,h6{ font-weight: 700; margin: 0 0 .5rem; }
+p{ margin: 0 0 1rem; }
+code,kbd,pre,samp{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+blockquote{ border-inline-start: 3px solid var(--surface); padding: .5rem 1rem; color: var(--muted); margin: 0 0 1rem; }
+
+.btn-login{ background: var(--primary); color: var(--primary-contrast); padding: .5rem .9rem; border: 0; cursor:pointer; }
+.btn-login:hover{ filter: brightness(0.95); }
+
+.btn-logout{ background: var(--danger); color: var(--danger-contrast); padding: .5rem .9rem; border: 0; cursor:pointer; }
+.btn-logout:hover{ filter: brightness(0.95); }
+
+.btn-register{ background: var(--primary); color: var(--primary-contrast); padding: .5rem .9rem; border: 0; cursor:pointer; }
+.btn-register:hover{ filter: brightness(0.95); }
+
+.btn-dashboard{ background: var(--primary); color: var(--primary-contrast); padding: .5rem .9rem; border: 0; cursor:pointer; }
+.btn-dashboard:hover{ filter: brightness(0.95); }

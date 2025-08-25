@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Post;
 use App\Models\PostType;
+use App\Models\Taxonomy;
+use App\Models\TaxonomyTerm;
 use App\Models\Template;
 use App\Services\ThemeManager;
 use App\Services\MenuService;
@@ -18,6 +20,49 @@ class TemplateRenderingService
     {
         $this->themeManager = $themeManager;
         $this->menuService = $menuService;
+    }
+
+    /**
+     * Render a taxonomy archive (e.g., tag/category pages) using theme templates when available.
+     */
+    public function renderTaxonomyArchive($posts, Taxonomy $taxonomy, TaxonomyTerm $term)
+    {
+        $common = [
+            'assets' => $this->themeManager->getAssets(),
+            'site_name' => config('app.name', 'CMS'),
+            'title' => ($taxonomy->label ?: ucfirst($taxonomy->slug)) . ': ' . $term->name,
+            'meta_description' => $term->description ?? '',
+        ];
+        $data = array_merge([
+            'taxonomy' => $taxonomy,
+            'term' => $term,
+            'posts' => $posts,
+        ], $common);
+
+        $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
+        // Try specific templates first, then generic archive
+        $candidates = [];
+        $slug = trim((string)($taxonomy->slug ?? ''));
+        if ($slug !== '') {
+            $candidates[] = $slug;      // e.g. 'tag' or 'category'
+        }
+        $candidates[] = 'archive';
+
+        foreach ($candidates as $tpl) {
+            $themeTemplate = $this->themeManager->renderTemplate($tpl, $themeData);
+            if ($themeTemplate) {
+                if ($this->isFullHtmlDocument($themeTemplate)) {
+                    return $themeTemplate;
+                }
+                return $this->renderLayout($themeTemplate, $data);
+            }
+        }
+
+        // Fallback to index renderer with contextual title
+        return $this->renderIndex($posts, null, [
+            'title' => $common['title'],
+            'description' => $common['meta_description'],
+        ]);
     }
 
     /**
@@ -43,9 +88,10 @@ class TemplateRenderingService
             'post' => $post,
         ], $this->getPostData($post), $common, $additionalData);
         
-        // Try theme template first
+        // Try theme template first (inject header/footer so layout partials have data)
         \Log::info('renderPost:attemptThemeTemplate', ['postId' => $post->id, 'slug' => $post->slug]);
-        $themeTemplate = $this->themeManager->renderTemplate('post', $data);
+        $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
+        $themeTemplate = $this->themeManager->renderTemplate('post', $themeData);
         if ($themeTemplate) {
             \Log::info('renderPost:usingThemeTemplate');
             if ($this->isFullHtmlDocument($themeTemplate)) {
@@ -67,8 +113,7 @@ class TemplateRenderingService
             \Log::info('renderPost:usingDbTemplate', ['templateId' => $template->id ?? null]);
             return $template->renderWithData($data);
         }
-        \Log::warning('renderPost:usingFallbackHtml');
-        return $this->getFallbackPostHtml($post, $data);
+        throw new \RuntimeException('No template available to render post');
     }
 
     public function renderPage(Post $page, array $additionalData = [])
@@ -99,7 +144,8 @@ class TemplateRenderingService
         $candidates[] = 'page';               // fallback generic page template
 
         foreach ($candidates as $tpl) {
-            $themeTemplate = $this->themeManager->renderTemplate($tpl, $data);
+            $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
+            $themeTemplate = $this->themeManager->renderTemplate($tpl, $themeData);
             if ($themeTemplate) {
                 if ($this->isFullHtmlDocument($themeTemplate)) {
                     return $themeTemplate;
@@ -116,7 +162,10 @@ class TemplateRenderingService
             $template = Template::ofType('page')->active()->first();
         }
 
-        return $template ? $template->renderWithData($data) : $this->getFallbackPageHtml($page, $data);
+        if ($template) {
+            return $template->renderWithData($data);
+        }
+        throw new \RuntimeException('No template available to render page');
     }
 
     public function renderIndex($posts, PostType $postType = null, array $additionalData = [])
@@ -129,39 +178,26 @@ class TemplateRenderingService
         ];
         $data = array_merge($this->getIndexData($posts, $postType), $common, $additionalData);
         
-        // Try theme templates in order of specificity for archives/listing pages
-        // 1) archives/{route_prefix}.blade.php (e.g., archives/news.blade.php)
-        // 2) {route_prefix}.blade.php         (e.g., news.blade.php)
-        // 3) posts.blade.php OR index.blade.php depending on prefer_index flag
-        //    - When additionalData['prefer_index'] is true (e.g., home page), try index before posts
-        //    - Otherwise (e.g., /posts listing), try posts before index
+        // Dynamic per post type: {route_prefix} -> index
+        $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
         $candidates = [];
         if ($postType && !in_array(($postType->route_prefix ?? null), [null, '', '/'], true)) {
             $prefix = ltrim((string) $postType->route_prefix, '/');
             if ($prefix !== '') {
-                $candidates[] = 'archives/' . $prefix;
                 $candidates[] = $prefix;
             }
         }
-        $preferIndex = (bool)($additionalData['prefer_index'] ?? false);
-        if ($preferIndex) {
-            $candidates[] = 'index';
-            $candidates[] = 'posts';
-        } else {
-            $candidates[] = 'posts';
-            $candidates[] = 'index';
-        }
+        $candidates[] = 'index';
 
         \Log::info('TemplateRenderingService:renderIndex:candidates', [
             'postTypeId' => $postType?->id,
             'route_prefix' => $postType?->route_prefix,
-            'prefer_index' => $preferIndex,
             'candidates' => $candidates,
         ]);
 
         foreach ($candidates as $tpl) {
             \Log::info('TemplateRenderingService:renderIndex:try', ['template' => $tpl]);
-            $themeTemplate = $this->themeManager->renderTemplate($tpl, $data);
+            $themeTemplate = $this->themeManager->renderTemplate($tpl, $themeData);
             if ($themeTemplate) {
                 \Log::info('TemplateRenderingService:renderIndex:using', ['template' => $tpl]);
                 if ($this->isFullHtmlDocument($themeTemplate)) {
@@ -183,18 +219,20 @@ class TemplateRenderingService
             \Log::info('TemplateRenderingService:renderIndex:usingDbTemplate', ['templateId' => $template->id ?? null]);
             return $template->renderWithData($data);
         }
-        \Log::warning('TemplateRenderingService:renderIndex:usingFallbackHtml');
-        return $this->getFallbackIndexHtml($posts, $postType, $data);
+        throw new \RuntimeException('No template available to render index');
     }
 
     public function renderLayout(string $content, array $data = [])
     {
         // First try theme-provided layout
-        $layoutData = array_merge([
+        // IMPORTANT: Merge order ensures the rendered fragment ($content) wins over any
+        // 'content' key present in $data (like post body). Otherwise the layout would
+        // print only the raw body and drop the template markup (H1, image, etc.).
+        $layoutData = array_merge($data, [
             'content' => $content,
             'header' => $this->renderHeader($data),
             'footer' => $this->renderFooter($data),
-        ], $data);
+        ]);
 
         // Inject common defaults and theme asset URLs expected by theme layouts
         $activeTheme = $this->themeManager->getActiveTheme();
@@ -239,7 +277,10 @@ class TemplateRenderingService
             $template = Template::ofType('layout')->active()->first();
         }
 
-        return $template ? $template->renderWithData($layoutData) : $this->getFallbackLayoutHtml($content, $layoutData);
+        if ($template) {
+            return $template->renderWithData($layoutData);
+        }
+        throw new \RuntimeException('No layout template available');
     }
 
     public function renderHeader(array $data = [])
@@ -258,7 +299,10 @@ class TemplateRenderingService
             $template = Template::ofType('header')->active()->first();
         }
 
-        return $template ? $template->renderWithData($headerData) : $this->getFallbackHeaderHtml($headerData);
+        if ($template) {
+            return $template->renderWithData($headerData);
+        }
+        throw new \RuntimeException('No header template available');
     }
 
     public function renderFooter(array $data = [])
@@ -277,7 +321,10 @@ class TemplateRenderingService
             $template = Template::ofType('footer')->active()->first();
         }
 
-        return $template ? $template->renderWithData($footerData) : $this->getFallbackFooterHtml($footerData);
+        if ($template) {
+            return $template->renderWithData($footerData);
+        }
+        throw new \RuntimeException('No footer template available');
     }
 
     private function getPostData(Post $post)
@@ -333,16 +380,25 @@ class TemplateRenderingService
 
     private function getHeaderData()
     {
-        $navigation = '';
-        try {
-            $navigation = $this->menuService->renderMenuHtml($this->menuService->getMenuByLocation('header'));
-        } catch (\Throwable $e) { $navigation = ''; }
+        $menu = $this->menuService->getMenuByLocation('primary');
+        if (!$menu) {
+            throw new \RuntimeException("Header menu location 'primary' not found or has no items");
+        }
+        \Log::info('flexia.header.menu', [
+            'menu_id' => $menu->id ?? null,
+            'menu_name' => $menu->name ?? null,
+            'items_count' => $menu?->items?->count() ?? null,
+        ]);
+        $navigation = $this->menuService->renderMenuHtml($menu, [
+            'id' => 'primary-menu',
+            'class' => 'menu',
+            'wrap' => false,
+        ]);
 
         return [
             'site_name' => config('app.name', 'CMS'),
             'logo_url' => '/images/logo.png',
-            // Prefer DB-driven menu; fallback to static links
-            'navigation_menu' => $navigation !== '' ? $navigation : $this->renderNavigationMenu(),
+            'navigation_menu' => $navigation,
             'search_box' => '<input type="search" placeholder="Search..." class="px-3 py-1 border rounded">',
             'user_menu' => '',
         ];
@@ -350,18 +406,26 @@ class TemplateRenderingService
 
     private function getFooterData()
     {
-        $footerLinks = '';
-        try {
-            $footerLinks = $this->menuService->renderMenuHtml($this->menuService->getMenuByLocation('footer'), [ 'class' => 'flex gap-4 justify-center' ]);
-        } catch (\Throwable $e) { $footerLinks = ''; }
+        $menu = $this->menuService->getMenuByLocation('footer');
+        if (!$menu) {
+            throw new \RuntimeException("Footer menu location 'footer' not found or has no items");
+        }
+        \Log::info('flexia.footer.menu', [
+            'menu_id' => $menu->id ?? null,
+            'menu_name' => $menu->name ?? null,
+            'items_count' => $menu?->items?->count() ?? null,
+        ]);
+        $footerLinks = $this->menuService->renderMenuHtml($menu, [
+            'class' => 'menu',
+            'wrap' => false,
+        ]);
 
         return [
             'site_name' => config('app.name', 'CMS'),
             'site_description' => 'A powerful content management system',
             'current_year' => date('Y'),
             'social_links' => '',
-            // Provide rendered footer links HTML
-            'footer_links' => $footerLinks !== '' ? $footerLinks : $this->renderFooterLinks(),
+            'footer_links' => $footerLinks,
             'contact_info' => '',
             'footer_extra' => '',
         ];
@@ -390,94 +454,14 @@ class TemplateRenderingService
 
     private function renderShareButtons(Post $post)
     {
-        $url = url('/' . $post->slug);
+        $prefix = $post->postType?->route_prefix;
+        $prefix = ($prefix === null || $prefix === '' || $prefix === '/') ? '' : '/' . ltrim($prefix, '/');
+        $url = url($prefix . '/' . $post->slug);
         return '<div class="flex space-x-2">
             <a href="https://twitter.com/intent/tweet?url=' . urlencode($url) . '&text=' . urlencode($post->title) . '" class="text-blue-500 hover:text-blue-700">Share on Twitter</a>
             <a href="https://www.facebook.com/sharer/sharer.php?u=' . urlencode($url) . '" class="text-blue-500 hover:text-blue-700">Share on Facebook</a>
         </div>';
     }
 
-    private function renderNavigationMenu()
-    {
-        return '<a href="/" class="text-gray-700 hover:text-gray-900 px-3 py-2">Home</a>
-                <a href="/posts" class="text-gray-700 hover:text-gray-900 px-3 py-2">Posts</a>';
-    }
-
-    private function renderFooterLinks()
-    {
-        return '<li><a href="/about" class="hover:text-white">About</a></li>
-                <li><a href="/contact" class="hover:text-white">Contact</a></li>
-                <li><a href="/privacy" class="hover:text-white">Privacy</a></li>';
-    }
-
-    // Fallback HTML methods
-    private function getFallbackPostHtml(Post $post, array $data)
-    {
-        return '<article class="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-8">
-            <h1 class="text-3xl font-bold mb-4">' . $data['title'] . '</h1>
-            <div class="text-gray-600 mb-6">' . $data['published_at'] . ' by ' . $data['author_name'] . '</div>
-            <div class="prose max-w-none">' . $data['content'] . '</div>
-        </article>';
-    }
-
-    private function getFallbackPageHtml(Post $page, array $data)
-    {
-        return '<article class="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-8">
-            <h1 class="text-3xl font-bold mb-4">' . $data['title'] . '</h1>
-            <div class="prose max-w-none">' . $data['content'] . '</div>
-        </article>';
-    }
-
-    private function getFallbackIndexHtml($posts, array $data)
-    {
-        $html = '<div class="max-w-6xl mx-auto">
-            <h1 class="text-4xl font-bold mb-8">' . $data['page_title'] . '</h1>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">';
-        
-        foreach ($posts as $post) {
-            $html .= '<article class="bg-white rounded-lg shadow-sm p-6">
-                <h2 class="text-xl font-semibold mb-2"><a href="/' . $post->slug . '">' . $post->title . '</a></h2>
-                <p class="text-gray-600">' . $post->excerpt . '</p>
-            </article>';
-        }
-        
-        $html .= '</div></div>';
-        return $html;
-    }
-
-    private function getFallbackLayoutHtml(string $content, array $data)
-    {
-        return '<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>' . ($data['title'] ?? 'CMS') . '</title>
-            <script src="https://cdn.tailwindcss.com"></script>
-        </head>
-        <body class="bg-gray-50">
-            ' . ($data['header'] ?? '') . '
-            <main class="container mx-auto px-4 py-8">' . $content . '</main>
-            ' . ($data['footer'] ?? '') . '
-        </body>
-        </html>';
-    }
-
-    private function getFallbackHeaderHtml(array $data)
-    {
-        return '<header class="bg-white shadow-sm border-b">
-            <div class="container mx-auto px-4 py-4">
-                <h1 class="text-xl font-semibold tracking-tight">' . $data['site_name'] . '</h1>
-            </div>
-        </header>';
-    }
-
-    private function getFallbackFooterHtml(array $data)
-    {
-        return '<footer class="bg-gray-800 text-white py-8 mt-12">
-            <div class="container mx-auto px-4 text-center">
-                <p>&copy; ' . $data['current_year'] . ' ' . $data['site_name'] . '. All rights reserved.</p>
-            </div>
-        </footer>';
-    }
+    // Removed: renderNavigationMenu, renderFooterLinks, and all fallback HTML methods.
 }

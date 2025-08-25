@@ -86,6 +86,22 @@ function SidebarProvider({
     [setOpenProp, open]
   )
 
+  // Initialize from cookie if uncontrolled and a cookie exists
+  React.useEffect(() => {
+    if (openProp !== undefined) return
+    try {
+      const match = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
+      if (match) {
+        const value = match.split('=')[1]
+        const cookieOpen = value === 'true'
+        _setOpen(cookieOpen)
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)

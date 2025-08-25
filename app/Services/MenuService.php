@@ -26,7 +26,12 @@ class MenuService
     {
         if (!$menu) return '';
         $class = $options['class'] ?? 'flex items-center gap-4';
-        return '<nav footer-menu><ul class="' . e($class) . '">' . $this->renderItems($menu->items) . '</ul></nav>';
+        $id = $options['id'] ?? null;
+        $idAttr = $id ? ' id="' . e($id) . '"' : '';
+        $wrap = array_key_exists('wrap', $options) ? (bool)$options['wrap'] : true; // default: wrap in <nav>
+        $navAttrs = $options['nav_attrs'] ?? ' footer-menu'; // keep legacy attr by default
+        $ul = '<ul' . $idAttr . ' class="' . e($class) . '">' . $this->renderItems($menu->items) . '</ul>';
+        return $wrap ? ('<nav' . $navAttrs . '>' . $ul . '</nav>') : $ul;
     }
 
     private function renderItems($items): string

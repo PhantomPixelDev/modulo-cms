@@ -226,33 +226,35 @@ class ThemeManager
 
         // Prefer physical blade file defined in theme.json -> templates for active theme
         if ($activeTheme) {
+            // 1) Try namespaced views: prefer slug, then directory_path
+            $candidates = [
+                'themes::' . $activeTheme->slug . '.templates.' . $template,
+                'themes::' . $activeTheme->directory_path . '.templates.' . $template,
+            ];
+            foreach ($candidates as $viewName) {
+                try {
+                    if (\View::exists($viewName)) {
+                        \Log::info('ThemeManager:renderTemplate:viewName', ['template' => $template, 'view' => $viewName]);
+                        return \View::make($viewName, $data)->render();
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error("ThemeManager renderTemplate(view) error for '{$template}' using '{$viewName}': " . $e->getMessage());
+                }
+            }
+
+            // 2) Fallback to absolute file path rendering
             $templatePath = $activeTheme->getTemplatePath($template);
             if ($templatePath && File::exists($templatePath)) {
                 try {
                     \Log::info('ThemeManager:renderTemplate:activePath', ['template' => $template, 'path' => $templatePath]);
                     return \View::file($templatePath, $data)->render();
                 } catch (\Throwable $e) {
-                    \Log::error("ThemeManager renderTemplate error for '{$template}' (active theme): " . $e->getMessage());
+                    \Log::error("ThemeManager renderTemplate(file) error for '{$template}': " . $e->getMessage());
                 }
             }
         }
 
-        // Filesystem fallback: use default theme blade file if present, regardless of DB state
-        $defaultPath = resource_path('themes/default/templates/' . $template . '.blade.php');
-        if (File::exists($defaultPath)) {
-            try {
-                \Log::info('ThemeManager:renderTemplate:defaultPath', ['template' => $template, 'path' => $defaultPath]);
-                return \View::file($defaultPath, $data)->render();
-            } catch (\Throwable $e) {
-                \Log::error("ThemeManager renderTemplate error for '{$template}' (default fs fallback): " . $e->getMessage());
-            }
-        }
-
-        // Last resort: return raw file contents from active theme mapping (no Blade processing)
-        if ($activeTheme) {
-            $raw = $this->getTemplate($template);
-            if ($raw !== null) return $raw;
-        }
+        // No raw file content fallback; return null so caller can handle properly
 
         return null;
     }

@@ -1,0 +1,22 @@
+/* Components */
+.card{ background: var(--surface); border:1px solid color-mix(in lab, var(--text) 10%, transparent); border-radius: var(--radius); padding: var(--space-md); box-shadow: var(--shadow-sm); transition: transform .2s ease, box-shadow .2s ease; }
+.card:hover{ transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.card__title{ margin: 0 0 .25rem; font-weight: 700; }
+.card__excerpt{ color: var(--muted); margin: 0; }
+
+.post .post-featured{ margin: 0 0 var(--space-md); }
+.post .featured-image{ width:100%; height:auto; display:block; }
+
+.site-nav .menu a{ padding:.25rem .5rem; border-radius: var(--radius-sm); }
+.site-nav .menu a:focus-visible{ outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* Taxonomy badges */
+.post-taxonomies{ margin-block: var(--space-md); display: grid; gap: var(--space-xs); }
+.taxonomy-group{ display:flex; align-items:center; flex-wrap: wrap; gap: var(--space-xs); }
+.tax-label{ color: var(--muted); font-size: .9rem; margin-right: .25rem; }
+.tax-terms{ list-style: none; padding: 0; margin: 0; display:flex; flex-wrap: wrap; gap: .375rem; align-items:center; }
+.tax-terms li{ display:inline-flex; }
+.badge{ display:inline-flex; align-items:center; padding:.2rem .55rem; border-radius: var(--radius-pill); background: color-mix(in lab, var(--text) 8%, transparent); border:1px solid color-mix(in lab, var(--text) 12%, transparent); font-size: .875rem; }
+
+/* Component file intentionally avoids layout utilities (moved to _utilities.scss) */
+

@@ -1,9 +1,11 @@
-import { Link, router } from '@inertiajs/react';
+ import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Pencil, Trash2, Shield } from 'lucide-react';
-import type { User } from '@/types';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ROUTE } from '../../routes';
 
 interface UserListProps {
   users: Array<{
@@ -23,33 +25,41 @@ interface UserListProps {
   canManageRoles?: boolean;
 }
 
-export function UserList({ 
-  users, 
-  onEdit, 
-  onRoleChange = () => {}, 
+export function UserList({
+  users,
+  onEdit,
+  onRoleChange = () => {},
   currentUserId = -1,
   canEditUsers = false,
   canDeleteUsers = false,
   canManageRoles = false
 }: UserListProps) {
+  if (!users || users.length === 0) {
+    return (
+      <EmptyState
+        title="No users found"
+        description="Invite or create a user to get started."
+      />
+    );
+  }
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-sm">
-        <thead>
-          <tr className="text-left border-b">
-            <th className="py-2 pr-4">Name</th>
-            <th className="py-2 pr-4">Email</th>
-            <th className="py-2 pr-4">Roles</th>
-            <th className="py-2 pr-4">Joined</th>
-            <th className="py-2 pr-4">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+    <TableContainer>
+      <Table dense>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Roles</TableHead>
+            <TableHead>Joined</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {users.map((user) => (
-            <tr key={user.id} className="border-b last:border-b-0 hover:bg-accent dark:hover:bg-gray-800">
-              <td className="py-2 pr-4">{user.name}</td>
-              <td className="py-2 pr-4">{user.email}</td>
-              <td className="py-2 pr-4">
+            <TableRow key={user.id}>
+              <TableCell>{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>
                 <div className="flex flex-wrap gap-1">
                   {user.roles?.map((role) => (
                     <Badge key={role.id} variant="outline">
@@ -57,15 +67,15 @@ export function UserList({
                     </Badge>
                   ))}
                 </div>
-              </td>
-              <td className="py-2 pr-4">
+              </TableCell>
+              <TableCell>
                 {new Date(user.created_at).toLocaleDateString()}
-              </td>
-              <td className="py-2 pr-4">
+              </TableCell>
+              <TableCell>
                 <div className="flex space-x-1">
                   {canEditUsers && (
-                    <Button 
-                      variant="secondary" 
+                    <Button
+                      variant="secondary"
                       size="sm"
                       className="h-8 px-2"
                       onClick={() => onEdit(user.id)}
@@ -89,17 +99,17 @@ export function UserList({
                         </DropdownMenuItem>
                       )}
                       {canManageRoles && (
-                        <DropdownMenuItem onClick={() => {/* Handle role management */}}>
+                        <DropdownMenuItem onClick={() => { /* Handle role management */ }}>
                           <Shield className="mr-2 h-4 w-4" />
                           Manage Roles
                         </DropdownMenuItem>
                       )}
                       {canDeleteUsers && user.id !== currentUserId && (
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="text-red-600"
                           onClick={() => {
                             if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                              router.delete(route('dashboard.admin.users.destroy', user.id), {
+                              router.delete(ROUTE.users.destroy(user.id), {
                                 onSuccess: () => {},
                                 onError: () => {},
                                 preserveScroll: true,
@@ -115,11 +125,11 @@ export function UserList({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }

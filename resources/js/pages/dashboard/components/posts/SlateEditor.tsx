@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { createEditor, Descendant, Transforms, Editor, Element as SlateElement, Text, Range } from 'slate';
+import { createEditor, Descendant, Transforms, Editor, Element as SlateElement, Text, Range, BaseEditor } from 'slate';
 import { Slate, Editable, withReact, ReactEditor } from 'slate-react';
-import { withHistory } from 'slate-history';
+import { withHistory, HistoryEditor } from 'slate-history';
 import {
   Bold,
   Italic,
@@ -63,7 +63,7 @@ type FormattedText = { text: string; bold?: boolean; italic?: boolean; underline
 
 declare module 'slate' {
   interface CustomTypes {
-    Editor: Editor;
+    Editor: BaseEditor & ReactEditor & HistoryEditor;
     Element: CustomElement;
     Text: FormattedText;
   }

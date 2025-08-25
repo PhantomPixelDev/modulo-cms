@@ -1,4 +1,0 @@
-/* Modern Theme responsive tweaks */
-@media (max-width: 768px) {
-  .container { padding: 0 .75rem; }
-}

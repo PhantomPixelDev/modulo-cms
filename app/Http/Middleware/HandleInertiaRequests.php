@@ -19,6 +19,31 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
+     * Dynamically select root view to mount Inertia.
+     * Use a theme-wrapped root for public auth pages so React renders inside the theme.
+     */
+    public function rootView(Request $request): string
+    {
+        if (auth()->check()) {
+            return 'app';
+        }
+        $routeName = optional($request->route())->getName();
+        // Guest-facing auth routes
+        $authGuestRoutes = [
+            'login',
+            'register',
+            'password.request',
+            'password.reset',
+        ];
+
+        if (in_array($routeName, $authGuestRoutes, true)) {
+            return 'theme-inertia';
+        }
+
+        return 'app';
+    }
+
+    /**
      * Determines the current asset version.
      *
      * @see https://inertiajs.com/asset-versioning

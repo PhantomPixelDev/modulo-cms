@@ -1,68 +1,10 @@
-import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Users, Shield, Settings, FileText, Folder, Tag, Plus, Palette, List, MenuSquare } from 'lucide-react';
-import AppLogo from './app-logo';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Panel',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-];
-
-// Admin navigation items
-const adminNavItems: NavItem[] = [
-    {
-        title: 'Users',
-        href: '/dashboard/admin/users',
-        icon: Users,
-    },
-    {
-        title: 'Roles',
-        href: '/dashboard/admin/roles',
-        icon: Shield,
-    },
-    {
-        title: 'Posts',
-        href: '/dashboard/admin/posts',
-        icon: FileText,
-    },
-    {
-        title: 'Pages',
-        href: '/dashboard/admin/pages',
-        icon: FileText,
-    },
-    {
-        title: 'Post Types',
-        href: '/dashboard/admin/post-types',
-        icon: Plus,
-    },
-    {
-        title: 'Taxonomies',
-        href: '/dashboard/admin/taxonomies',
-        icon: Folder,
-    },
-    {
-        title: 'Menus',
-        href: '/dashboard/admin/menus',
-        icon: List,
-    },
-    {
-        title: 'Themes',
-        href: '/dashboard/admin/themes',
-        icon: Palette,
-    },
-    {
-        title: 'Settings',
-        href: '/settings',
-        icon: Settings,
-    },
-];
+ import { NavFooter } from '@/components/nav-footer';
+ import { NavMain } from '@/components/nav-main';
+ import { NavUser } from '@/components/nav-user';
+ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
+ import { Link, usePage } from '@inertiajs/react';
+ import AppLogo from './app-logo';
+ import { adminNav, mainNav } from '@/config/nav';
 
 export function AppSidebar() {
     const page = usePage();
@@ -82,7 +24,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={mainNav} />
                 
                 {/* Admin Navigation - Only show for admin users */}
                 {user && (user.roles?.some((role: any) => ['admin', 'super-admin'].includes(role.name)) || user.permissions?.some((perm: any) => perm.name === 'view users')) && (
@@ -90,7 +32,7 @@ export function AppSidebar() {
                         <SidebarGroup className="px-2 py-0">
                             <SidebarGroupLabel>Administration</SidebarGroupLabel>
                             <SidebarMenu>
-                                {adminNavItems.map((item) => (
+                                {adminNav.map((item) => (
                                     <SidebarMenuItem key={item.title}>
                                         <SidebarMenuButton asChild isActive={page.url.startsWith(item.href)} tooltip={{ children: item.title }}>
                                             <Link href={item.href} prefetch>

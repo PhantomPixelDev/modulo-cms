@@ -8,6 +8,8 @@ use App\Services\TemplateRenderingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Taxonomy;
+use App\Models\TaxonomyTerm;
 
 class FrontendController extends Controller
 {
@@ -16,6 +18,53 @@ class FrontendController extends Controller
     public function __construct(TemplateRenderingService $templateService)
     {
         $this->templateService = $templateService;
+    }
+
+    /**
+     * List posts by taxonomy term (e.g., /tag/{slug}, /category/{slug}).
+     */
+    public function listByTaxonomyTerm(Request $request, string $slug)
+    {
+        $taxonomySlug = strtolower((string) $request->route('taxonomySlug'));
+        // Find public taxonomy by slug
+        $taxonomy = Taxonomy::where('slug', $taxonomySlug)->where('is_public', true)->firstOrFail();
+        // Find term by slug within taxonomy
+        $term = TaxonomyTerm::where('slug', $slug)->where('taxonomy_id', $taxonomy->id)->firstOrFail();
+
+        // Query published posts related to this term
+        $posts = Post::with(['postType', 'author'])
+            ->published()
+            ->whereHas('taxonomyTerms', function($q) use ($term) {
+                $q->where('taxonomy_term_id', $term->id);
+            })
+            ->orderBy('published_at', 'desc')
+            ->paginate(12);
+
+        // Render using theme templates
+        $rendered = $this->templateService->renderTaxonomyArchive($posts, $taxonomy, $term);
+        if ($rendered) {
+            return response($rendered)->header('Content-Type', 'text/html');
+        }
+
+        // Fallback simple Inertia list if theme rendering fails
+        return Inertia::render('frontend/posts', [
+            'posts' => $posts->through(function ($post) {
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'excerpt' => $post->excerpt,
+                    'featured_image' => $post->featured_image,
+                    'published_at' => $post->published_at,
+                    'post_type' => [
+                        'id' => $post->postType->id,
+                        'label' => $post->postType->label,
+                        'route_prefix' => $post->postType->route_prefix,
+                    ],
+                ];
+            }),
+            'pageTitle' => ($taxonomy->label ?: ucfirst($taxonomy->slug)) . ': ' . $term->name,
+        ]);
     }
 
     /**
@@ -97,7 +146,7 @@ class FrontendController extends Controller
             return $query;
         };
 
-        // If no post type slug provided, try to find content by slug alone
+        // If no post type slug provided, treat it strictly as a page lookup
         if (!$postTypeSlug) {
             // First try to find a page with empty route_prefix or route_prefix = '/'
             $pagePostType = PostType::where(function($query) {
@@ -120,13 +169,8 @@ class FrontendController extends Controller
                     return $this->renderContent($content, null, null);
                 }
             }
-
-            // If not found as page, try to find any published content
-            $content = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
-                ->where('slug', $slug);
-            $applyVisibility($content);
-            $content = $content->firstOrFail();
-            \Log::info('showContent:genericLookup', ['foundId' => $content?->id]);
+            // No page found: return 404 so posts cannot be reached at '/{slug}'
+            abort(404);
         } else {
             // Find post type by route prefix
             $postType = PostType::where('route_prefix', $postTypeSlug)->firstOrFail();
@@ -233,6 +277,20 @@ class FrontendController extends Controller
                 $query->where('post_type_id', $pt->id);
                 \Log::info('listPosts:filterBySlug', ['route_prefix' => $postTypeSlug, 'postTypeId' => $pt->id]);
             }
+        } elseif ($routeName === 'posts.index' && !$request->has('type')) {
+            // Generic /posts route: default to classic "post" type (slug=post or route_prefix=posts)
+            $pt = PostType::where('slug', 'post')
+                ->orWhere('route_prefix', 'posts')
+                ->orderByRaw("CASE WHEN slug='post' THEN 0 ELSE 1 END")
+                ->first();
+            if ($pt) {
+                $query->where('post_type_id', $pt->id);
+                \Log::info('listPosts:defaultToClassicPostType', ['postTypeId' => $pt->id]);
+                // Also make it available for template/UI selection below
+                $request->attributes->set('default_post_type_id', $pt->id);
+            } else {
+                \Log::warning('listPosts:classicPostTypeNotFound');
+            }
         }
 
         // Filter by post type slug if specified in query params
@@ -252,6 +310,11 @@ class FrontendController extends Controller
             $postType = PostType::find($routePostTypeId);
         } elseif ($postTypeSlug) {
             $postType = PostType::where('route_prefix', $postTypeSlug)->first();
+        } elseif ($routeName === 'posts.index') {
+            $defaultId = $request->attributes->get('default_post_type_id');
+            if ($defaultId) {
+                $postType = PostType::find($defaultId);
+            }
         }
         
         // Normalize route_prefix (treat '/' as empty)

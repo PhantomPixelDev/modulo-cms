@@ -1,5 +1,5 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { ReactNode } from 'react';
+import { SectionHeader } from '@/components/ui/section-header';
 
 interface SectionWrapperProps {
   title: string;
@@ -15,14 +15,9 @@ export function SectionWrapper({
   className = '' 
 }: SectionWrapperProps) {
   return (
-    <div className={`px-4 py-6${className}`}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-        {actions && <div>{actions}</div>}
-      </div>
-      <Card>
-        <CardContent className="pt-6">{children}</CardContent>
-      </Card>
+    <div className={`px-4 py-6 ${className}`}>
+      <SectionHeader title={title} actions={actions} /> 
+      {children}
     </div>
   );
 }

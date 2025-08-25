@@ -1,6 +1,8 @@
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Role, Permission } from '../../types';
+ import { Button } from '@/components/ui/button';
+ import { Badge } from '@/components/ui/badge';
+ import { EmptyState } from '@/components/ui/empty-state';
+ import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+ import { Role, Permission } from '../../types';
 
 interface RoleListProps {
   roles: Role[];
@@ -8,21 +10,29 @@ interface RoleListProps {
 }
 
 export function RoleList({ roles, onEdit }: RoleListProps) {
+  if (!roles || roles.length === 0) {
+    return (
+      <EmptyState
+        title="No roles"
+        description="Create roles and assign permissions."
+      />
+    );
+  }
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-sm">
-        <thead>
-          <tr className="text-left border-b">
-            <th className="py-2 pr-4">Name</th>
-            <th className="py-2 pr-4">Permissions</th>
-            <th className="py-2 pr-4">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+    <TableContainer>
+      <Table dense>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Permissions</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {roles.map((role) => (
-            <tr key={role.id} className="border-b last:border-b-0 hover:bg-accent dark:hover:bg-gray-800">
-              <td className="py-2 pr-4 font-medium">{role.name}</td>
-              <td className="py-2 pr-4">
+            <TableRow key={role.id}>
+              <TableCell className="font-medium">{role.name}</TableCell>
+              <TableCell>
                 <div className="flex flex-wrap gap-1">
                   {role.permissions?.map((permission: Permission) => (
                     <Badge key={permission.id} variant="outline" className="text-xs">
@@ -30,8 +40,8 @@ export function RoleList({ roles, onEdit }: RoleListProps) {
                     </Badge>
                   ))}
                 </div>
-              </td>
-              <td className="py-2 pr-4">
+              </TableCell>
+              <TableCell>
                 <div className="flex space-x-2">
                   <Button 
                     variant="ghost" 
@@ -42,11 +52,12 @@ export function RoleList({ roles, onEdit }: RoleListProps) {
                     Edit
                   </Button>
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
+

@@ -16,9 +16,27 @@ declare global {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+const pages = import.meta.glob('./pages/**/*.tsx');
+
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,
-    resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
+    resolve: (name) => {
+        // Try exact match first (preserve existing behavior)
+        let direct = `./pages/${name}.tsx`;
+        let indexPath = `./pages/${name}/index.tsx`;
+        let key = pages[direct] ? direct : indexPath;
+        if (pages[key]) return resolvePageComponent(key, pages);
+
+        // Fallback: try lowercase variant (helps when backend sends 'Dashboard' but files are 'dashboard')
+        const lower = name.toLowerCase();
+        direct = `./pages/${lower}.tsx`;
+        indexPath = `./pages/${lower}/index.tsx`;
+        key = pages[direct] ? direct : indexPath;
+        if (pages[key]) return resolvePageComponent(key, pages);
+
+        // As a last resort, throw with available keys to aid debugging
+        throw new Error(`Page not found: ./pages/${name}.tsx or ./pages/${name}/index.tsx`);
+    },
     setup({ el, App, props }) {
         const root = createRoot(el);
 

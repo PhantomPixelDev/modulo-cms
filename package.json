@@ -11,7 +11,8 @@
         "types": "tsc --noEmit",
         "clean": "bash scripts/clean.sh",
         "clean:php": "bash -lc 'php artisan optimize:clear && php artisan cache:clear && php artisan view:clear || true'",
-        "clean:frontend": "bash -lc 'rm -rf node_modules/.vite .vite public/build tsconfig.tsbuildinfo resources/js/*.tsbuildinfo .eslintcache'"
+        "clean:frontend": "bash -lc 'rm -rf node_modules/.vite .vite public/build tsconfig.tsbuildinfo resources/js/*.tsbuildinfo .eslintcache'",
+        "build:flexia": "sass --no-source-map --style=compressed resources/themes/flexia/assets/scss/main.scss resources/themes/flexia/assets/css/style.min.css"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
@@ -25,6 +26,7 @@
         "prettier": "^3.4.2",
         "prettier-plugin-organize-imports": "^4.1.0",
         "prettier-plugin-tailwindcss": "^0.6.11",
+        "sass": "^1.77.8",
         "typescript-eslint": "^8.23.0"
     },
     "dependencies": {
