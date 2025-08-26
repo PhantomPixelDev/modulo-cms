@@ -19,8 +19,26 @@ class CheckPermission
             abort(403, 'Unauthorized action.');
         }
 
-        foreach ([$permission, ...$permissions] as $perm) {
-            if (!$request->user()->hasPermissionTo($perm)) {
+        // Each middleware parameter is an AND group.
+        // Within each parameter, support pipe-delimited OR, e.g. 'edit media|delete media'.
+        $groups = array_merge([$permission], $permissions);
+
+        foreach ($groups as $group) {
+            $alternatives = array_filter(array_map('trim', explode('|', (string) $group)));
+            if (empty($alternatives)) {
+                // No concrete permission provided; deny.
+                abort(403, 'Unauthorized action.');
+            }
+
+            $hasAny = false;
+            foreach ($alternatives as $alt) {
+                if ($request->user()->hasPermissionTo($alt)) {
+                    $hasAny = true;
+                    break;
+                }
+            }
+
+            if (!$hasAny) {
                 abort(403, 'Unauthorized action.');
             }
         }

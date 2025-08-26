@@ -54,6 +54,10 @@ export default function DashboardContent({
   groupedTerms,
   sitemapSettings,
   media,
+  folders,
+  allFolders,
+  breadcrumb,
+  currentFolderId,
   editUser,
   editRole,
   editPostType,
@@ -97,6 +101,10 @@ export default function DashboardContent({
     // Check provided permissions or fallback to auth.user.can
     return permissionsWithTimestamps.some(p => p.name === perm) || Boolean(auth?.user?.can?.(perm));
   };
+
+  // Media permissions (computed via can())
+  const canEditMedia = can('edit media');
+  const canDeleteMedia = can('delete media');
 
   // Admins or users with relevant permissions can edit post author
   const canEditAuthorFlag = can('assign posts author') || can('edit posts');
@@ -267,7 +275,26 @@ export default function DashboardContent({
         </Button>
       }
     >
-      <MediaLibrary items={asArray(media as any)} canUpload={can('upload media')} />
+      <MediaLibrary
+        items={asArray(media as any)}
+        pagination={
+          media && !Array.isArray((media as any)) && (media as any).current_page
+            ? {
+                current_page: (media as any).current_page,
+                last_page: (media as any).last_page,
+                per_page: (media as any).per_page,
+                total: (media as any).total,
+              }
+            : undefined
+        }
+        folders={asArray(folders as any)}
+        allFolders={asArray(allFolders as any)}
+        breadcrumb={asArray(breadcrumb as any)}
+        currentFolderId={currentFolderId ?? null}
+        canUpload={can('upload media')}
+        canEdit={canEditMedia}
+        canDelete={canDeleteMedia}
+      />
     </SectionWrapper>
   );
 

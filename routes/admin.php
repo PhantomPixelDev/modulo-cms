@@ -14,6 +14,7 @@ use App\Http\Controllers\Content\MenuItemController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\SitemapController as AdminSitemapController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
+use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
 use Inertia\Inertia;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
@@ -219,4 +220,18 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard/admin')->name('dashbo
     Route::post('/media/{id?}/regenerate', [AdminMediaController::class, 'regenerate'])
         ->middleware('permission:edit media')
         ->name('media.regenerate');
+    Route::post('/media/bulk', [AdminMediaController::class, 'bulk'])
+        ->middleware('permission:edit media|delete media')
+        ->name('media.bulk');
+
+    // Media folders
+    Route::post('/media/folders', [AdminMediaFolderController::class, 'store'])
+        ->middleware('permission:upload media')
+        ->name('media.folders.store');
+    Route::put('/media/folders/{bucket}', [AdminMediaFolderController::class, 'update'])
+        ->middleware('permission:edit media')
+        ->name('media.folders.update');
+    Route::delete('/media/folders/{bucket}', [AdminMediaFolderController::class, 'destroy'])
+        ->middleware('permission:delete media')
+        ->name('media.folders.destroy');
 });

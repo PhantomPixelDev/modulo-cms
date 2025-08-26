@@ -28,6 +28,8 @@ import {
   FileCode,
   FileText,
 } from 'lucide-react';
+import MediaPickerDialog from '../media/MediaPickerDialog';
+import type { MediaItem } from '../../types';
 
 // Types
 export type Align = 'left' | 'center' | 'right' | 'justify';
@@ -488,6 +490,7 @@ export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorPr
   const [value, setValue] = useState<Descendant[]>(initialValue);
   const [viewMode, setViewMode] = useState<'editor' | 'html' | 'markdown'>('editor');
   const [previewText, setPreviewText] = useState<string>('');
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
 
   useEffect(() => {
     // noop; value is managed by Slate
@@ -522,7 +525,7 @@ export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorPr
 
   return (
     <div>
-      <Toolbar editor={editor} viewMode={viewMode} onChangeViewMode={setViewMode} value={value} />
+      <Toolbar editor={editor} viewMode={viewMode} onChangeViewMode={setViewMode} value={value} onRequestImage={() => setImagePickerOpen(true)} />
       <Slate editor={editor} initialValue={initialValue} onChange={handleChange}>
         {viewMode === 'editor' ? (
           <Editable
@@ -550,11 +553,21 @@ export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorPr
           </div>
         )}
       </Slate>
+      <MediaPickerDialog
+        open={imagePickerOpen}
+        onOpenChange={setImagePickerOpen}
+        onSelect={(item: MediaItem) => {
+          if (!item?.url) return;
+          insertImage(editor, item.url);
+          setImagePickerOpen(false);
+        }}
+        type="image"
+      />
     </div>
   );
 }
 
-function Toolbar({ editor, viewMode, onChangeViewMode, value }: { editor: Editor; viewMode: 'editor' | 'html' | 'markdown'; onChangeViewMode: (m: 'editor' | 'html' | 'markdown') => void; value: Descendant[] }) {
+function Toolbar({ editor, viewMode, onChangeViewMode, value, onRequestImage }: { editor: Editor; viewMode: 'editor' | 'html' | 'markdown'; onChangeViewMode: (m: 'editor' | 'html' | 'markdown') => void; value: Descendant[]; onRequestImage: () => void }) {
   return (
     <div className="flex flex-wrap gap-1 mb-2">
       <IconBtn title="Bold" onClick={() => toggleMark(editor, 'bold')}><Bold size={16} /></IconBtn>
@@ -585,11 +598,7 @@ function Toolbar({ editor, viewMode, onChangeViewMode, value }: { editor: Editor
         wrapLink(editor, prev);
       }}><LinkIcon size={16} /></IconBtn>
       <IconBtn title="Unlink" onClick={() => unwrapLink(editor)}><Unlink size={16} /></IconBtn>
-      <IconBtn title="Image" onClick={() => {
-        const url = window.prompt('Image URL');
-        if (!url) return;
-        insertImage(editor, url);
-      }}><ImageIcon size={16} /></IconBtn>
+      <IconBtn title="Image" onClick={onRequestImage}><ImageIcon size={16} /></IconBtn>
 
       <span className="mx-2 w-px bg-gray-300" />
       <IconBtn title="Editor" onClick={() => onChangeViewMode('editor')}><Eye size={16} /></IconBtn>

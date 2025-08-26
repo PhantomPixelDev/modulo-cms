@@ -36,6 +36,17 @@ export interface Post extends BaseEntity {
   author?: User;
   post_type?: PostType;
   taxonomy_terms?: TaxonomyTerm[];
+  // Added fields used by forms and returned by backend
+  slug?: string;
+  featured_image?: string | null;
+  published_at?: string | null;
+  meta_title?: string;
+  meta_description?: string;
+  parent_id?: number | null;
+  menu_order?: number;
+  meta_data?: Record<string, any>;
+  // Used on edit screens for pre-selecting taxonomy terms
+  selected_terms?: number[];
 }
 
 export interface PostType extends BaseEntity {
@@ -98,6 +109,21 @@ export interface MediaItem extends BaseEntity {
   url: string;
   thumb?: string;
   custom_properties?: Record<string, any>;
+}
+
+export interface MediaFolder extends BaseEntity {
+  name: string;
+  slug: string;
+  path: string;
+  parent_id: number | null;
+}
+
+export interface Paginated<T> {
+  data: T[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
 }
 
 export interface Template extends BaseEntity {
@@ -175,7 +201,11 @@ export interface DashboardProps {
   widgetAreas?: Record<string, any>;
   auth: Auth;
   // Media library
-  media?: MediaItem[];
+  media?: MediaItem[] | Paginated<MediaItem>;
+  folders?: MediaFolder[];
+  allFolders?: MediaFolder[];
+  breadcrumb?: MediaFolder[];
+  currentFolderId?: number | null;
 }
 
 // Normalize paginated objects or arrays to arrays

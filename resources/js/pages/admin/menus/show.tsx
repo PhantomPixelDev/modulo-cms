@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 
 interface MenuItemDTO {
   id: number;
@@ -130,17 +131,19 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
     route_name: '',
     order: 0,
     target: '_self' as '_self' | '_blank',
+    visible_to: 'all' as 'all' | 'guest' | 'auth',
   });
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     post('/dashboard/admin/menu-items', {
       preserveScroll: true,
-      onSuccess: () => reset('label', 'url', 'parent_id', 'order'),
+      onSuccess: () => reset('label', 'url', 'page_slug', 'route_name', 'parent_id', 'order'),
     });
   };
 
   const parentOptions = [{ id: 0, label: '— Root —' }, ...allItems.map((i) => ({ id: i.id, label: i.label }))];
+  const linkType = data.route_name ? 'route' : data.page_slug ? 'page' : 'url';
 
   return (
     <form onSubmit={submit} className="space-y-3">
@@ -153,12 +156,12 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
         <label className="block text-sm mb-1">Link Type</label>
         <select
           className="w-full border rounded px-3 py-2"
-          value={data.route_name ? 'route' : data.page_slug ? 'page' : 'url'}
+          value={linkType}
           onChange={(e) => {
             const t = e.target.value as 'url' | 'page' | 'route';
             if (t === 'url') { setData('route_name', ''); setData('page_slug', ''); }
-            if (t === 'page') { setData('route_name', ''); }
-            if (t === 'route') { setData('page_slug', ''); }
+            if (t === 'page') { setData('route_name', ''); setData('url', ''); }
+            if (t === 'route') { setData('page_slug', ''); setData('url', ''); }
           }}
         >
           <option value="url">URL</option>
@@ -166,21 +169,25 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
           <option value="route">Route name</option>
         </select>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      {linkType === 'url' && (
         <div>
           <label className="block text-sm mb-1">URL</label>
-          <input className="w-full border rounded px-3 py-2" value={data.url} onChange={(e) => setData('url', e.target.value)} />
+          <input className="w-full border rounded px-3 py-2" placeholder="https://example.com/path" value={data.url} onChange={(e) => setData('url', e.target.value)} />
           {errors.url && <p className="text-sm text-red-600">{errors.url}</p>}
         </div>
+      )}
+      {linkType === 'page' && (
         <div>
           <label className="block text-sm mb-1">Page Slug</label>
-          <input className="w-full border rounded px-3 py-2" value={data.page_slug} onChange={(e) => setData('page_slug', e.target.value)} />
+          <input className="w-full border rounded px-3 py-2" placeholder="about, contact" value={data.page_slug} onChange={(e) => setData('page_slug', e.target.value)} />
         </div>
-      </div>
-      <div>
-        <label className="block text-sm mb-1">Route Name</label>
-        <input className="w-full border rounded px-3 py-2" value={data.route_name} onChange={(e) => setData('route_name', e.target.value)} />
-      </div>
+      )}
+      {linkType === 'route' && (
+        <div>
+          <label className="block text-sm mb-1">Route Name</label>
+          <input className="w-full border rounded px-3 py-2" placeholder="dashboard.admin.posts.index" value={data.route_name} onChange={(e) => setData('route_name', e.target.value)} />
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm mb-1">Order</label>
@@ -193,6 +200,14 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
             <option value="_blank">New tab</option>
           </select>
         </div>
+      </div>
+      <div>
+        <label className="block text-sm mb-1">Visible To</label>
+        <select className="w-full border rounded px-3 py-2" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
+          <option value="all">Everyone</option>
+          <option value="guest">Guests only</option>
+          <option value="auth">Authenticated users</option>
+        </select>
       </div>
       <div>
         <label className="block text-sm mb-1">Parent</label>
@@ -218,6 +233,7 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
     visible_to: (item.visible_to ?? 'all') as 'all' | 'guest' | 'auth',
     target: (item.target ?? '_self') as '_self' | '_blank',
   });
+  const [expanded, setExpanded] = useState(true);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,30 +283,53 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
     });
   }
 
+  const linkType = data.route_name ? 'route' : data.page_slug ? 'page' : 'url';
   return (
     <li className="border rounded p-3 mb-3" draggable onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop}>
-      <form onSubmit={submit} className="grid md:grid-cols-7 gap-2 items-start">
-        <input className="border rounded px-2 py-1 md:col-span-2" value={data.label} onChange={(e) => setData('label', e.target.value)} />
-        <input className="border rounded px-2 py-1 md:col-span-2" placeholder="URL" value={data.url} onChange={(e) => setData('url', e.target.value)} />
-        {/* Link helpers: choose which field to use */}
-        <select className="border rounded px-2 py-1" value={data.route_name ? 'route' : data.page_slug ? 'page' : 'url'} onChange={(e) => {
+      <div className="flex items-center gap-2 mb-2">
+        <button type="button" className="p-1 hover:bg-muted rounded" onClick={() => setExpanded((v) => !v)} aria-label={expanded ? 'Collapse' : 'Expand'}>
+          {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </button>
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">Drag to reorder within the same parent</span>
+      </div>
+      <form onSubmit={submit} className="grid md:grid-cols-6 gap-2 items-start">
+        <input className="border rounded px-2 py-1 md:col-span-2" placeholder="Label" value={data.label} onChange={(e) => setData('label', e.target.value)} />
+        <select className="border rounded px-2 py-1" value={linkType} onChange={(e) => {
           const t = e.target.value as 'url' | 'page' | 'route';
           if (t === 'url') { setData('route_name', ''); setData('page_slug', ''); }
-          if (t === 'page') { setData('route_name', ''); }
-          if (t === 'route') { setData('page_slug', ''); }
+          if (t === 'page') { setData('route_name', ''); setData('url', ''); }
+          if (t === 'route') { setData('page_slug', ''); setData('url', ''); }
         }}>
           <option value="url">URL</option>
           <option value="page">Page slug</option>
           <option value="route">Route name</option>
         </select>
+        {linkType === 'url' && (
+          <input className="border rounded px-2 py-1 md:col-span-2" placeholder="https://example.com/path" value={data.url} onChange={(e) => setData('url', e.target.value)} />
+        )}
+        {linkType === 'page' && (
+          <input className="border rounded px-2 py-1 md:col-span-2" placeholder="about, contact" value={data.page_slug} onChange={(e) => setData('page_slug', e.target.value)} />
+        )}
+        {linkType === 'route' && (
+          <input className="border rounded px-2 py-1 md:col-span-2" placeholder="dashboard.admin.posts.index" value={data.route_name} onChange={(e) => setData('route_name', e.target.value)} />
+        )}
         <input className="border rounded px-2 py-1" placeholder="Order" type="number" value={data.order ?? 0} onChange={(e) => setData('order', Number(e.target.value))} />
-        {/* Parent select */}
         <select className="border rounded px-2 py-1" value={data.parent_id ?? 0} onChange={(e) => setData('parent_id', Number(e.target.value) || null)}>
           {parentOptions.map((opt) => (
             <option key={opt.id} value={opt.id}>{opt.label}</option>
           ))}
         </select>
-        <div className="flex gap-2 justify-end">
+        <select className="border rounded px-2 py-1" value={data.target} onChange={(e) => setData('target', e.target.value as '_self' | '_blank')}>
+          <option value="_self">Same tab</option>
+          <option value="_blank">New tab</option>
+        </select>
+        <select className="border rounded px-2 py-1" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
+          <option value="all">Everyone</option>
+          <option value="guest">Guests only</option>
+          <option value="auth">Authenticated users</option>
+        </select>
+        <div className="flex gap-2 justify-end md:col-span-2">
           <Button disabled={processing} size="sm">Save</Button>
           <Button
             type="button"
@@ -304,7 +343,7 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
         </div>
       </form>
 
-      {item.children && item.children.length > 0 && (
+      {expanded && item.children && item.children.length > 0 && (
         <ul className="ml-6 mt-2">
           {item.children
             .slice()

@@ -166,3 +166,57 @@ it('denies edit/update/destroy without respective permissions', function () {
     ])->assertForbidden();
     $this->delete(route('dashboard.admin.posts.destroy', $post))->assertForbidden();
 });
+
+it('persists featured_image on create and update', function () {
+    $u = postUser(['create posts', 'edit posts']);
+    $this->actingAs($u);
+
+    $type = PostType::create([
+        'name' => 'gallery', 'label' => 'Gallery', 'plural_label' => 'Galleries',
+        'description' => null, 'route_prefix' => 'galleries',
+        'has_taxonomies' => false, 'has_featured_image' => true, 'has_excerpt' => true, 'has_comments' => false,
+        'supports' => ['title','editor'], 'taxonomies' => [], 'slug' => 'gallery',
+        'is_public' => true, 'is_hierarchical' => false, 'menu_icon' => null, 'menu_position' => 6,
+    ]);
+
+    // Create with featured_image
+    $resp = $this->post(route('dashboard.admin.posts.store'), [
+        'post_type_id' => $type->id,
+        'title' => 'With Image',
+        'slug' => null,
+        'content' => 'Body',
+        'status' => 'draft',
+        'featured_image' => 'https://cdn.test/img.jpg',
+    ]);
+    $resp->assertRedirect(route('dashboard.admin.posts.index'));
+
+    $post = Post::first();
+    expect($post)->not->toBeNull();
+    expect($post->featured_image)->toBe('https://cdn.test/img.jpg');
+
+    // Update to a new featured_image
+    $resp2 = $this->put(route('dashboard.admin.posts.update', $post), [
+        'post_type_id' => $type->id,
+        'title' => 'With Image 2',
+        'slug' => $post->slug,
+        'content' => 'Body 2',
+        'status' => 'published',
+        'featured_image' => 'https://cdn.test/img2.jpg',
+    ]);
+    $resp2->assertRedirect(route('dashboard.admin.posts.index'));
+    $post->refresh();
+    expect($post->featured_image)->toBe('https://cdn.test/img2.jpg');
+
+    // Clear featured_image
+    $resp3 = $this->put(route('dashboard.admin.posts.update', $post), [
+        'post_type_id' => $type->id,
+        'title' => 'With Image 3',
+        'slug' => $post->slug,
+        'content' => 'Body 3',
+        'status' => 'draft',
+        'featured_image' => null,
+    ]);
+    $resp3->assertRedirect(route('dashboard.admin.posts.index'));
+    $post->refresh();
+    expect($post->featured_image)->toBeNull();
+});

@@ -73,12 +73,26 @@ export const ROUTE = {
     regenerate: () => route('dashboard.admin.sitemap.regenerate'),
   },
   media: {
-    index: () => route('dashboard.admin.media.index'),
+    index: (params?: { folder_id?: number | string; q?: string; type?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number | string; perPage?: number | string }) => {
+      const p: Record<string, any> = {};
+      if (!params) return route('dashboard.admin.media.index');
+      for (const k of ['folder_id', 'q', 'type', 'sort', 'dir', 'page', 'perPage'] as const) {
+        const v = (params as any)[k];
+        if (v !== undefined && v !== null && v !== '') p[k] = v;
+      }
+      return Object.keys(p).length ? route('dashboard.admin.media.index', p) : route('dashboard.admin.media.index');
+    },
     store: () => route('dashboard.admin.media.store'),
     update: (id: number | string) => route('dashboard.admin.media.update', id),
     destroy: (id: number | string) => route('dashboard.admin.media.destroy', id),
     regenerate: (id?: number | string) =>
       id ? route('dashboard.admin.media.regenerate', id) : route('dashboard.admin.media.regenerate'),
+    bulk: () => route('dashboard.admin.media.bulk'),
+    folders: {
+      store: () => route('dashboard.admin.media.folders.store'),
+      update: (id: number | string) => route('dashboard.admin.media.folders.update', { bucket: id }),
+      destroy: (id: number | string) => route('dashboard.admin.media.folders.destroy', { bucket: id }),
+    },
   },
   misc: {
     dashboard: () => route('dashboard.admin.index'),

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import SlateEditor from './SlateEditor';
 import { Button } from '@/components/ui/button';
+import MediaPickerDialog from '../media/MediaPickerDialog';
+import type { MediaItem } from '../../types';
 
 function toDatetimeLocalStr(s?: string): string {
   if (!s) return '';
@@ -66,6 +68,9 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
     menu_order: typeof post?.menu_order === 'number' ? post.menu_order : 0,
     meta_data: (post?.meta_data && typeof post.meta_data === 'object') ? post.meta_data : {},
   });
+
+  // Media picker dialog state
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Meta data repeater hook
   const { metaPairs, setMetaPairs, updateMetaPair, removeMetaPair, toObject } = useMetaPairs(form.meta_data || {});
@@ -136,13 +141,19 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
           <p className="text-xs text-muted-foreground mt-1">Leave blank to auto-generate from title.</p>
         </div>
         <div>
-          <label className="block text-sm mb-1">Featured Image URL</label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            value={form.featured_image}
-            onChange={(e) => setForm((f) => ({ ...f, featured_image: e.target.value }))}
-            placeholder="https://..."
-          />
+          <label className="block text-sm mb-1">Featured Image</label>
+          <div className="flex gap-2">
+            <input
+              className="w-full border rounded px-3 py-2"
+              value={form.featured_image}
+              onChange={(e) => setForm((f) => ({ ...f, featured_image: e.target.value }))}
+              placeholder="https://..."
+            />
+            <Button type="button" variant="secondary" onClick={() => setPickerOpen(true)}>Choose…</Button>
+            {form.featured_image && (
+              <Button type="button" variant="outline" onClick={() => setForm((f) => ({ ...f, featured_image: '' }))}>Clear</Button>
+            )}
+          </div>
           {form.featured_image ? (
             <div className="mt-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -339,6 +350,17 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
         <Button type="submit">{isEditing ? 'Update Post' : 'Create Post'}</Button>
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
       </div>
+
+      <MediaPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onSelect={(item: MediaItem) => {
+          if (!item?.url) return;
+          setForm((f) => ({ ...f, featured_image: item.url }));
+          setPickerOpen(false);
+        }}
+        type="image"
+      />
     </form>
   );
 }

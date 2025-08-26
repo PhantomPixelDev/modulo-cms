@@ -22,7 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // Register custom middleware aliases
+        // Register middleware aliases
+        // Use custom permission middleware (supports pipe-delimited OR: 'edit media|delete media')
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
