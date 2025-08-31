@@ -105,7 +105,12 @@ class TaxonomyController extends Controller
      */
     public function show(Taxonomy $taxonomy)
     {
-        $taxonomy->load(['terms', 'terms.posts']);
+        $taxonomy->load([
+            'terms',
+            'terms.posts' => function ($q) {
+                $q->with(['author:id,name', 'postType:id,label,name']);
+            },
+        ]);
         
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies.show',

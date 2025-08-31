@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
+use App\Services\MenuService;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
@@ -31,6 +32,8 @@ class MenuController extends Controller
             'description' => 'nullable|string',
         ]);
         $menu = Menu::create($data);
+        // Invalidate cache entries for this menu
+        app(MenuService::class)->forgetMenu($menu);
         if ($request->wantsJson()) {
             return response()->json($menu, Response::HTTP_CREATED);
         }
@@ -56,7 +59,12 @@ class MenuController extends Controller
             'location' => 'nullable|string|max:50',
             'description' => 'nullable|string',
         ]);
+        $old = $menu->replicate();
         $menu->update($data);
+        $svc = app(MenuService::class);
+        // Forget by old identifiers and new ones
+        $svc->forgetMenu($old);
+        $svc->forgetMenu($menu);
         if ($request->wantsJson()) {
             return response()->json($menu);
         }
@@ -67,6 +75,8 @@ class MenuController extends Controller
     {
         // Cascade delete items
         MenuItem::where('menu_id', $menu->id)->delete();
+        // Invalidate cache entries for this menu before deletion
+        app(MenuService::class)->forgetMenu($menu);
         $menu->delete();
         if ($request->wantsJson()) {
             return response()->noContent();

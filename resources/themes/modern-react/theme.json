@@ -1,0 +1,157 @@
+{
+  "name": "Modern React",
+  "slug": "modern-react",
+  "version": "1.0.0",
+  "description": "Modern React-based theme using Inertia.js with TypeScript components and Tailwind CSS.",
+  "author": "Modulo CMS",
+  "author_url": "https://github.com/PhantomPixelDev/modulo-cms",
+  "tags": ["react", "modern", "typescript", "inertia"],
+  "template_engine": "react",
+  "supports": {
+    "post_thumbnails": true,
+    "menus": true,
+    "widgets": true,
+    "custom_logo": true,
+    "responsive": true
+  },
+  "templates": {
+    "layout": {
+      "type": "react",
+      "component": "components/Layout.tsx"
+    },
+    "header": {
+      "type": "react", 
+      "component": "components/Header.tsx"
+    },
+    "footer": {
+      "type": "react",
+      "component": "components/Footer.tsx"
+    },
+    "post": {
+      "type": "react",
+      "component": "components/Post.tsx"
+    },
+    "posts": {
+      "type": "react",
+      "component": "components/Posts.tsx"
+    },
+    "page": {
+      "type": "react",
+      "component": "components/Page.tsx"
+    },
+    "index": {
+      "type": "react",
+      "component": "components/Index.tsx"
+    },
+    "archive": {
+      "type": "react",
+      "component": "components/Archive.tsx"
+    },
+    "search": {
+      "type": "react",
+      "component": "components/Search.tsx"
+    },
+    "login": {
+      "type": "react",
+      "component": "components/Login.tsx"
+    },
+    "register": {
+      "type": "react",
+      "component": "components/Register.tsx"
+    },
+    "forgot-password": {
+      "type": "react",
+      "component": "components/ForgotPassword.tsx"
+    },
+    "reset-password": {
+      "type": "react",
+      "component": "components/ResetPassword.tsx"
+    },
+    "verify-email": {
+      "type": "react",
+      "component": "components/VerifyEmail.tsx"
+    },
+    "confirm-password": {
+      "type": "react",
+      "component": "components/ConfirmPassword.tsx"
+    },
+    "404": {
+      "type": "react",
+      "component": "components/NotFound.tsx"
+    }
+  },
+  "partials": {
+    "navigation": {
+      "type": "react",
+      "component": "components/partials/Navigation.tsx"
+    },
+    "sidebar": {
+      "type": "react", 
+      "component": "components/partials/Sidebar.tsx"
+    },
+    "post-meta": {
+      "type": "react",
+      "component": "components/partials/PostMeta.tsx"
+    },
+    "comments": {
+      "type": "react",
+      "component": "components/partials/Comments.tsx"
+    }
+  },
+  "assets": {
+    "css": [
+      "assets/css/theme.css"
+    ],
+    "js": [
+      "assets/js/theme.js"
+    ]
+  },
+  "menus": {
+    "primary": "Primary Navigation",
+    "footer": "Footer Links"
+  },
+  "widget_areas": {
+    "sidebar": "Main Sidebar",
+    "footer-1": "Footer Column 1",
+    "footer-2": "Footer Column 2",
+    "footer-3": "Footer Column 3"
+  },
+  "customizer": {
+    "colors": {
+      "primary": {
+        "label": "Primary Color",
+        "type": "color",
+        "default": "#3b82f6"
+      },
+      "secondary": {
+        "label": "Secondary Color", 
+        "type": "color",
+        "default": "#64748b"
+      }
+    },
+    "typography": {
+      "font_family": {
+        "label": "Font Family",
+        "type": "select",
+        "default": "inter",
+        "options": [
+          {"value": "inter", "label": "Inter"},
+          {"value": "roboto", "label": "Roboto"},
+          {"value": "open-sans", "label": "Open Sans"}
+        ]
+      }
+    },
+    "layout": {
+      "container_width": {
+        "label": "Container Width",
+        "type": "select", 
+        "default": "max-w-6xl",
+        "options": [
+          {"value": "max-w-4xl", "label": "Narrow"},
+          {"value": "max-w-6xl", "label": "Medium"},
+          {"value": "max-w-7xl", "label": "Wide"}
+        ]
+      }
+    }
+  }
+}

@@ -31,7 +31,7 @@ export function PageForm({ page, isEditing, onSubmit, onCancel }: PageFormProps)
         <div>
           <label className="block text-sm mb-1">Title</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
             required
@@ -40,7 +40,7 @@ export function PageForm({ page, isEditing, onSubmit, onCancel }: PageFormProps)
         <div>
           <label className="block text-sm mb-1">Status</label>
           <select
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-600 bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.status}
             onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
           >
@@ -56,7 +56,7 @@ export function PageForm({ page, isEditing, onSubmit, onCancel }: PageFormProps)
         <div>
           <label className="block text-sm mb-1">Excerpt</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.excerpt}
             onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))}
           />
@@ -64,7 +64,7 @@ export function PageForm({ page, isEditing, onSubmit, onCancel }: PageFormProps)
         <div>
           <label className="block text-sm mb-1">Slug</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.slug}
             onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
             placeholder="auto-generated if empty"
@@ -75,7 +75,7 @@ export function PageForm({ page, isEditing, onSubmit, onCancel }: PageFormProps)
       <div>
         <label className="block text-sm mb-1">Content</label>
         <textarea
-          className="w-full border rounded px-3 py-2 min-h-40"
+          className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 min-h-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={form.content}
           onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
           required

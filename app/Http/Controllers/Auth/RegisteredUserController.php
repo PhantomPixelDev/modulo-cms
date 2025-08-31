@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisteredUserRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\ReactTemplateRenderer;
 
 class RegisteredUserController extends Controller
 {
@@ -21,6 +22,16 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
+        // Try themed React register if available
+        try {
+            /** @var ReactTemplateRenderer $renderer */
+            $renderer = app(ReactTemplateRenderer::class);
+            if ($renderer->isReactTheme() && $renderer->canRender('register')) {
+                return $renderer->render('register');
+            }
+        } catch (\Throwable $e) {
+            // Fallback to default page rendering below
+        }
         return Inertia::render('auth/register');
     }
 
@@ -29,18 +40,13 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): SymfonyResponse
+    public function store(RegisteredUserRequest $request): SymfonyResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
-
+        $data = $request->validated();
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
         ]);
 
         event(new Registered($user));

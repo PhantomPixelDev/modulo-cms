@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Services\TemplateRenderingService;
+use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Schema;
@@ -14,10 +15,20 @@ use App\Models\TaxonomyTerm;
 class FrontendController extends Controller
 {
     protected $templateService;
+    protected $reactRenderer;
 
-    public function __construct(TemplateRenderingService $templateService)
+    public function __construct(TemplateRenderingService $templateService, ReactTemplateRenderer $reactRenderer)
     {
         $this->templateService = $templateService;
+        $this->reactRenderer = $reactRenderer;
+    }
+
+    /**
+     * Check if we should use React rendering
+     */
+    protected function shouldUseReact(): bool
+    {
+        return $this->reactRenderer->isReactTheme();
     }
 
     /**
@@ -77,13 +88,27 @@ class FrontendController extends Controller
             return Inertia::render('welcome');
         }
 
-        // Fetch latest public content for the index template
-        $posts = Post::with(['postType', 'author'])
+        // Fetch latest posts (not pages) for the index template
+        $posts = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
             ->published()
+            ->whereHas('postType', function($query) {
+                $query->where('route_prefix', '!=', '')
+                      ->whereNotNull('route_prefix');
+            })
             ->orderBy('published_at', 'desc')
             ->paginate(12);
 
-        // If use_template=true (or a theme index exists), render through the theme system
+        // Try React template first if active theme is React
+        if ($this->shouldUseReact() && $this->reactRenderer->canRender('index')) {
+            return $this->reactRenderer->render('index', [
+                'posts' => [
+                    'data' => $this->transformPostsForReact($posts)->toArray()
+                ],
+                'pagination' => $this->transformPaginationForReact($posts),
+            ]);
+        }
+
+        // Fallback to Blade theme templates
         $rendered = $this->templateService->renderIndex($posts, null, [
             'title' => config('app.name'),
             'site_name' => config('app.name'),
@@ -196,7 +221,17 @@ class FrontendController extends Controller
         $template = $template ?? ($isPage ? 'frontend/page' : 'frontend/post');
         $dataKey = $dataKey ?? ($isPage ? 'page' : 'post');
 
-        // Always try theme templates first; fallback to Inertia if not available
+        // Try React template first if active theme is React
+        if ($this->shouldUseReact()) {
+            $templateName = $isPage ? 'page' : 'post';
+            if ($this->reactRenderer->canRender($templateName)) {
+                return $this->reactRenderer->render($templateName, [
+                    $dataKey => $this->transformPostForReact($content),
+                ]);
+            }
+        }
+
+        // Fallback to Blade theme templates
         if ($isPage) {
             $renderedContent = $this->templateService->renderPage($content);
         } else {
@@ -259,7 +294,7 @@ class FrontendController extends Controller
             'queryType' => $request->get('type'),
         ]);
 
-        $query = Post::with(['postType', 'author', 'taxonomyTerms'])
+        $query = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
             ->published()
             ->orderBy('published_at', 'desc');
 
@@ -344,7 +379,21 @@ class FrontendController extends Controller
         }
         \Log::info('listPosts:uiMeta', [ 'basePath' => $basePath, 'pageTitle' => $pageTitle ]);
 
-        // Try rendering via active theme using TemplateRenderingService
+        // Try React template first if active theme is React
+        if ($this->shouldUseReact()) {
+            // Use 'index' template for post listings, fallback to 'posts'
+            $templateName = $this->reactRenderer->canRender('index') ? 'index' : 'posts';
+            if ($this->reactRenderer->canRender($templateName)) {
+                return $this->reactRenderer->render($templateName, [
+                    'posts' => [
+                        'data' => $this->transformPostsForReact($posts)->toArray()
+                    ],
+                    'pagination' => $this->transformPaginationForReact($posts),
+                ]);
+            }
+        }
+
+        // Fallback to Blade theme templates
         $rendered = $this->templateService->renderIndex($posts, $postType, [
             'title' => $pageTitle,
             'description' => $postType?->description ?? '',
@@ -406,5 +455,85 @@ class FrontendController extends Controller
             'showFilters' => false,
             'postTypes' => PostType::where('is_public', true)->get(['id', 'name', 'label', 'slug', 'route_prefix']),
         ]);
+    }
+
+    /**
+     * Transform posts collection for React components
+     */
+    protected function transformPostsForReact($posts)
+    {
+        return $posts->getCollection()->map(function ($post) {
+            return $this->transformPostForReact($post);
+        });
+    }
+
+    /**
+     * Transform single post for React components
+     */
+    protected function transformPostForReact($post): array
+    {
+        return [
+            'id' => $post->id ?? 0,
+            'title' => $post->title ?? '',
+            'slug' => $post->slug ?? '',
+            'content' => $post->content ?? '',
+            'excerpt' => $post->excerpt ?? '',
+            'featured_image' => $post->featured_image,
+            'published_at' => $post->published_at ? $post->published_at->toISOString() : now()->toISOString(),
+            'updated_at' => $post->updated_at ? $post->updated_at->toISOString() : now()->toISOString(),
+            'meta_title' => $post->meta_title,
+            'meta_description' => $post->meta_description,
+            'author' => $post->author ? [
+                'id' => $post->author->id,
+                'name' => $post->author->name ?? 'Unknown',
+                'email' => $post->author->email ?? '',
+            ] : [
+                'id' => 0,
+                'name' => 'Unknown',
+                'email' => '',
+            ],
+            'post_type' => $post->postType ? [
+                'id' => $post->postType->id,
+                'name' => $post->postType->name ?? 'post',
+                'label' => $post->postType->label ?? 'Post',
+                'slug' => $post->postType->slug ?? 'post',
+                'route_prefix' => $post->postType->route_prefix ?? 'posts',
+            ] : [
+                'id' => 0,
+                'name' => 'post',
+                'label' => 'Post',
+                'slug' => 'post',
+                'route_prefix' => 'posts',
+            ],
+            'terms' => $post->taxonomyTerms ? $post->taxonomyTerms->map(function ($term) {
+                return [
+                    'id' => $term->id ?? 0,
+                    'name' => $term->name ?? '',
+                    'slug' => $term->slug ?? '',
+                    'taxonomy' => $term->taxonomy ? [
+                        'name' => $term->taxonomy->name ?? '',
+                        'label' => $term->taxonomy->label ?? '',
+                    ] : [
+                        'name' => '',
+                        'label' => '',
+                    ],
+                ];
+            })->toArray() : [],
+        ];
+    }
+
+    /**
+     * Transform pagination for React components
+     */
+    protected function transformPaginationForReact($posts): array
+    {
+        return [
+            'current_page' => $posts->currentPage(),
+            'last_page' => $posts->lastPage(),
+            'per_page' => $posts->perPage(),
+            'total' => $posts->total(),
+            'prev_page_url' => $posts->previousPageUrl(),
+            'next_page_url' => $posts->nextPageUrl(),
+        ];
     }
 }

@@ -538,7 +538,7 @@ export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorPr
         ) : (
           <div className="min-h-40">
             <textarea
-              className="w-full h-40 border rounded p-2 font-mono text-sm"
+              className="w-full h-40 border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded p-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={previewText}
               onChange={(e) => setPreviewText(e.target.value)}
               onBlur={() => {

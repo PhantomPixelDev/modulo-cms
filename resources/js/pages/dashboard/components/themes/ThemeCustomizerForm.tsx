@@ -51,7 +51,7 @@ export function ThemeCustomizerForm({
                 <label htmlFor={`cz_${key}`} className="text-sm font-medium">{label}</label>
                 <div className="md:col-span-2">
                   {options ? (
-                    <select id={`cz_${key}`} name={key} defaultValue={String(value)} className="w-full border rounded px-3 py-2 bg-background">
+                    <select id={`cz_${key}`} name={key} defaultValue={String(value)} className="w-full border border-gray-600 bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                       {options.map((opt: any) => (
                         <option key={String(opt?.value ?? opt)} value={String(opt?.value ?? opt)}>{String(opt?.label ?? opt)}</option>
                       ))}
@@ -59,9 +59,9 @@ export function ThemeCustomizerForm({
                   ) : type === 'color' ? (
                     <input id={`cz_${key}`} name={key} defaultValue={String(value)} type="color" className="h-9 w-16 p-1 border rounded" />
                   ) : type === 'textarea' ? (
-                    <textarea id={`cz_${key}`} name={key} defaultValue={String(value)} className="w-full border rounded px-3 py-2 bg-background" rows={4} />
+                    <textarea id={`cz_${key}`} name={key} defaultValue={String(value)} className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" rows={4} />
                   ) : (
-                    <input id={`cz_${key}`} name={key} defaultValue={String(value)} type={type} className="w-full border rounded px-3 py-2 bg-background" />
+                    <input id={`cz_${key}`} name={key} defaultValue={String(value)} type={type} className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   )}
                 </div>
               </div>

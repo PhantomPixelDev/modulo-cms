@@ -96,7 +96,7 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
         <div>
           <label className="block text-sm mb-1">Title</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.title}
             onChange={(e) => {
               const title = e.target.value;
@@ -113,7 +113,7 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
         <div>
           <label className="block text-sm mb-1">Post Type</label>
           <select
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-600 bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.post_type_id}
             onChange={(e) => setForm((f) => ({ ...f, post_type_id: Number(e.target.value) }))}
             required
@@ -130,7 +130,7 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
           <label className="block text-sm mb-1">Slug</label>
           <div className="flex gap-2">
             <input
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={form.slug}
               onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
               onBlur={(e) => setForm((f) => ({ ...f, slug: slugify(e.target.value || f.title) }))}
@@ -144,7 +144,7 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
           <label className="block text-sm mb-1">Featured Image</label>
           <div className="flex gap-2">
             <input
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={form.featured_image}
               onChange={(e) => setForm((f) => ({ ...f, featured_image: e.target.value }))}
               placeholder="https://..."
@@ -168,7 +168,7 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
         <div>
           <label className="block text-sm mb-1">Status</label>
           <select
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-600 bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.status}
             onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
           >
@@ -181,7 +181,7 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
         <div>
           <label className="block text-sm mb-1">Excerpt</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.excerpt}
             onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))}
           />
@@ -301,7 +301,7 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
         <div>
           <label className="block text-sm mb-1">Meta Title</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.meta_title}
             onChange={(e) => setForm((f) => ({ ...f, meta_title: e.target.value }))}
           />
@@ -309,7 +309,7 @@ export function PostForm({ post, postTypes = [], groupedTerms = {}, authors = []
         <div>
           <label className="block text-sm mb-1">Meta Description</label>
           <textarea
-            className="w-full border rounded px-3 py-2 min-h-20"
+            className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 min-h-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.meta_description}
             onChange={(e) => setForm((f) => ({ ...f, meta_description: e.target.value }))}
           />

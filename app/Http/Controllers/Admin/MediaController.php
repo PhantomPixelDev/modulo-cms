@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MediaUploadRequest;
 use App\Models\MediaBucket;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -177,7 +178,7 @@ class MediaController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(MediaUploadRequest $request)
     {
         $this->authorizeUpload();
 
@@ -185,14 +186,39 @@ class MediaController extends Controller
             return back()->with('error', 'Media library package not installed yet.');
         }
 
-        $request->validate([
-            'file' => 'required|file|max:20480', // 20MB
-            'folder_id' => 'nullable|integer|exists:media_buckets,id',
-        ]);
+        $data = $request->validated();
+        $uploaded = $request->file('file');
+
+        // Extra safety: validate image dimensions and megapixels for raster images (exclude SVG)
+        if ($uploaded && str_starts_with((string) $uploaded->getMimeType(), 'image/') && $uploaded->getMimeType() !== 'image/svg+xml') {
+            $real = $uploaded->getRealPath();
+            if ($real && @is_file($real)) {
+                $info = @getimagesize($real);
+                if ($info && is_array($info)) {
+                    $w = (int) ($info[0] ?? 0);
+                    $h = (int) ($info[1] ?? 0);
+                    // Hard caps
+                    $maxW = (int) env('MAX_IMAGE_WIDTH', 10000); // 10k px
+                    $maxH = (int) env('MAX_IMAGE_HEIGHT', 10000);
+                    $maxMP = (int) env('MAX_IMAGE_MEGAPIXELS', 60); // 60 MP
+                    if ($w <= 0 || $h <= 0 || $w > $maxW || $h > $maxH || (($w * $h) > ($maxMP * 1000000))) {
+                        return back()->with('error', 'Image dimensions exceed allowed limits.');
+                    }
+                }
+            }
+        }
+
+        // Basic SVG safety: reject if contains script tags
+        if ($uploaded && $uploaded->getMimeType() === 'image/svg+xml') {
+            $contents = @file_get_contents($uploaded->getRealPath());
+            if ($contents !== false && preg_match('/<\s*script/i', $contents)) {
+                return back()->with('error', 'Unsafe SVG content detected.');
+            }
+        }
 
         $bucket = null;
-        if ($request->filled('folder_id')) {
-            $bucket = MediaBucket::find($request->integer('folder_id'));
+        if (!empty($data['folder_id'])) {
+            $bucket = MediaBucket::find((int) $data['folder_id']);
         }
         if (!$bucket) {
             $bucket = MediaBucket::firstOrCreate(['name' => 'default', 'parent_id' => null]);

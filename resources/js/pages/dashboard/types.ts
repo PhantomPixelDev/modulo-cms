@@ -208,6 +208,40 @@ export interface DashboardProps {
   currentFolderId?: number | null;
 }
 
+// Post Type List Item
+export interface PostTypeListItem {
+  id: number;
+  name: string;
+  label: string;
+  route_prefix: string;
+}
+
+// Taxonomy List Item
+export interface TaxonomyListItem {
+  id: number;
+  name: string;
+  label: string;
+}
+
+// Page List Item
+export interface PageListItem {
+  id: number;
+  title: string;
+  status: string;
+  author?: { name: string };
+  created_at: string;
+}
+
+// Post List Item
+export interface PostListItem {
+  id: number;
+  title: string;
+  status: string;
+  post_type?: { label: string; name: string };
+  author?: { name: string };
+  created_at: string;
+}
+
 // Normalize paginated objects or arrays to arrays
 export function asArray<T>(val?: T[] | { data: T[] } | null): T[] {
   if (!val) return [];

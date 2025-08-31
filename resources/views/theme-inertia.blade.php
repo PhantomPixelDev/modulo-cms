@@ -11,32 +11,9 @@
     @vite('resources/js/app.tsx')
     @inertiaHead
 
-    @php
-      // Pull active theme assets via the same mechanism TemplateRenderingService uses
+      @php
+      // Pull active theme assets via ThemeManager so React themes can include their CSS/JS
       $themeAssets = app(\App\Services\ThemeManager::class)->getAssets();
-      // Build header/footer variables expected by theme partials
-      $menuService = app(\App\Services\MenuService::class);
-      // Header navigation (optional)
-      try {
-        $primaryMenu = $menuService->getMenuByLocation('primary');
-        $navigation_menu = $menuService->renderMenuHtml($primaryMenu, [
-          'id' => 'primary-menu',
-          'class' => 'menu',
-          'wrap' => false,
-        ]);
-      } catch (\Throwable $e) {
-        $navigation_menu = '';
-      }
-      // Footer links (required by footer partial)
-      try {
-        $footerMenu = $menuService->getMenuByLocation('footer');
-        $footer_links = $menuService->renderMenuHtml($footerMenu, [
-          'class' => 'menu',
-          'wrap' => false,
-        ]);
-      } catch (\Throwable $e) {
-        $footer_links = '';
-      }
     @endphp
 
     @if(isset($themeAssets['css']))
@@ -45,14 +22,8 @@
       @endforeach
     @endif
   </head>
-  <body class="flexia-theme">
-    @includeIf('themes::flexia.templates.header')
-
-    <main id="main" class="container p-6" role="main">
-      @inertia
-    </main>
-
-    @includeIf('themes::flexia.partials.footer')
+  <body>
+    @inertia
 
     @if(isset($themeAssets['js']))
       @foreach($themeAssets['js'] as $js)

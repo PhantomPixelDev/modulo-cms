@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TaxonomyTerm;
 use App\Models\Taxonomy;
 use Illuminate\Http\Request;
+use App\Http\Requests\TaxonomyTermRequest;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 
@@ -78,28 +79,12 @@ class TaxonomyTermController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(TaxonomyTermRequest $request)
     {
-        $request->validate([
-            'taxonomy_id' => 'required|exists:taxonomies,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:taxonomy_terms,id',
-            'term_order' => 'integer|min:0|max:10000',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-        ]);
-
-        TaxonomyTerm::create([
-            'taxonomy_id' => $request->taxonomy_id,
-            'name' => $request->name,
-            'slug' => $this->makeUniqueSlug($request->name, (int) $request->taxonomy_id),
-            'description' => $request->description,
-            'parent_id' => $request->parent_id,
-            'term_order' => $request->term_order ?? 0,
-            'meta_title' => $request->meta_title,
-            'meta_description' => $request->meta_description,
-        ]);
+        $data = $request->validated();
+        $data['slug'] = $this->makeUniqueSlug($data['name'], (int) $data['taxonomy_id']);
+        $data['term_order'] = $data['term_order'] ?? 0;
+        TaxonomyTerm::create($data);
 
         return redirect()->route('dashboard.admin.taxonomy-terms.index')->with('success', 'Taxonomy term created successfully.');
     }
@@ -109,7 +94,14 @@ class TaxonomyTermController extends Controller
      */
     public function show(TaxonomyTerm $taxonomyTerm)
     {
-        $taxonomyTerm->load(['taxonomy', 'parent', 'children', 'posts']);
+        $taxonomyTerm->load([
+            'taxonomy',
+            'parent',
+            'children',
+            'posts' => function ($q) {
+                $q->with(['author:id,name', 'postType:id,label,name']);
+            },
+        ]);
         
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomy-terms.show',
@@ -150,28 +142,12 @@ class TaxonomyTermController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, TaxonomyTerm $taxonomyTerm)
+    public function update(TaxonomyTermRequest $request, TaxonomyTerm $taxonomyTerm)
     {
-        $request->validate([
-            'taxonomy_id' => 'required|exists:taxonomies,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:taxonomy_terms,id',
-            'term_order' => 'integer|min:0|max:10000',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-        ]);
-
-        $taxonomyTerm->update([
-            'taxonomy_id' => $request->taxonomy_id,
-            'name' => $request->name,
-            'slug' => $this->makeUniqueSlug($request->name, (int) $request->taxonomy_id, $taxonomyTerm->id),
-            'description' => $request->description,
-            'parent_id' => $request->parent_id,
-            'term_order' => $request->term_order ?? 0,
-            'meta_title' => $request->meta_title,
-            'meta_description' => $request->meta_description,
-        ]);
+        $data = $request->validated();
+        $data['slug'] = $this->makeUniqueSlug($data['name'], (int) $data['taxonomy_id'], $taxonomyTerm->id);
+        $data['term_order'] = $data['term_order'] ?? 0;
+        $taxonomyTerm->update($data);
 
         return redirect()->route('dashboard.admin.taxonomy-terms.index')->with('success', 'Taxonomy term updated successfully.');
     }

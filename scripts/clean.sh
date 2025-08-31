@@ -47,7 +47,7 @@ fi
 
 # 2) Frontend/Vite/TypeScript caches
 cyan "-- Frontend: removing Vite/TS caches and build output"
-rmrf node_modules/.vite
+rmrf .vite
 rmrf .vite
 rmrf .cache
 rmrf .eslintcache

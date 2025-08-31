@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             ExampleContentSeeder::class,
             NewsSeeder::class,
             MenuSeeder::class,
+            MediaSeeder::class,
         ]);
 
         // Seed dev user accounts if the seeder exists (guard against missing class)

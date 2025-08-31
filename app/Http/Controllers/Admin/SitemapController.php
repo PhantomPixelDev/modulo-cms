@@ -7,6 +7,7 @@ use App\Models\PostType;
 use App\Models\SitemapSetting;
 use App\Services\SitemapBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -40,6 +41,10 @@ class SitemapController extends Controller
         $settings = (new SitemapBuilder())->getSettings();
         $settings->fill($data);
         $settings->save();
+
+        // Invalidate cached settings/xml so UI uses fresh values
+        Cache::forget('sitemap.settings');
+        Cache::forget('sitemap.xml');
 
         return back()->with('success', 'Sitemap settings updated');
     }

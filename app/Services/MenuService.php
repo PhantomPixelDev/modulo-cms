@@ -5,21 +5,62 @@ namespace App\Services;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class MenuService
 {
+    public static function keyForLocation(string $location): string
+    {
+        return 'menu:location:' . $location;
+    }
+
+    public static function keyForSlug(string $slug): string
+    {
+        return 'menu:slug:' . $slug;
+    }
+
     public function getMenuByLocation(string $location): ?Menu
     {
-        return Menu::with(['items.children'])
-            ->where('location', $location)
-            ->first();
+        $key = self::keyForLocation($location);
+        return Cache::remember($key, 300, function () use ($location) {
+            return Menu::with(['items.children'])
+                ->where('location', $location)
+                ->first();
+        });
     }
 
     public function getMenuBySlug(string $slug): ?Menu
     {
-        return Menu::with(['items.children'])
-            ->where('slug', $slug)
-            ->first();
+        $key = self::keyForSlug($slug);
+        return Cache::remember($key, 300, function () use ($slug) {
+            return Menu::with(['items.children'])
+                ->where('slug', $slug)
+                ->first();
+        });
+    }
+
+    /**
+     * Forget cache entries for a specific menu by its known identifiers.
+     */
+    public function forgetMenu(?Menu $menu): void
+    {
+        if (!$menu) return;
+        if (!empty($menu->slug)) {
+            Cache::forget(self::keyForSlug((string) $menu->slug));
+        }
+        if (!empty($menu->location)) {
+            Cache::forget(self::keyForLocation((string) $menu->location));
+        }
+    }
+
+    public function forgetBySlug(string $slug): void
+    {
+        Cache::forget(self::keyForSlug($slug));
+    }
+
+    public function forgetByLocation(string $location): void
+    {
+        Cache::forget(self::keyForLocation($location));
     }
 
     public function renderMenuHtml(?Menu $menu, array $options = []): string

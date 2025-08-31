@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\ReactTemplateRenderer;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -19,6 +20,19 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(Request $request): Response
     {
+        // Try themed React login if available
+        try {
+            /** @var ReactTemplateRenderer $renderer */
+            $renderer = app(ReactTemplateRenderer::class);
+            if ($renderer->isReactTheme() && $renderer->canRender('login')) {
+                return $renderer->render('login', [
+                    'canResetPassword' => Route::has('password.request'),
+                    'status' => $request->session()->get('status'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Fallback to default page rendering below
+        }
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),

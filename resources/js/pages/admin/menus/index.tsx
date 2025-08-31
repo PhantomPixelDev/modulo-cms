@@ -53,22 +53,22 @@ export default function AdminMenusIndex() {
           <form onSubmit={submit} className="space-y-3">
             <div>
               <label className="block text-sm mb-1">Name</label>
-              <input className="w-full border rounded px-3 py-2" value={data.name} onChange={(e) => setData('name', e.target.value)} />
+              <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.name} onChange={(e) => setData('name', e.target.value)} />
               {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm mb-1">Slug</label>
-              <input className="w-full border rounded px-3 py-2" value={data.slug} onChange={(e) => setData('slug', e.target.value)} />
+              <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.slug} onChange={(e) => setData('slug', e.target.value)} />
               {errors.slug && <p className="text-sm text-red-600">{errors.slug}</p>}
             </div>
             <div>
               <label className="block text-sm mb-1">Location (optional)</label>
-              <input className="w-full border rounded px-3 py-2" value={data.location} onChange={(e) => setData('location', e.target.value)} />
+              <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.location} onChange={(e) => setData('location', e.target.value)} />
               {errors.location && <p className="text-sm text-red-600">{errors.location}</p>}
             </div>
             <div>
               <label className="block text-sm mb-1">Description (optional)</label>
-              <textarea className="w-full border rounded px-3 py-2" value={data.description} onChange={(e) => setData('description', e.target.value)} />
+              <textarea className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.description} onChange={(e) => setData('description', e.target.value)} />
               {errors.description && <p className="text-sm text-red-600">{errors.description}</p>}
             </div>
             <Button disabled={processing}>Create</Button>

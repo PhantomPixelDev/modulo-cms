@@ -100,7 +100,22 @@ class Theme extends Model
 
         // Prefer explicit mapping from theme.json stored in DB
         if (isset($templates[$template])) {
-            return $this->full_path . '/' . $templates[$template];
+            $templateConfig = $templates[$template];
+            
+            // Handle React template configuration (array format)
+            if (is_array($templateConfig)) {
+                if ($this->template_engine === 'react' && isset($templateConfig['component'])) {
+                    return $templateConfig['component']; // Return component name for React
+                }
+                if (isset($templateConfig['path'])) {
+                    return $this->full_path . '/' . $templateConfig['path'];
+                }
+            }
+            
+            // Handle Blade template configuration (string format)
+            if (is_string($templateConfig)) {
+                return $this->full_path . '/' . $templateConfig;
+            }
         }
 
         // Fallback: conventional location inside templates directory

@@ -31,7 +31,7 @@ Route::get('/categories/{slug}', [\App\Http\Controllers\FrontendController::clas
     ->where('slug', '[a-zA-Z0-9\-_]+');
 
 // Public API endpoints for menus (place before dynamic catch-all)
-Route::prefix('api/menus')->group(function () {
+Route::prefix('api/menus')->middleware('throttle:api')->group(function () {
     Route::get('slug/{slug}', [MenuApiController::class, 'showBySlug'])->name('api.menus.slug');
     Route::get('location/{location}', [MenuApiController::class, 'showByLocation'])->name('api.menus.location');
 });

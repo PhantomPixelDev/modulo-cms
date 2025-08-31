@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\NewPasswordRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +15,7 @@ use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\ReactTemplateRenderer;
 
 class NewPasswordController extends Controller
 {
@@ -22,6 +24,19 @@ class NewPasswordController extends Controller
      */
     public function create(Request $request): Response
     {
+        // Try themed React reset-password if available
+        try {
+            /** @var ReactTemplateRenderer $renderer */
+            $renderer = app(ReactTemplateRenderer::class);
+            if ($renderer->isReactTheme() && $renderer->canRender('reset-password')) {
+                return $renderer->render('reset-password', [
+                    'email' => $request->email,
+                    'token' => $request->route('token'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Fallback to default page rendering below
+        }
         return Inertia::render('auth/reset-password', [
             'email' => $request->email,
             'token' => $request->route('token'),
@@ -33,22 +48,18 @@ class NewPasswordController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(NewPasswordRequest $request): RedirectResponse
     {
-        $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        $data = $request->validated();
 
         // Here we will attempt to reset the user's password. If it is successful we
         // will update the password on an actual user model and persist it to the
         // database. Otherwise we will parse the error and return the response.
         $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user) use ($request) {
+            $data,
+            function (User $user) use ($data) {
                 $user->forceFill([
-                    'password' => Hash::make($request->password),
+                    'password' => Hash::make($data['password']),
                     'remember_token' => Str::random(60),
                 ])->save();
 

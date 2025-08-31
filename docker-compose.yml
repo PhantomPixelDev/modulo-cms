@@ -10,7 +10,7 @@ services:
       context: .
       target: development
       args:
-        NODE_VERSION: 22
+        BUN_VERSION: latest
         PHP_VERSION: 8.4
     labels:
       - purpose=development-only
@@ -21,12 +21,13 @@ services:
     volumes:
       - ./env.development:/var/www/html/.env:z,ro
       - ./:/var/www/html:z,cached
-      - node_modules_app:/var/www/html/node_modules
+      - bun_modules_app:/var/www/html/node_modules
       - storage_data:/var/www/html/storage
       - cache_data:/var/www/html/bootstrap/cache
+      - media_uploads:/var/www/html/storage/app/public
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -34,12 +35,13 @@ services:
 
   vite:
     container_name: modulo-cms-vite
-    image: node:22-alpine3.20
+    image: oven/bun:latest
+    user: root
     labels:
       - purpose=development-only
     environment:
       - VITE_DEV_SERVER_URL=http://vite:5173
-    command: sh -lc 'npm ci --prefer-offline --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort'
+    command: sh -lc 'chown -R 1000:1000 /var/www/html/node_modules && bun install --frozen-lockfile --no-cache && bun run dev -- --host 0.0.0.0 --port 5173 --strictPort'
     ports:
       - "5173:5173"
     expose:
@@ -48,12 +50,12 @@ services:
     volumes:
       - ./env.development:/var/www/html/.env:z,ro
       - ./:/var/www/html:z,cached
-      - node_modules_vite:/var/www/html/node_modules
+      - bun_modules_vite:/var/www/html/node_modules
     restart: unless-stopped
-    user: "1000:1000"
 
 volumes:
-  node_modules_app:
-  node_modules_vite:
+  bun_modules_app:
+  bun_modules_vite:
   storage_data:
   cache_data:
+  media_uploads:

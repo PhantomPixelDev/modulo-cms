@@ -12,36 +12,27 @@
 # are NOT used by the default docker-compose.
 
 # Global args for version pinning
-ARG NODE_VERSION=22
 ARG PHP_VERSION=8.4
 ARG ALPINE_VERSION=3.20
 
-# Stage 1: Node.js build stage for frontend assets
-FROM node:${NODE_VERSION}-alpine AS frontend-builder
-
-# Security: Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+# Stage 1: Bun build stage for frontend assets
+FROM oven/bun:latest AS frontend-builder
 
 WORKDIR /app
 
 # Copy package files first for better layer caching
-COPY --chown=nextjs:nodejs package*.json ./
-COPY --chown=nextjs:nodejs tsconfig.json vite.config.ts components.json eslint.config.js ./
+COPY package*.json bun.lock ./
+COPY tsconfig.json vite.config.ts components.json ./
 
-# Switch to non-root user
-USER nextjs
-
-# Install dependencies with cache mount
-RUN --mount=type=cache,target=/home/nextjs/.npm,uid=1001,gid=1001 \
-    npm ci --prefer-offline --no-audit --no-fund --ignore-scripts
+# Install dependencies with Bun
+RUN bun install --frozen-lockfile --no-cache
 
 # Copy source code
-COPY --chown=nextjs:nodejs resources/ ./resources/
-COPY --chown=nextjs:nodejs public/ ./public/
+COPY resources/ ./resources/
+COPY public/ ./public/
 
 # Build frontend assets
-RUN npm run build
+RUN bun run build
 
 # Stage 2: PHP production base
 FROM php:${PHP_VERSION}-fpm-alpine AS php-base
@@ -136,6 +127,9 @@ COPY --chown=app:app . .
 # Copy built frontend assets from frontend-builder stage
 COPY --from=frontend-builder --chown=app:app /app/public/build ./public/build
 
+# Ensure Bun is available in the final image
+COPY --from=frontend-builder /usr/local/bin/bun /usr/local/bin/bun
+
 # Switch back to root for system configuration
 USER root
 
@@ -168,34 +162,40 @@ FROM php-base AS development
 # Switch to root for package installation
 USER root
 
-# Install development tools and Node.js
+# Install development tools
 RUN apk add --no-cache \
-        nodejs \
-        npm \
         bash \
         vim \
-        htop && \
+        htop \
+        curl \
+        unzip \
+        nodejs \
+        npm && \
     rm -rf /var/cache/apk/*
 
 # Install development PHP dependencies as root to avoid permission issues
 RUN --mount=type=cache,target=/tmp/composer-cache \
     composer install --optimize-autoloader --no-interaction --no-scripts
 
-# Copy Node.js dependencies
+# Install dependencies with npm (fallback from Bun for Docker compatibility)
 COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    npm install --prefer-offline --no-audit --no-fund
+    npm ci --only=production
 
 # Fix permissions for Laravel directories
 RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views \
-             bootstrap/cache database && \
-    chmod -R 777 storage bootstrap/cache database && \
-    chown -R www-data:www-data storage bootstrap/cache database
+             bootstrap/cache database public/themes storage/app/public && \
+    chmod -R 777 storage bootstrap/cache database public/themes && \
+    chown -R www-data:www-data storage bootstrap/cache database public/themes
 
 # Development environment variables
 ENV APP_ENV=local \
     APP_DEBUG=true \
     PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
 
+# Create entrypoint script for development
+COPY docker/entrypoint-dev.sh /entrypoint-dev.sh
+RUN chmod +x /entrypoint-dev.sh
+
 # Override CMD for development - run as root to avoid permission issues
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["/entrypoint-dev.sh"]

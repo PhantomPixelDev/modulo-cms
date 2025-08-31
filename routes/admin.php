@@ -12,7 +12,7 @@ use App\Http\Controllers\Content\PagesController;
 use App\Http\Controllers\Content\MenuController;
 use App\Http\Controllers\Content\MenuItemController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\SitemapController as AdminSitemapController;
+use App\Http\Controllers\Admin\SitemapController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
 use Inertia\Inertia;
@@ -194,13 +194,13 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard/admin')->name('dashbo
     Route::delete('/menu-items/{menuItem}', [MenuItemController::class, 'destroy'])->middleware('permission:delete menu items')->name('menu-items.destroy');
 
     // Sitemap management
-    Route::get('/sitemap', [AdminSitemapController::class, 'index'])
+    Route::get('/sitemap', [SitemapController::class, 'index'])
         ->middleware('permission:view settings')
         ->name('sitemap.index');
-    Route::put('/sitemap', [AdminSitemapController::class, 'update'])
+    Route::put('/sitemap', [SitemapController::class, 'update'])
         ->middleware('permission:edit settings')
         ->name('sitemap.update');
-    Route::post('/sitemap/regenerate', [AdminSitemapController::class, 'regenerate'])
+    Route::post('/sitemap/regenerate', [SitemapController::class, 'regenerate'])
         ->middleware('permission:edit settings')
         ->name('sitemap.regenerate');
 

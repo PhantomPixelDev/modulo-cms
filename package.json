@@ -11,13 +11,12 @@
         "types": "tsc --noEmit",
         "clean": "bash scripts/clean.sh",
         "clean:php": "bash -lc 'php artisan optimize:clear && php artisan cache:clear && php artisan view:clear || true'",
-        "clean:frontend": "bash -lc 'rm -rf node_modules/.vite .vite public/build tsconfig.tsbuildinfo resources/js/*.tsbuildinfo .eslintcache'",
+        "clean:frontend": "bash -lc 'rm -rf .vite public/build tsconfig.tsbuildinfo resources/js/*.tsbuildinfo .eslintcache'",
         "build:flexia": "sass --no-source-map --style=compressed resources/themes/flexia/assets/scss/main.scss resources/themes/flexia/assets/css/style.min.css"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
         "@types/autoprefixer": "^10.2.4",
-        "@types/node": "^22.13.5",
         "autoprefixer": "^10.4.21",
         "eslint": "^9.17.0",
         "eslint-config-prettier": "^10.0.1",

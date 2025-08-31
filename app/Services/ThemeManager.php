@@ -12,10 +12,12 @@ class ThemeManager
 {
     protected string $themesPath;
     protected ?Theme $activeTheme = null;
+    protected int $ttl;
 
     public function __construct()
     {
         $this->themesPath = resource_path('themes');
+        $this->ttl = (int) env('THEME_CACHE_TTL', 3600);
     }
 
     /**
@@ -29,7 +31,7 @@ class ThemeManager
                 return null;
             }
 
-            $this->activeTheme = Cache::remember('active_theme', 3600, function () {
+            $this->activeTheme = Cache::remember('active_theme', $this->ttl, function () {
                 return Theme::active()->first();
             });
         }
@@ -93,6 +95,7 @@ class ThemeManager
                 'screenshot' => $config['screenshot'] ?? null,
                 'tags' => $config['tags'] ?? [],
                 'supports' => $config['supports'] ?? [],
+                'template_engine' => $config['template_engine'] ?? 'blade',
                 'templates' => $config['templates'] ?? [],
                 'partials' => $config['partials'] ?? [],
                 'assets' => $config['assets'] ?? [],
@@ -149,9 +152,7 @@ class ThemeManager
         
         if ($activated) {
             // Reset in-memory and cached theme state so UI reflects immediately
-            $this->activeTheme = null;
-            Cache::forget('active_theme');
-            Cache::forget('installed_themes');
+            $this->clearCache();
         }
 
         return $activated;
@@ -399,9 +400,19 @@ class ThemeManager
      */
     public function getInstalledThemes(): Collection
     {
-        return Cache::remember('installed_themes', 3600, function () {
+        return Cache::remember('installed_themes', $this->ttl, function () {
             return Theme::installed()->orderBy('name')->get();
         });
+    }
+
+    /**
+     * Clear all theme-related caches and in-memory state
+     */
+    public function clearCache(): void
+    {
+        $this->activeTheme = null;
+        Cache::forget('active_theme');
+        Cache::forget('installed_themes');
     }
 
     /**

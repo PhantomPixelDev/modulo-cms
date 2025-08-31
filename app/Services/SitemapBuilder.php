@@ -13,19 +13,29 @@ use Illuminate\Support\Carbon;
 
 class SitemapBuilder
 {
+    protected string $settingsCacheKey = 'sitemap.settings';
+    protected int $settingsTtl;
+
+    public function __construct()
+    {
+        $this->settingsTtl = (int) env('SITEMAP_SETTINGS_CACHE_TTL', 600);
+    }
+
     public function getSettings(): SitemapSetting
     {
-        $settings = SitemapSetting::query()->first();
-        if (!$settings) {
-            $settings = SitemapSetting::create([
-                'included_post_type_ids' => null, // null = include all public by default
-                'include_taxonomies' => true,
-                'enable_cache' => true,
-                'cache_ttl' => 3600,
-                'last_generated_at' => null,
-            ]);
-        }
-        return $settings;
+        return Cache::remember($this->settingsCacheKey, $this->settingsTtl, function () {
+            $settings = SitemapSetting::query()->first();
+            if (!$settings) {
+                $settings = SitemapSetting::create([
+                    'included_post_type_ids' => null, // null = include all public by default
+                    'include_taxonomies' => true,
+                    'enable_cache' => true,
+                    'cache_ttl' => 3600,
+                    'last_generated_at' => null,
+                ]);
+            }
+            return $settings;
+        });
     }
 
     public function getXml(bool $forceRefresh = false): string
