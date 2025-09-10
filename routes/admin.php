@@ -44,6 +44,26 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard/admin')->name('dashbo
         ]);
     })->name('debug');
 
+    // Page management
+    Route::get('/pages', [PagesController::class, 'index'])
+        ->middleware('permission:view pages')
+        ->name('pages.index');
+    Route::get('/pages/create', [PagesController::class, 'create'])
+        ->middleware('permission:create pages')
+        ->name('pages.create');
+    Route::post('/pages', [PagesController::class, 'store'])
+        ->middleware('permission:create pages')
+        ->name('pages.store');
+    Route::get('/pages/{page}/edit', [PagesController::class, 'edit'])
+        ->middleware('permission:edit pages')
+        ->name('pages.edit');
+    Route::put('/pages/{page}', [PagesController::class, 'update'])
+        ->middleware('permission:edit pages')
+        ->name('pages.update');
+    Route::delete('/pages/{page}', [PagesController::class, 'destroy'])
+        ->middleware('permission:delete pages')
+        ->name('pages.destroy');
+
     // User management
     Route::get('/users', [UserController::class, 'index'])
         ->middleware('permission:view users')

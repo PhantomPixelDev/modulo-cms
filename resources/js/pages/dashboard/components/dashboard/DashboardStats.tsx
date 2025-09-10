@@ -6,9 +6,10 @@ export interface DashboardStatsProps {
   users?: number;
   roles?: number;
   posts?: number;
+  media?: number;
 }
 
-export function DashboardStats({ users = 0, roles = 0, posts = 0 }: DashboardStatsProps) {
+export function DashboardStats({ users = 0, roles = 0, posts = 0, media = 0 }: DashboardStatsProps) {
   const stats = [
     {
       title: 'Users',
@@ -27,6 +28,12 @@ export function DashboardStats({ users = 0, roles = 0, posts = 0 }: DashboardSta
       value: posts,
       icon: FileText,
       description: 'Published content'
+    },
+    {
+      title: 'Media',
+      value: media,
+      icon: TrendingUp,
+      description: 'Total media files'
     }
   ];
 

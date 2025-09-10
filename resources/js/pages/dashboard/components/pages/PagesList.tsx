@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { ActionButtons } from '@/components/ui/table-actions';
 import { DataTable } from '../common/DataTable';
 import { EmptyState } from '../common/EmptyState';
 import { PageListItem } from '../../types';
@@ -27,14 +28,13 @@ export function PagesList({ pages, canEdit = false, canDelete = false, onEdit, o
   ];
 
   const actions = (item: PageListItem) => (
-    <div className="flex gap-2">
-      {canEdit && (
-        <Button size="sm" onClick={() => onEdit?.(item.id)}>Edit</Button>
-      )}
-      {canDelete && (
-        <Button variant="destructive" size="sm" onClick={() => onDelete?.(item)}>Delete</Button>
-      )}
-    </div>
+    <ActionButtons
+      onEdit={canEdit ? () => onEdit?.(item.id) : undefined}
+      onDelete={canDelete ? () => onDelete?.(item) : undefined}
+      showEdit={canEdit}
+      showDelete={canDelete}
+      showView={false}
+    />
   );
 
   return (

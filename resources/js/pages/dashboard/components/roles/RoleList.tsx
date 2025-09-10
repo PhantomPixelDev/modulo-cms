@@ -1,5 +1,6 @@
  import React from 'react';
 import { Button } from '@/components/ui/button';
+import { ActionButtons } from '@/components/ui/table-actions';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '../common/DataTable';
 import { EmptyState } from '../common/EmptyState';
@@ -26,16 +27,13 @@ export function RoleList({ roles, onEdit }: RoleListProps) {
   ];
 
   const actions = (item: Role) => (
-    <div className="flex space-x-2">
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="h-8 px-2"
-        onClick={() => onEdit(item.id)}
-      >
-        Edit
-      </Button>
-    </div>
+    <ActionButtons
+      onEdit={() => onEdit(item.id)}
+      showEdit={true}
+      showDelete={false}
+      showView={false}
+      size="sm"
+    />
   );
 
   return (

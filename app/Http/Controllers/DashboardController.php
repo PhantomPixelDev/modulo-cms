@@ -17,6 +17,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
+
+
+
 class DashboardController extends Controller
 {
     public function index(): Response
@@ -34,6 +37,7 @@ class DashboardController extends Controller
                 'postTypes' => PostType::count(),
                 'taxonomies' => Taxonomy::count(),
                 'taxonomyTerms' => TaxonomyTerm::count(),
+                
             ];
 
             // Recent Activity Feed

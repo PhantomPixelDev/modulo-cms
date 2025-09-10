@@ -44,16 +44,17 @@ Route::get('/posts/{slug}', [\App\Http\Controllers\FrontendController::class, 's
     ->where('slug', '[a-zA-Z0-9\-_]+')
     ->name('post.show');
 
-// First, handle top-level pages (like /about)
-Route::get('/{slug}', [\App\Http\Controllers\FrontendController::class, 'showContent'])
-    ->where('slug', '^(?!dashboard|login|register|password|confirm\-password|forgot\-password|reset\-password|verify\-email|email|logout|settings|admin|posts|pages|up|api)[a-zA-Z0-9\-_]+$')
-    ->name('page.show');
-
-// Dynamic routes for all other post types (like /news/some-news)
+// Dynamic routes for all post types (like /news/some-news)
+// This needs to be before the catch-all page route
 Route::get('/{postTypeSlug}/{slug}', [\App\Http\Controllers\FrontendController::class, 'showContent'])
-    ->where('postTypeSlug', '^(?!dashboard|login|register|password|forgot\-password|reset\-password|verify\-email|email|logout|settings|admin|up|api).*$')
+    ->where('postTypeSlug', '^(?!dashboard|login|register|password|forgot\-password|reset\-password|verify\-email|email|logout|settings|admin|up|api|sitemap\.xml|health).+$')
     ->where('slug', '[a-zA-Z0-9\-_]+')
     ->name('content.show');
+
+// Handle top-level pages (like /about) - this is now after post types
+Route::get('/{slug}', [\App\Http\Controllers\FrontendController::class, 'showContent'])
+    ->where('slug', '^(?!dashboard|login|register|password|confirm\-password|forgot\-password|reset\-password|verify\-email|email|logout|settings|admin|posts|pages|up|api|sitemap\.xml|health).+$')
+    ->name('page.show');
 
 // Register index routes for all post types with route_prefix (like /news)
 if (Schema::hasTable('post_types')) {

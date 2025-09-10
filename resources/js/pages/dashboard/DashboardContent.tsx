@@ -934,7 +934,7 @@ export default function DashboardContent({
 
           {/* Stats Grid */}
           {adminStats && (
-            <DashboardStats users={adminStats.users} roles={adminStats.roles} posts={adminStats.posts} />
+            <DashboardStats users={adminStats.users} roles={adminStats.roles} posts={adminStats.posts} media={adminStats.media} />
           )}
 
           {/* Dashboard Grid */}

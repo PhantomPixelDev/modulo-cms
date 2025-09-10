@@ -388,11 +388,30 @@ class FrontendController extends Controller
      */
     protected function transformPostForReact($post): array
     {
+        $content = $post->content ?? '';
+        
+        // If content is a JSON string, try to parse it as Slate.js content
+        if (is_string($content) && str_starts_with(trim($content), '[')) {
+            try {
+                $slateContent = json_decode($content, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    // Convert Slate.js JSON to HTML
+                    $content = $this->slateToHtml($slateContent);
+                }
+            } catch (\Exception $e) {
+                // If parsing fails, keep the original content
+                \Log::warning('Failed to parse Slate.js content', [
+                    'post_id' => $post->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
         return [
             'id' => $post->id ?? 0,
             'title' => $post->title ?? '',
             'slug' => $post->slug ?? '',
-            'content' => $post->content ?? '',
+            'content' => $content,
             'excerpt' => $post->excerpt ?? '',
             'featured_image' => $post->featured_image,
             'published_at' => $post->published_at ? $post->published_at->toISOString() : now()->toISOString(),
@@ -441,6 +460,79 @@ class FrontendController extends Controller
     /**
      * Transform pagination for React components
      */
+    /**
+     * Convert Slate.js JSON to HTML
+     */
+    protected function slateToHtml(array $nodes): string
+    {
+        $html = '';
+        
+        foreach ($nodes as $node) {
+            if (isset($node['text'])) {
+                $text = htmlspecialchars($node['text']);
+                
+                // Apply text formatting
+                if (!empty($node['bold'])) {
+                    $text = "<strong>$text</strong>";
+                }
+                if (!empty($node['italic'])) {
+                    $text = "<em>$text</em>";
+                }
+                if (!empty($node['underline'])) {
+                    $text = "<u>$text</u>";
+                }
+                if (!empty($node['code'])) {
+                    $text = "<code>$text</code>";
+                }
+                
+                $html .= $text;
+            } elseif (isset($node['children'])) {
+                $children = $this->slateToHtml($node['children']);
+                
+                // Handle different element types
+                switch ($node['type'] ?? 'paragraph') {
+                    case 'heading-one':
+                        $html .= "<h1>$children</h1>";
+                        break;
+                    case 'heading-two':
+                        $html .= "<h2>$children</h2>";
+                        break;
+                    case 'heading-three':
+                        $html .= "<h3>$children</h3>";
+                        break;
+                    case 'block-quote':
+                        $html .= "<blockquote>$children</blockquote>";
+                        break;
+                    case 'bulleted-list':
+                        $html .= "<ul>$children</ul>";
+                        break;
+                    case 'numbered-list':
+                        $html .= "<ol>$children</ol>";
+                        break;
+                    case 'list-item':
+                        $html .= "<li>$children</li>";
+                        break;
+                    case 'link':
+                        $url = $node['url'] ?? '#';
+                        $html .= "<a href=\"$url\">$children</a>";
+                        break;
+                    case 'image':
+                        $url = $node['url'] ?? '';
+                        $alt = $node['alt'] ?? '';
+                        $html .= "<img src=\"$url\" alt=\"$alt\" />";
+                        break;
+                    case 'code-block':
+                        $html .= "<pre><code>$children</code></pre>";
+                        break;
+                    default: // paragraph
+                        $html .= "<p>$children</p>";
+                }
+            }
+        }
+        
+        return $html;
+    }
+    
     protected function transformPaginationForReact($posts): array
     {
         return [

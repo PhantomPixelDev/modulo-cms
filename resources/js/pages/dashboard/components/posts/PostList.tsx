@@ -1,6 +1,7 @@
  import React from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { ActionButtons } from '@/components/ui/table-actions';
 import { DataTable } from '../common/DataTable';
 import { EmptyState } from '../common/EmptyState';
 import { PostListItem } from '../../types';
@@ -25,12 +26,13 @@ export function PostList({ posts, canCreate = false, canEdit = false, onCreate }
   ];
 
   const actions = (item: PostListItem) => (
-    <div className="flex gap-2">
-      <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.posts.show(item.id))}>View</Button>
-      {canEdit && (
-        <Button variant="secondary" size="sm" onClick={() => router.visit(ROUTE.posts.edit(item.id))}>Edit</Button>
-      )}
-    </div>
+    <ActionButtons
+      onView={() => router.visit(ROUTE.posts.show(item.id))}
+      onEdit={canEdit ? () => router.visit(ROUTE.posts.edit(item.id)) : undefined}
+      showView={true}
+      showEdit={canEdit}
+      showDelete={false}
+    />
   );
 
   return (

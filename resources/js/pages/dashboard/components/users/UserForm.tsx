@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { ActionButtonGroup } from '@/components/ui/button-groups';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -97,28 +98,23 @@ export function UserForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Create a new object with only the fields we want to submit
-    const submitData: Partial<UserFormData> = { 
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setProcessing(true);
+    const formData = {
       name: data.name,
       email: data.email,
+      password: data.password,
+      password_confirmation: data.password_confirmation,
       roles: data.roles,
-      send_welcome_email: data.send_welcome_email
+      send_welcome_email: data.send_welcome_email,
     };
     
-    // Only include password fields if they are being changed or it's a new user
-    if (!isEditing || data.password) {
-      submitData.password = data.password;
-      submitData.password_confirmation = data.password_confirmation;
-    }
-    
-    try {
-      await onSubmit(submitData as UserFormData);
-    } catch (error) {
+    onSubmit(formData).catch((error) => {
       console.error(`Error ${isEditing ? 'updating' : 'creating'} user:`, error);
-    }
+    }).finally(() => {
+      setProcessing(false);
+    });
   };
 
   return (
@@ -255,22 +251,14 @@ export function UserForm({
         </CardContent>
       </Card>
 
-      <div className="flex justify-end space-x-2">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onCancel}
-          disabled={processing}
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit"
-          disabled={processing}
-        >
-          {processing ? 'Saving...' : isEditing ? 'Update User' : 'Create User'}
-        </Button>
-      </div>
+      <ActionButtonGroup
+        onSave={handleSubmit}
+        onCancel={onCancel}
+        saveLabel={isEditing ? 'Update User' : 'Create User'}
+        cancelLabel="Cancel"
+        isSubmitting={processing}
+        className="mt-6"
+      />
     </form>
   );
 }

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
+import { ActionButtons } from '@/components/ui/table-actions';
 import { DataTable } from '../common/DataTable';
 import { EmptyState } from '../common/EmptyState';
 import { PostTypeListItem } from '../../types';
@@ -28,17 +29,14 @@ export function PostTypeList({ items, canView = false, canEdit = false, canDelet
   ];
 
   const actions = (item: PostTypeListItem) => (
-    <div className="flex gap-2">
-      {canView && (
-        <Button variant="secondary" size="sm" onClick={() => onView?.(item.id)}>View</Button>
-      )}
-      {canEdit && (
-        <Button size="sm" onClick={() => onEdit?.(item.id)}>Edit</Button>
-      )}
-      {canDelete && (
-        <Button variant="destructive" size="sm" onClick={() => onDelete?.(item)}>Delete</Button>
-      )}
-    </div>
+    <ActionButtons
+      onView={canView ? () => onView?.(item.id) : undefined}
+      onEdit={canEdit ? () => onEdit?.(item.id) : undefined}
+      onDelete={canDelete ? () => onDelete?.(item) : undefined}
+      showView={canView}
+      showEdit={canEdit}
+      showDelete={canDelete}
+    />
   );
 
   return (

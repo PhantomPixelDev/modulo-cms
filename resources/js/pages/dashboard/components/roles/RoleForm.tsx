@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { ActionButtonGroup } from '@/components/ui/button-groups';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Role, Permission } from '../../types';
@@ -66,14 +67,13 @@ export function RoleForm({ role, allPermissions, isEditing, onSubmit, onCancel }
         {errors.permissions && <p className="text-sm text-red-500 mt-1">{errors.permissions}</p>}
       </div>
 
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="default">
-          {isEditing ? 'Update Role' : 'Create Role'}
-        </Button>
-      </div>
+      <ActionButtonGroup
+        onSave={handleSubmit}
+        onCancel={onCancel}
+        saveLabel={isEditing ? 'Update Role' : 'Create Role'}
+        cancelLabel="Cancel"
+        className="mt-6"
+      />
     </form>
   );
 }

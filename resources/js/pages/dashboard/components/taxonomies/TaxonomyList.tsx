@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
+import { ActionButtons } from '@/components/ui/table-actions';
 import { DataTable } from '../common/DataTable';
 import { EmptyState } from '../common/EmptyState';
 import { TaxonomyListItem } from '../../types';
@@ -19,14 +20,13 @@ export function TaxonomyList({ items, canView = false, canEdit = false, onView, 
   ];
 
   const actions = (item: TaxonomyListItem) => (
-    <div className="flex gap-2">
-      {canView && (
-        <Button variant="secondary" size="sm" onClick={() => onView?.(item.id)}>View</Button>
-      )}
-      {canEdit && (
-        <Button size="sm" onClick={() => onEdit?.(item.id)}>Edit</Button>
-      )}
-    </div>
+    <ActionButtons
+      onView={canView ? () => onView?.(item.id) : undefined}
+      onEdit={canEdit ? () => onEdit?.(item.id) : undefined}
+      showView={canView}
+      showEdit={canEdit}
+      showDelete={false}
+    />
   );
 
   if (!items || items.length === 0) {
