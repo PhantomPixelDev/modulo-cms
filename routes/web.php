@@ -5,6 +5,9 @@ use App\Http\Controllers\Api\MenuApiController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Schema;
 
+// Health check endpoint for container orchestration (no closure to support route:cache)
+Route::get('/health', \App\Http\Controllers\HealthController::class);
+
 Route::get('/', [\App\Http\Controllers\FrontendController::class, 'home'])->name('home');
 
 // SEO: sitemap
@@ -36,19 +39,28 @@ Route::prefix('api/menus')->middleware('throttle:api')->group(function () {
     Route::get('location/{location}', [MenuApiController::class, 'showByLocation'])->name('api.menus.location');
 });
 
-// Dynamic routes for all post types
+// Handle posts with 'posts' prefix (e.g., /posts/getting-started-guide)
+Route::get('/posts/{slug}', [\App\Http\Controllers\FrontendController::class, 'showPost'])
+    ->where('slug', '[a-zA-Z0-9\-_]+')
+    ->name('post.show');
+
+// First, handle top-level pages (like /about)
+Route::get('/{slug}', [\App\Http\Controllers\FrontendController::class, 'showContent'])
+    ->where('slug', '^(?!dashboard|login|register|password|confirm\-password|forgot\-password|reset\-password|verify\-email|email|logout|settings|admin|posts|pages|up|api)[a-zA-Z0-9\-_]+$')
+    ->name('page.show');
+
+// Dynamic routes for all other post types (like /news/some-news)
 Route::get('/{postTypeSlug}/{slug}', [\App\Http\Controllers\FrontendController::class, 'showContent'])
     ->where('postTypeSlug', '^(?!dashboard|login|register|password|forgot\-password|reset\-password|verify\-email|email|logout|settings|admin|up|api).*$')
     ->where('slug', '[a-zA-Z0-9\-_]+')
     ->name('content.show');
 
-// Register index routes for all post types with route_prefix (guarded for testing/migrations)
+// Register index routes for all post types with route_prefix (like /news)
 if (Schema::hasTable('post_types')) {
     try {
-        // Exclude root ('/') route_prefix to avoid conflicting with the home route
+        // Include all post types with a route_prefix
         $postTypes = \App\Models\PostType::whereNotNull('route_prefix')
             ->where('route_prefix', '!=', '')
-            ->where('route_prefix', '!=', '/')
             ->where('is_public', true)
             ->get();
 
@@ -57,37 +69,29 @@ if (Schema::hasTable('post_types')) {
                 ->name("{$postType->route_prefix}.index")
                 ->defaults('postTypeId', $postType->id);
         }
-    } catch (\Throwable $e) {
-        // During early app boot or tests before migrations, skip dynamic route registration
-    }
-}
 
-// Explicit archive route for generic posts listing (independent of DB post_types)
-Route::get('/posts', [\App\Http\Controllers\FrontendController::class, 'listPosts'])
-    ->name('posts.index');
-
-// Fallback for pages without a route_prefix (like the home page)
-if (Schema::hasTable('post_types')) {
-    try {
-        $pageType = \App\Models\PostType::where(function($q){
+        // Handle pages index
+        $pageType = \App\Models\PostType::where(function($q) {
                 $q->whereNull('route_prefix')
-                  ->orWhere('route_prefix','')
-                  ->orWhere('route_prefix','/');
+                  ->orWhere('route_prefix', '')
+                  ->orWhere('route_prefix', '/');
             })
             ->where('is_public', true)
             ->first();
+
         if ($pageType) {
             Route::get('/pages', [\App\Http\Controllers\FrontendController::class, 'listPosts'])
                 ->name('pages.index')
                 ->defaults('postTypeId', $pageType->id);
         }
     } catch (\Throwable $e) {
-        // Skip when migrations not yet run
+        // Skip during early app boot or tests before migrations
     }
 }
-Route::get('/{slug}', [\App\Http\Controllers\FrontendController::class, 'showContent'])
-    ->where('slug', '^(?!dashboard|login|register|password|confirm\-password|forgot\-password|reset\-password|verify\-email|email|logout|settings|admin|posts|pages|up|api)[a-zA-Z0-9\-_]+$')
-    ->name('page.show');
+
+// Explicit archive route for generic posts listing
+Route::get('/posts', [\App\Http\Controllers\FrontendController::class, 'listPosts'])
+    ->name('posts.index');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');

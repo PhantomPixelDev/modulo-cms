@@ -9,6 +9,17 @@ echo "Starting Modulo CMS development container..."
 echo "Waiting for services to be ready..."
 sleep 2
 
+# Ensure SQLite database exists before Composer (package:discover may boot app)
+echo "Ensuring SQLite database exists..."
+mkdir -p database
+if [ ! -f database/database.sqlite ]; then
+    touch database/database.sqlite
+fi
+
+# Install PHP dependencies first
+echo "Installing PHP dependencies..."
+composer install --no-interaction --optimize-autoloader
+
 # Run Laravel setup commands
 echo "Running Laravel setup..."
 
@@ -31,9 +42,13 @@ php artisan migrate --force
 echo "Seeding database..."
 php artisan db:seed --force
 
-# Install and publish theme assets
-echo "Installing theme assets..."
-php artisan theme:install modern-react --force || echo "Theme install failed, continuing..."
+# Install and activate modern-react theme only
+echo "Installing modern-react theme..."
+php artisan theme:install modern-react --activate || echo "Modern-react theme install/activate failed, continuing..."
+
+# Publish assets for all installed themes
+echo "Publishing theme assets..."
+php -r "require 'vendor/autoload.php'; $app = require 'bootstrap/app.php'; $app->make(Illuminate\\Contracts\\Console\\Kernel::class); $ok = $app->make(App\\Services\\ThemeManager::class)->publishAllAssets(); echo ($ok ? 'Theme assets published' : 'Publishing theme assets failed'), PHP_EOL;" || echo "Publishing theme assets step encountered an error (continuing)"
 
 # Create storage link for media files
 echo "Creating storage link..."
@@ -43,19 +58,24 @@ php artisan storage:link || echo "Storage link already exists"
 echo "Restoring media files..."
 php artisan media:restore || echo "Media restoration failed, continuing..."
 
-# Clear and cache routes
-echo "Caching routes..."
+# Clear route cache (skip caching in development to avoid closure errors)
+echo "Clearing route cache..."
 php artisan route:clear
-php artisan route:cache
+# php artisan route:cache
 
 # Clear view cache
 echo "Clearing view cache..."
-php artisan view:clear
+echo "Ensuring view compiled directory exists..."
+mkdir -p storage/framework/views || true
+php artisan view:clear || echo "view:clear failed (continuing)"
 
 # Set proper permissions
 echo "Setting permissions..."
-chmod -R 777 storage bootstrap/cache public/themes
-chown -R www-data:www-data storage bootstrap/cache public/themes
+# Ensure directories exist before changing permissions
+mkdir -p storage bootstrap/cache public/themes || true
+# Some hosts (e.g., bind mounts with restrictive perms) may not allow these; don't exit on failure
+chmod -R 777 storage bootstrap/cache public/themes || true
+chown -R www-data:www-data storage bootstrap/cache public/themes || true
 
 echo "Setup complete! Starting Laravel development server..."
 

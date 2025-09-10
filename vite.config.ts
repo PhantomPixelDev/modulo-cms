@@ -9,6 +9,10 @@ export default defineConfig({
         port: 5173,
         host: '0.0.0.0',
         cors: true,
+        hmr: {
+            host: 'localhost',
+            port: 5173,
+        },
     },
     plugins: [
         laravel({

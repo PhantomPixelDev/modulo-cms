@@ -76,6 +76,8 @@ class TemplateRenderingService
 
     public function renderPost(Post $post, array $additionalData = [])
     {
+        $activeTheme = $this->themeManager->getActiveTheme();
+        
         // Provide common variables expected by layouts (assets, site info)
         $common = [
             'assets' => $this->themeManager->getAssets(),
@@ -88,32 +90,25 @@ class TemplateRenderingService
             'post' => $post,
         ], $this->getPostData($post), $common, $additionalData, $this->buildSeoForPost($post));
         
-        // Try theme template first (inject header/footer so layout partials have data)
-        \Log::info('renderPost:attemptThemeTemplate', ['postId' => $post->id, 'slug' => $post->slug]);
-        $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
-        $themeTemplate = $this->themeManager->renderTemplate('post', $themeData);
-        if ($themeTemplate) {
-            \Log::info('renderPost:usingThemeTemplate');
-            if ($this->isFullHtmlDocument($themeTemplate)) {
-                return $themeTemplate;
+        if ($activeTheme && $activeTheme->template_engine === 'react') {
+            $postType = $post->postType;
+            $componentName = 'Post';
+            if ($postType && $postType->route_prefix) {
+                $componentName = ucfirst($postType->route_prefix);
             }
-            return $this->renderLayout($themeTemplate, $data);
+            
+            $props = array_merge($data, [
+                'post' => $post,
+                'post_type' => $postType,
+                'theme' => $activeTheme,
+            ]);
+            
+            \Log::info('TemplateRenderingService:renderPost:usingReact', ['component' => $componentName]);
+            
+            return \Inertia\Inertia::render($componentName, $props)->toResponse(request())->getContent();
         }
-        \Log::warning('renderPost:themeTemplateMissingOrError, falling back');
         
-        // Fallback to database templates
-        $postType = $post->postType;
-        $template = $postType->singleTemplate ?? Template::ofType('post')->default()->first();
-        
-        if (!$template) {
-            $template = Template::ofType('post')->active()->first();
-        }
-
-        if ($template) {
-            \Log::info('renderPost:usingDbTemplate', ['templateId' => $template->id ?? null]);
-            return $template->renderWithData($data);
-        }
-        throw new \RuntimeException('No template available to render post');
+        throw new \RuntimeException('No React theme available to render post');
     }
 
     public function renderPage(Post $page, array $additionalData = [])
@@ -170,6 +165,8 @@ class TemplateRenderingService
 
     public function renderIndex($posts, PostType $postType = null, array $additionalData = [])
     {
+        $activeTheme = $this->themeManager->getActiveTheme();
+        
         $common = [
             'assets' => $this->themeManager->getAssets(),
             'site_name' => config('app.name', 'CMS'),
@@ -178,48 +175,27 @@ class TemplateRenderingService
         ];
         $data = array_merge($this->getIndexData($posts, $postType), $common, $additionalData, $this->buildSeoForIndex($postType, $additionalData));
         
-        // Dynamic per post type: {route_prefix} -> index
-        $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
-        $candidates = [];
-        if ($postType && !in_array(($postType->route_prefix ?? null), [null, '', '/'], true)) {
-            $prefix = ltrim((string) $postType->route_prefix, '/');
-            if ($prefix !== '') {
-                $candidates[] = $prefix;
+        if ($activeTheme && $activeTheme->template_engine === 'react') {
+            // Determine React component to render
+            $componentName = 'Index';
+            if ($postType && $postType->route_prefix) {
+                $componentName = ucfirst($postType->route_prefix);
             }
+            
+            $props = array_merge($data, [
+                'posts' => $data['posts'] ?? collect(),
+                'pagination' => $data['pagination'] ?? null,
+                'post_type' => $postType,
+                'theme' => $activeTheme,
+            ]);
+            
+            \Log::info('TemplateRenderingService:renderIndex:usingReact', ['component' => $componentName]);
+            
+            // Return Inertia response which will render the React component
+            return \Inertia\Inertia::render($componentName, $props)->toResponse(request())->getContent();
         }
-        $candidates[] = 'index';
-
-        \Log::info('TemplateRenderingService:renderIndex:candidates', [
-            'postTypeId' => $postType?->id,
-            'route_prefix' => $postType?->route_prefix,
-            'candidates' => $candidates,
-        ]);
-
-        foreach ($candidates as $tpl) {
-            \Log::info('TemplateRenderingService:renderIndex:try', ['template' => $tpl]);
-            $themeTemplate = $this->themeManager->renderTemplate($tpl, $themeData);
-            if ($themeTemplate) {
-                \Log::info('TemplateRenderingService:renderIndex:using', ['template' => $tpl]);
-                if ($this->isFullHtmlDocument($themeTemplate)) {
-                    return $themeTemplate;
-                }
-                return $this->renderLayout($themeTemplate, $data);
-            }
-        }
-        \Log::warning('TemplateRenderingService:renderIndex:noThemeTemplateMatch');
         
-        // Fallback to database templates
-        $template = $postType?->archiveTemplate ?? Template::ofType('index')->default()->first();
-        
-        if (!$template) {
-            $template = Template::ofType('index')->active()->first();
-        }
-
-        if ($template) {
-            \Log::info('TemplateRenderingService:renderIndex:usingDbTemplate', ['templateId' => $template->id ?? null]);
-            return $template->renderWithData($data);
-        }
-        throw new \RuntimeException('No template available to render index');
+        throw new \RuntimeException('No React theme available to render index');
     }
 
     public function renderLayout(string $content, array $data = [])
@@ -380,9 +356,9 @@ class TemplateRenderingService
 
     private function getHeaderData()
     {
-        $menu = $this->menuService->getMenuByLocation('primary');
+        $menu = $this->menuService->getMenuByLocation('header');
         if (!$menu) {
-            throw new \RuntimeException("Header menu location 'primary' not found or has no items");
+            throw new \RuntimeException("Header menu location 'header' not found or has no items");
         }
         \Log::info('flexia.header.menu', [
             'menu_id' => $menu->id ?? null,

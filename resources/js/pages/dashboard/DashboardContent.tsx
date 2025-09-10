@@ -16,6 +16,7 @@ import { PageForm } from './components/pages/PageForm';
 import { PagesList } from './components/pages/PagesList';
 import { TaxonomyList } from './components/taxonomies/TaxonomyList';
 import { DashboardStats } from './components/dashboard/DashboardStats';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActiveThemeCard } from './components/themes/ActiveThemeCard';
 import { InstalledThemesGrid } from './components/themes/InstalledThemesGrid';
 import { DiscoveredThemesList } from './components/themes/DiscoveredThemesList';
@@ -62,6 +63,8 @@ export default function DashboardContent({
   editRole,
   editPostType,
   auth,
+  recentActivity,
+  systemStatus,
 }: DashboardProps) {
   const [showUserForm, setShowUserForm] = useState(false);
   const [showRoleForm, setShowRoleForm] = useState(false);
@@ -259,9 +262,8 @@ export default function DashboardContent({
     >
       <PostList
         posts={(postsProp as any) || (posts as any) || []}
-        canCreate={can('create posts')}
+        canCreate={false}
         canEdit={can('edit posts')}
-        onCreate={() => router.visit(ROUTE.posts.create())}
       />
     </SectionWrapper>
   );
@@ -921,12 +923,116 @@ export default function DashboardContent({
     const section = normalizeSection(adminSection);
     if (!section) {
       return (
-        <div className="px-4 py-6 space-y-4">
-          <SectionHeader title="Panel" />
+        <div className="px-4 py-6 space-y-6">
+          {/* Welcome Header */}
+          <Card className="border-0">
+            <CardHeader>
+              <CardTitle className="text-xl">Welcome back, {auth?.user?.name || 'Admin'}!</CardTitle>
+              <CardDescription>Here's what's happening with your CMS today.</CardDescription>
+            </CardHeader>
+          </Card>
 
+          {/* Stats Grid */}
           {adminStats && (
             <DashboardStats users={adminStats.users} roles={adminStats.roles} posts={adminStats.posts} />
           )}
+
+          {/* Dashboard Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Quick Actions */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => router.visit(ROUTE.posts.create())}
+                  >
+                    <span className="mr-2">📝</span> Create New Post
+                  </Button>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => router.visit(ROUTE.pages.create())}
+                  >
+                    <span className="mr-2">📄</span> Create New Page
+                  </Button>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => router.visit(ROUTE.users.create())}
+                  >
+                    <span className="mr-2">👤</span> Add New User
+                  </Button>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => router.visit(ROUTE.themes.index())}
+                  >
+                    <span className="mr-2">🎨</span> Manage Themes
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {recentActivity && recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <div key={index} className="flex items-start space-x-3 p-3 bg-muted/50 rounded-lg">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <span className="text-primary text-sm">{activity.icon}</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{activity.title}</p>
+                          <p className="text-xs text-muted-foreground">{activity.description} - {activity.timestamp}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center text-muted-foreground py-4">
+                      <p className="text-sm">No recent activity</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* System Status */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {systemStatus && Object.entries(systemStatus).map(([key, status]) => {
+              const getColorClasses = (color: string) => {
+                switch (color) {
+                  case 'green': return { text: 'text-green-600', bg: 'bg-green-500' };
+                  case 'red': return { text: 'text-red-600', bg: 'bg-red-500' };
+                  case 'yellow': return { text: 'text-yellow-600', bg: 'bg-yellow-500' };
+                  case 'blue': return { text: 'text-primary', bg: 'bg-primary' };
+                  default: return { text: 'text-gray-600', bg: 'bg-gray-500' };
+                }
+              };
+              const colors = getColorClasses(status.color);
+              return (
+                <Card key={key} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">{status.label}</p>
+                      <p className={`text-lg font-semibold ${colors.text}`}>{status.value}</p>
+                    </div>
+                    <div className={`w-3 h-3 ${colors.bg} rounded-full ${status.indicator === 'pulse' ? 'animate-pulse' : ''}`}></div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       );
     }

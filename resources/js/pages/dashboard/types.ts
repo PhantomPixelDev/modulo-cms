@@ -206,6 +206,23 @@ export interface DashboardProps {
   allFolders?: MediaFolder[];
   breadcrumb?: MediaFolder[];
   currentFolderId?: number | null;
+  // Dashboard activity and status
+  recentActivity?: Array<{
+    type: string;
+    icon: string;
+    title: string;
+    description: string;
+    user: string;
+    timestamp: string;
+    created_at: any;
+  }>;
+  systemStatus?: Record<string, {
+    status: string;
+    label: string;
+    value: string;
+    color: string;
+    indicator: string;
+  }>;
 }
 
 // Post Type List Item

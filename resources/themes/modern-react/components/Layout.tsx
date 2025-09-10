@@ -28,7 +28,7 @@ interface LayoutProps {
     logo?: string;
   };
   menus?: {
-    primary?: Array<{
+    header?: Array<{
       id: number;
       label: string;
       url: string;
@@ -96,7 +96,7 @@ export default function Layout({
       <div className="min-h-screen flex flex-col bg-white text-gray-900">
         <Header 
           site={site}
-          menu={menus?.primary}
+          menu={menus?.header}
           theme={theme}
         />
         

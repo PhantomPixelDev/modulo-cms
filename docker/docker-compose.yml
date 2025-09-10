@@ -7,7 +7,8 @@ services:
   app:
     container_name: modulo-cms
     build:
-      context: .
+      context: ..
+      dockerfile: docker/Dockerfile
       target: development
       args:
         BUN_VERSION: latest
@@ -17,17 +18,19 @@ services:
     ports:
       - "0.0.0.0:8080:8000"
     env_file:
-      - env.development
+      - .env
     volumes:
-      - ./env.development:/var/www/html/.env:z,ro
-      - ./:/var/www/html:z,cached
+      - ./.env:/var/www/html/.env:z,ro
+      - ../:/var/www/html:z,cached
       - bun_modules_app:/var/www/html/node_modules
+      - vendor_data:/var/www/html/vendor
+      - composer_cache:/tmp/composer-cache
       - storage_data:/var/www/html/storage
       - cache_data:/var/www/html/bootstrap/cache
       - media_uploads:/var/www/html/storage/app/public
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://0.0.0.0:8000/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -35,27 +38,31 @@ services:
 
   vite:
     container_name: modulo-cms-vite
-    image: oven/bun:latest
+    image: docker.io/oven/bun:latest
     user: root
     labels:
       - purpose=development-only
     environment:
       - VITE_DEV_SERVER_URL=http://vite:5173
-    command: sh -lc 'chown -R 1000:1000 /var/www/html/node_modules && bun install --frozen-lockfile --no-cache && bun run dev -- --host 0.0.0.0 --port 5173 --strictPort'
+    command: sh -lc 'chown -R 1000:1000 /var/www/html/node_modules && bun install --frozen-lockfile && bun run dev -- --host 0.0.0.0 --port 5173 --strictPort'
     ports:
       - "5173:5173"
     expose:
       - "5173"
     working_dir: /var/www/html
     volumes:
-      - ./env.development:/var/www/html/.env:z,ro
-      - ./:/var/www/html:z,cached
+      - ./.env:/var/www/html/.env:z,ro
+      - ../:/var/www/html:z,cached
       - bun_modules_vite:/var/www/html/node_modules
+      - bun_cache:/root/.bun
     restart: unless-stopped
 
 volumes:
   bun_modules_app:
   bun_modules_vite:
+  vendor_data:
+  composer_cache:
+  bun_cache:
   storage_data:
   cache_data:
   media_uploads:

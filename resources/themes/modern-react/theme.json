@@ -107,7 +107,7 @@
     ]
   },
   "menus": {
-    "primary": "Primary Navigation",
+    "header": "Header Navigation",
     "footer": "Footer Links"
   },
   "widget_areas": {

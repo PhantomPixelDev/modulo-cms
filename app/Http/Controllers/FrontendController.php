@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\PostType;
+use App\Services\PostService;
 use App\Services\TemplateRenderingService;
 use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\Request;
@@ -16,11 +17,16 @@ class FrontendController extends Controller
 {
     protected $templateService;
     protected $reactRenderer;
+    protected $postService;
 
-    public function __construct(TemplateRenderingService $templateService, ReactTemplateRenderer $reactRenderer)
-    {
+    public function __construct(
+        TemplateRenderingService $templateService, 
+        ReactTemplateRenderer $reactRenderer,
+        PostService $postService
+    ) {
         $this->templateService = $templateService;
         $this->reactRenderer = $reactRenderer;
+        $this->postService = $postService;
     }
 
     /**
@@ -156,135 +162,45 @@ class FrontendController extends Controller
             'showFilters' => false,
         ]);
     }
+    
     public function showContent(Request $request)
     {
-        // Read params strictly by name to avoid positional misbinding
         $slug = $request->route('slug');
         $postTypeSlug = $request->route('postTypeSlug');
-        \Log::info('showContent:start', ['slug' => $slug, 'postTypeSlug' => $postTypeSlug]);
-
-        // Helper to apply published visibility for guests; allow preview for authenticated users
-        $applyVisibility = function ($query) {
-            if (!auth()->check()) {
-                $query->published();
-            }
-            return $query;
-        };
-
-        // If no post type slug provided, treat it strictly as a page lookup
+        
+        // For pages (no postTypeSlug in URL)
         if (!$postTypeSlug) {
-            // First try to find a page with empty route_prefix or route_prefix = '/'
-            $pagePostType = PostType::where(function($query) {
-                $query->whereNull('route_prefix')
-                      ->orWhere('route_prefix', '')
-                      ->orWhere('route_prefix', '/');
-            })->first();
-            \Log::info('showContent:pageType', ['pageTypeId' => $pagePostType?->id]);
-
-            if ($pagePostType) {
-                $content = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
-                    ->where('slug', $slug)
-                    ->where('post_type_id', $pagePostType->id);
-                $applyVisibility($content);
-                $content = $content->first();
-                \Log::info('showContent:pageLookup', ['foundId' => $content?->id]);
-
-                if ($content) {
-                    // Increment view count once inside renderContent
-                    return $this->renderContent($content, null, null);
-                }
-            }
-            // No page found: return 404 so posts cannot be reached at '/{slug}'
-            abort(404);
-        } else {
-            // Find post type by route prefix
-            $postType = PostType::where('route_prefix', $postTypeSlug)->firstOrFail();
+            $content = $this->postService->getPostBySlug($slug, 'page');
             
-            $content = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
-                ->where('slug', $slug)
-                ->where('post_type_id', $postType->id);
-            $applyVisibility($content);
-            $content = $content->firstOrFail();
-            \Log::info('showContent:typedLookup', ['foundId' => $content?->id]);
+            if (!$content) {
+                abort(404, 'Page not found');
+            }
+            
+            return $this->renderContent($content, null, null);
         }
-
+        
+        // For posts with post type prefix (e.g., /news/slug)
+        $postType = PostType::where('route_prefix', $postTypeSlug)->firstOrFail();
+        $content = $this->postService->getPostBySlug($slug);
+        
+        if (!$content || $content->post_type_id !== $postType->id) {
+            abort(404);
+        }
+        
         return $this->renderContent($content, null, null);
     }
 
-    private function renderContent($content, $template, $dataKey)
+    public function showPost(Request $request, string $slug)
     {
-        // Increment view count once per render
-        try { $content->increment('view_count'); } catch (\Throwable $e) {}
-
-        // Determine whether content is a page (route_prefix empty/null/'/')
-        $isPage = in_array(($content->postType->route_prefix ?? null), [null, '', '/'], true);
-        $template = $template ?? ($isPage ? 'frontend/page' : 'frontend/post');
-        $dataKey = $dataKey ?? ($isPage ? 'page' : 'post');
-
-        // Try React template first if active theme is React
-        if ($this->shouldUseReact()) {
-            $templateName = $isPage ? 'page' : 'post';
-            if ($this->reactRenderer->canRender($templateName)) {
-                return $this->reactRenderer->render($templateName, [
-                    $dataKey => $this->transformPostForReact($content),
-                ]);
-            }
+        $content = $this->postService->getPostBySlug($slug, 'post');
+        
+        if (!$content) {
+            abort(404, 'Post not found');
         }
-
-        // Fallback to Blade theme templates
-        if ($isPage) {
-            $renderedContent = $this->templateService->renderPage($content);
-        } else {
-            $renderedContent = $this->templateService->renderPost($content);
-        }
-
-        if ($renderedContent) {
-            return response($renderedContent)->header('Content-Type', 'text/html');
-        }
-
-        // Default Inertia rendering
-        return Inertia::render($template, [
-            $dataKey => [
-                'id' => $content->id,
-                'title' => $content->title,
-                'slug' => $content->slug,
-                'content' => $content->content,
-                'excerpt' => $content->excerpt,
-                'featured_image' => $content->featured_image,
-                'published_at' => $content->published_at,
-                'updated_at' => $content->updated_at,
-                'view_count' => $content->view_count,
-                'meta_title' => $content->meta_title,
-                'meta_description' => $content->meta_description,
-                'author' => $content->author ? [
-                    'id' => $content->author->id,
-                    'name' => $content->author->name,
-                    'email' => $content->author->email,
-                ] : null,
-                'post_type' => [
-                    'id' => $content->postType->id,
-                    'name' => $content->postType->name,
-                    'label' => $content->postType->label,
-                    'slug' => $content->postType->slug,
-                    'route_prefix' => $content->postType->route_prefix,
-                ],
-                'taxonomy_terms' => $content->taxonomyTerms->map(function ($term) {
-                    return [
-                        'id' => $term->id,
-                        'name' => $term->name,
-                        'slug' => $term->slug,
-                        'taxonomy' => [
-                            'id' => $term->taxonomy->id,
-                            'name' => $term->taxonomy->name,
-                            'label' => $term->taxonomy->label,
-                            'slug' => $term->taxonomy->slug,
-                        ],
-                    ];
-                }),
-            ],
-        ]);
+        
+        return $this->renderContent($content, null, null);
     }
-
+    
     public function listPosts(Request $request, $postTypeSlug = null)
     {
         \Log::info('listPosts:start', [
@@ -535,5 +451,79 @@ class FrontendController extends Controller
             'prev_page_url' => $posts->previousPageUrl(),
             'next_page_url' => $posts->nextPageUrl(),
         ];
+    }
+
+    private function renderContent($content, $template, $dataKey)
+    {
+        // Increment view count once per render
+        try { $content->increment('view_count'); } catch (\Throwable $e) {}
+
+        // Determine whether content is a page (route_prefix empty/null/'/')
+        $isPage = in_array(($content->postType->route_prefix ?? null), [null, '', '/'], true);
+        $template = $template ?? ($isPage ? 'frontend/page' : 'frontend/post');
+        $dataKey = $dataKey ?? ($isPage ? 'page' : 'post');
+
+        // Try React template first if active theme is React
+        if ($this->shouldUseReact()) {
+            $templateName = $isPage ? 'page' : 'post';
+            if ($this->reactRenderer->canRender($templateName)) {
+                return $this->reactRenderer->render($templateName, [
+                    $dataKey => $this->transformPostForReact($content),
+                ]);
+            }
+        }
+
+        // Fallback to Blade theme templates
+        if ($isPage) {
+            $renderedContent = $this->templateService->renderPage($content);
+        } else {
+            $renderedContent = $this->templateService->renderPost($content);
+        }
+
+        if ($renderedContent) {
+            return response($renderedContent)->header('Content-Type', 'text/html');
+        }
+
+        // Default Inertia rendering
+        return Inertia::render($template, [
+            $dataKey => [
+                'id' => $content->id,
+                'title' => $content->title,
+                'slug' => $content->slug,
+                'content' => $content->content,
+                'excerpt' => $content->excerpt,
+                'featured_image' => $content->featured_image,
+                'published_at' => $content->published_at,
+                'updated_at' => $content->updated_at,
+                'view_count' => $content->view_count,
+                'meta_title' => $content->meta_title,
+                'meta_description' => $content->meta_description,
+                'author' => $content->author ? [
+                    'id' => $content->author->id,
+                    'name' => $content->author->name,
+                    'email' => $content->author->email,
+                ] : null,
+                'post_type' => [
+                    'id' => $content->postType->id,
+                    'name' => $content->postType->name,
+                    'label' => $content->postType->label,
+                    'slug' => $content->postType->slug,
+                    'route_prefix' => $content->postType->route_prefix,
+                ],
+                'taxonomy_terms' => $content->taxonomyTerms->map(function ($term) {
+                    return [
+                        'id' => $term->id,
+                        'name' => $term->name,
+                        'slug' => $term->slug,
+                        'taxonomy' => [
+                            'id' => $term->taxonomy->id,
+                            'name' => $term->taxonomy->name,
+                            'label' => $term->taxonomy->label,
+                            'slug' => $term->taxonomy->slug,
+                        ],
+                    ];
+                }),
+            ],
+        ]);
     }
 }

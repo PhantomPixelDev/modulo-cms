@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             ContentPermissionsSeeder::class,
             PostTypeRoutePrefixSeeder::class,
             ContentSeeder::class,
+            DefaultUsersSeeder::class,
+            DefaultPagesSeeder::class,
             ExampleContentSeeder::class,
             NewsSeeder::class,
             MenuSeeder::class,
