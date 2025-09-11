@@ -212,6 +212,10 @@ class FrontendController extends Controller
 
         $query = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
             ->published()
+            ->whereHas('postType', function($q) {
+                $q->where('name', 'post')
+                  ->orWhere('slug', 'posts');
+            })
             ->orderBy('published_at', 'desc');
 
         // Use route-provided postTypeId when available (set as a route default in routes/web.php)
@@ -229,7 +233,7 @@ class FrontendController extends Controller
                 \Log::info('listPosts:filterBySlug', ['route_prefix' => $postTypeSlug, 'postTypeId' => $pt->id]);
             }
         } elseif ($routeName === 'posts.index' && !$request->has('type')) {
-            // Generic /posts route: default to classic "post" type (slug=post or route_prefix=posts)
+            // For the main posts index, ensure we only show 'post' type
             $pt = PostType::where('slug', 'post')
                 ->orWhere('route_prefix', 'posts')
                 ->orderByRaw("CASE WHEN slug='post' THEN 0 ELSE 1 END")
@@ -241,15 +245,6 @@ class FrontendController extends Controller
                 $request->attributes->set('default_post_type_id', $pt->id);
             } else {
                 \Log::warning('listPosts:classicPostTypeNotFound');
-            }
-        }
-
-        // Filter by post type slug if specified in query params
-        if ($request->has('type')) {
-            $postType = PostType::where('slug', $request->type)->first();
-            if ($postType) {
-                $query->where('post_type_id', $postType->id);
-                \Log::info('listPosts:filterByQueryParamType', ['slug' => $request->type, 'postTypeId' => $postType->id]);
             }
         }
 

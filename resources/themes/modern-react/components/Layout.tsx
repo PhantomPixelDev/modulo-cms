@@ -2,6 +2,8 @@ import React from 'react';
 import { Head } from '@inertiajs/react';
 import Header from './Header';
 import Footer from './Footer';
+import Navigation from './partials/Navigation';
+import Sidebar from './partials/Sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,6 +28,10 @@ interface LayoutProps {
     name?: string;
     tagline?: string;
     logo?: string;
+    description?: string;
+    social_links?: {
+      [key: string]: string;
+    };
   };
   menus?: {
     header?: Array<{
@@ -37,6 +43,13 @@ interface LayoutProps {
     }>;
     footer?: Array<any>;
   };
+  widgets?: Array<{
+    id: string;
+    title: string;
+    content: string;
+    type: string;
+    settings: Record<string, any>;
+  }>;
 }
 
 export default function Layout({ 
@@ -48,7 +61,8 @@ export default function Layout({
   canonicalUrl,
   theme,
   site,
-  menus 
+  menus,
+  widgets = [] 
 }: LayoutProps) {
   const pageTitle = title ? `${title} | ${site?.name || 'Modulo CMS'}` : site?.name || 'Modulo CMS';
   const containerWidth = theme?.layout?.container_width || 'max-w-6xl';
@@ -94,15 +108,18 @@ export default function Layout({
       </Head>
 
       <div className="min-h-screen flex flex-col bg-white text-gray-900">
-        <Header 
-          site={site}
-          menu={menus?.header}
-          theme={theme}
-        />
+        <Navigation site={site} menus={menus} />
         
-        <main className="flex-1">
-          <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${containerWidth}`}>
-            {children}
+        <main className="flex-1 pt-16">
+          <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${containerWidth} py-8`}>
+            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="lg:w-3/4">
+                {children}
+              </div>
+              <aside className="lg:w-1/4">
+                <Sidebar widgets={widgets} />
+              </aside>
+            </div>
           </div>
         </main>
         

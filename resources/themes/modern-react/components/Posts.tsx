@@ -82,25 +82,31 @@ const Posts: React.FC<PostsProps> = ({ posts, pagination, theme, site, menus }) 
   const safeSite = site || { name: 'Modulo CMS', tagline: 'Modern Content Management System' };
   const safeMenus = menus || {};
 
+  // Filter posts to only include those with post_type.slug === 'post'
+  const filteredPosts = {
+    ...safePosts,
+    data: safePosts.data.filter(post => post?.post_type?.slug === 'post')
+  };
+
   return (
     <Layout theme={safeTheme} site={safeSite} menus={safeMenus}>
       <Head>
-        <title>Posts - {safeSite.name}</title>
-        <meta name="description" content={`Browse all posts on ${safeSite.name}`} />
+        <title>Blog Posts - {safeSite.name}</title>
+        <meta name="description" content={`Browse blog posts on ${safeSite.name}`} />
       </Head>
 
       <div className="space-y-8">
         <header className="text-center py-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Posts</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Blog Posts</h1>
           <p className="text-xl opacity-90 max-w-2xl mx-auto">
-            Browse all our blog posts and articles
+            Browse all our latest blog posts and articles
           </p>
         </header>
 
-        {safePosts?.data && safePosts.data.length > 0 ? (
+        {filteredPosts?.data && filteredPosts.data.length > 0 ? (
           <>
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {safePosts.data.map((post) => (
+              {filteredPosts.data.map((post) => (
                 <PostCard key={post.id} post={post} />
               ))}
             </section>
@@ -133,7 +139,7 @@ const Posts: React.FC<PostsProps> = ({ posts, pagination, theme, site, menus }) 
             )}
 
             <div className="text-center text-gray-600 dark:text-gray-400">
-              Showing {safePosts?.data?.length || 0} of {safePagination?.total || 0} posts
+              Showing {filteredPosts?.data?.length || 0} of {safePagination?.total || 0} posts
             </div>
           </>
         ) : (
