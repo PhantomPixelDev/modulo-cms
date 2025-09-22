@@ -17,10 +17,9 @@ services:
       - purpose=development-only
     ports:
       - "0.0.0.0:8080:8000"
-    env_file:
-      - .env
+    # No compose-level env_file; Laravel reads root ../.env mounted below
     volumes:
-      - ./.env:/var/www/html/.env:z,ro
+      - ../.env:/var/www/html/.env:z,ro
       - ../:/var/www/html:z,cached
       - bun_modules_app:/var/www/html/node_modules
       - vendor_data:/var/www/html/vendor
@@ -44,17 +43,21 @@ services:
       - purpose=development-only
     environment:
       - VITE_DEV_SERVER_URL=http://vite:5173
-    command: sh -lc 'chown -R 1000:1000 /var/www/html/node_modules && bun install --frozen-lockfile && bun run dev -- --host 0.0.0.0 --port 5173 --strictPort'
+    working_dir: /var/www/html
+    volumes:
+      - ../:/var/www/html
+      - /var/www/html/node_modules
+    command: sh -c "bun install && bun run dev --host 0.0.0.0 --port 5173 --strictPort"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     ports:
       - "5173:5173"
     expose:
       - "5173"
-    working_dir: /var/www/html
-    volumes:
-      - ./.env:/var/www/html/.env:z,ro
-      - ../:/var/www/html:z,cached
-      - bun_modules_vite:/var/www/html/node_modules
-      - bun_cache:/root/.bun
     restart: unless-stopped
 
 volumes:
