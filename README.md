@@ -28,6 +28,33 @@ Modulo CMS is a modern, modular content management system built on Laravel 12 wi
 
 ### Using Podman Compose (Recommended for Development)
 
+#### Quick Start (Recommended)
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/PhantomPixelDev/modulo-cms.git
+   cd modulo-cms
+   ```
+
+2. Set up the environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   Ensure `DB_CONNECTION=sqlite` for a quick setup, or configure your preferred database.
+
+3. Run the automated setup script:
+   ```bash
+   chmod +x start-dev.sh
+   ./start-dev.sh
+   ```
+
+4. Access the application at `http://localhost:8080` and the admin dashboard at `http://localhost:8080/dashboard`.
+   - Default admin credentials: email `admin@example.com`, password `password`
+
+#### Manual Setup (Alternative)
+
+If you prefer manual control over the setup process:
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/PhantomPixelDev/modulo-cms.git
@@ -42,53 +69,21 @@ Modulo CMS is a modern, modular content management system built on Laravel 12 wi
 
 3. Start the development environment:
    ```bash
-   podman compose up -d
+   podman compose -f docker/docker-compose.yml up -d --build
    ```
 
 4. Generate application key:
    ```bash
-   podman compose exec app php artisan key:generate
+   podman compose -f docker/docker-compose.yml exec app php artisan key:generate
    ```
 
 5. Run migrations and seed the database:
    ```bash
-   podman compose exec app php artisan migrate --seed
+   podman compose -f docker/docker-compose.yml exec app php artisan migrate --seed
    ```
 
 6. Access the application at `http://localhost:8080` and the admin dashboard at `http://localhost:8080/dashboard`.
    - Default admin credentials: email `admin@example.com`, password `password`
-
-### Manual Installation
-
-1. Clone the repository and navigate to the project folder (as shown above).
-
-2. Install PHP dependencies:
-   ```bash
-   composer install
-   ```
-
-3. Install frontend dependencies with Bun:
-   ```bash
-   bun install
-   ```
-
-4. Build frontend assets:
-   ```bash
-   bun run build
-   ```
-
-5. Set up the environment file and generate application key (as shown above).
-
-6. Run migrations and seed the database (as shown above).
-
-7. Start the development server:
-   ```bash
-   php artisan serve
-   ```
-   And in a separate terminal, start the Vite dev server for HMR:
-   ```bash
-   bun run dev
-   ```
 
 ## Usage
 

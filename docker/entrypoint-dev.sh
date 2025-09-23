@@ -42,13 +42,40 @@ php artisan migrate --force
 echo "Seeding database..."
 php artisan db:seed --force
 
-# Install and activate modern-react theme only
-echo "Installing modern-react theme..."
-php artisan theme:install modern-react --activate || echo "Modern-react theme install/activate failed, continuing..."
+# Install and activate modern-react theme only if not already active
+echo "Checking theme status..."
+ACTIVE_THEME=$(php -r "
+require 'vendor/autoload.php';
+\$app = require 'bootstrap/app.php';
+\$app->make(Illuminate\\Contracts\\Console\\Kernel::class);
+try {
+    \$theme = App\\Models\\Theme::active()->first();
+    echo \$theme ? \$theme->slug : 'none';
+} catch (Exception \$e) {
+    echo 'none';
+}
+" 2>/dev/null || echo "none")
 
-# Publish assets for all installed themes
+if [ "$ACTIVE_THEME" != "modern-react" ]; then
+    echo "Installing and activating modern-react theme..."
+    php artisan theme:install modern-react --activate || echo "Theme install/activate failed, continuing..."
+else
+    echo "Modern-react theme already active, skipping installation."
+fi
+
+# Publish assets for all installed themes (safe to run multiple times)
 echo "Publishing theme assets..."
-php -r "require 'vendor/autoload.php'; $app = require 'bootstrap/app.php'; $app->make(Illuminate\\Contracts\\Console\\Kernel::class); $ok = $app->make(App\\Services\\ThemeManager::class)->publishAllAssets(); echo ($ok ? 'Theme assets published' : 'Publishing theme assets failed'), PHP_EOL;" || echo "Publishing theme assets step encountered an error (continuing)"
+php -r "
+require 'vendor/autoload.php';
+\$app = require 'bootstrap/app.php';
+\$app->make(Illuminate\\Contracts\\Console\\Kernel::class);
+try {
+    \$ok = \$app->make(App\\Services\\ThemeManager::class)->publishAllAssets();
+    echo (\$ok ? 'Theme assets published' : 'Publishing theme assets failed'), PHP_EOL;
+} catch (Exception \$e) {
+    echo 'Publishing theme assets encountered an error: ' . \$e->getMessage() . PHP_EOL;
+}
+" || echo "Publishing theme assets step encountered an error (continuing)"
 
 # Create storage link for media files
 echo "Creating storage link..."

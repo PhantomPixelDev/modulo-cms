@@ -18,6 +18,7 @@ class Theme extends Model
         'screenshot',
         'tags',
         'supports',
+        'template_engine',
         'templates',
         'partials',
         'assets',
@@ -151,7 +152,7 @@ class Theme extends Model
     /**
      * Get asset URL
      */
-    public function getAssetUrl(string $type, string $asset = null): string|array|null
+    public function getAssetUrl(string $type, ?string $asset = null): string|array|null
     {
         $assets = $this->assets ?? [];
         
@@ -184,7 +185,7 @@ class Theme extends Model
     /**
      * Get customizer setting
      */
-    public function getCustomizerSetting(string $section, string $setting = null)
+    public function getCustomizerSetting(string $section, ?string $setting = null)
     {
         $customizer = $this->customizer ?? [];
         

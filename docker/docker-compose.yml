@@ -19,7 +19,7 @@ services:
       - "0.0.0.0:8080:8000"
     # No compose-level env_file; Laravel reads root ../.env mounted below
     volumes:
-      - ../.env:/var/www/html/.env:z,ro
+      - ../.env:/var/www/html/.env:z
       - ../:/var/www/html:z,cached
       - bun_modules_app:/var/www/html/node_modules
       - vendor_data:/var/www/html/vendor
