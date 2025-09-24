@@ -10,16 +10,19 @@ use App\Models\Template;
 use App\Services\ThemeManager;
 use App\Services\MenuService;
 use Illuminate\Support\Facades\View;
+use App\Services\ReactTemplateRenderer;
 
 class TemplateRenderingService
 {
     protected ThemeManager $themeManager;
     protected MenuService $menuService;
+    protected ReactTemplateRenderer $reactRenderer;
 
-    public function __construct(ThemeManager $themeManager, MenuService $menuService)
+    public function __construct(ThemeManager $themeManager, MenuService $menuService, ReactTemplateRenderer $reactRenderer)
     {
         $this->themeManager = $themeManager;
         $this->menuService = $menuService;
+        $this->reactRenderer = $reactRenderer;
     }
 
     /**
@@ -27,280 +30,74 @@ class TemplateRenderingService
      */
     public function renderTaxonomyArchive($posts, Taxonomy $taxonomy, TaxonomyTerm $term)
     {
-        $common = [
-            'assets' => $this->themeManager->getAssets(),
-            'site_name' => config('app.name', 'CMS'),
-            'title' => ($taxonomy->label ?: ucfirst($taxonomy->slug)) . ': ' . $term->name,
-            'meta_description' => $term->description ?? '',
-        ];
-        $data = array_merge([
+        $data = [
             'taxonomy' => $taxonomy,
             'term' => $term,
             'posts' => $posts,
-        ], $common, $this->buildSeoForTaxonomy($taxonomy, $term));
+            'title' => ($taxonomy->label ?: ucfirst($taxonomy->slug)) . ': ' . $term->name,
+            'meta_description' => $term->description ?? '',
+        ];
+        $data = array_merge($data, $this->buildSeoForTaxonomy($taxonomy, $term));
 
-        $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
-        // Try specific templates first, then generic archive
-        $candidates = [];
-        $slug = trim((string)($taxonomy->slug ?? ''));
-        if ($slug !== '') {
-            $candidates[] = $slug;      // e.g. 'tag' or 'category'
-        }
-        $candidates[] = 'archive';
-
-        foreach ($candidates as $tpl) {
-            $themeTemplate = $this->themeManager->renderTemplate($tpl, $themeData);
-            if ($themeTemplate) {
-                if ($this->isFullHtmlDocument($themeTemplate)) {
-                    return $themeTemplate;
-                }
-                return $this->renderLayout($themeTemplate, $data);
-            }
-        }
-
-        // Fallback to index renderer with contextual title
-        return $this->renderIndex($posts, null, [
-            'title' => $common['title'],
-            'description' => $common['meta_description'],
-        ]);
-    }
-
-    /**
-     * Detect if a rendered string is a complete HTML document
-     */
-    private function isFullHtmlDocument(string $html): bool
-    {
-        $snippet = substr(ltrim($html), 0, 500);
-        return stripos($snippet, '<!DOCTYPE') !== false || stripos($snippet, '<html') !== false;
+        // React-only: render the archive component defined in theme.json
+        return $this->reactRenderer
+            ->render('archive', $data)
+            ->toResponse(request())
+            ->getContent();
     }
 
     public function renderPost(Post $post, array $additionalData = [])
     {
-        $activeTheme = $this->themeManager->getActiveTheme();
-        
-        // Provide common variables expected by layouts (assets, site info)
-        $common = [
-            'assets' => $this->themeManager->getAssets(),
-            'site_name' => config('app.name', 'CMS'),
+        $data = array_merge([
+            'post' => $post,
+            'post_type' => $post->postType,
             'title' => $post->title,
             'meta_description' => $post->excerpt ?? '',
-        ];
-        $data = array_merge([
-            // Provide objects expected by theme templates
-            'post' => $post,
-        ], $this->getPostData($post), $common, $additionalData, $this->buildSeoForPost($post));
-        
-        if ($activeTheme && $activeTheme->template_engine === 'react') {
-            $postType = $post->postType;
-            $componentName = 'Post';
-            if ($postType && $postType->route_prefix) {
-                $componentName = ucfirst($postType->route_prefix);
-            }
-            
-            $props = array_merge($data, [
-                'post' => $post,
-                'post_type' => $postType,
-                'theme' => $activeTheme,
-            ]);
-            
-            \Log::info('TemplateRenderingService:renderPost:usingReact', ['component' => $componentName]);
-            
-            return \Inertia\Inertia::render($componentName, $props)->toResponse(request())->getContent();
-        }
-        
-        throw new \RuntimeException('No React theme available to render post');
+        ], $additionalData, $this->buildSeoForPost($post));
+
+        return $this->reactRenderer
+            ->render('post', $data)
+            ->toResponse(request())
+            ->getContent();
     }
 
     public function renderPage(Post $page, array $additionalData = [])
     {
-        $common = [
-            'assets' => $this->themeManager->getAssets(),
-            'site_name' => config('app.name', 'CMS'),
+        $data = array_merge([
+            'page' => $page,
+            'post' => $page, // alias if components expect `post`
             'title' => $page->title,
             'meta_description' => $page->excerpt ?? '',
-        ];
-        $data = array_merge([
-            // Provide objects expected by theme templates
-            'page' => $page,
-            // Also provide 'post' alias for backward compatibility with templates using $post
-            'post' => $page,
-        ], $this->getPageData($page), $common, $additionalData, $this->buildSeoForPage($page));
-        
-        // Try theme templates in order of specificity:
-        // 1) pages/{slug}.blade.php
-        // 2) {slug}.blade.php
-        // 3) page.blade.php (generic)
-        $slug = trim((string) $page->slug);
-        $candidates = [];
-        if ($slug !== '') {
-            $candidates[] = 'pages/' . $slug; // e.g. resources/themes/<active>/templates/pages/about.blade.php
-            $candidates[] = $slug;            // e.g. resources/themes/<active>/templates/about.blade.php
-        }
-        $candidates[] = 'page';               // fallback generic page template
+        ], $additionalData, $this->buildSeoForPage($page));
 
-        foreach ($candidates as $tpl) {
-            $themeData = array_merge($data, $this->getHeaderData(), $this->getFooterData());
-            $themeTemplate = $this->themeManager->renderTemplate($tpl, $themeData);
-            if ($themeTemplate) {
-                if ($this->isFullHtmlDocument($themeTemplate)) {
-                    return $themeTemplate;
-                }
-                return $this->renderLayout($themeTemplate, $data);
-            }
-        }
-        
-        // Fallback to database templates
-        $postType = $page->postType;
-        $template = $postType->singleTemplate ?? Template::ofType('page')->default()->first();
-        
-        if (!$template) {
-            $template = Template::ofType('page')->active()->first();
-        }
-
-        if ($template) {
-            return $template->renderWithData($data);
-        }
-        throw new \RuntimeException('No template available to render page');
+        return $this->reactRenderer
+            ->render('page', $data)
+            ->toResponse(request())
+            ->getContent();
     }
 
     public function renderIndex($posts, PostType $postType = null, array $additionalData = [])
     {
-        $activeTheme = $this->themeManager->getActiveTheme();
-        
-        $common = [
-            'assets' => $this->themeManager->getAssets(),
-            'site_name' => config('app.name', 'CMS'),
+        $data = array_merge([
+            'posts' => $posts,
+            'post_type' => $postType,
             'title' => $additionalData['title'] ?? ($postType?->plural_label ?? config('app.name', 'CMS')),
             'meta_description' => $additionalData['description'] ?? ($postType?->description ?? ''),
-        ];
-        $data = array_merge($this->getIndexData($posts, $postType), $common, $additionalData, $this->buildSeoForIndex($postType, $additionalData));
-        
-        if ($activeTheme && $activeTheme->template_engine === 'react') {
-            // Determine React component to render
-            $componentName = 'Index';
-            if ($postType && $postType->route_prefix) {
-                $componentName = ucfirst($postType->route_prefix);
-            }
-            
-            $props = array_merge($data, [
-                'posts' => $data['posts'] ?? collect(),
-                'pagination' => $data['pagination'] ?? null,
-                'post_type' => $postType,
-                'theme' => $activeTheme,
-            ]);
-            
-            \Log::info('TemplateRenderingService:renderIndex:usingReact', ['component' => $componentName]);
-            
-            // Return Inertia response which will render the React component
-            return \Inertia\Inertia::render($componentName, $props)->toResponse(request())->getContent();
-        }
-        
-        throw new \RuntimeException('No React theme available to render index');
+        ], $additionalData, $this->buildSeoForIndex($postType, $additionalData));
+
+        // Use the "posts" or "index" template from the React theme. Prefer "posts" for listings.
+        $templateName = 'posts';
+        return $this->reactRenderer
+            ->render($templateName, $data)
+            ->toResponse(request())
+            ->getContent();
     }
 
     public function renderLayout(string $content, array $data = [])
     {
-        // First try theme-provided layout
-        // IMPORTANT: Merge order ensures the rendered fragment ($content) wins over any
-        // 'content' key present in $data (like post body). Otherwise the layout would
-        // print only the raw body and drop the template markup (H1, image, etc.).
-        $layoutData = array_merge($data, [
-            'content' => $content,
-            'header' => $this->renderHeader($data),
-            'footer' => $this->renderFooter($data),
-        ]);
-
-        // Inject common defaults and theme asset URLs expected by theme layouts
-        $activeTheme = $this->themeManager->getActiveTheme();
-        $assets = $this->themeManager->getAssets();
-        $css = $assets['css'] ?? [];
-        $js = $assets['js'] ?? [];
-
-        $layoutData = array_merge([
-            'site_language' => config('app.locale', 'en'),
-            'site_name' => $layoutData['site_name'] ?? config('app.name', 'CMS'),
-            'page_title' => $layoutData['page_title'] ?? ($layoutData['title'] ?? ''),
-            'meta_description' => $layoutData['meta_description'] ?? ($layoutData['description'] ?? ''),
-            'body_classes' => $layoutData['body_classes'] ?? '',
-            'extra_head' => $layoutData['extra_head'] ?? '',
-            'extra_scripts' => $layoutData['extra_scripts'] ?? '',
-            // Provide the entire assets array for Blade layouts like themes.modern
-            'assets' => $assets,
-            'theme_css_url' => is_array($css) && count($css) > 0 ? $css[0] : (is_string($css) ? $css : ''),
-            'theme_responsive_css_url' => is_array($css) && count($css) > 1 ? $css[1] : '',
-            'theme_js_url' => is_array($js) && count($js) > 0 ? $js[0] : (is_string($js) ? $js : ''),
-            'favicon_url' => (function () use ($activeTheme) {
-                if (!$activeTheme) return '';
-                $images = $activeTheme->assets['images'] ?? [];
-                if (isset($images['favicon'])) {
-                    return asset('themes/' . $activeTheme->directory_path . '/' . $images['favicon']);
-                }
-                return '';
-            })(),
-        ], $layoutData);
-
-        // Also expose header/footer variables to the layout so Blade includes can use them
-        $layoutData = array_merge($layoutData, $this->getHeaderData(), $this->getFooterData());
-
-        $themeLayout = $this->themeManager->renderTemplate('layout', $layoutData);
-        if ($themeLayout) {
-            return $themeLayout;
-        }
-
-        // Fallback to database layout templates
-        $template = Template::ofType('layout')->default()->first();
-        if (!$template) {
-            $template = Template::ofType('layout')->active()->first();
-        }
-
-        if ($template) {
-            return $template->renderWithData($layoutData);
-        }
-        throw new \RuntimeException('No layout template available');
-    }
-
-    public function renderHeader(array $data = [])
-    {
-        $headerData = array_merge($this->getHeaderData(), $data);
-
-        // Theme header first
-        $themeHeader = $this->themeManager->renderTemplate('header', $headerData);
-        if ($themeHeader) {
-            return $themeHeader;
-        }
-
-        // Fallback to database templates
-        $template = Template::ofType('header')->default()->first();
-        if (!$template) {
-            $template = Template::ofType('header')->active()->first();
-        }
-
-        if ($template) {
-            return $template->renderWithData($headerData);
-        }
-        throw new \RuntimeException('No header template available');
-    }
-
-    public function renderFooter(array $data = [])
-    {
-        $footerData = array_merge($this->getFooterData(), $data);
-
-        // Theme footer first
-        $themeFooter = $this->themeManager->renderTemplate('footer', $footerData);
-        if ($themeFooter) {
-            return $themeFooter;
-        }
-
-        // Fallback to database templates
-        $template = Template::ofType('footer')->default()->first();
-        if (!$template) {
-            $template = Template::ofType('footer')->active()->first();
-        }
-
-        if ($template) {
-            return $template->renderWithData($footerData);
-        }
-        throw new \RuntimeException('No footer template available');
+        // React-only path does not use Blade layouts. If needed, implement a React layout component.
+        // For backward compatibility, simply return the provided content.
+        return $content;
     }
 
     private function getPostData(Post $post)
@@ -568,6 +365,4 @@ class TemplateRenderingService
             <a href="https://www.facebook.com/sharer/sharer.php?u=' . urlencode($url) . '" class="text-blue-500 hover:text-blue-700">Share on Facebook</a>
         </div>';
     }
-
-    // Removed: renderNavigationMenu, renderFooterLinks, and all fallback HTML methods.
 }

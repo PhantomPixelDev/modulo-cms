@@ -15,39 +15,38 @@ podman compose -f docker/docker-compose.yml down || true
 echo "🔨 Building and starting containers..."
 podman compose -f docker/docker-compose.yml up -d --build
 
-# Wait for containers to be ready
-echo "⏳ Waiting for containers to start..."
-sleep 10
+# Wait briefly for containers to transition to running state
+echo "⏳ Waiting for containers to start (initial grace period)..."
+sleep 3
 
 # Check container status
 echo "📊 Container status:"
 podman compose -f docker/docker-compose.yml ps
 
-# Wait for app to be ready
-echo "⏳ Waiting for app container to be ready..."
-for i in {1..30}; do
-    if podman compose -f docker/docker-compose.yml exec app php -v > /dev/null 2>&1; then
-        echo "✅ App container is ready!"
-        break
-    fi
-    echo "   Waiting... ($i/30)"
-    sleep 2
+# Wait until the entrypoint completes setup. The entrypoint prints this line
+READY_LOG_MARKER="Setup complete! Starting Laravel development server..."
+echo "⏳ Waiting for application setup to finish inside container..."
+
+MAX_WAIT_SECONDS=300
+SLEEP_INTERVAL=3
+ELAPSED=0
+
+until podman compose -f docker/docker-compose.yml logs app 2>/dev/null | grep -q "$READY_LOG_MARKER"; do
+  if [ $ELAPSED -ge $MAX_WAIT_SECONDS ]; then
+    echo "❌ Timeout waiting for app setup to complete after ${MAX_WAIT_SECONDS}s."
+    echo "ℹ️  You can inspect logs with: podman compose -f docker/docker-compose.yml logs -f app"
+    exit 1
+  fi
+  printf "   Waiting for setup to complete... (%ds/%ds)\r" "$ELAPSED" "$MAX_WAIT_SECONDS"
+  sleep $SLEEP_INTERVAL
+  ELAPSED=$((ELAPSED + SLEEP_INTERVAL))
 done
 
-# Generate app key if needed
-echo "🔑 Ensuring app key is set..."
-podman compose -f docker/docker-compose.yml exec app php artisan key:generate --force || true
+echo "\n✅ Application setup finished. Laravel dev server should be running."
 
-# Run migrations and seed
-echo "🗄️  Running migrations and seeding..."
-podman compose -f docker/docker-compose.yml exec app php artisan migrate --force
-podman compose -f docker/docker-compose.yml exec app php artisan db:seed --force
-
-# Clear all caches
-echo "🧹 Clearing caches..."
-podman compose -f docker/docker-compose.yml exec app php artisan cache:clear
-podman compose -f docker/docker-compose.yml exec app php artisan config:clear
-podman compose -f docker/docker-compose.yml exec app php artisan view:clear
+# At this point, vendor/ should exist and artisan should be usable without errors.
+# The entrypoint already runs key:generate, migrate, seed, cache steps.
+# If you still want to run additional commands, do it after this point.
 
 # Verify theme status
 echo "🎨 Checking theme status..."

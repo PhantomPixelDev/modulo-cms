@@ -20,7 +20,7 @@ class PostTypeRoutePrefixSeeder extends Seeder
         PostType::where('slug', 'page')->update(['route_prefix' => null]);
         
         // You can add more post types here as needed
-        // PostType::where('slug', 'news')->update(['route_prefix' => 'news']);
+        // PostType::where('slug', 'info')->update(['route_prefix' => 'infos']);
         // PostType::where('slug', 'blog')->update(['route_prefix' => 'blog']);
     }
 }

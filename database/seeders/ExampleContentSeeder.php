@@ -18,9 +18,9 @@ class ExampleContentSeeder extends Seeder
 
         $postType = PostType::where('name', 'post')->first();
         $pageType = PostType::where('name', 'page')->first();
-        $newsType = PostType::where('name', 'news')->first();
+        $infoType = PostType::where('name', 'info')->first();
 
-        if (!$postType || !$pageType || !$newsType) {
+        if (!$postType || !$pageType || !$infoType) {
             $this->command?->warn('Post types not found. Run ContentSeeder first.');
             return;
         }
@@ -91,8 +91,8 @@ class ExampleContentSeeder extends Seeder
             ],
         ];
 
-        // Example news items
-        $newsItems = [
+        // Example info items
+        $infoItems = [
             [
                 'title' => 'Modulo CMS Version 1.0 Released',
                 'excerpt' => 'We are excited to announce the official release of Modulo CMS version 1.0!',
@@ -109,22 +109,22 @@ class ExampleContentSeeder extends Seeder
             ],
         ];
 
-        foreach ($newsItems as $news) {
-            $slug = Str::slug($news['title']);
+        foreach ($infoItems as $info) {
+            $slug = Str::slug($info['title']);
             $post = Post::updateOrCreate(
-                ['slug' => $slug, 'post_type_id' => $newsType->id],
+                ['slug' => $slug, 'post_type_id' => $infoType->id],
                 [
                     'author_id' => $authorId,
-                    'title' => $news['title'],
-                    'excerpt' => $news['excerpt'],
-                    'content' => $news['content'],
+                    'title' => $info['title'],
+                    'excerpt' => $info['excerpt'],
+                    'content' => $info['content'],
                     'status' => 'published',
-                    'published_at' => $news['published_at'],
+                    'published_at' => $info['published_at'],
                 ]
             );
 
-            if (!empty($news['terms'])) {
-                $post->taxonomyTerms()->syncWithoutDetaching(array_filter($news['terms']));
+            if (!empty($info['terms'])) {
+                $post->taxonomyTerms()->syncWithoutDetaching(array_filter($info['terms']));
             }
         }
 

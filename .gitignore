@@ -21,3 +21,4 @@ yarn-error.log
 /.zed
 /database/seeders/DEVUserAccountsSeeder.php
 .windsurf/*
+.fuse_hidden*

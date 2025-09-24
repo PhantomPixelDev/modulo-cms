@@ -1,80 +1,84 @@
 # Start Dev Stack (Podman/Docker)
 
-This guide starts the Modulo CMS development environment with PHP (artisan serve) and Vite HMR.
+Run the Modulo CMS dev environment with Laravel (artisan serve) and Vite HMR.
 
 ## Prerequisites
 
 - Podman with compose support (or Docker). On some systems you may need `podman-compose`.
-- Ports in use:
+- Ports used:
   - 8080 → app (Laravel dev server)
   - 5173 → Vite HMR
 
-## 1) Build and start
+## Start (recommended)
 
 ```bash
-podman compose build
-podman compose up -d
+bash ./start-dev.sh
 ```
 
-If your system requires the Python podman-compose wrapper, use:
-```bash
-podman-compose -f podman-compose.yml build
-podman-compose -f podman-compose.yml up -d
-```
+What this does:
+- Builds and starts the containers from `docker/docker-compose.yml`.
+- Waits until the app prints: `Setup complete! Starting Laravel development server...`.
+- The app container initializes automatically (composer install, app key, publish Spatie migrations, migrate, seed, storage:link).
 
-## 2) Install PHP deps (first run)
-Because the project root is bind-mounted, run Composer in the container once:
-```bash
-podman exec -it modulo-cms composer install
-```
-
-## 3) Initialize Laravel (SQLite + key + migrations)
-```bash
-podman exec -it modulo-cms sh -lc 'mkdir -p database && touch database/database.sqlite'
-podman exec -it modulo-cms php artisan key:generate
-podman exec -it modulo-cms php artisan migrate --force
-```
-
-## 4) Open in browser
-
+Open:
 - App: http://localhost:8080
-- Vite HMR: http://localhost:5173
+- Health: http://localhost:8080/health (should say `ok`)
+
+## Manual alternative
+
+```bash
+podman compose -f docker/docker-compose.yml up -d --build
+podman compose -f docker/docker-compose.yml logs -f app
+```
+Wait until you see the readiness message above. After first boot, you can use:
+
+```bash
+podman compose -f docker/docker-compose.yml exec app php artisan about
+```
 
 ## Useful commands
 
 - Logs
 ```bash
-podman logs -f modulo-cms         # PHP (artisan serve)
-podman logs -f modulo-cms-vite    # Vite HMR
+podman compose -f docker/docker-compose.yml logs -f app           # Laravel
+podman compose -f docker/docker-compose.yml logs -f vite          # Vite HMR
 ```
 
 - Artisan
 ```bash
-podman exec -it modulo-cms php artisan about
-podman exec -it modulo-cms php artisan migrate
-podman exec -it modulo-cms php artisan tinker
-```
-
-- NPM (inside container)
-```bash
-podman exec -it modulo-cms npm run lint
-podman exec -it modulo-cms npm run build
+podman compose -f docker/docker-compose.yml exec app php artisan migrate
+podman compose -f docker/docker-compose.yml exec app php artisan tinker
 ```
 
 - Stop
 ```bash
-podman compose down
+podman compose -f docker/docker-compose.yml down
 ```
 
-## Day-to-day development
+## Development defaults
 
-See `docs/DAY_TO_DAY_DEV.md` for the ongoing development workflow (start/stop, logs, artisan, frontend tasks, tests, caches).
+To avoid bind-mount permission issues, the dev `.env` uses:
+- `VIEW_COMPILED_PATH=/tmp/laravel-views`
+- `DB_CONNECTION=sqlite` + `DB_DATABASE=/tmp/modulo-cms.sqlite`
+- `SESSION_DRIVER=file`, `CACHE_STORE=file`
+
+These are container-only and safe for development. For production, use real DB/cache and remove the `/tmp` overrides.
 
 ## Troubleshooting
 
-- Permission issues with bind mounts:
-```bash
-chmod -R 775 storage bootstrap/cache
-```
+- Keyring quota error (rootless Podman): `crun: join keyctl ... Disk quota exceeded`
+  - Fix by raising key quotas (sudo):
+    ```bash
+    sudo sysctl -w kernel.keys.maxkeys=50000 kernel.keys.maxbytes=50000000
+    echo -e "kernel.keys.maxkeys=50000\nkernel.keys.maxbytes=50000000" | sudo tee /etc/sysctl.d/60-keyring-quota.conf
+    sudo sysctl --system
+    ```
+  - Or use rootful Podman temporarily: `sudo podman compose -f docker/docker-compose.yml up -d --build`
 
-- Compose fallback warning to docker-compose provider: consider installing `podman-compose` and using the commands shown above.
+- Cache/view path not writable (Blade compiler error):
+  - Run: `podman compose -f docker/docker-compose.yml exec app php artisan optimize:clear`
+  - Ensure paths exist: `storage/framework/*`, `bootstrap/cache` (the entrypoint creates these; in dev we fallback to `/tmp` automatically)
+
+- SQLite read-only or missing tables:
+  - Dev DB lives at `/tmp/modulo-cms.sqlite` inside container; ensure it exists and is writable.
+  - Run migrations: `podman compose -f docker/docker-compose.yml exec app php artisan migrate --force`

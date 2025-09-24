@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             DefaultUsersSeeder::class,
             DefaultPagesSeeder::class,
             ExampleContentSeeder::class,
-            NewsSeeder::class,
+            InfoSeeder::class,
             MenuSeeder::class,
             MediaSeeder::class,
         ]);

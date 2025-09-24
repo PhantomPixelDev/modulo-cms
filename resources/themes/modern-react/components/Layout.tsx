@@ -65,7 +65,7 @@ export default function Layout({
   widgets = [] 
 }: LayoutProps) {
   const pageTitle = title ? `${title} | ${site?.name || 'Modulo CMS'}` : site?.name || 'Modulo CMS';
-  const containerWidth = theme?.layout?.container_width || 'max-w-6xl';
+  const containerWidth = theme?.layout?.container_width || 'container';
   const primaryColor = theme?.colors?.primary || '#3b82f6';
   const fontFamily = theme?.typography?.font_family || 'inter';
 
@@ -103,20 +103,24 @@ export default function Layout({
                          fontFamily === 'roboto' ? 'Roboto, system-ui, sans-serif' :
                          fontFamily === 'open-sans' ? '"Open Sans", system-ui, sans-serif' :
                          'system-ui, sans-serif'};
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+            min-height: 100vh;
           }
         `}</style>
       </Head>
 
-      <div className="min-h-screen flex flex-col bg-white text-gray-900">
+      <div className="min-h-screen flex flex-col">
         <Navigation site={site} menus={menus} />
         
-        <main className="flex-1 pt-16">
-          <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${containerWidth} py-8`}>
-            <div className="flex flex-col lg:flex-row gap-8">
-              <div className="lg:w-3/4">
-                {children}
+        <main className="flex-1 pt-20">
+          <div className="container mx-auto px-6 py-8">
+            <div className="flex flex-col xl:flex-row gap-8">
+              <div className="xl:w-4/5">
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-gray-900">
+                  {children}
+                </div>
               </div>
-              <aside className="lg:w-1/4">
+              <aside className="xl:w-1/5">
                 <Sidebar widgets={widgets} />
               </aside>
             </div>

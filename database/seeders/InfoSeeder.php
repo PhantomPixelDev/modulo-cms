@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
-class NewsSeeder extends Seeder
+class InfoSeeder extends Seeder
 {
     public function run(): void
     {
@@ -20,24 +20,24 @@ class NewsSeeder extends Seeder
             return;
         }
 
-        // Create or update news post type
-        $newsType = PostType::updateOrCreate(
-            ['name' => 'news'],
+        // Create or update info post type
+        $infoType = PostType::updateOrCreate(
+            ['name' => 'info'],
             [
-                'label' => 'News',
-                'plural_label' => 'News',
-                'description' => 'News and announcements',
+                'label' => 'Info',
+                'plural_label' => 'Infos',
+                'description' => 'Information and announcements',
                 'has_taxonomies' => true,
                 'has_featured_image' => true,
                 'has_excerpt' => true,
                 'has_comments' => false,
                 'supports' => json_encode(['title', 'editor', 'thumbnail', 'excerpt']),
                 'taxonomies' => json_encode(['category']),
-                'slug' => 'news',
-                'route_prefix' => 'news',
+                'slug' => 'infos',
+                'route_prefix' => 'infos',
                 'is_public' => true,
                 'is_hierarchical' => false,
-                'menu_icon' => 'newspaper',
+                'menu_icon' => 'info',
                 'menu_position' => 5.5,
             ]
         );
@@ -45,8 +45,8 @@ class NewsSeeder extends Seeder
         // Get the technology category term
         $techTerm = TaxonomyTerm::where('slug', 'technology')->first();
         
-        // Example news items
-        $newsItems = [
+        // Example info items
+        $infoItems = [
             [
                 'title' => 'Modulo CMS Version 1.0 Released',
                 'excerpt' => 'We are excited to announce the official release of Modulo CMS version 1.0!',
@@ -63,25 +63,25 @@ class NewsSeeder extends Seeder
             ],
         ];
 
-        foreach ($newsItems as $news) {
-            $slug = Str::slug($news['title']);
+        foreach ($infoItems as $info) {
+            $slug = Str::slug($info['title']);
             $post = Post::updateOrCreate(
-                ['slug' => $slug, 'post_type_id' => $newsType->id],
+                ['slug' => $slug, 'post_type_id' => $infoType->id],
                 [
                     'author_id' => $authorId,
-                    'title' => $news['title'],
-                    'excerpt' => $news['excerpt'],
-                    'content' => $news['content'],
+                    'title' => $info['title'],
+                    'excerpt' => $info['excerpt'],
+                    'content' => $info['content'],
                     'status' => 'published',
-                    'published_at' => $news['published_at'],
+                    'published_at' => $info['published_at'],
                 ]
             );
 
-            if (!empty($news['terms'])) {
-                $post->taxonomyTerms()->syncWithoutDetaching($news['terms']);
+            if (!empty($info['terms'])) {
+                $post->taxonomyTerms()->syncWithoutDetaching($info['terms']);
             }
         }
 
-        $this->command?->info('News post type and example news items created successfully!');
+        $this->command?->info('Info post type and example info items created successfully!');
     }
 }

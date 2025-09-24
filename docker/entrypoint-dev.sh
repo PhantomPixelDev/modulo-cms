@@ -1,110 +1,72 @@
 #!/bin/bash
 
-# Exit on any error
-set -e
+# Fail fast and make errors visible
+set -euo pipefail
 
 echo "Starting Modulo CMS development container..."
 
-# Wait for database to be ready (if using external DB)
-echo "Waiting for services to be ready..."
-sleep 2
-
-# Ensure SQLite database exists before Composer (package:discover may boot app)
+# 1) Ensure SQLite database exists (Laravel may access it during composer scripts)
 echo "Ensuring SQLite database exists..."
 mkdir -p database
-if [ ! -f database/database.sqlite ]; then
-    touch database/database.sqlite
-fi
+touch database/database.sqlite || true
+chmod 777 database || true
+chmod 666 database/database.sqlite || true
 
-# Install PHP dependencies first
+# 2) Install PHP dependencies (idempotent)
 echo "Installing PHP dependencies..."
 composer install --no-interaction --optimize-autoloader
 
-# Run Laravel setup commands
-echo "Running Laravel setup..."
-
-# Generate app key if not exists
-if [ ! -f .env ] || ! grep -q "APP_KEY=" .env || [ -z "$(grep APP_KEY= .env | cut -d'=' -f2)" ]; then
-    echo "Generating application key..."
-    php artisan key:generate --no-interaction
+# 3) Generate app key if not set
+if [ ! -f .env ] || ! grep -q "^APP_KEY=" .env || [ -z "$(grep -m1 '^APP_KEY=' .env | cut -d'=' -f2-)" ]; then
+  echo "Generating application key..."
+  php artisan key:generate --no-interaction || true
 fi
 
-# Clear and cache config
-echo "Clearing and caching configuration..."
-php artisan config:clear
-php artisan config:cache
+# 3.5) Ensure cache/view/session directories exist and are writable
+echo "Ensuring cache/view/session directories..."
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache || true
+# Try to make them writable for dev
+chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
-# Run migrations
+# If views path is not writable, fall back to /tmp
+if [ ! -w storage/framework/views ]; then
+  echo "storage/framework/views not writable; falling back to /tmp/laravel-views"
+  mkdir -p /tmp/laravel-views
+  chmod 777 /tmp/laravel-views || true
+  export VIEW_COMPILED_PATH=/tmp/laravel-views
+fi
+
+# If bootstrap/cache not writable, try to relax perms; otherwise fallback to /tmp
+if [ ! -w bootstrap/cache ]; then
+  echo "bootstrap/cache not writable; attempting chmod 777"
+  chmod 777 bootstrap/cache 2>/dev/null || true
+  if [ ! -w bootstrap/cache ]; then
+    echo "bootstrap/cache still not writable; using /tmp/bootstrap-cache"
+    mkdir -p /tmp/bootstrap-cache
+    chmod 777 /tmp/bootstrap-cache || true
+    export APP_BOOTSTRAP_CACHE=/tmp/bootstrap-cache
+  fi
+fi
+
+# 4) Publish package migrations required by the app (idempotent)
+echo "Publishing package migrations..."
+php artisan vendor:publish --provider="Spatie\\Permission\\PermissionServiceProvider" --tag=migrations --force || true
+php artisan vendor:publish --provider="Spatie\\MediaLibrary\\MediaLibraryServiceProvider" --tag=migrations --force || true
+
+# 4.5) Ensure we are not using stale cached config/views
+echo "Clearing cached config and views..."
+php artisan config:clear || true
+php artisan view:clear || true
+
+# 5) Run database migrations and seeds
 echo "Running database migrations..."
 php artisan migrate --force
-
-# Seed database if needed
 echo "Seeding database..."
-php artisan db:seed --force
+php artisan db:seed --force || true
 
-# Install and activate modern-react theme only if not already active
-echo "Checking theme status..."
-ACTIVE_THEME=$(php -r "
-require 'vendor/autoload.php';
-\$app = require 'bootstrap/app.php';
-\$app->make(Illuminate\\Contracts\\Console\\Kernel::class);
-try {
-    \$theme = App\\Models\\Theme::active()->first();
-    echo \$theme ? \$theme->slug : 'none';
-} catch (Exception \$e) {
-    echo 'none';
-}
-" 2>/dev/null || echo "none")
-
-if [ "$ACTIVE_THEME" != "modern-react" ]; then
-    echo "Installing and activating modern-react theme..."
-    php artisan theme:install modern-react --activate || echo "Theme install/activate failed, continuing..."
-else
-    echo "Modern-react theme already active, skipping installation."
-fi
-
-# Publish assets for all installed themes (safe to run multiple times)
-echo "Publishing theme assets..."
-php -r "
-require 'vendor/autoload.php';
-\$app = require 'bootstrap/app.php';
-\$app->make(Illuminate\\Contracts\\Console\\Kernel::class);
-try {
-    \$ok = \$app->make(App\\Services\\ThemeManager::class)->publishAllAssets();
-    echo (\$ok ? 'Theme assets published' : 'Publishing theme assets failed'), PHP_EOL;
-} catch (Exception \$e) {
-    echo 'Publishing theme assets encountered an error: ' . \$e->getMessage() . PHP_EOL;
-}
-" || echo "Publishing theme assets step encountered an error (continuing)"
-
-# Create storage link for media files
+# 6) Create storage symlink (safe to re-run)
 echo "Creating storage link..."
-php artisan storage:link || echo "Storage link already exists"
-
-# Restore missing media files
-echo "Restoring media files..."
-php artisan media:restore || echo "Media restoration failed, continuing..."
-
-# Clear route cache (skip caching in development to avoid closure errors)
-echo "Clearing route cache..."
-php artisan route:clear
-# php artisan route:cache
-
-# Clear view cache
-echo "Clearing view cache..."
-echo "Ensuring view compiled directory exists..."
-mkdir -p storage/framework/views || true
-php artisan view:clear || echo "view:clear failed (continuing)"
-
-# Set proper permissions
-echo "Setting permissions..."
-# Ensure directories exist before changing permissions
-mkdir -p storage bootstrap/cache public/themes || true
-# Some hosts (e.g., bind mounts with restrictive perms) may not allow these; don't exit on failure
-chmod -R 777 storage bootstrap/cache public/themes || true
-chown -R www-data:www-data storage bootstrap/cache public/themes || true
+php artisan storage:link || true
 
 echo "Setup complete! Starting Laravel development server..."
-
-# Start the Laravel development server
 exec php artisan serve --host=0.0.0.0 --port=8000

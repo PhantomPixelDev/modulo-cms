@@ -39,24 +39,24 @@ class ContentSeeder extends Seeder
         // Intentionally do NOT seed the 'page' post type. Pages will be created on-demand
         // by the PagesController when an admin first uses the Pages section.
 
-        // Add news post type
-        $newsType = PostType::updateOrCreate(
-            ['name' => 'news'],
+        // Add info post type
+        $infoType = PostType::updateOrCreate(
+            ['name' => 'info'],
             [
-                'label' => 'News',
-                'plural_label' => 'News',
-                'description' => 'News and announcements',
+                'label' => 'Info',
+                'plural_label' => 'Infos',
+                'description' => 'Information and announcements',
                 'has_taxonomies' => true,
                 'has_featured_image' => true,
                 'has_excerpt' => true,
                 'has_comments' => false,
                 'supports' => ['title', 'editor', 'thumbnail', 'excerpt'],
                 'taxonomies' => ['category'],
-                'slug' => 'news',
-                'route_prefix' => 'news',
+                'slug' => 'infos',
+                'route_prefix' => 'infos',
                 'is_public' => true,
                 'is_hierarchical' => false,
-                'menu_icon' => 'newspaper',
+                'menu_icon' => 'info',
                 'menu_position' => 5.5,
             ]
         );
