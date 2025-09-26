@@ -34,6 +34,7 @@ class TaxonomyTermController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', \App\Models\TaxonomyTerm::class);
         $query = TaxonomyTerm::with('taxonomy')->orderBy('term_order');
 
         if ($request->has('taxonomy_id')) {
@@ -60,6 +61,7 @@ class TaxonomyTermController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', \App\Models\TaxonomyTerm::class);
         $taxonomies = Taxonomy::all();
         $parentTerms = TaxonomyTerm::whereNull('parent_id')->get();
 
@@ -81,6 +83,7 @@ class TaxonomyTermController extends Controller
      */
     public function store(TaxonomyTermRequest $request)
     {
+        $this->authorize('create', \App\Models\TaxonomyTerm::class);
         $data = $request->validated();
         $data['slug'] = $this->makeUniqueSlug($data['name'], (int) $data['taxonomy_id']);
         $data['term_order'] = $data['term_order'] ?? 0;
@@ -94,6 +97,7 @@ class TaxonomyTermController extends Controller
      */
     public function show(TaxonomyTerm $taxonomyTerm)
     {
+        $this->authorize('view', $taxonomyTerm);
         $taxonomyTerm->load([
             'taxonomy',
             'parent',
@@ -120,6 +124,7 @@ class TaxonomyTermController extends Controller
      */
     public function edit(TaxonomyTerm $taxonomyTerm)
     {
+        $this->authorize('update', $taxonomyTerm);
         $taxonomies = Taxonomy::all();
         $parentTerms = TaxonomyTerm::whereNull('parent_id')
             ->where('id', '!=', $taxonomyTerm->id)
@@ -144,6 +149,7 @@ class TaxonomyTermController extends Controller
      */
     public function update(TaxonomyTermRequest $request, TaxonomyTerm $taxonomyTerm)
     {
+        $this->authorize('update', $taxonomyTerm);
         $data = $request->validated();
         $data['slug'] = $this->makeUniqueSlug($data['name'], (int) $data['taxonomy_id'], $taxonomyTerm->id);
         $data['term_order'] = $data['term_order'] ?? 0;
@@ -157,6 +163,7 @@ class TaxonomyTermController extends Controller
      */
     public function destroy(TaxonomyTerm $taxonomyTerm)
     {
+        $this->authorize('delete', $taxonomyTerm);
         // Prevent deleting default terms
         if (in_array($taxonomyTerm->name, ['Uncategorized'])) {
             return back()->with('error', 'Cannot delete default taxonomy terms.');

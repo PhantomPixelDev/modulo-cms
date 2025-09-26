@@ -12,6 +12,14 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view users')->only(['index']);
+        $this->middleware('permission:create users')->only(['create', 'store']);
+        $this->middleware('permission:edit users')->only(['edit', 'update']);
+        $this->middleware('permission:delete users')->only(['destroy']);
+    }
+
     /**
      * Display a listing of users.
      */
@@ -54,6 +62,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', User::class);
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -143,6 +152,7 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        $this->authorize('delete', $user);
         // Prevent self-deletion
         if ($user->id === auth()->id()) {
             return back()->with('error', 'You cannot delete yourself.');

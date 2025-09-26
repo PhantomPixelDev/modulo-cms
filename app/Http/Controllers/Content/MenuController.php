@@ -12,8 +12,14 @@ use Inertia\Inertia;
 
 class MenuController extends Controller
 {
+    public function __construct()
+    {
+        // Policies handle authorization for menu actions
+    }
+
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Menu::class);
         $menus = Menu::with('items.children')->orderBy('name')->get();
         if ($request->wantsJson()) {
             return response()->json($menus);
@@ -25,6 +31,7 @@ class MenuController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Menu::class);
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:menus,slug',
@@ -42,6 +49,7 @@ class MenuController extends Controller
 
     public function show(Request $request, Menu $menu)
     {
+        $this->authorize('view', $menu);
         $menu->load('items.children');
         if ($request->wantsJson()) {
             return response()->json($menu);
@@ -53,6 +61,7 @@ class MenuController extends Controller
 
     public function update(Request $request, Menu $menu)
     {
+        $this->authorize('update', $menu);
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:menus,slug,' . $menu->id,
@@ -73,6 +82,7 @@ class MenuController extends Controller
 
     public function destroy(Request $request, Menu $menu)
     {
+        $this->authorize('delete', $menu);
         // Cascade delete items
         MenuItem::where('menu_id', $menu->id)->delete();
         // Invalidate cache entries for this menu before deletion

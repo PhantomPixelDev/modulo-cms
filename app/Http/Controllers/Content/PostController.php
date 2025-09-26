@@ -15,7 +15,10 @@ class PostController extends Controller
 {
     public function __construct()
     {
-        // Laravel 12 uses route middleware instead of controller middleware
+        $this->middleware('permission:view posts')->only(['index', 'show']);
+        $this->middleware('permission:create posts')->only(['create', 'store']);
+        $this->middleware('permission:edit posts')->only(['edit', 'update']);
+        $this->middleware('permission:delete posts')->only(['destroy']);
     }
 
     /**
@@ -96,6 +99,7 @@ class PostController extends Controller
      */
     public function create(Request $request)
     {
+        $this->authorize('create', Post::class);
         // Exclude 'page' from Posts create form options
         $postTypes = PostType::where('name', '!=', 'page')->get();
         $taxonomyTerms = TaxonomyTerm::with('taxonomy')->get();
@@ -162,6 +166,7 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Post::class);
         $request->validate([
             'post_type_id' => 'required|exists:post_types,id',
             'title' => 'required|string|max:255',
@@ -223,6 +228,7 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
+        $this->authorize('view', $post);
         $post->load(['postType', 'author', 'taxonomyTerms.taxonomy']);
         
         $postData = [
@@ -279,6 +285,7 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
+        $this->authorize('update', $post);
         $post->load(['postType', 'author', 'taxonomyTerms.taxonomy']);
         // Exclude 'page' from Posts edit form options
         $postTypes = PostType::where('name', '!=', 'page')->get();
@@ -352,6 +359,7 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
+        $this->authorize('update', $post);
         $request->validate([
             'post_type_id' => 'required|exists:post_types,id',
             'title' => 'required|string|max:255',
@@ -416,6 +424,7 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
+        $this->authorize('delete', $post);
         $post->delete();
         return back()->with('success', 'Post deleted successfully.');
     }

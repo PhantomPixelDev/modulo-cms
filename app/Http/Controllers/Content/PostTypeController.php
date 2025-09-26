@@ -10,11 +10,17 @@ use Illuminate\Support\Str;
 
 class PostTypeController extends Controller
 {
+    public function __construct()
+    {
+        // Policies govern all actions for post types
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        $this->authorize('viewAny', PostType::class);
         // Hide the built-in 'page' type from the Post Types list
         $postTypesPaginated = PostType::where('name', '!=', 'page')
             ->orderBy('menu_position')
@@ -43,6 +49,7 @@ class PostTypeController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', PostType::class);
         return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.create',
             'adminStats' => [
@@ -59,6 +66,7 @@ class PostTypeController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', PostType::class);
         $request->validate([
             'name' => 'required|string|max:255|unique:post_types',
             'label' => 'required|string|max:255',
@@ -109,6 +117,7 @@ class PostTypeController extends Controller
      */
     public function show(PostType $postType)
     {
+        $this->authorize('view', $postType);
         $postType->load('posts');
         
         return Inertia::render('Dashboard', [
@@ -128,6 +137,7 @@ class PostTypeController extends Controller
      */
     public function edit(PostType $postType)
     {
+        $this->authorize('update', $postType);
         return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.edit',
             'editPostType' => $postType,
@@ -145,6 +155,7 @@ class PostTypeController extends Controller
      */
     public function update(Request $request, PostType $postType)
     {
+        $this->authorize('update', $postType);
         $request->validate([
             'name' => 'required|string|max:255|unique:post_types,name,' . $postType->id,
             'label' => 'required|string|max:255',
@@ -195,6 +206,7 @@ class PostTypeController extends Controller
      */
     public function destroy(PostType $postType)
     {
+        $this->authorize('delete', $postType);
         // Prevent deleting default post types
         if (in_array($postType->name, ['post', 'page'])) {
             throw \Illuminate\Validation\ValidationException::withMessages([

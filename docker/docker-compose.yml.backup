@@ -1,0 +1,71 @@
+## docker-compose for LOCAL DEVELOPMENT only
+## ----------------------------------------
+## This setup mounts your working directory into the container,
+## runs `php artisan serve` for the app, and a separate Vite dev server
+## for HMR. Not intended for production use.
+services:
+  app:
+    container_name: modulo-cms
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: development
+      args:
+        BUN_VERSION: latest
+        PHP_VERSION: 8.4
+    labels:
+      - purpose=development-only
+    ports:
+      - "0.0.0.0:8080:8000"
+    # No compose-level env_file; Laravel reads root ../.env mounted below
+    volumes:
+      - ../.env:/var/www/html/.env:z
+      - ../:/var/www/html:z,cached
+      - bun_modules_app:/var/www/html/node_modules
+      - vendor_data:/var/www/html/vendor
+      - composer_cache:/tmp/composer-cache
+      - storage_data:/var/www/html/storage
+      - cache_data:/var/www/html/bootstrap/cache
+      - media_uploads:/var/www/html/storage/app/public
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  vite:
+    container_name: modulo-cms-vite
+    image: docker.io/oven/bun:latest
+    user: root
+    labels:
+      - purpose=development-only
+    environment:
+      - VITE_DEV_SERVER_URL=http://vite:5173
+    working_dir: /var/www/html
+    volumes:
+      - ../:/var/www/html
+      - /var/www/html/node_modules
+    command: sh -c "bun install && bun run dev --host 0.0.0.0 --port 5173 --strictPort"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    ports:
+      - "5173:5173"
+    expose:
+      - "5173"
+    restart: unless-stopped
+
+volumes:
+  bun_modules_app:
+  bun_modules_vite:
+  vendor_data:
+  composer_cache:
+  bun_cache:
+  storage_data:
+  cache_data:
+  media_uploads:

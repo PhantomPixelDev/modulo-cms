@@ -3,6 +3,7 @@ import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
+import { useAcl } from '@/lib/acl';
 
 interface MenuItemDTO {
   id: number;
@@ -36,6 +37,7 @@ interface MenuDTO {
 
 export default function AdminMenusShow() {
   const menu = (usePage().props as any).menu as MenuDTO;
+  const { hasPermission, isAdmin } = useAcl();
 
   const { data, setData, put, processing, errors } = useForm({
     name: menu?.name || '',
@@ -58,16 +60,19 @@ export default function AdminMenusShow() {
           <Button asChild variant="ghost">
             <Link href="/dashboard/admin/menus">Back</Link>
           </Button>
-          <Button
-            variant="destructive"
-            onClick={() => {
-              if (!confirm(`Delete menu \"${menu.name}\"?`)) return;
-              router.delete(`/dashboard/admin/menus/${menu.id}`, { replace: true });
-            }}
-          >Delete</Button>
+          {(isAdmin() || hasPermission('delete menus')) && (
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (!confirm(`Delete menu \"${menu.name}\"?`)) return;
+                router.delete(`/dashboard/admin/menus/${menu.id}`, { replace: true });
+              }}
+            >Delete</Button>
+          )}
         </div>
       </div>
 
+      {(isAdmin() || hasPermission('edit menus')) && (
       <form onSubmit={submit} className="space-y-3 max-w-xl">
         <div>
           <label className="block text-sm mb-1">Name</label>
@@ -91,13 +96,18 @@ export default function AdminMenusShow() {
         </div>
         <Button disabled={processing}>Save</Button>
       </form>
+      )}
 
       {/* Inline Menu Items Builder */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Create Item */}
         <div className="rounded border p-4">
-          <h2 className="font-medium mb-3">Add Menu Item</h2>
-          <CreateItemForm menuId={menu.id} allItems={flatten(menu.items || [])} />
+          {(isAdmin() || hasPermission('create menu items')) && (
+            <>
+              <h2 className="font-medium mb-3">Add Menu Item</h2>
+              <CreateItemForm menuId={menu.id} allItems={flatten(menu.items || [])} />
+            </>
+          )}
         </div>
 
         {/* Items List */}
@@ -330,16 +340,20 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
           <option value="auth">Authenticated users</option>
         </select>
         <div className="flex gap-2 justify-end md:col-span-2">
-          <Button disabled={processing} size="sm">Save</Button>
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={() => {
-              if (!confirm(`Delete item \"${item.label}\"?`)) return;
-              router.delete(`/dashboard/admin/menu-items/${item.id}`);
-            }}
-          >Delete</Button>
+          {(isAdmin() || hasPermission('edit menu items')) && (
+            <Button disabled={processing} size="sm">Save</Button>
+          )}
+          {(isAdmin() || hasPermission('delete menu items')) && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (!confirm(`Delete item \"${item.label}\"?`)) return;
+                router.delete(`/dashboard/admin/menu-items/${item.id}`);
+              }}
+            >Delete</Button>
+          )}
         </div>
       </form>
 

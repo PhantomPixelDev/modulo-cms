@@ -20,12 +20,20 @@ class ContentPermissionsSeeder extends Seeder
 
         // Create content management permissions
         $contentPermissions = [
+            // Admin area access gate
+            'access admin',
             // Post permissions
             'view posts',
             'create posts',
             'edit posts',
             'delete posts',
             'publish posts',
+
+            // Page permissions (separate Pages management in admin)
+            'view pages',
+            'create pages',
+            'edit pages',
+            'delete pages',
             
             // Post type permissions
             'view post types',

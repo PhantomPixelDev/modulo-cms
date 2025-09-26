@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
 
 class TaxonomyController extends Controller
 {
+    // Policies govern all actions for taxonomies
+
     /**
      * Generate a unique slug for Taxonomy across all records.
      */
@@ -32,6 +34,7 @@ class TaxonomyController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Taxonomy::class);
         $taxonomies = Taxonomy::orderBy('menu_position')->paginate(15);
 
         return Inertia::render('Dashboard', [
@@ -51,6 +54,7 @@ class TaxonomyController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', Taxonomy::class);
         $postTypes = PostType::all();
 
         return Inertia::render('Dashboard', [
@@ -70,6 +74,7 @@ class TaxonomyController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Taxonomy::class);
         $request->validate([
             'name' => 'required|string|max:255|unique:taxonomies',
             'label' => 'required|string|max:255',
@@ -105,6 +110,7 @@ class TaxonomyController extends Controller
      */
     public function show(Taxonomy $taxonomy)
     {
+        $this->authorize('view', $taxonomy);
         $taxonomy->load([
             'terms',
             'terms.posts' => function ($q) {
@@ -129,6 +135,7 @@ class TaxonomyController extends Controller
      */
     public function edit(Taxonomy $taxonomy)
     {
+        $this->authorize('update', $taxonomy);
         $postTypes = PostType::all();
 
         return Inertia::render('Dashboard', [
@@ -149,6 +156,7 @@ class TaxonomyController extends Controller
      */
     public function update(Request $request, Taxonomy $taxonomy)
     {
+        $this->authorize('update', $taxonomy);
         $request->validate([
             'name' => 'required|string|max:255|unique:taxonomies,name,' . $taxonomy->id,
             'label' => 'required|string|max:255',
@@ -184,6 +192,7 @@ class TaxonomyController extends Controller
      */
     public function destroy(Taxonomy $taxonomy)
     {
+        $this->authorize('delete', $taxonomy);
         // Prevent deleting default taxonomies
         if (in_array($taxonomy->name, ['category', 'post_tag'])) {
             return back()->with('error', 'Cannot delete default taxonomies.');

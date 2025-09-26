@@ -37,47 +37,24 @@ interface Post {
   }>;
 }
 
-interface PaginationData {
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
-  prev_page_url?: string;
-  next_page_url?: string;
-}
-
 interface PostsProps {
   posts: {
     data: Post[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    prev_page_url?: string;
+    next_page_url?: string;
   };
-  pagination: PaginationData;
-  theme: {
-    name: string;
-    slug: string;
-    version: string;
-    colors?: {
-      primary?: string;
-      secondary?: string;
-    };
-    typography?: {
-      font_family?: string;
-    };
-    layout?: {
-      container_width?: string;
-    };
-  };
-  site: {
-    name: string;
-    tagline?: string;
-    logo?: string;
-  };
+  site?: any;
+  theme?: any;
   menus?: any;
 }
 
-const Posts: React.FC<PostsProps> = ({ posts, pagination, theme, site, menus }) => {
+export default function Posts({ posts, site, theme, menus }: PostsProps) {
   // Provide default values to prevent undefined errors
-  const safePosts = posts || { data: [] };
-  const safePagination = pagination || { current_page: 1, last_page: 1, per_page: 12, total: 0 };
+  const safePosts = posts || { data: [], current_page: 1, last_page: 1, per_page: 12, total: 0 };
   const safeTheme = theme || { name: 'Modern React', slug: 'modern-react', version: '1.0.0' };
   const safeSite = site || { name: 'Modulo CMS', tagline: 'Modern Content Management System' };
   const safeMenus = menus || {};
@@ -172,6 +149,4 @@ const Posts: React.FC<PostsProps> = ({ posts, pagination, theme, site, menus }) 
       </div>
     </Layout>
   );
-};
-
-export default Posts;
+}

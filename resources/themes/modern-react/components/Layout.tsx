@@ -62,7 +62,7 @@ export default function Layout({
   theme,
   site,
   menus,
-  widgets = [] 
+  widgets = []
 }: LayoutProps) {
   const pageTitle = title ? `${title} | ${site?.name || 'Modulo CMS'}` : site?.name || 'Modulo CMS';
   const containerWidth = theme?.layout?.container_width || 'container';

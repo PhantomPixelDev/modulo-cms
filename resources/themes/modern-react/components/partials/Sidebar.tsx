@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 
 interface Widget {
   id: string;
@@ -38,17 +38,18 @@ interface SidebarProps {
   widgets?: Widget[];
   className?: string;
   recentPosts?: RecentPost[];
-  categories?: Category[];
-  tags?: Tag[];
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
   widgets = [], 
   className = '', 
-  recentPosts = [], 
-  categories = [], 
-  tags = [] 
+  recentPosts = [] 
 }) => {
+  const { props } = usePage<any>();
+  
+  // Extract categories and tags from shared page data
+  const categories: Category[] = props.categories || [];
+  const tags: Tag[] = props.tags || [];
   // Default widgets if none are provided
   const defaultWidgets: Widget[] = [
     {
@@ -109,14 +110,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         );
 
       case 'categories':
-        const displayCategories = categories.length > 0 
-          ? categories
-          : [
-              { id: 1, name: 'Technology', posts_count: 5, slug: 'technology' },
-              { id: 2, name: 'Web Development', posts_count: 8, slug: 'web-development' },
-              { id: 3, name: 'Design', posts_count: 3, slug: 'design' },
-              { id: 4, name: 'Business', posts_count: 2, slug: 'business' },
-            ];
+        // Only show categories if we have real data
+        if (!categories || categories.length === 0) {
+          return null;
+        }
 
         return (
           <div key={widget.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100/50 hover:shadow-xl transition-all duration-300">
@@ -129,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <h3 className="text-xl font-bold text-gray-800">{widget.title}</h3>
             </div>
             <div className="space-y-3">
-              {displayCategories.map((category) => (
+              {categories.map((category) => (
                 <Link
                   key={category.id}
                   href={`/category/${category.slug}`}
@@ -144,28 +141,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </Link>
               ))}
             </div>
-            {displayCategories.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-7v14a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2h10a2 2 0 012 2v7z" />
-                </svg>
-                <p>No categories available</p>
-              </div>
-            )}
           </div>
         );
 
       case 'tags':
-        const displayTags = tags.length > 0 
-          ? tags
-          : [
-              { id: 1, name: 'React', slug: 'react' },
-              { id: 2, name: 'TypeScript', slug: 'typescript' },
-              { id: 3, name: 'Laravel', slug: 'laravel' },
-              { id: 4, name: 'Tailwind CSS', slug: 'tailwind-css' },
-              { id: 5, name: 'JavaScript', slug: 'javascript' },
-              { id: 6, name: 'PHP', slug: 'php' },
-            ];
+        // Only show tags if we have real data
+        if (!tags || tags.length === 0) {
+          return null;
+        }
 
         return (
           <div key={widget.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100/50 hover:shadow-xl transition-all duration-300">
@@ -178,7 +161,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <h3 className="text-xl font-bold text-gray-800">{widget.title}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
-              {displayTags.map((tag) => (
+              {tags.map((tag) => (
                 <Link
                   key={tag.id}
                   href={`/tag/${tag.slug}`}
@@ -189,14 +172,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </Link>
               ))}
             </div>
-            {displayTags.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                <p>No tags available</p>
-              </div>
-            )}
           </div>
         );
 

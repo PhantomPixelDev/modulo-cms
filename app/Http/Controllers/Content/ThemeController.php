@@ -16,6 +16,7 @@ class ThemeController extends Controller
     public function __construct(ThemeManager $themeManager)
     {
         $this->themeManager = $themeManager;
+        // Policies enforce authorization for theme actions
     }
 
     /**
@@ -23,6 +24,7 @@ class ThemeController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', \App\Models\Theme::class);
         $installedThemes = $this->themeManager->getInstalledThemes();
         $discoveredThemes = $this->themeManager->discoverThemes();
         $activeTheme = $this->themeManager->getActiveTheme();
@@ -40,6 +42,7 @@ class ThemeController extends Controller
      */
     public function install(Request $request)
     {
+        $this->authorize('install', \App\Models\Theme::class);
         $request->validate([
             'slug' => 'required|string',
         ]);
@@ -66,6 +69,14 @@ class ThemeController extends Controller
      */
     public function activate(Request $request, string $slug)
     {
+        // Find the theme to authorize activation; fallback to manager if not installed yet
+        $themeModel = \App\Models\Theme::where('slug', $slug)->first();
+        if ($themeModel) {
+            $this->authorize('activate', $themeModel);
+        } else {
+            // If not installed, require install/activate permissions via install gate
+            $this->authorize('install', \App\Models\Theme::class);
+        }
         try {
             $success = $this->themeManager->activateTheme($slug);
 
@@ -86,6 +97,7 @@ class ThemeController extends Controller
     public function show(string $id)
     {
         $theme = Theme::findOrFail($id);
+        $this->authorize('view', $theme);
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'themes.show',
@@ -101,6 +113,7 @@ class ThemeController extends Controller
     public function update(Request $request, string $id)
     {
         $theme = Theme::findOrFail($id);
+        $this->authorize('update', $theme);
 
         $request->validate([
             'customizer' => 'sometimes|array',
@@ -121,6 +134,7 @@ class ThemeController extends Controller
     public function destroy(string $id)
     {
         $theme = Theme::findOrFail($id);
+        $this->authorize('delete', $theme);
 
         if ($theme->is_active) {
             return back()->withErrors(['theme' => 'Cannot uninstall active theme']);
@@ -144,6 +158,7 @@ class ThemeController extends Controller
      */
     public function discoverAll()
     {
+        $this->authorize('install', \App\Models\Theme::class);
         try {
             $installedThemes = $this->themeManager->installAllThemes(Auth::id());
             $this->themeManager->publishAllAssets();
@@ -161,6 +176,7 @@ class ThemeController extends Controller
     public function publishAssets(string $id)
     {
         $theme = Theme::findOrFail($id);
+        $this->authorize('publishAssets', $theme);
 
         try {
             $success = $this->themeManager->publishAssets($theme);
@@ -181,6 +197,7 @@ class ThemeController extends Controller
     public function customizer(string $id)
     {
         $theme = Theme::findOrFail($id);
+        $this->authorize('customize', $theme);
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'themes.customizer',

@@ -18,5 +18,9 @@
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'throttle:api' => \App\Http\Middleware\ThrottleRequestsPerMinute::class . ':60,1',
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        // Spatie Permission middlewares for RBAC
+        'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+        'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+        'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
     ];
 {{ ... }}

@@ -16,7 +16,8 @@ declare global {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-const pages = import.meta.glob('./pages/**/*.tsx');
+// Page components (standardized to a single `pages/` directory)
+const pages = import.meta.glob('./pages/**/*.tsx', { eager: true });
 const themeComponents = import.meta.glob('../themes/**/components/**/*.tsx', { eager: false });
 
 createInertiaApp({
@@ -47,18 +48,20 @@ createInertiaApp({
             }
         }
 
-        // Try exact match first (preserve existing behavior)
-        let direct = `./pages/${name}.tsx`;
-        let indexPath = `./pages/${name}/index.tsx`;
-        let key = pages[direct] ? direct : indexPath;
-        if (pages[key]) return resolvePageComponent(key, pages);
+        // Try exact match within standardized `pages/` directory
+        const possiblePaths = [
+            `./pages/${name}.tsx`,
+            `./pages/${name}/index.tsx`,
+            // Handle kebab-case for routes like 'taxonomy-term'
+            `./pages/${name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}.tsx`,
+        ];
 
-        // Fallback: try lowercase variant (helps when backend sends 'Dashboard' but files are 'dashboard')
-        const lower = name.toLowerCase();
-        direct = `./pages/${lower}.tsx`;
-        indexPath = `./pages/${lower}/index.tsx`;
-        key = pages[direct] ? direct : indexPath;
-        if (pages[key]) return resolvePageComponent(key, pages);
+        // Try to find the first matching path
+        for (const path of possiblePaths) {
+            if (pages[path]) {
+                return resolvePageComponent(path, pages);
+            }
+        }
 
         // As a last resort, throw with available keys to aid debugging
         throw new Error(`Page not found: ./pages/${name}.tsx or ./pages/${name}/index.tsx or theme component ${name}`);

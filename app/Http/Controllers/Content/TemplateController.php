@@ -9,11 +9,17 @@ use Inertia\Inertia;
 
 class TemplateController extends Controller
 {
+    public function __construct()
+    {
+        // Policies handle authorization for all actions
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        $this->authorize('viewAny', Template::class);
         $templates = Template::with('creator')
             ->orderBy('type')
             ->orderBy('name')
@@ -57,6 +63,7 @@ class TemplateController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', Template::class);
         return Inertia::render('Dashboard', [
             'adminSection' => 'templates.create',
             'templateTypes' => Template::getAvailableTypes(),
@@ -74,6 +81,7 @@ class TemplateController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Template::class);
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|in:' . implode(',', array_keys(Template::getAvailableTypes())),
@@ -109,6 +117,7 @@ class TemplateController extends Controller
      */
     public function show(Template $template)
     {
+        $this->authorize('view', $template);
         $template->load('creator');
         
         return Inertia::render('Dashboard', [
@@ -144,6 +153,7 @@ class TemplateController extends Controller
      */
     public function edit(Template $template)
     {
+        $this->authorize('update', $template);
         return Inertia::render('Dashboard', [
             'adminSection' => 'templates.edit',
             'editTemplate' => [
@@ -172,6 +182,7 @@ class TemplateController extends Controller
      */
     public function update(Request $request, Template $template)
     {
+        $this->authorize('update', $template);
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|in:' . implode(',', array_keys(Template::getAvailableTypes())),
@@ -208,6 +219,7 @@ class TemplateController extends Controller
      */
     public function destroy(Template $template)
     {
+        $this->authorize('delete', $template);
         // Prevent deleting default templates
         if ($template->is_default) {
             return back()->with('error', 'Cannot delete default templates.');

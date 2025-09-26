@@ -10,6 +10,8 @@ use Inertia\Inertia;
 
 class MenuItemController extends Controller
 {
+    // Policies govern all actions for menu items
+
     /**
      * Recursively delete a menu item's subtree (children, grandchildren, etc.).
      */
@@ -23,6 +25,7 @@ class MenuItemController extends Controller
     }
     public function index(Request $request)
     {
+        $this->authorize('viewAny', \App\Models\MenuItem::class);
         $menuId = $request->query('menu_id');
         $query = MenuItem::query();
         if ($menuId) {
@@ -41,6 +44,7 @@ class MenuItemController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', \App\Models\MenuItem::class);
         $data = $request->validate([
             'menu_id' => 'required|exists:menus,id',
             'parent_id' => 'nullable|exists:menu_items,id',
@@ -61,6 +65,7 @@ class MenuItemController extends Controller
 
     public function update(Request $request, MenuItem $menuItem)
     {
+        $this->authorize('update', $menuItem);
         $data = $request->validate([
             'parent_id' => 'nullable|exists:menu_items,id',
             'label' => 'required|string|max:255',
@@ -80,6 +85,7 @@ class MenuItemController extends Controller
 
     public function destroy(Request $request, MenuItem $menuItem)
     {
+        $this->authorize('delete', $menuItem);
         // Recursively delete full subtree
         $this->deleteSubtree($menuItem);
         if ($request->wantsJson()) {

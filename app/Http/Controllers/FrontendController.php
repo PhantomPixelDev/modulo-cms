@@ -37,50 +37,116 @@ class FrontendController extends Controller
         return $this->reactRenderer->isReactTheme();
     }
 
+
+
     /**
      * List posts by taxonomy term (e.g., /tag/{slug}, /category/{slug}).
      */
     public function listByTaxonomyTerm(Request $request, string $slug)
     {
+        \Log::info('listByTaxonomyTerm called', [
+            'slug' => $slug,
+            'routeParams' => $request->route()->parameters(),
+            'request' => $request->all(),
+        ]);
+        
         $taxonomySlug = strtolower((string) $request->route('taxonomySlug'));
+        \Log::info('Taxonomy slug', ['taxonomySlug' => $taxonomySlug]);
+        
         // Find public taxonomy by slug
-        $taxonomy = Taxonomy::where('slug', $taxonomySlug)->where('is_public', true)->firstOrFail();
+        $taxonomy = Taxonomy::where('slug', $taxonomySlug)
+            ->where('is_public', true)
+            ->firstOrFail();
+            
         // Find term by slug within taxonomy
-        $term = TaxonomyTerm::where('slug', $slug)->where('taxonomy_id', $taxonomy->id)->firstOrFail();
+        $term = TaxonomyTerm::with('taxonomy')
+            ->where('slug', $slug)
+            ->where('taxonomy_id', $taxonomy->id)
+            ->firstOrFail();
 
-        // Query published posts related to this term
-        $posts = Post::with(['postType', 'author'])
+        // Get paginated posts for this term
+        $perPage = 10; // Adjust as needed
+        $posts = $term->posts()
             ->published()
-            ->whereHas('taxonomyTerms', function($q) use ($term) {
-                $q->where('taxonomy_term_id', $term->id);
-            })
             ->orderBy('published_at', 'desc')
-            ->paginate(12);
+            ->with(['author', 'postType'])
+            ->paginate($perPage);
 
-        // Render using theme templates
-        $rendered = $this->templateService->renderTaxonomyArchive($posts, $taxonomy, $term);
-        if ($rendered) {
-            return response($rendered)->header('Content-Type', 'text/html');
+
+        // If using React rendering
+        if ($this->shouldUseReact()) {
+            return Inertia::render('TaxonomyTerm', [
+                'term' => [
+                    'id' => $term->id,
+                    'name' => $term->name,
+                    'slug' => $term->slug,
+                    'description' => $term->description,
+                    'taxonomy' => [
+                        'id' => $term->taxonomy->id,
+                        'name' => $term->taxonomy->name,
+                        'slug' => $term->taxonomy->slug,
+                        'label' => $term->taxonomy->label,
+                    ],
+                ],
+                'posts' => $posts->map(function ($post) {
+                    return [
+                        'id' => $post->id,
+                        'title' => $post->title,
+                        'slug' => $post->slug,
+                        'excerpt' => $post->excerpt,
+                        'published_at' => $post->published_at?->toDateTimeString(),
+                        'featured_image' => $post->featured_image,
+                        'author' => $post->author ? [
+                            'id' => $post->author->id,
+                            'name' => $post->author->name,
+                        ] : null,
+                        'post_type' => [
+                            'id' => $post->postType->id,
+                            'name' => $post->postType->name,
+                            'slug' => $post->postType->slug,
+                            'route_prefix' => $post->postType->route_prefix,
+                        ],
+                    ];
+                })->toArray(),
+                'pagination' => [
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                    'per_page' => $posts->perPage(),
+                    'total' => $posts->total(),
+                ],
+            ]);
         }
 
-        // Fallback simple Inertia list if theme rendering fails
-        return Inertia::render('frontend/posts', [
-            'posts' => $posts->through(function ($post) {
+        // Fallback to React rendering with correct component name
+        return Inertia::render('TaxonomyTerm', [
+            'term' => $term,
+            'posts' => $posts->map(function ($post) {
                 return [
                     'id' => $post->id,
                     'title' => $post->title,
                     'slug' => $post->slug,
                     'excerpt' => $post->excerpt,
+                    'published_at' => $post->published_at?->toDateTimeString(),
                     'featured_image' => $post->featured_image,
-                    'published_at' => $post->published_at,
+                    'author' => $post->author ? [
+                        'id' => $post->author->id,
+                        'name' => $post->author->name,
+                    ] : null,
                     'post_type' => [
                         'id' => $post->postType->id,
-                        'label' => $post->postType->label,
+                        'name' => $post->postType->name,
+                        'slug' => $post->postType->slug,
                         'route_prefix' => $post->postType->route_prefix,
                     ],
                 ];
-            }),
-            'pageTitle' => ($taxonomy->label ?: ucfirst($taxonomy->slug)) . ': ' . $term->name,
+            })->toArray(),
+            'pagination' => [
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'per_page' => $posts->perPage(),
+                'total' => $posts->total(),
+            ],
+            'taxonomy' => $taxonomy,
         ]);
     }
 
@@ -103,6 +169,7 @@ class FrontendController extends Controller
             })
             ->orderBy('published_at', 'desc')
             ->paginate(12);
+
 
         // Try React template first if active theme is React
         if ($this->shouldUseReact() && $this->reactRenderer->canRender('index')) {
@@ -249,6 +316,7 @@ class FrontendController extends Controller
         }
 
         $posts = $query->paginate(12);
+
 
         // Determine post type for template/UI from route default or inferred filter
         $postType = null;
@@ -544,6 +612,7 @@ class FrontendController extends Controller
     {
         // Increment view count once per render
         try { $content->increment('view_count'); } catch (\Throwable $e) {}
+
 
         // Determine whether content is a page (route_prefix empty/null/'/')
         $isPage = in_array(($content->postType->route_prefix ?? null), [null, '', '/'], true);

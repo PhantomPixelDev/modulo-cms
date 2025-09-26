@@ -30,9 +30,24 @@ export default defineConfig({
         jsx: 'automatic',
     },
     resolve: {
-        alias: {
-            '@': resolve(__dirname, 'resources/js'),
-            'ziggy-js': resolve(__dirname, 'vendor/tightenco/ziggy'),
+        alias: [
+            { find: /^\/(.*)/, replacement: '/$1' },
+            { find: /^~\/(.*)/, replacement: '$1' },
+            { 
+                find: '@', 
+                replacement: resolve(__dirname, 'resources/js') 
+            },
+            { 
+                find: 'ziggy-js', 
+                replacement: resolve(__dirname, 'vendor/tightenco/ziggy') 
+            },
+        ],
+        extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'],
+    },
+    optimizeDeps: {
+        include: ['react', 'react-dom', '@inertiajs/react'],
+        esbuildOptions: {
+            preserveSymlinks: true,
         },
     },
 });

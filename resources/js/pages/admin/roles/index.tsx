@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Shield } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { type BreadcrumbItem } from '@/types';
+import { useAcl } from '@/lib/acl';
 
 interface Permission {
     id: number;
@@ -41,6 +42,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function RolesIndex({ roles }: Props) {
     const { delete: destroy } = useForm();
+    const { hasPermission, isAdmin } = useAcl();
 
     const handleDelete = (roleId: number) => {
         if (confirm('Are you sure you want to delete this role?')) {
@@ -62,12 +64,14 @@ export default function RolesIndex({ roles }: Props) {
                             Manage system roles and permissions
                         </p>
                     </div>
-                    <Link href="/admin/roles/create">
-                        <Button>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Role
-                        </Button>
-                    </Link>
+                    {(isAdmin() || hasPermission('create roles')) && (
+                        <Link href="/admin/roles/create">
+                            <Button>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Role
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 <Card>
@@ -109,12 +113,14 @@ export default function RolesIndex({ roles }: Props) {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex space-x-2">
-                                                    <Link href={`/admin/roles/${role.id}/edit`}>
-                                                        <Button variant="outline" size="sm">
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                    </Link>
-                                                    {role.name !== 'super-admin' && (
+                                                    {(isAdmin() || hasPermission('edit roles')) && (
+                                                        <Link href={`/admin/roles/${role.id}/edit`}>
+                                                            <Button variant="outline" size="sm">
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                        </Link>
+                                                    )}
+                                                    {(isAdmin() || hasPermission('delete roles')) && role.name !== 'super-admin' && (
                                                         <Button 
                                                             variant="outline" 
                                                             size="sm" 

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Users } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
+import { useAcl } from '@/lib/acl';
 import { type BreadcrumbItem } from '@/types';
 
 interface User {
@@ -41,6 +42,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function UsersIndex({ users }: Props) {
     const { delete: destroy } = useForm();
+    const { hasPermission, isAdmin } = useAcl();
 
     const handleDelete = (userId: number) => {
         if (confirm('Are you sure you want to delete this user?')) {
@@ -62,12 +64,14 @@ export default function UsersIndex({ users }: Props) {
                             Manage system users and their roles
                         </p>
                     </div>
-                    <Link href="/admin/users/create">
-                        <Button>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add User
-                        </Button>
-                    </Link>
+                    {(isAdmin() || hasPermission('create users')) && (
+                        <Link href="/admin/users/create">
+                            <Button>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add User
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 <Card>
@@ -114,19 +118,23 @@ export default function UsersIndex({ users }: Props) {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex space-x-2">
-                                                    <Link href={`/admin/users/${user.id}/edit`}>
-                                                        <Button variant="outline" size="sm">
-                                                            <Edit className="h-4 w-4" />
+                                                    {(isAdmin() || hasPermission('edit users')) && (
+                                                        <Link href={`/admin/users/${user.id}/edit`}>
+                                                            <Button variant="outline" size="sm">
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                        </Link>
+                                                    )}
+                                                    {(isAdmin() || hasPermission('delete users')) && (
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="text-red-600 hover:text-red-700"
+                                                            onClick={() => handleDelete(user.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
                                                         </Button>
-                                                    </Link>
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
-                                                        className="text-red-600 hover:text-red-700"
-                                                        onClick={() => handleDelete(user.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

@@ -19,6 +19,8 @@ class RolePermissionSeeder extends Seeder
 
         // Create permissions
         $permissions = [
+            // Admin area access
+            'access admin',
             // User management
             'view users',
             'create users',
@@ -47,6 +49,12 @@ class RolePermissionSeeder extends Seeder
             'edit posts',
             'delete posts',
             'publish posts',
+
+            // Page management (separate from posts)
+            'view pages',
+            'create pages',
+            'edit pages',
+            'delete pages',
             
             // Post type management
             'view post types',
@@ -77,7 +85,17 @@ class RolePermissionSeeder extends Seeder
             'view settings',
             'edit settings',
             'system settings',
-            
+
+            // Menus
+            'view menus', 'create menus', 'edit menus', 'delete menus',
+            'view menu items', 'create menu items', 'edit menu items', 'delete menu items',
+
+            // Templates
+            'view templates', 'create templates', 'edit templates', 'delete templates',
+
+            // Themes
+            'view themes', 'edit themes', 'delete themes', 'install themes', 'activate themes', 'publish theme assets', 'customize themes',
+
             // Analytics
             'view analytics',
             'export data',
@@ -97,10 +115,12 @@ class RolePermissionSeeder extends Seeder
         $roles = [
             'super-admin' => $permissions,
             'admin' => [
+                'access admin',
                 'view users', 'create users', 'edit users', 'assign roles',
                 'view roles', 'create roles', 'edit roles', 'assign permissions',
                 'view content', 'create content', 'edit content', 'delete content', 'publish content', 'approve content',
                 'view posts', 'create posts', 'edit posts', 'delete posts', 'publish posts',
+                'view pages', 'create pages', 'edit pages', 'delete pages',
                 'view post types', 'create post types', 'edit post types', 'delete post types',
                 'view taxonomies', 'create taxonomies', 'edit taxonomies', 'delete taxonomies',
                 'view taxonomy terms', 'create taxonomy terms', 'edit taxonomy terms', 'delete taxonomy terms',
@@ -108,6 +128,10 @@ class RolePermissionSeeder extends Seeder
                 'view settings', 'edit settings',
                 'view analytics', 'export data',
                 'create backups', 'restore backups',
+                'view menus', 'create menus', 'edit menus', 'delete menus',
+                'view menu items', 'create menu items', 'edit menu items', 'delete menu items',
+                'view templates', 'create templates', 'edit templates', 'delete templates',
+                'view themes', 'edit themes', 'delete themes', 'install themes', 'activate themes', 'publish theme assets', 'customize themes',
             ],
             'moderator' => [
                 'view users',

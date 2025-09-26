@@ -2,21 +2,17 @@
 
 namespace App\Http\Controllers\Content;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\AdminBaseController;
 use App\Models\Post;
 use App\Models\PostType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class PagesController extends Controller
+class PagesController extends AdminBaseController
 {
+    protected string $resourceName = 'pages';
+    
     protected ?PostType $pageType = null;
-
-    public function __construct()
-    {
-        // Do not hit the database in the constructor to avoid errors during app boot
-        // or when the post_types table hasn't been seeded yet. Resolve lazily.
-    }
 
     private function resolvePageType(): PostType
     {

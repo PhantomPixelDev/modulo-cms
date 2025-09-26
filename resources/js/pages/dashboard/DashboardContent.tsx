@@ -27,6 +27,7 @@ import { DashboardProps, asArray, type User as DashboardUser, type Permission } 
 import { SectionHeader } from '@/components/ui/section-header';
 import { ROUTE } from './routes';
 import { MediaLibrary } from './components/media/MediaLibrary';
+import { useAcl } from '@/lib/acl';
 
 export default function DashboardContent({
   adminStats,
@@ -81,29 +82,9 @@ export default function DashboardContent({
   const roles = asArray(rolesProp);
   const posts = asArray(postsProp);
   
-  // Ensure permissions have the required fields
-  const permissionsWithTimestamps: Permission[] = (permissions || []).map(p => {
-    const permission = p as Permission;
-    return {
-      id: permission.id || 0,
-      name: permission.name || '',
-      description: 'description' in permission ? (permission as any).description : '',
-      created_at: 'created_at' in permission ? (permission as any).created_at : new Date().toISOString(),
-      updated_at: 'updated_at' in permission ? (permission as any).updated_at : new Date().toISOString(),
-    };
-  });
-
-  // Helper: check capability from permissions array; fallback to auth.user?.can.
-  // If no permissions are provided at all, default to true so dev environments still show actions.
-  const can = (perm: string) => {
-    // Admin/super-admin override
-    const isAdmin = Array.isArray(auth?.user?.roles) && auth.user.roles.some((r: any) => ['admin', 'super-admin'].includes(r.name));
-    if (isAdmin) return true;
-    // If no permissions provided at all, default allow in dev
-    if (permissionsWithTimestamps.length === 0) return true;
-    // Check provided permissions or fallback to auth.user.can
-    return permissionsWithTimestamps.some(p => p.name === perm) || Boolean(auth?.user?.can?.(perm));
-  };
+  // Centralized UI ACL: prefer auth-shared roles/permissions via useAcl
+  const { hasPermission, isAdmin: isAdminRole } = useAcl();
+  const can = (perm: string) => isAdminRole() || hasPermission(perm);
 
   // Media permissions (computed via can())
   const canEditMedia = can('edit media');

@@ -2,6 +2,7 @@ import React from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { useAcl } from '@/lib/acl';
 
 interface MenuItemDTO {
   id: number;
@@ -26,6 +27,7 @@ interface MenuDTO {
 
 export default function AdminMenusIndex() {
   const menus = (usePage().props as any).menus || [];
+  const { hasPermission, isAdmin } = useAcl();
 
   const { data, setData, post, processing, reset, errors } = useForm({
     name: '',
@@ -48,6 +50,7 @@ export default function AdminMenusIndex() {
       <h1 className="text-xl font-semibold tracking-tight">Menus</h1>
 
       <div className="grid md:grid-cols-2 gap-6">
+        {(isAdmin() || hasPermission('create menus')) && (
         <div className="rounded border p-4">
           <h2 className="font-medium mb-3">Create Menu</h2>
           <form onSubmit={submit} className="space-y-3">
@@ -74,6 +77,7 @@ export default function AdminMenusIndex() {
             <Button disabled={processing}>Create</Button>
           </form>
         </div>
+        )}
 
         <div className="rounded border p-4">
           <h2 className="font-medium mb-3">Existing Menus</h2>
@@ -85,17 +89,21 @@ export default function AdminMenusIndex() {
                   <div className="text-sm text-gray-500">slug: {m.slug}{m.location ? ` • ${m.location}` : ''}</div>
                 </div>
                 <div className="flex gap-2">
-                  <Button asChild size="sm" variant="outline">
-                    <Link href={`/dashboard/admin/menus/${m.id}`}>Edit</Link>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => {
-                      if (!confirm(`Delete menu \"${m.name}\"?`)) return;
-                      router.delete(`/dashboard/admin/menus/${m.id}`);
-                    }}
-                  >Delete</Button>
+                  {(isAdmin() || hasPermission('edit menus')) && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/dashboard/admin/menus/${m.id}`}>Edit</Link>
+                    </Button>
+                  )}
+                  {(isAdmin() || hasPermission('delete menus')) && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        if (!confirm(`Delete menu \"${m.name}\"?`)) return;
+                        router.delete(`/dashboard/admin/menus/${m.id}`);
+                      }}
+                    >Delete</Button>
+                  )}
                 </div>
               </li>
             ))}
