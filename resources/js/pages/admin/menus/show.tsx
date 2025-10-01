@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 import { useAcl } from '@/lib/acl';
 
@@ -76,22 +78,22 @@ export default function AdminMenusShow() {
       <form onSubmit={submit} className="space-y-3 max-w-xl">
         <div>
           <label className="block text-sm mb-1">Name</label>
-          <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.name} onChange={(e) => setData('name', e.target.value)} />
+          <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
           {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
         </div>
         <div>
           <label className="block text-sm mb-1">Slug</label>
-          <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.slug} onChange={(e) => setData('slug', e.target.value)} />
+          <Input value={data.slug} onChange={(e) => setData('slug', e.target.value)} />
           {errors.slug && <p className="text-sm text-red-600">{errors.slug}</p>}
         </div>
         <div>
           <label className="block text-sm mb-1">Location (optional)</label>
-          <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.location || ''} onChange={(e) => setData('location', e.target.value)} />
+          <Input value={data.location || ''} onChange={(e) => setData('location', e.target.value)} />
           {errors.location && <p className="text-sm text-red-600">{errors.location}</p>}
         </div>
         <div>
           <label className="block text-sm mb-1">Description (optional)</label>
-          <textarea className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.description || ''} onChange={(e) => setData('description', e.target.value)} />
+          <Textarea value={data.description || ''} onChange={(e) => setData('description', e.target.value)} />
           {errors.description && <p className="text-sm text-red-600">{errors.description}</p>}
         </div>
         <Button disabled={processing}>Save</Button>
@@ -159,13 +161,13 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
     <form onSubmit={submit} className="space-y-3">
       <div>
         <label className="block text-sm mb-1">Label</label>
-        <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.label} onChange={(e) => setData('label', e.target.value)} />
+        <Input value={data.label} onChange={(e) => setData('label', e.target.value)} />
         {errors.label && <p className="text-sm text-red-600">{errors.label}</p>}
       </div>
       <div>
         <label className="block text-sm mb-1">Link Type</label>
         <select
-          className="w-full border border-gray-600 bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-input bg-background text-foreground rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
           value={linkType}
           onChange={(e) => {
             const t = e.target.value as 'url' | 'page' | 'route';
@@ -182,30 +184,30 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
       {linkType === 'url' && (
         <div>
           <label className="block text-sm mb-1">URL</label>
-          <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://example.com/path" value={data.url} onChange={(e) => setData('url', e.target.value)} />
+          <Input placeholder="https://example.com/path" value={data.url} onChange={(e) => setData('url', e.target.value)} />
           {errors.url && <p className="text-sm text-red-600">{errors.url}</p>}
         </div>
       )}
       {linkType === 'page' && (
         <div>
           <label className="block text-sm mb-1">Page Slug</label>
-          <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="about, contact" value={data.page_slug} onChange={(e) => setData('page_slug', e.target.value)} />
+          <Input placeholder="about, contact" value={data.page_slug} onChange={(e) => setData('page_slug', e.target.value)} />
         </div>
       )}
       {linkType === 'route' && (
         <div>
           <label className="block text-sm mb-1">Route Name</label>
-          <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="dashboard.admin.posts.index" value={data.route_name} onChange={(e) => setData('route_name', e.target.value)} />
+          <Input placeholder="dashboard.admin.posts.index" value={data.route_name} onChange={(e) => setData('route_name', e.target.value)} />
         </div>
       )}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm mb-1">Order</label>
-          <input className="w-full border border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" type="number" value={data.order} onChange={(e) => setData('order', Number(e.target.value))} />
+          <Input type="number" value={data.order} onChange={(e) => setData('order', Number(e.target.value))} />
         </div>
         <div>
           <label className="block text-sm mb-1">Target</label>
-          <select className="w-full border border-gray-600 bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.target} onChange={(e) => setData('target', e.target.value as '_self' | '_blank')}>
+          <select className="w-full border border-input bg-background text-foreground rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" value={data.target} onChange={(e) => setData('target', e.target.value as '_self' | '_blank')}>
             <option value="_self">Same tab</option>
             <option value="_blank">New tab</option>
           </select>
@@ -213,7 +215,7 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
       </div>
       <div>
         <label className="block text-sm mb-1">Visible To</label>
-        <select className="w-full border border-gray-600 bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
+        <select className="w-full border border-input bg-background text-foreground rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
           <option value="all">Everyone</option>
           <option value="guest">Guests only</option>
           <option value="auth">Authenticated users</option>
@@ -221,7 +223,7 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
       </div>
       <div>
         <label className="block text-sm mb-1">Parent</label>
-        <select className="w-full border border-gray-600 bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value={data.parent_id ?? 0} onChange={(e) => setData('parent_id', Number(e.target.value) || null)}>
+        <select className="w-full border border-input bg-background text-foreground rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" value={data.parent_id ?? 0} onChange={(e) => setData('parent_id', Number(e.target.value) || null)}>
           {parentOptions.map((opt) => (
             <option key={opt.id} value={opt.id}>{opt.label}</option>
           ))}
@@ -304,8 +306,8 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
         <span className="text-sm text-muted-foreground">Drag to reorder within the same parent</span>
       </div>
       <form onSubmit={submit} className="grid md:grid-cols-6 gap-2 items-start">
-        <input className="border rounded px-2 py-1 md:col-span-2" placeholder="Label" value={data.label} onChange={(e) => setData('label', e.target.value)} />
-        <select className="border rounded px-2 py-1" value={linkType} onChange={(e) => {
+        <Input className="md:col-span-2" placeholder="Label" value={data.label} onChange={(e) => setData('label', e.target.value)} />
+        <select className="border border-input bg-background text-foreground rounded px-2 py-1" value={linkType} onChange={(e) => {
           const t = e.target.value as 'url' | 'page' | 'route';
           if (t === 'url') { setData('route_name', ''); setData('page_slug', ''); }
           if (t === 'page') { setData('route_name', ''); setData('url', ''); }
@@ -316,25 +318,25 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
           <option value="route">Route name</option>
         </select>
         {linkType === 'url' && (
-          <input className="border rounded px-2 py-1 md:col-span-2" placeholder="https://example.com/path" value={data.url} onChange={(e) => setData('url', e.target.value)} />
+          <Input className="md:col-span-2" placeholder="https://example.com/path" value={data.url} onChange={(e) => setData('url', e.target.value)} />
         )}
         {linkType === 'page' && (
-          <input className="border rounded px-2 py-1 md:col-span-2" placeholder="about, contact" value={data.page_slug} onChange={(e) => setData('page_slug', e.target.value)} />
+          <Input className="md:col-span-2" placeholder="about, contact" value={data.page_slug} onChange={(e) => setData('page_slug', e.target.value)} />
         )}
         {linkType === 'route' && (
-          <input className="border rounded px-2 py-1 md:col-span-2" placeholder="dashboard.admin.posts.index" value={data.route_name} onChange={(e) => setData('route_name', e.target.value)} />
+          <Input className="md:col-span-2" placeholder="dashboard.admin.posts.index" value={data.route_name} onChange={(e) => setData('route_name', e.target.value)} />
         )}
-        <input className="border rounded px-2 py-1" placeholder="Order" type="number" value={data.order ?? 0} onChange={(e) => setData('order', Number(e.target.value))} />
-        <select className="border rounded px-2 py-1" value={data.parent_id ?? 0} onChange={(e) => setData('parent_id', Number(e.target.value) || null)}>
+        <Input placeholder="Order" type="number" value={data.order ?? 0} onChange={(e) => setData('order', Number(e.target.value))} />
+        <select className="border border-input bg-background text-foreground rounded px-2 py-1" value={data.parent_id ?? 0} onChange={(e) => setData('parent_id', Number(e.target.value) || null)}>
           {parentOptions.map((opt) => (
             <option key={opt.id} value={opt.id}>{opt.label}</option>
           ))}
         </select>
-        <select className="border rounded px-2 py-1" value={data.target} onChange={(e) => setData('target', e.target.value as '_self' | '_blank')}>
+        <select className="border border-input bg-background text-foreground rounded px-2 py-1" value={data.target} onChange={(e) => setData('target', e.target.value as '_self' | '_blank')}>
           <option value="_self">Same tab</option>
           <option value="_blank">New tab</option>
         </select>
-        <select className="border rounded px-2 py-1" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
+        <select className="border border-input bg-background text-foreground rounded px-2 py-1" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
           <option value="all">Everyone</option>
           <option value="guest">Guests only</option>
           <option value="auth">Authenticated users</option>

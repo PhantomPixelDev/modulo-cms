@@ -10,7 +10,7 @@ use Inertia\Inertia;
 
 class PagesController extends AdminBaseController
 {
-    protected string $resourceName = 'pages';
+    protected string $resourceName = 'posts';
     
     protected ?PostType $pageType = null;
 

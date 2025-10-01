@@ -1,11 +1,13 @@
 import '../css/app.css';
 
-import { createInertiaApp, router } from '@inertiajs/react';
+import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
-import { initializeTheme } from './hooks/use-appearance';
-import GlobalToasts from './components/GlobalToasts';
-import { toast } from 'sonner';
+// TEMP: disable theme init and toasts to isolate crash
+// import { initializeTheme } from './hooks/use-appearance';
+// import GlobalToasts from './components/GlobalToasts';
+// import { toast } from 'sonner';
+import ErrorBoundary from './ErrorBoundary';
 
 declare global {
     interface Window {
@@ -17,7 +19,8 @@ declare global {
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 // Page components (standardized to a single `pages/` directory)
-const pages = import.meta.glob('./pages/**/*.tsx', { eager: true });
+// Use lazy imports to avoid evaluating every page at startup
+const pages = import.meta.glob('./pages/**/*.tsx', { eager: false });
 const themeComponents = import.meta.glob('../themes/**/components/**/*.tsx', { eager: false });
 
 createInertiaApp({
@@ -68,56 +71,27 @@ createInertiaApp({
     },
     setup({ el, App, props }) {
         const root = createRoot(el);
-
-        const showFlash = (flash: any) => {
-            if (!flash) return;
-            // Create a compact signature to avoid duplicate toasts across events/HMR
-            const sig = JSON.stringify({
-                s: flash.success ?? null,
-                e: flash.error ?? null,
-                w: flash.warning ?? null,
-                i: flash.info ?? null,
-                m: flash.message ?? null,
+        // Attach global error hooks for visibility
+        if (typeof window !== 'undefined') {
+            window.addEventListener('error', (e) => {
+                console.error('[window.onerror]', e?.error || e?.message || e);
             });
-            if (window.__LAST_FLASH_SIG__ === sig) return;
-
-            if (flash.success) toast.success(flash.success);
-            if (flash.error) toast.error(flash.error);
-            if (flash.warning) toast.warning(flash.warning);
-            if (flash.info) toast.info(flash.info);
-            if (flash.message) toast(flash.message);
-
-            window.__LAST_FLASH_SIG__ = sig;
-        };
-
-        // Initial render
-        root.render(
-            <>
-                <App {...props} />
-                <GlobalToasts />
-            </>
-        );
-
-        // Trigger toasts for initial page
-        try {
-            // Inertia passes the initial page on props
-            // @ts-ignore - initial page shape depends on adapter
-            showFlash(props?.initialPage?.props?.flash);
-        } catch {}
-
-        // Show toasts on subsequent successful navigations (only attach once)
-        if (!window.__FLASH_LISTENER_ADDED__) {
-            router.on('success', (event: any) => {
-                const page = event?.detail?.page;
-                showFlash(page?.props?.flash);
+            window.addEventListener('unhandledrejection', (e: PromiseRejectionEvent) => {
+                console.error('[window.unhandledrejection]', e?.reason);
             });
-            window.__FLASH_LISTENER_ADDED__ = true;
         }
+
+        // Minimal initial render with global ErrorBoundary
+        root.render(
+            <ErrorBoundary>
+                <App {...props} />
+            </ErrorBoundary>
+        );
     },
     progress: {
         color: '#4B5563',
     },
 });
 
-// This will set light / dark mode on load...
-initializeTheme();
+// TEMP: disable theme initialization during debugging
+// initializeTheme();

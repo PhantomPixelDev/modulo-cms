@@ -14,6 +14,9 @@ function menuItemsUser(array $perms = []): User {
         Permission::findOrCreate($perm, 'web');
     }
     if ($perms) $user->givePermissionTo($perms);
+    // Also give access admin permission which is required for admin routes
+    Permission::findOrCreate('access admin', 'web');
+    $user->givePermissionTo('access admin');
     return $user;
 }
 
@@ -57,7 +60,7 @@ it('denies creating/updating/deleting menu items without permissions', function 
 });
 
 it('creates, updates, and deletes menu items with proper permissions', function () {
-    $u = menuItemsUser(['create menu items','edit menu items','delete menu items','view menus']);
+    $u = menuItemsUser(['edit menus','view menus']);
     $this->actingAs($u);
     $menu = ensureMenu();
 

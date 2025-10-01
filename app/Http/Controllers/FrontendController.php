@@ -69,13 +69,13 @@ class FrontendController extends Controller
         $posts = $term->posts()
             ->published()
             ->orderBy('published_at', 'desc')
-            ->with(['author', 'postType'])
+            ->with(['author', 'postType', 'taxonomyTerms'])
             ->paginate($perPage);
 
 
-        // If using React rendering
+        // If using React theme, render via Inertia to the ModernReact TaxonomyTerm component
         if ($this->shouldUseReact()) {
-            return Inertia::render('TaxonomyTerm', [
+            $data = [
                 'term' => [
                     'id' => $term->id,
                     'name' => $term->name,
@@ -103,9 +103,16 @@ class FrontendController extends Controller
                         'post_type' => [
                             'id' => $post->postType->id,
                             'name' => $post->postType->name,
+                            'label' => $post->postType->label,
                             'slug' => $post->postType->slug,
                             'route_prefix' => $post->postType->route_prefix,
                         ],
+                        'terms' => $post->taxonomyTerms ? $post->taxonomyTerms->map(function ($term) {
+                            return [
+                                'name' => $term->name,
+                                'slug' => $term->slug,
+                            ];
+                        })->toArray() : [],
                     ];
                 })->toArray(),
                 'pagination' => [
@@ -113,12 +120,17 @@ class FrontendController extends Controller
                     'last_page' => $posts->lastPage(),
                     'per_page' => $posts->perPage(),
                     'total' => $posts->total(),
+                    'prev_page_url' => $posts->previousPageUrl(),
+                    'next_page_url' => $posts->nextPageUrl(),
                 ],
-            ]);
+            ];
+
+            \Log::info('TaxonomyTerm data', $data);
+            return Inertia::render('Themes/ModernReact/TaxonomyTerm', $data);
         }
 
-        // Fallback to React rendering with correct component name
-        return Inertia::render('TaxonomyTerm', [
+        // Fallback: always render the themed TaxonomyTerm component via Inertia
+        return Inertia::render('Themes/ModernReact/TaxonomyTerm', [
             'term' => $term,
             'posts' => $posts->map(function ($post) {
                 return [
@@ -596,23 +608,10 @@ class FrontendController extends Controller
         return $html;
     }
     
-    protected function transformPaginationForReact($posts): array
-    {
-        return [
-            'current_page' => $posts->currentPage(),
-            'last_page' => $posts->lastPage(),
-            'per_page' => $posts->perPage(),
-            'total' => $posts->total(),
-            'prev_page_url' => $posts->previousPageUrl(),
-            'next_page_url' => $posts->nextPageUrl(),
-        ];
-    }
-
     private function renderContent($content, $template, $dataKey)
     {
         // Increment view count once per render
         try { $content->increment('view_count'); } catch (\Throwable $e) {}
-
 
         // Determine whether content is a page (route_prefix empty/null/'/')
         $isPage = in_array(($content->postType->route_prefix ?? null), [null, '', '/'], true);
@@ -680,6 +679,109 @@ class FrontendController extends Controller
                     ];
                 }),
             ],
+        ]);
+    }
+
+    protected function transformPaginationForReact($posts): array
+    {
+        return [
+            'current_page' => $posts->currentPage(),
+            'last_page' => $posts->lastPage(),
+            'per_page' => $posts->perPage(),
+            'total' => $posts->total(),
+            'prev_page_url' => $posts->previousPageUrl(),
+            'next_page_url' => $posts->nextPageUrl(),
+        ];
+    }
+
+    /**
+     * Handle search requests
+     */
+    public function search(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        if (empty(trim($query))) {
+            return Inertia::render('frontend/posts', [
+                'posts' => collect(),
+                'pagination' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => 12,
+                    'total' => 0,
+                    'has_more_pages' => false,
+                ],
+                'basePath' => '/search',
+                'pageTitle' => 'Search',
+                'showFilters' => false,
+                'searchQuery' => '',
+            ]);
+        }
+
+        $searchTerm = trim($query);
+
+        // Search in posts
+        $posts = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
+            ->published()
+            ->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('excerpt', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('content', 'LIKE', "%{$searchTerm}%");
+            })
+            ->orderBy('published_at', 'desc')
+            ->paginate(12);
+
+        if ($this->shouldUseReact()) {
+            return $this->reactRenderer->render('search', [
+                'posts' => [
+                    'data' => $this->transformPostsForReact($posts)->toArray()
+                ],
+                'pagination' => $this->transformPaginationForReact($posts),
+                'searchQuery' => $searchTerm,
+            ]);
+        }
+
+        // Fallback to Inertia rendering
+        return Inertia::render('frontend/posts', [
+            'posts' => $posts->through(function ($post) {
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'excerpt' => $post->excerpt,
+                    'featured_image' => $post->featured_image,
+                    'published_at' => $post->published_at,
+                    'author' => $post->author ? [
+                        'id' => $post->author->id,
+                        'name' => $post->author->name,
+                    ] : null,
+                    'post_type' => [
+                        'id' => $post->postType->id,
+                        'name' => $post->postType->name,
+                        'label' => $post->postType->label,
+                        'slug' => $post->postType->slug,
+                        'route_prefix' => $post->postType->route_prefix,
+                    ],
+                    'terms' => $post->taxonomyTerms ? $post->taxonomyTerms->map(function ($term) {
+                        return [
+                            'id' => $term->id ?? 0,
+                            'name' => $term->name ?? '',
+                            'slug' => $term->slug ?? '',
+                        ];
+                    })->toArray() : [],
+                ];
+            }),
+            'pagination' => [
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'per_page' => $posts->perPage(),
+                'total' => $posts->total(),
+                'has_more_pages' => $posts->hasMorePages(),
+            ],
+            'basePath' => '/search',
+            'pageTitle' => 'Search Results',
+            'showFilters' => false,
+            'searchQuery' => $searchTerm,
         ]);
     }
 }

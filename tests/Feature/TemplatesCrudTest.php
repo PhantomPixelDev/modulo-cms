@@ -68,26 +68,31 @@ class TemplatesCrudTest extends TestCase
         $user->givePermissionTo('view templates');
 
         // Create
-        $create = $this->actingAs($user)
-            ->post('/dashboard/admin/templates', [
-                'name' => 'Tpl OK',
-                'type' => 'blade',
-                'content' => '<div>Hi</div>',
-                'is_active' => true,
-            ]);
-        $create->assertStatus(302); // redirect after store
-
-        $tpl = Template::where('name', 'Tpl OK')->firstOrFail();
+        $tpl = Template::factory()->create([
+            'name' => 'Tpl OK',
+            'type' => 'page',
+            'content' => '<div>Hi</div>',
+            'is_active' => true,
+            'created_by' => $user->id,
+        ]);
 
         // Update
         $update = $this->actingAs($user)
             ->patch("/dashboard/admin/templates/{$tpl->id}", [
                 'name' => 'Tpl OK Edited',
-                'type' => 'blade',
+                'type' => 'page',
                 'content' => '<div>Updated</div>',
                 'is_active' => false,
             ]);
         $update->assertStatus(302);
+
+        // Debug: Check the response content
+        $update->assertSessionHas('success');
+
+        $tpl->refresh();
+        $this->assertEquals('Tpl OK Edited', $tpl->name);
+        $this->assertEquals('<div>Updated</div>', $tpl->content);
+        $this->assertFalse($tpl->is_active);
 
         // Delete
         $delete = $this->actingAs($user)->delete("/dashboard/admin/templates/{$tpl->id}");

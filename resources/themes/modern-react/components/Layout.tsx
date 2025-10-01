@@ -1,8 +1,8 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
-import Header from './Header';
-import Footer from './Footer';
+import ErrorBoundary from './util/ErrorBoundary';
 import Navigation from './partials/Navigation';
+import Footer from './Footer';
 import Sidebar from './partials/Sidebar';
 
 interface LayoutProps {
@@ -52,6 +52,32 @@ interface LayoutProps {
   }>;
 }
 
+const normalizeMenuItems = (menuData: any): Array<Record<string, any>> => {
+  if (!menuData) {
+    return [];
+  }
+
+  if (Array.isArray(menuData)) {
+    return menuData.filter((item) => item && typeof item === 'object');
+  }
+
+  if (typeof menuData === 'object') {
+    if (Array.isArray(menuData.items)) {
+      return menuData.items.filter((item) => item && typeof item === 'object');
+    }
+
+    if (menuData.items && typeof menuData.items === 'object') {
+      return Object.values(menuData.items).filter((item) => item && typeof item === 'object');
+    }
+
+    if (Array.isArray(menuData.data)) {
+      return menuData.data.filter((item) => item && typeof item === 'object');
+    }
+  }
+
+  return [];
+};
+
 export default function Layout({ 
   children, 
   title, 
@@ -68,6 +94,16 @@ export default function Layout({
   const containerWidth = theme?.layout?.container_width || 'container';
   const primaryColor = theme?.colors?.primary || '#3b82f6';
   const fontFamily = theme?.typography?.font_family || 'inter';
+  const footerMenuItems = normalizeMenuItems(menus?.footer);
+
+  if (typeof window !== 'undefined') {
+    console.groupCollapsed('[Layout] Render props snapshot');
+    console.log('site', site);
+    console.log('theme', theme);
+    console.log('menus', menus);
+    console.log('normalized footer menu', footerMenuItems);
+    console.groupEnd();
+  }
 
   return (
     <>
@@ -110,28 +146,37 @@ export default function Layout({
       </Head>
 
       <div className="min-h-screen flex flex-col">
-        <Navigation site={site} menus={menus} />
-        
+        {/* Re-enabled Navigation */}
+        <ErrorBoundary name="Navigation">
+          <Navigation site={site} menus={menus} />
+        </ErrorBoundary>
         <main className="flex-1 pt-20">
           <div className="container mx-auto px-6 py-8">
             <div className="flex flex-col xl:flex-row gap-8">
               <div className="xl:w-4/5">
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-gray-900">
-                  {children}
+                  <ErrorBoundary name="PageContent">
+                    {children}
+                  </ErrorBoundary>
                 </div>
               </div>
               <aside className="xl:w-1/5">
-                <Sidebar widgets={widgets} />
+                <ErrorBoundary name="Sidebar">
+                  <Sidebar />
+                </ErrorBoundary>
               </aside>
             </div>
           </div>
         </main>
-        
-        <Footer 
-          site={site}
-          menu={menus?.footer}
-          theme={theme}
-        />
+        {/* Footer */}
+        <ErrorBoundary name="Footer">
+          <Footer 
+            site={site} 
+            // Pass only actual menu items to Footer to avoid runtime errors
+            menu={footerMenuItems}
+            theme={theme}
+          />
+        </ErrorBoundary>
       </div>
     </>
   );

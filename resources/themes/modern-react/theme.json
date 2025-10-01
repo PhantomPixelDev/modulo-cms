@@ -78,6 +78,10 @@
     "404": {
       "type": "react",
       "component": "components/NotFound.tsx"
+    },
+    "taxonomy": {
+      "type": "react",
+      "component": "components/TaxonomyTerm.tsx"
     }
   },
   "partials": {

@@ -13,6 +13,9 @@ function menuUser(array $perms = []): User {
         Permission::findOrCreate($perm, 'web');
     }
     if ($perms) $user->givePermissionTo($perms);
+    // Also give access admin permission which is required for admin routes
+    Permission::findOrCreate('access admin', 'web');
+    $user->givePermissionTo('access admin');
     return $user;
 }
 

@@ -45,11 +45,42 @@ const Sidebar: React.FC<SidebarProps> = ({
   className = '', 
   recentPosts = [] 
 }) => {
-  const { props } = usePage<any>();
+  let props = { categories: [], tags: [] } as any;
+  try {
+    const pageProps = usePage<any>();
+    props = (pageProps && pageProps.props) ? pageProps.props : { categories: [], tags: [] };
+  } catch (error) {
+    console.error('Sidebar: Error accessing page props:', error);
+    props = { categories: [], tags: [] };
+  }
   
-  // Extract categories and tags from shared page data
-  const categories: Category[] = props.categories || [];
-  const tags: Tag[] = props.tags || [];
+  // Ultra-safe extraction of categories and tags with multiple fallbacks
+  let categories: Category[] = [];
+  let tags: Tag[] = [];
+  
+  try {
+    if (props && props.categories) {
+      if (Array.isArray(props.categories)) {
+        categories = props.categories.filter(cat => cat && typeof cat === 'object');
+      } else if (typeof props.categories === 'object') {
+        const catValues = Object.values(props.categories);
+        categories = catValues.filter(cat => cat && typeof cat === 'object');
+      }
+    }
+    
+    if (props && props.tags) {
+      if (Array.isArray(props.tags)) {
+        tags = props.tags.filter(tag => tag && typeof tag === 'object');
+      } else if (typeof props.tags === 'object') {
+        const tagValues = Object.values(props.tags);
+        tags = tagValues.filter(tag => tag && typeof tag === 'object');
+      }
+    }
+  } catch (e) {
+    console.warn('Sidebar: Error extracting categories/tags:', e);
+    categories = [];
+    tags = [];
+  }
   // Default widgets if none are provided
   const defaultWidgets: Widget[] = [
     {
@@ -126,20 +157,35 @@ const Sidebar: React.FC<SidebarProps> = ({
               <h3 className="text-xl font-bold text-gray-800">{widget.title}</h3>
             </div>
             <div className="space-y-3">
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/category/${category.slug}`}
-                  className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 hover:bg-purple-50/70 border border-gray-100/50 hover:border-purple-200/50 transition-all duration-300 hover:shadow-md group"
-                >
-                  <span className="font-medium text-gray-800 group-hover:text-purple-600 transition-colors duration-300">
-                    {category.name}
-                  </span>
-                  <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full group-hover:from-purple-200 group-hover:to-pink-200 transition-all duration-300">
-                    {category.posts_count || 0}
-                  </span>
-                </Link>
-              ))}
+              {categories.map((category, idx) => {
+                try {
+                  if (!category || typeof category !== 'object') return null;
+                  
+                  const safeCategory = category || {};
+                  const id = (typeof safeCategory.id === 'number') ? safeCategory.id : idx;
+                  const name = (typeof safeCategory.name === 'string' && safeCategory.name.length > 0) ? safeCategory.name : 'Unnamed Category';
+                  const slug = (typeof safeCategory.slug === 'string' && safeCategory.slug.length > 0) ? safeCategory.slug : 'unknown';
+                  const postsCount = (typeof safeCategory.posts_count === 'number') ? safeCategory.posts_count : 0;
+                  
+                  return (
+                    <Link
+                      key={id}
+                      href={`/category/${slug}`}
+                      className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 hover:bg-purple-50/70 border border-gray-100/50 hover:border-purple-200/50 transition-all duration-300 hover:shadow-md group"
+                    >
+                      <span className="font-medium text-gray-800 group-hover:text-purple-600 transition-colors duration-300">
+                        {name}
+                      </span>
+                      <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full group-hover:from-purple-200 group-hover:to-pink-200 transition-all duration-300">
+                        {postsCount}
+                      </span>
+                    </Link>
+                  );
+                } catch (catErr) {
+                  console.warn('Sidebar: Error rendering category:', catErr, category);
+                  return null;
+                }
+              })}
             </div>
           </div>
         );
@@ -161,16 +207,30 @@ const Sidebar: React.FC<SidebarProps> = ({
               <h3 className="text-xl font-bold text-gray-800">{widget.title}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <Link
-                  key={tag.id}
-                  href={`/tag/${tag.slug}`}
-                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 hover:from-orange-200 hover:to-red-200 text-orange-700 hover:text-red-700 rounded-full text-sm font-medium transition-all duration-300 hover:shadow-md transform hover:scale-105"
-                >
-                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full mr-2"></span>
-                  {tag.name}
-                </Link>
-              ))}
+              {tags.map((tag, idx) => {
+                try {
+                  if (!tag || typeof tag !== 'object') return null;
+                  
+                  const safeTag = tag || {};
+                  const id = (typeof safeTag.id === 'number') ? safeTag.id : idx;
+                  const name = (typeof safeTag.name === 'string' && safeTag.name.length > 0) ? safeTag.name : 'Unnamed Tag';
+                  const slug = (typeof safeTag.slug === 'string' && safeTag.slug.length > 0) ? safeTag.slug : 'unknown';
+                  
+                  return (
+                    <Link
+                      key={id}
+                      href={`/tag/${slug}`}
+                      className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 hover:from-orange-200 hover:to-red-200 text-orange-700 hover:text-red-700 rounded-full text-sm font-medium transition-all duration-300 hover:shadow-md transform hover:scale-105"
+                    >
+                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full mr-2"></span>
+                      {name}
+                    </Link>
+                  );
+                } catch (tagErr) {
+                  console.warn('Sidebar: Error rendering tag:', tagErr, tag);
+                  return null;
+                }
+              })}
             </div>
           </div>
         );

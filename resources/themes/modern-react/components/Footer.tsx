@@ -22,8 +22,33 @@ interface FooterProps {
 
 export default function Footer({ site, menu, theme }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  
+  // Ultra-safe menu normalization with multiple fallbacks
+  let items: Array<any> = [];
+  try {
+    if (!menu) {
+      items = [];
+    } else if (Array.isArray(menu)) {
+      items = menu.filter(item => item && typeof item === 'object');
+    } else if (typeof menu === 'object') {
+      // Handle various menu object structures
+      if (Array.isArray(menu.items)) {
+        items = menu.items.filter(item => item && typeof item === 'object');
+      } else if (menu.items && typeof menu.items === 'object') {
+        const itemValues = Object.values(menu.items);
+        items = itemValues.filter(item => item && typeof item === 'object');
+      } else {
+        const menuValues = Object.values(menu);
+        items = menuValues.filter(item => item && typeof item === 'object' && !('nodeType' in item));
+      }
+    }
+  } catch (e) {
+    console.warn('Footer menu normalization error:', e);
+    items = [];
+  }
 
-  return (
+  try {
+    return (
     <footer className="bg-gradient-to-r from-slate-900/95 via-blue-900/90 to-purple-900/95 backdrop-blur-sm border-t border-white/10">
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -53,16 +78,39 @@ export default function Footer({ site, menu, theme }: FooterProps) {
               Navigation
             </h4>
             <nav className="space-y-3">
-              {menu?.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.url}
-                  target={item.target}
-                  className="block text-blue-100/80 hover:text-white text-sm transition-all duration-300 hover:translate-x-1"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {Array.isArray(items) && items.length > 0 && items.map((raw: any, idx: number) => {
+                try {
+                  if (!raw || typeof raw !== 'object') return null;
+                  
+                  const safeItem = raw || {};
+                  const id = (typeof safeItem.id === 'number') ? safeItem.id : idx;
+                  const label = (typeof safeItem.label === 'string' && safeItem.label.length > 0) 
+                    ? safeItem.label 
+                    : (typeof safeItem.title === 'string' && safeItem.title.length > 0)
+                      ? safeItem.title
+                      : 'Link';
+                  const url = (typeof safeItem.url === 'string' && safeItem.url.length > 0)
+                    ? safeItem.url
+                    : (typeof safeItem.href === 'string' && safeItem.href.length > 0)
+                      ? safeItem.href
+                      : '#';
+                  const target = (typeof safeItem.target === 'string') ? safeItem.target : '_self';
+                  
+                  return (
+                    <Link
+                      key={id}
+                      href={url}
+                      target={target}
+                      className="block text-blue-100/80 hover:text-white text-sm transition-all duration-300 hover:translate-x-1"
+                    >
+                      {label}
+                    </Link>
+                  );
+                } catch (itemErr) {
+                  console.warn('Footer menu item render error:', itemErr, raw);
+                  return null;
+                }
+              })}
             </nav>
           </div>
 
@@ -113,5 +161,17 @@ export default function Footer({ site, menu, theme }: FooterProps) {
         </div>
       </div>
     </footer>
-  );
+    );
+  } catch (err) {
+    // Fail-safe minimal footer with ultra-safe site name extraction
+    console.error('Footer render error:', err, { site, menu, theme });
+    const safeSiteName = (site && typeof site.name === 'string') ? site.name : 'Modulo CMS';
+    return (
+      <footer className="border-t border-gray-200">
+        <div className="container mx-auto px-6 py-6 text-sm text-gray-500 text-center">
+          © {currentYear} {safeSiteName}
+        </div>
+      </footer>
+    );
+  }
 }

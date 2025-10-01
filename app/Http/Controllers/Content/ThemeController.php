@@ -154,9 +154,9 @@ class ThemeController extends Controller
     }
 
     /**
-     * Discover and install all themes
+     * Discover themes (alias for discoverAll for route compatibility)
      */
-    public function discoverAll()
+    public function discover()
     {
         $this->authorize('install', \App\Models\Theme::class);
         try {

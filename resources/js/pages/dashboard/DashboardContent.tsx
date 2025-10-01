@@ -79,8 +79,15 @@ export default function DashboardContent({
       name: role.name
     }))
   }));
+  // Transform permissions to include timestamps for RoleForm
+  const permissionsWithTimestamps = (permissions || []).map(permission => ({
+    ...permission,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }));
+
+  // Ensure roles is always an array
   const roles = asArray(rolesProp);
-  const posts = asArray(postsProp);
   
   // Centralized UI ACL: prefer auth-shared roles/permissions via useAcl
   const { hasPermission, isAdmin: isAdminRole } = useAcl();

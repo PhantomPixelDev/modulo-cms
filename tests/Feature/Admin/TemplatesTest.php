@@ -14,6 +14,9 @@ function userWithPerms(array $perms = []): User {
         }
         $user->givePermissionTo($perms);
     }
+    // Also give access admin permission which is required for admin routes
+    Spatie\Permission\Models\Permission::findOrCreate('access admin', 'web');
+    $user->givePermissionTo('access admin');
     return $user;
 }
 

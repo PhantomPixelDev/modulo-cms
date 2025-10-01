@@ -37,6 +37,9 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::resource('taxonomy-terms', TaxonomyTermController::class);
         Route::resource('templates', TemplateController::class);
         Route::resource('themes', ThemeController::class);
+
+        // Theme-specific routes
+        Route::post('/themes/discover', [ThemeController::class, 'discover'])->name('themes.discover');
         
         // Media routes
         Route::prefix('media')->group(function () {

@@ -10,6 +10,9 @@ Route::get('/health', \App\Http\Controllers\HealthController::class);
 
 Route::get('/', [\App\Http\Controllers\FrontendController::class, 'home'])->name('home');
 
+// Search route
+Route::get('/search', [\App\Http\Controllers\FrontendController::class, 'search'])->name('search');
+
 // SEO: sitemap
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 

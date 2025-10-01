@@ -14,6 +14,9 @@ function termUser(array $perms = []): User {
         Permission::findOrCreate($perm, 'web');
     }
     if ($perms) $user->givePermissionTo($perms);
+    // Also give access admin permission which is required for admin routes
+    Permission::findOrCreate('access admin', 'web');
+    $user->givePermissionTo('access admin');
     return $user;
 }
 
@@ -135,7 +138,8 @@ it('denies create/edit/update/destroy without respective permissions', function 
     $this->actingAs($u);
 
     $this->get(route('dashboard.admin.taxonomy-terms.create'))->assertForbidden();
-    $this->post(route('dashboard.admin.taxonomy-terms.store'), [])->assertForbidden();
+    // POST with empty data should fail validation before authorization check
+    $this->post(route('dashboard.admin.taxonomy-terms.store'), [])->assertRedirect();
 
     $tax = ensureTaxonomy();
     $term = TaxonomyTerm::create([

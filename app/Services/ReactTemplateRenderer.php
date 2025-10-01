@@ -28,7 +28,7 @@ class ReactTemplateRenderer
         if (!$theme || $theme->template_engine !== 'react') {
             throw new \Exception("Active theme is not a React theme");
         }
-
+        
         $componentPath = $this->resolveComponentPath($theme, $templateName);
         
         if (!$componentPath) {
@@ -73,15 +73,19 @@ class ReactTemplateRenderer
         $templates = $theme->templates ?? [];
         
         if (!isset($templates[$templateName])) {
-            return null;
+            // Fallback: try to find a component based on template name
+            $componentName = ucfirst($templateName);
+            return $this->convertToInertiaPath($theme->slug, "components/{$componentName}");
         }
 
         $templateConfig = $templates[$templateName];
         
         // Handle both old string format and new object format
         if (is_string($templateConfig)) {
-            // Legacy blade template - not supported for React rendering
-            return null;
+            // For React themes, convert string template names to component paths automatically
+            // e.g., "posts" -> "components/Posts", "home" -> "components/Home"
+            $componentName = ucfirst($templateName);
+            return $this->convertToInertiaPath($theme->slug, "components/{$componentName}");
         }
 
         if (is_array($templateConfig) && 
