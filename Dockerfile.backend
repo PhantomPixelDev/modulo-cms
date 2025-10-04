@@ -1,0 +1,20 @@
+FROM php:8.3-cli-alpine
+
+# Install dependencies and build tools
+RUN apk add --no-cache \
+    sqlite \
+    sqlite-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    unzip \
+    git \
+    curl \
+    && docker-php-ext-install pdo_sqlite exif \
+    && apk del sqlite-dev libpng-dev libjpeg-turbo-dev
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
+EXPOSE 8080

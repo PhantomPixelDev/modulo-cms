@@ -26,7 +26,56 @@ Modulo CMS is a modern, modular content management system built on Laravel 12 wi
 
 ## Installation
 
-### Using Podman Compose (Recommended for Development)
+### Docker/Podman Setup (Recommended)
+
+**Quick start:**
+```bash
+./docker.sh setup
+```
+
+This will:
+- Build backend (PHP 8.3 + Laravel) and frontend (Bun + Vite) containers
+- Install all dependencies
+- Set up database with sample data
+- Install and activate the React theme
+- Start both dev servers with hot-reload
+
+**Customize setup (optional):**
+```bash
+# Copy and edit the environment file
+cp .env.docker.example .env.docker
+
+# Customize theme, app name, etc.
+vim .env.docker
+
+# Run setup with custom config
+source .env.docker && ./docker.sh setup
+```
+
+**Available environment variables:**
+- `APP_NAME` - Application name (default: "Modulo CMS")
+- `DEFAULT_THEME` - Theme to install (default: "modern-react")
+- `SEED_EXAMPLE_CONTENT` - Seed with example data (default: "true")
+- `DB_CONNECTION` - Database type (default: "sqlite")
+
+**Access:**
+- Backend: http://localhost:8080
+- Frontend: http://localhost:5173  
+- Login: `admin@example.com` / `password`
+
+**Other commands:**
+```bash
+./docker.sh start    # Start services
+./docker.sh stop     # Stop services
+./docker.sh logs     # View logs
+./docker.sh shell    # Open backend shell
+./docker.sh rebuild  # Rebuild from scratch
+./docker.sh nuke     # Complete cleanup (destructive)
+```
+
+---
+
+### Manual Installation (Alternative)
 
 #### Quick Start (Recommended)
 
