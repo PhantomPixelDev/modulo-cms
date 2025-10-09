@@ -151,9 +151,12 @@ export interface DashboardProps {
     users: number;
     roles: number;
     posts: number;
+    pages: number;
     postTypes: number;
     taxonomies: number;
     taxonomyTerms: number;
+    themes: number;
+    media: number;
   };
   adminSection?: string;
   users?: {
@@ -222,6 +225,9 @@ export interface DashboardProps {
     value: string;
     color: string;
     indicator: string;
+    detail?: string;
+    last_checked_at?: string;
+    meta?: Record<string, string | number | null | undefined>;
   }>;
 }
 

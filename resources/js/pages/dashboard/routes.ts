@@ -62,10 +62,12 @@ export const ROUTE = {
     },
   },
   roles: {
-    index: () => route('dashboard.admin.roles'),
+    index: () => route('dashboard.admin.roles.index'),
+    create: () => route('dashboard.admin.roles.create'),
     store: () => route('dashboard.admin.roles.store'),
-    update: (id: number | string) => route('dashboard.admin.roles.update', id),
-    edit: (id: number | string) => route('dashboard.admin.roles.edit', id),
+    update: (id: number | string) => route('dashboard.admin.roles.update', { role: id }),
+    destroy: (id: number | string) => route('dashboard.admin.roles.destroy', { role: id }),
+    edit: (id: number | string) => route('dashboard.admin.roles.edit', { role: id }),
   },
   sitemap: {
     index: () => route('dashboard.admin.sitemap.index'),
@@ -83,10 +85,10 @@ export const ROUTE = {
       return Object.keys(p).length ? route('dashboard.admin.media.index', p) : route('dashboard.admin.media.index');
     },
     store: () => route('dashboard.admin.media.store'),
-    update: (id: number | string) => route('dashboard.admin.media.update', id),
-    destroy: (id: number | string) => route('dashboard.admin.media.destroy', id),
+    update: (id: number | string) => route('dashboard.admin.media.update', { media: id }),
+    destroy: (id: number | string) => route('dashboard.admin.media.destroy', { media: id }),
     regenerate: (id?: number | string) =>
-      id ? route('dashboard.admin.media.regenerate', id) : route('dashboard.admin.media.regenerate'),
+      id ? route('dashboard.admin.media.regenerate', { media: id }) : route('dashboard.admin.media.regenerate'),
     bulk: () => route('dashboard.admin.media.bulk'),
     folders: {
       store: () => route('dashboard.admin.media.folders.store'),

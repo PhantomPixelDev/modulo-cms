@@ -15,6 +15,15 @@ export interface Author {
   name: string;
 }
 
+export interface FeaturedImagePreview {
+  id?: number;
+  url: string;
+  thumb?: string;
+  name?: string;
+  mime_type?: string;
+  file_name?: string;
+}
+
 export interface ParentPost {
   id: number;
   title: string;

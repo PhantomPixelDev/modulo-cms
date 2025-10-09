@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ActionButtonGroup } from '@/components/ui/button-groups';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, Image as ImageIcon, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+
+import type { FeaturedImagePreview } from '../posts/types';
 
 import SlateEditor from '../posts/SlateEditor';
 import MediaPickerDialog from '../media/MediaPickerDialog';
@@ -33,6 +36,29 @@ const slugify = (text: string) => {
     .replace(/-+$/, '');
 };
 
+const normalizeFeaturedImage = (source: any): FeaturedImagePreview | null => {
+  if (!source) return null;
+
+  if (typeof source === 'string') {
+    return { url: source };
+  }
+
+  if (typeof source === 'object') {
+    const url = source.url ?? source.src ?? '';
+    if (!url) return null;
+    return {
+      id: typeof source.id === 'number' ? source.id : undefined,
+      url,
+      thumb: source.thumb ?? source.preview_url ?? undefined,
+      name: source.name ?? source.file_name ?? source.alt ?? undefined,
+      mime_type: source.mime_type,
+      file_name: source.file_name,
+    };
+  }
+
+  return null;
+};
+
 export function PageForm({ 
   page, 
   isEditing, 
@@ -41,10 +67,14 @@ export function PageForm({
   onSubmit, 
   onCancel 
 }: PageFormProps) {
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [activeTab, setActiveTab] = useState('content');
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  const initialFeaturedImage = normalizeFeaturedImage(page?.featured_image);
+  const initialFeaturedImageId = page?.featured_image_id ?? initialFeaturedImage?.id ?? null;
+
   const [form, setForm] = useState(() => {
     // Initialize with empty content by default
     let initialContent = '';
@@ -81,8 +111,8 @@ export function PageForm({
       status: page?.status ?? 'draft',
       content: initialContent, // This is a string (JSON or HTML)
       excerpt: page?.excerpt ?? '',
-      featured_image_id: page?.featured_image_id ?? null,
-      featured_image: page?.featured_image ?? null,
+      featured_image_id: initialFeaturedImageId,
+      featured_image: initialFeaturedImage,
       meta_title: page?.meta_title ?? '',
       meta_description: page?.meta_description ?? '',
       author_id: page?.author_id?.toString() ?? '',
@@ -111,8 +141,16 @@ export function PageForm({
       }
 
       // Prepare the form data
+      const featuredImageUrl = form.featured_image
+        ? typeof form.featured_image === 'string'
+          ? form.featured_image
+          : form.featured_image.url
+        : null;
+
       const formData = {
         ...form,
+        featured_image_id: form.featured_image_id ?? (typeof form.featured_image === 'object' ? form.featured_image?.id ?? null : null),
+        featured_image: featuredImageUrl,
         content: contentToSubmit,
         author_id: form.author_id ? parseInt(form.author_id, 10) : null,
       };
@@ -133,10 +171,11 @@ export function PageForm({
   };
 
   const handleFeaturedImageSelect = (media: any) => {
+    const normalized = normalizeFeaturedImage(media);
     setForm(f => ({
       ...f,
-      featured_image_id: media.id,
-      featured_image: media
+      featured_image_id: media?.id ?? normalized?.id ?? null,
+      featured_image: normalized
     }));
     setShowMediaPicker(false);
   };
@@ -172,10 +211,17 @@ export function PageForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">{isEditing ? 'Edit Page' : 'Create Page'}</h2>
-        <div className="flex space-x-2">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2 sm:flex sm:items-start sm:justify-between sm:space-y-0">
+        <div className="max-w-xl text-sm text-muted-foreground">
+          <p>{isEditing ? 'Update the page content, metadata, and publishing options.' : 'Fill in the page details, configure SEO, and prepare it for publishing.'}</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground/90">
+            <li key="content">Provide the main content, excerpt, and featured image.</li>
+            <li key="seo">Fine-tune SEO metadata for better visibility.</li>
+            <li key="publish">Set publication status, author, and scheduling.</li>
+          </ul>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           <Button 
             type="button" 
             variant="outline" 
@@ -237,12 +283,12 @@ export function PageForm({
 
             <div>
               <Label>Featured Image</Label>
-              <div className="mt-1 flex items-center space-x-4">
-                {form.featured_image ? (
+              <div className="mt-1 flex flex-wrap items-center gap-4">
+                {form.featured_image && typeof form.featured_image === 'object' && (
                   <div className="relative group">
                     <img
-                      src={form.featured_image.url}
-                      alt="Featured"
+                      src={form.featured_image.thumb || form.featured_image.url}
+                      alt={form.featured_image.name || form.title || 'Featured'}
                       className="h-24 w-24 rounded-md object-cover"
                     />
                     <Button
@@ -255,7 +301,8 @@ export function PageForm({
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
-                ) : (
+                )}
+                <div className="flex items-center space-x-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -263,9 +310,14 @@ export function PageForm({
                     onClick={() => setShowMediaPicker(true)}
                   >
                     <ImageIcon className="mr-2 h-4 w-4" />
-                    Set featured image
+                    {form.featured_image ? 'Change image' : 'Select featured image'}
                   </Button>
-                )}
+                  <Badge variant="outline" className="px-2">
+                    {form.featured_image
+                      ? form.featured_image.name || form.featured_image.file_name || (form.featured_image_id ? `ID ${form.featured_image_id}` : 'Selected')
+                      : 'None selected'}
+                  </Badge>
+                </div>
               </div>
             </div>
 
@@ -395,11 +447,11 @@ export function PageForm({
       />
 
       <ActionButtonGroup
-        onSave={handleSubmit}
         onCancel={onCancel}
         saveLabel={isEditing ? 'Update Page' : 'Create Page'}
         cancelLabel="Cancel"
         isSubmitting={isSubmitting}
+        onSave={() => formRef.current?.requestSubmit()}
         className="mt-6"
       />
     </form>

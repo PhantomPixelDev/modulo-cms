@@ -44,21 +44,5 @@ class MediaBucket extends Model implements HasMedia
         });
     }
 
-    /**
-     * Define media conversions for thumbnails and responsive sizes.
-     */
-    public function registerMediaConversions(Media $media = null): void
-    {
-        $this->addMediaConversion('thumb')
-            ->width(300)
-            ->height(300)
-            ->nonQueued();
-
-        $this->addMediaConversion('medium')
-            ->width(800)
-            ->nonQueued();
-
-        $this->addMediaConversion('large')
-            ->width(1600);
-    }
+    // Media conversions disabled for now to avoid processing issues during uploads
 }

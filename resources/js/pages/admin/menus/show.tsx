@@ -4,7 +4,11 @@ import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SectionHeader } from '@/components/ui/section-header';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useAcl } from '@/lib/acl';
 
 interface MenuItemDTO {
@@ -54,79 +58,129 @@ export default function AdminMenusShow() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="px-3 py-4 sm:px-6 sm:py-6 space-y-6">
       <Head title={`Menu: ${menu?.name ?? ''}`} />
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Edit Menu</h1>
-        <div className="flex gap-2">
-          <Button asChild variant="ghost">
-            <Link href="/dashboard/admin/menus">Back</Link>
-          </Button>
-          {(isAdmin() || hasPermission('delete menus')) && (
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (!confirm(`Delete menu \"${menu.name}\"?`)) return;
-                router.delete(`/dashboard/admin/menus/${menu.id}`, { replace: true });
-              }}
-            >Delete</Button>
-          )}
-        </div>
-      </div>
+      <SectionHeader
+        title={`Menu: ${menu?.name ?? ''}`}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/dashboard/admin/menus">Back to Menus</Link>
+            </Button>
+            {(isAdmin() || hasPermission('delete menus')) && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => {
+                  if (!confirm(`Delete menu "${menu.name}"?`)) return;
+                  router.delete(`/dashboard/admin/menus/${menu.id}`, { replace: true });
+                }}
+              >Delete Menu</Button>
+            )}
+          </div>
+        }
+      />
 
-      {(isAdmin() || hasPermission('edit menus')) && (
-      <form onSubmit={submit} className="space-y-3 max-w-xl">
-        <div>
-          <label className="block text-sm mb-1">Name</label>
-          <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
-          {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Slug</label>
-          <Input value={data.slug} onChange={(e) => setData('slug', e.target.value)} />
-          {errors.slug && <p className="text-sm text-red-600">{errors.slug}</p>}
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Location (optional)</label>
-          <Input value={data.location || ''} onChange={(e) => setData('location', e.target.value)} />
-          {errors.location && <p className="text-sm text-red-600">{errors.location}</p>}
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Description (optional)</label>
-          <Textarea value={data.description || ''} onChange={(e) => setData('description', e.target.value)} />
-          {errors.description && <p className="text-sm text-red-600">{errors.description}</p>}
-        </div>
-        <Button disabled={processing}>Save</Button>
-      </form>
-      )}
+      <div className="grid gap-6 xl:grid-cols-5">
+        {(isAdmin() || hasPermission('edit menus')) && (
+          <Card className="xl:col-span-2 border-border/60 shadow-none">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-base font-semibold text-foreground/90">Menu Details</CardTitle>
+              <CardDescription className="text-sm text-muted-foreground">
+                Update the menu’s metadata and description.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={submit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Name</label>
+                  <Input value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder="Primary Navigation" />
+                  {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Slug</label>
+                  <Input value={data.slug} onChange={(e) => setData('slug', e.target.value)} placeholder="primary-navigation" />
+                  {errors.slug && <p className="text-xs text-red-500">{errors.slug}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Location</label>
+                  <Input value={data.location || ''} onChange={(e) => setData('location', e.target.value)} placeholder="header" />
+                  <p className="text-xs text-muted-foreground">Optional: specify where this menu is used in your theme.</p>
+                  {errors.location && <p className="text-xs text-red-500">{errors.location}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Description</label>
+                  <Textarea
+                    value={data.description || ''}
+                    onChange={(e) => setData('description', e.target.value)}
+                    placeholder="Appears in admin lists to identify the menu"
+                    className="min-h-[90px]"
+                  />
+                  {errors.description && <p className="text-xs text-red-500">{errors.description}</p>}
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => router.reload({ only: ['menu'] })} disabled={processing}>
+                    Reset
+                  </Button>
+                  <Button disabled={processing} size="sm">
+                    {processing ? 'Saving…' : 'Save Changes'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Inline Menu Items Builder */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Create Item */}
-        <div className="rounded border p-4">
+        <div className="xl:col-span-3 space-y-6">
           {(isAdmin() || hasPermission('create menu items')) && (
-            <>
-              <h2 className="font-medium mb-3">Add Menu Item</h2>
-              <CreateItemForm menuId={menu.id} allItems={flatten(menu.items || [])} />
-            </>
+            <Card className="border-border/60 shadow-none">
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-base font-semibold text-foreground/90">Add Menu Item</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Link to external URLs, internal pages, or named routes. Use the order field to control placement.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CreateItemForm menuId={menu.id} allItems={flatten(menu.items || [])} />
+              </CardContent>
+            </Card>
           )}
-        </div>
 
-        {/* Items List */}
-        <div className="rounded border p-4">
-          <h2 className="font-medium mb-3">Items</h2>
-          {Array.isArray(menu.items) && menu.items.length > 0 ? (
-            <ul>
-              {menu.items
-                .filter((it: any) => !it.parent_id)
-                .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
-                .map((it: MenuItemDTO) => (
-                  <ItemRow key={it.id} item={it} allItems={flatten(menu.items!)} />
-                ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">No items yet.</p>
-          )}
+          <Card className="border-border/60 shadow-none">
+            <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle className="text-base font-semibold text-foreground/90">Menu Structure</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Manage menu items and edit their details. Ordering follows the numeric values you provide.
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="text-xs font-medium">
+                {menu?.items?.length ? `${menu.items.length} item${menu.items.length === 1 ? '' : 's'}` : 'No items yet'}
+              </Badge>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(menu.items) && menu.items.length > 0 ? (
+                <div className="space-y-3">
+                  {menu.items
+                    .filter((it: any) => !it.parent_id)
+                    .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+                    .map((it: MenuItemDTO) => (
+                      <ItemRow
+                        key={it.id}
+                        item={it}
+                        allItems={flatten(menu.items!)}
+                        isAdmin={isAdmin}
+                        hasPermission={hasPermission}
+                      />
+                    ))}
+                </div>
+              ) : (
+                <div className="rounded-md border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
+                  No items yet. Use the “Add Menu Item” card to start building this menu.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -158,16 +212,16 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
   const linkType = data.route_name ? 'route' : data.page_slug ? 'page' : 'url';
 
   return (
-    <form onSubmit={submit} className="space-y-3">
-      <div>
-        <label className="block text-sm mb-1">Label</label>
-        <Input value={data.label} onChange={(e) => setData('label', e.target.value)} />
-        {errors.label && <p className="text-sm text-red-600">{errors.label}</p>}
+    <form onSubmit={submit} className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Label</label>
+        <Input value={data.label} onChange={(e) => setData('label', e.target.value)} placeholder="Menu item label" />
+        {errors.label && <p className="text-xs text-red-500">{errors.label}</p>}
       </div>
-      <div>
-        <label className="block text-sm mb-1">Link Type</label>
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Link Type</label>
         <select
-          className="w-full border border-input bg-background text-foreground rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           value={linkType}
           onChange={(e) => {
             const t = e.target.value as 'url' | 'page' | 'route';
@@ -182,59 +236,66 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
         </select>
       </div>
       {linkType === 'url' && (
-        <div>
-          <label className="block text-sm mb-1">URL</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">URL</label>
           <Input placeholder="https://example.com/path" value={data.url} onChange={(e) => setData('url', e.target.value)} />
-          {errors.url && <p className="text-sm text-red-600">{errors.url}</p>}
+          {errors.url && <p className="text-xs text-red-500">{errors.url}</p>}
         </div>
       )}
       {linkType === 'page' && (
-        <div>
-          <label className="block text-sm mb-1">Page Slug</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Page Slug</label>
           <Input placeholder="about, contact" value={data.page_slug} onChange={(e) => setData('page_slug', e.target.value)} />
         </div>
       )}
       {linkType === 'route' && (
-        <div>
-          <label className="block text-sm mb-1">Route Name</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Route Name</label>
           <Input placeholder="dashboard.admin.posts.index" value={data.route_name} onChange={(e) => setData('route_name', e.target.value)} />
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm mb-1">Order</label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Order</label>
           <Input type="number" value={data.order} onChange={(e) => setData('order', Number(e.target.value))} />
         </div>
-        <div>
-          <label className="block text-sm mb-1">Target</label>
-          <select className="w-full border border-input bg-background text-foreground rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" value={data.target} onChange={(e) => setData('target', e.target.value as '_self' | '_blank')}>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Target</label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" value={data.target} onChange={(e) => setData('target', e.target.value as '_self' | '_blank')}>
             <option value="_self">Same tab</option>
             <option value="_blank">New tab</option>
           </select>
         </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Visible To</label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
+            <option value="all">Everyone</option>
+            <option value="guest">Guests only</option>
+            <option value="auth">Authenticated users</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parent</label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" value={data.parent_id ?? 0} onChange={(e) => setData('parent_id', Number(e.target.value) || null)}>
+            {parentOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div>
-        <label className="block text-sm mb-1">Visible To</label>
-        <select className="w-full border border-input bg-background text-foreground rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
-          <option value="all">Everyone</option>
-          <option value="guest">Guests only</option>
-          <option value="auth">Authenticated users</option>
-        </select>
+      <div className="flex items-center justify-end gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => reset('label', 'url', 'page_slug', 'route_name', 'parent_id', 'order')} disabled={processing}>
+          Reset
+        </Button>
+        <Button disabled={processing} size="sm">
+          {processing ? 'Adding…' : 'Add Item'}
+        </Button>
       </div>
-      <div>
-        <label className="block text-sm mb-1">Parent</label>
-        <select className="w-full border border-input bg-background text-foreground rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" value={data.parent_id ?? 0} onChange={(e) => setData('parent_id', Number(e.target.value) || null)}>
-          {parentOptions.map((opt) => (
-            <option key={opt.id} value={opt.id}>{opt.label}</option>
-          ))}
-        </select>
-      </div>
-      <Button disabled={processing}>Add</Button>
     </form>
   );
 }
 
-function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[] }) {
+function ItemRow({ item, allItems, isAdmin, hasPermission }: { item: MenuItemDTO; allItems: MenuItemDTO[]; isAdmin: () => boolean; hasPermission: (perm: string) => boolean }) {
   const { data, setData, put, processing } = useForm({
     parent_id: item.parent_id ?? null,
     label: item.label,
@@ -253,11 +314,6 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
   };
 
   // Compute siblings (same parent) for drag-sorting
-  const siblings = useMemo(
-    () => allItems.filter((i) => (i.parent_id ?? null) === (item.parent_id ?? null)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-    [allItems, item.parent_id]
-  );
-
   // Flatten descendants to avoid selecting self/desc as parent
   const descendantIds = useMemo(() => collectDescendants(allItems, item.id), [allItems, item.id]);
   const parentOptions = useMemo(
@@ -265,49 +321,24 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
     [allItems, descendantIds, item.id]
   );
 
-  function onDragStart(ev: React.DragEvent) {
-    ev.dataTransfer.setData('text/plain', String(item.id));
-    ev.dataTransfer.effectAllowed = 'move';
-  }
-  function onDragOver(ev: React.DragEvent) {
-    ev.preventDefault();
-    ev.dataTransfer.dropEffect = 'move';
-  }
-  function onDrop(ev: React.DragEvent) {
-    ev.preventDefault();
-    const sourceId = Number(ev.dataTransfer.getData('text/plain'));
-    if (!sourceId || sourceId === item.id) return;
-    const source = allItems.find((i) => i.id === sourceId);
-    if (!source) return;
-    // Only support reordering within same parent for DnD
-    const sameParent = (source.parent_id ?? null) === (item.parent_id ?? null);
-    if (!sameParent) return;
-    const ordered = siblings.map((s) => s.id);
-    const fromIdx = ordered.indexOf(sourceId);
-    const toIdx = ordered.indexOf(item.id);
-    if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
-    ordered.splice(fromIdx, 1);
-    ordered.splice(toIdx, 0, sourceId);
-    // Persist new order indices for siblings
-    ordered.forEach((id, idx) => {
-      const src = allItems.find((i) => i.id === id);
-      router.put(`/dashboard/admin/menu-items/${id}`, { order: idx, label: src?.label ?? '' }, { preserveScroll: true, preserveState: true });
-    });
-  }
-
   const linkType = data.route_name ? 'route' : data.page_slug ? 'page' : 'url';
   return (
-    <li className="border rounded p-3 mb-3" draggable onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop}>
-      <div className="flex items-center gap-2 mb-2">
-        <button type="button" className="p-1 hover:bg-muted rounded" onClick={() => setExpanded((v) => !v)} aria-label={expanded ? 'Collapse' : 'Expand'}>
-          {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        </button>
-        <GripVertical className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Drag to reorder within the same parent</span>
+    <div className="rounded-md border border-border/60 bg-card/50 p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <button type="button" className="rounded p-1 hover:bg-muted" onClick={() => setExpanded((v) => !v)} aria-label={expanded ? 'Collapse' : 'Expand'}>
+            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </button>
+          <span className="font-medium text-foreground/80">{item.label}</span>
+        </div>
+        <Badge variant="outline" className="text-xs uppercase">
+          {data.parent_id ? parentOptions.find((opt) => opt.id === data.parent_id)?.label ?? 'Nested' : 'Root'}
+        </Badge>
       </div>
-      <form onSubmit={submit} className="grid md:grid-cols-6 gap-2 items-start">
+      <Separator className="my-3" />
+      <form onSubmit={submit} className="grid gap-2 md:grid-cols-7">
         <Input className="md:col-span-2" placeholder="Label" value={data.label} onChange={(e) => setData('label', e.target.value)} />
-        <select className="border border-input bg-background text-foreground rounded px-2 py-1" value={linkType} onChange={(e) => {
+        <select className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={linkType} onChange={(e) => {
           const t = e.target.value as 'url' | 'page' | 'route';
           if (t === 'url') { setData('route_name', ''); setData('page_slug', ''); }
           if (t === 'page') { setData('route_name', ''); setData('url', ''); }
@@ -327,16 +358,16 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
           <Input className="md:col-span-2" placeholder="dashboard.admin.posts.index" value={data.route_name} onChange={(e) => setData('route_name', e.target.value)} />
         )}
         <Input placeholder="Order" type="number" value={data.order ?? 0} onChange={(e) => setData('order', Number(e.target.value))} />
-        <select className="border border-input bg-background text-foreground rounded px-2 py-1" value={data.parent_id ?? 0} onChange={(e) => setData('parent_id', Number(e.target.value) || null)}>
+        <select className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={data.parent_id ?? 0} onChange={(e) => setData('parent_id', Number(e.target.value) || null)}>
           {parentOptions.map((opt) => (
             <option key={opt.id} value={opt.id}>{opt.label}</option>
           ))}
         </select>
-        <select className="border border-input bg-background text-foreground rounded px-2 py-1" value={data.target} onChange={(e) => setData('target', e.target.value as '_self' | '_blank')}>
+        <select className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={data.target} onChange={(e) => setData('target', e.target.value as '_self' | '_blank')}>
           <option value="_self">Same tab</option>
           <option value="_blank">New tab</option>
         </select>
-        <select className="border border-input bg-background text-foreground rounded px-2 py-1" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
+        <select className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={data.visible_to} onChange={(e) => setData('visible_to', e.target.value as 'all' | 'guest' | 'auth')}>
           <option value="all">Everyone</option>
           <option value="guest">Guests only</option>
           <option value="auth">Authenticated users</option>
@@ -360,16 +391,22 @@ function ItemRow({ item, allItems }: { item: MenuItemDTO; allItems: MenuItemDTO[
       </form>
 
       {expanded && item.children && item.children.length > 0 && (
-        <ul className="ml-6 mt-2">
+        <div className="ml-6 mt-3 space-y-3">
           {item.children
             .slice()
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((child) => (
-              <ItemRow key={child.id} item={child as MenuItemDTO} allItems={allItems} />
+              <ItemRow
+                key={child.id}
+                item={child as MenuItemDTO}
+                allItems={allItems}
+                isAdmin={isAdmin}
+                hasPermission={hasPermission}
+              />
             ))}
-        </ul>
+        </div>
       )}
-    </li>
+    </div>
   );
 }
 

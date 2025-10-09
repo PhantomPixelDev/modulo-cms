@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import ErrorBoundary from './util/ErrorBoundary';
 import Navigation from './partials/Navigation';
 import Footer from './Footer';
@@ -51,6 +52,7 @@ interface LayoutProps {
     id?: number;
     title?: string;
     excerpt?: string;
+    featured_image?: string;
     updated_at?: string;
     author?: {
       name?: string;
@@ -106,6 +108,8 @@ export default function Layout({
   const containerWidth = safeTheme.layout?.container_width || 'container';
   const primaryColor = safeTheme.colors?.primary || '#3b82f6';
   const fontFamily = safeTheme.typography?.font_family || 'inter';
+
+  useDocumentTitle(pageTitle);
   
   // Enhanced SEO data based on content type
   const isArticle = post && post.id;

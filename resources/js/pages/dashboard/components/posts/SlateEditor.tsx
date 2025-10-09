@@ -375,7 +375,7 @@ function parseMarkdown(md: string): Descendant[] {
   const out: Descendant[] = [];
   let i = 0;
   while (i < lines.length) {
-    let line = lines[i];
+    const line = lines[i];
     // skip extra blank lines
     if (!line.trim()) {
       i++; continue;

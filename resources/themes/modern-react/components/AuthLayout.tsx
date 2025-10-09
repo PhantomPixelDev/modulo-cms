@@ -1,5 +1,6 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,8 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children, title, description }: AuthLayoutProps) {
   const pageTitle = title ? `${title} | Modulo CMS` : 'Modulo CMS';
+
+  useDocumentTitle(pageTitle);
 
   return (
     <>

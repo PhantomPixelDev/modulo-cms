@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client';
 // import GlobalToasts from './components/GlobalToasts';
 // import { toast } from 'sonner';
 import ErrorBoundary from './ErrorBoundary';
+import { AdminToastProvider } from './components/admin/AdminToastProvider';
 
 declare global {
     interface Window {
@@ -85,7 +86,9 @@ createInertiaApp({
         // Minimal initial render with global ErrorBoundary
         root.render(
             <ErrorBoundary>
-                <App {...props} />
+                <AdminToastProvider>
+                    <App {...props} />
+                </AdminToastProvider>
             </ErrorBoundary>
         );
     },

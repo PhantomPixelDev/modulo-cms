@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from 'react';
-import { router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 // Ziggy exposes a global `route()` when @routes is included; declare it for TS
 declare const route: (name: string, params?: any) => string;
 import { Button } from '@/components/ui/button';
 import { SectionWrapper } from './components/common/SectionWrapper';
-import { toast } from 'sonner';
+import { useAdminToast } from '@/components/admin/AdminToastProvider';
 import { UserList, UserForm } from './components/users';
 import { RoleList, RoleForm } from './components/roles';
 import { PostList } from './components/posts/PostList';
@@ -15,19 +15,25 @@ import { PostView } from './components/posts/PostView';
 import { PageForm } from './components/pages/PageForm';
 import { PagesList } from './components/pages/PagesList';
 import { TaxonomyList } from './components/taxonomies/TaxonomyList';
+import { TaxonomyForm } from './components/taxonomies/TaxonomyForm';
 import { DashboardStats } from './components/dashboard/DashboardStats';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { Activity, Database, HardDrive, RefreshCcw, Server, Timer, Zap } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { ActiveThemeCard } from './components/themes/ActiveThemeCard';
 import { InstalledThemesGrid } from './components/themes/InstalledThemesGrid';
 import { DiscoveredThemesList } from './components/themes/DiscoveredThemesList';
 import { ThemeDetails } from './components/themes/ThemeDetails';
 import { ThemeCustomizerForm } from './components/themes/ThemeCustomizerForm';
 import { SitemapSettingsForm } from './components/sitemap/SitemapSettingsForm';
-import { DashboardProps, asArray, type User as DashboardUser, type Permission } from './types';
+import { DashboardProps, asArray, type User as DashboardUser, type Permission, type PostListItem } from './types';
 import { SectionHeader } from '@/components/ui/section-header';
 import { ROUTE } from './routes';
 import { MediaLibrary } from './components/media/MediaLibrary';
 import { useAcl } from '@/lib/acl';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function DashboardContent({
   adminStats,
@@ -63,12 +69,19 @@ export default function DashboardContent({
   editUser,
   editRole,
   editPostType,
+  editTaxonomy,
   auth,
   recentActivity,
   systemStatus,
 }: DashboardProps) {
+  const {
+    success: showSuccess,
+    error: showError,
+    info: showInfo,
+    warning: showWarning,
+    notify: showToast,
+  } = useAdminToast();
   const [showUserForm, setShowUserForm] = useState(false);
-  const [showRoleForm, setShowRoleForm] = useState(false);
   // Convert users to match the expected User type
   const users = asArray(usersProp).map((user: DashboardUser) => ({
     ...user,
@@ -99,6 +112,80 @@ export default function DashboardContent({
 
   // Admins or users with relevant permissions can edit post author
   const canEditAuthorFlag = can('assign posts author') || can('edit posts');
+
+  const statusIcons: Record<string, LucideIcon> = {
+    server: Server,
+    uptime: Timer,
+    database: Database,
+    cache: Zap,
+    storage: HardDrive,
+    queue: Activity,
+  };
+
+  const statusDescriptions: Record<string, string> = {
+    server: 'Application web server availability',
+    uptime: 'Time since the last server restart',
+    database: 'Database connection health',
+    cache: 'Cache layer responsiveness',
+    storage: 'Disk usage across storage volumes',
+    queue: 'Background job throughput',
+  };
+
+  const STATUS_COLOR_TOKENS: Record<string, { text: string; indicator: string; badge: string; iconBg: string; border: string }> = {
+    green: {
+      text: 'text-emerald-600',
+      indicator: 'bg-emerald-500',
+      badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      iconBg: 'bg-emerald-50 text-emerald-600',
+      border: 'border-emerald-100',
+    },
+    blue: {
+      text: 'text-sky-600',
+      indicator: 'bg-sky-500',
+      badge: 'bg-sky-50 text-sky-700 border border-sky-200',
+      iconBg: 'bg-sky-50 text-sky-600',
+      border: 'border-sky-100',
+    },
+    yellow: {
+      text: 'text-amber-600',
+      indicator: 'bg-amber-400',
+      badge: 'bg-amber-50 text-amber-700 border border-amber-200',
+      iconBg: 'bg-amber-50 text-amber-600',
+      border: 'border-amber-100',
+    },
+    red: {
+      text: 'text-rose-600',
+      indicator: 'bg-rose-500',
+      badge: 'bg-rose-50 text-rose-700 border border-rose-200',
+      iconBg: 'bg-rose-50 text-rose-600',
+      border: 'border-rose-100',
+    },
+    gray: {
+      text: 'text-muted-foreground',
+      indicator: 'bg-muted-foreground/60',
+      badge: 'bg-muted/80 text-muted-foreground border border-border/60',
+      iconBg: 'bg-muted/70 text-muted-foreground',
+      border: 'border-border/60',
+    },
+  };
+
+  const getStatusColors = (tone: string) => STATUS_COLOR_TOKENS[tone] ?? STATUS_COLOR_TOKENS.gray;
+
+  const formatLastChecked = (iso?: string) => {
+    if (!iso) return 'Updated moments ago';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return 'Updated moments ago';
+
+    const diffMinutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
+    if (diffMinutes <= 1) return 'Updated just now';
+    if (diffMinutes < 60) return `Updated ${diffMinutes}m ago`;
+
+    const diffHours = Math.round(diffMinutes / 60);
+    if (diffHours < 24) return `Updated ${diffHours}h ago`;
+
+    const diffDays = Math.round(diffHours / 24);
+    return `Updated ${diffDays}d ago`;
+  };
   // Handle page form submission
   const handlePageSubmit = async (formData: any, editId?: number) => {
     const url = editId ? ROUTE.pages.update(editId) : ROUTE.pages.store();
@@ -108,17 +195,17 @@ export default function DashboardContent({
       router[method](url, formData, {
         preserveScroll: true,
         onSuccess: () => {
-          toast.success(`Page ${editId ? 'updated' : 'created'} successfully`);
+          showSuccess(`Page ${editId ? 'updated' : 'created'} successfully`);
           router.visit(ROUTE.pages.index());
         },
         onError: (errors) => {
           console.error('Validation errors:', errors);
-          toast.error(`Failed to ${editId ? 'update' : 'create'} page`);
+          showError(`Failed to ${editId ? 'update' : 'create'} page`);
         },
       });
     } catch (error) {
       console.error('Error saving page:', error);
-      toast.error(`Failed to ${editId ? 'update' : 'create'} page`);
+      showError(`Failed to ${editId ? 'update' : 'create'} page`);
     }
   };
 
@@ -129,15 +216,15 @@ export default function DashboardContent({
     try {
       await router.delete(ROUTE.pages.destroy(page.id), {
         onSuccess: () => {
-          toast.success('Page deleted');
+          showSuccess('Page deleted');
           router.visit(ROUTE.pages.index());
         },
-        onError: () => toast.error('Failed to delete page'),
+        onError: () => showError('Failed to delete page'),
         preserveScroll: true,
       });
     } catch (error) {
       console.error('Error deleting page:', error);
-      toast.error('An error occurred while deleting the page');
+      showError('An error occurred while deleting the page');
     }
   };
 
@@ -148,15 +235,15 @@ export default function DashboardContent({
     try {
       await router.delete(ROUTE.postTypes.destroy(pt.id), {
         onSuccess: () => {
-          toast.success('Post type deleted');
+          showSuccess('Post type deleted');
           router.visit(ROUTE.postTypes.index());
         },
-        onError: () => toast.error('Failed to delete post type'),
+        onError: () => showError('Failed to delete post type'),
         preserveScroll: true,
       });
     } catch (error) {
       console.error('Error deleting post type:', error);
-      toast.error('An error occurred while deleting the post type');
+      showError('An error occurred while deleting the post type');
     }
   };
 
@@ -167,12 +254,20 @@ export default function DashboardContent({
         ? ROUTE.postTypes.update((editPostType as any).id)
         : ROUTE.postTypes.store();
       const method = (editPostType as any) ? 'put' : 'post';
-      await router[method](url, formData);
-      toast.success(`Post type ${(editPostType as any) ? 'updated' : 'created'} successfully`);
-      router.visit(ROUTE.postTypes.index());
+      await router[method](url, formData, {
+        preserveScroll: true,
+        onSuccess: () => {
+          showSuccess(`Post type ${(editPostType as any) ? 'updated' : 'created'} successfully`);
+          router.visit(ROUTE.postTypes.index());
+        },
+        onError: (errors) => {
+          console.error('Validation errors:', errors);
+          showError(`Failed to ${(editPostType as any) ? 'update' : 'create'} post type`);
+        },
+      });
     } catch (error) {
       console.error('Error saving post type:', error);
-      toast.error(`Failed to ${(editPostType as any) ? 'update' : 'create'} post type`);
+      showError(`Failed to ${(editPostType as any) ? 'update' : 'create'} post type`);
     }
   };
 
@@ -184,14 +279,17 @@ export default function DashboardContent({
       await router[method](url, formData, {
         preserveScroll: true,
         onSuccess: () => {
+          showSuccess(`Post ${editId ? 'updated' : 'created'} successfully`);
           router.visit(ROUTE.posts.index());
         },
         onError: (errors) => {
           console.error('Validation errors:', errors);
+          showError(`Failed to ${editId ? 'update' : 'create'} post`);
         },
       });
     } catch (error) {
       console.error('Error saving post:', error);
+      showError(`Failed to ${editId ? 'update' : 'create'} post`);
     }
   };
 
@@ -210,51 +308,71 @@ export default function DashboardContent({
       await router[method](url, formData, {
         preserveScroll: true,
         onSuccess: () => {
+          showSuccess(`User ${editUser ? 'updated' : 'created'} successfully`);
           router.visit(ROUTE.users.index());
         },
         onError: (errors) => {
           console.error('Validation errors:', errors);
+          showError(`Failed to ${editUser ? 'update' : 'create'} user`);
         },
       });
     } catch (error) {
       console.error('Error saving user:', error);
+      showError(`Failed to ${editUser ? 'update' : 'create'} user`);
     }
   };
 
   // Handle role form submission
-  const handleRoleSubmit = (data: any) => {
+  const handleRoleSubmit = async (data: any) => {
     const url = editRole 
       ? ROUTE.roles.update(editRole.id)
       : ROUTE.roles.store();
     
     const method = editRole ? 'put' : 'post';
     
-    router[method](url, data, {
-      onSuccess: () => {
-        setShowRoleForm(false);
-      },
-    });
+    try {
+      await router[method](url, data, {
+        preserveScroll: true,
+        onSuccess: () => {
+          showSuccess(`Role ${editRole ? 'updated' : 'created'} successfully`);
+          router.visit(ROUTE.roles.index());
+        },
+        onError: (errors) => {
+          console.error('Failed to save role:', errors);
+          showError(`Failed to ${editRole ? 'update' : 'create'} role`);
+        },
+      });
+    } catch (error) {
+      console.error('Error saving role:', error);
+      showError(`Failed to ${editRole ? 'update' : 'create'} role`);
+    }
   };
 
   // --- Posts: extract render helpers to simplify switch ---
-  const renderPostsList = () => (
-    <SectionWrapper
-      title="Posts"
-      actions={
-        can('create posts') ? (
-          <Button size="sm" onClick={() => router.visit(ROUTE.posts.create())}>
-            + New Post
-          </Button>
-        ) : null
-      }
-    >
-      <PostList
-        posts={(postsProp as any) || (posts as any) || []}
-        canCreate={false}
-        canEdit={can('edit posts')}
-      />
-    </SectionWrapper>
-  );
+  const renderPostsList = () => {
+    const postItems: PostListItem[] = Array.isArray(postsProp)
+      ? (postsProp as PostListItem[])
+      : (((postsProp as any)?.data ?? []) as PostListItem[]);
+
+    return (
+      <SectionWrapper
+        title="Posts"
+        actions={
+          can('create posts') ? (
+            <Button size="sm" onClick={() => router.visit(ROUTE.posts.create())}>
+              + New Post
+            </Button>
+          ) : null
+        }
+      >
+        <PostList
+          posts={postItems}
+          canCreate={false}
+          canEdit={can('edit posts')}
+        />
+      </SectionWrapper>
+    );
+  };
 
   const renderMedia = () => (
     <SectionWrapper
@@ -314,14 +432,14 @@ export default function DashboardContent({
             await router.post(url, {}, {
               preserveScroll: true,
               onSuccess: () => {
-                toast.success(`Role ${action === 'assign' ? 'assigned' : 'removed'} successfully`);
+                showSuccess(`Role ${action === 'assign' ? 'assigned' : 'removed'} successfully`);
                 router.reload({ only: ['users'] });
               },
-              onError: () => toast.error(`Failed to ${action} role`)
+              onError: () => showError(`Failed to ${action} role`)
             });
           } catch (error) {
             console.error('Error updating user role:', error);
-            toast.error('An error occurred while updating the role');
+            showError('An error occurred while updating the role');
           }
         }}
         currentUserId={auth.user?.id}
@@ -415,7 +533,7 @@ export default function DashboardContent({
     <SectionWrapper 
       title="Roles"
       actions={
-        <Button size="sm" onClick={() => setShowRoleForm(true)}>
+        <Button size="sm" onClick={() => router.visit(ROUTE.roles.create())}>
           + New Role
         </Button>
       }
@@ -512,7 +630,7 @@ export default function DashboardContent({
       }
     >
       <PagesList
-        pages={asArray((postsProp as any)?.data || posts)
+        pages={asArray((postsProp as any)?.data || [])
           .filter((p: any) => (p.post_type?.name ? p.post_type.name === 'page' : true))
           .map((p: any) => ({
             id: p.id,
@@ -677,7 +795,35 @@ export default function DashboardContent({
         </Button>
       }
     >
-      <p>Taxonomy form UI is not implemented yet.</p>
+      <TaxonomyForm
+        taxonomy={(adminSection === 'taxonomies.edit' ? editTaxonomy : null) as any}
+        postTypes={(postTypes as any) || []}
+        isEditing={adminSection === 'taxonomies.edit'}
+        onSubmit={async (payload) => {
+          const isEditingTaxonomy = adminSection === 'taxonomies.edit' && editTaxonomy;
+          try {
+            const method = isEditingTaxonomy ? 'put' : 'post';
+            const url = isEditingTaxonomy
+              ? route('dashboard.admin.taxonomies.update', { taxonomy: editTaxonomy.id })
+              : route('dashboard.admin.taxonomies.store');
+            await router[method](url, payload, {
+              preserveScroll: true,
+              onSuccess: () => {
+                showSuccess(`Taxonomy ${isEditingTaxonomy ? 'updated' : 'created'} successfully`);
+                router.visit(ROUTE.taxonomies.index());
+              },
+              onError: (errors) => {
+                console.error('Failed to save taxonomy', errors);
+                showError(`Failed to ${isEditingTaxonomy ? 'update' : 'create'} taxonomy`);
+              },
+            });
+          } catch (error) {
+            console.error('Error submitting taxonomy form:', error);
+            showError(`Failed to ${isEditingTaxonomy ? 'update' : 'create'} taxonomy`);
+          }
+        }}
+        onCancel={() => router.visit(ROUTE.taxonomies.index())}
+      />
     </SectionWrapper>
   );
 
@@ -701,14 +847,14 @@ export default function DashboardContent({
                     await router.post(ROUTE.themes.discover(), {}, {
                       preserveScroll: true,
                       onSuccess: () => {
-                        toast.success('Discovered and installed themes');
+                        showSuccess('Discovered and installed themes');
                         router.reload({ only: ['themes', 'discoveredThemes', 'activeTheme'] });
                       },
-                      onError: () => toast.error('Failed to discover/install themes'),
+                      onError: () => showError('Failed to discover/install themes'),
                     });
                   } catch (e) {
                     console.error(e);
-                    toast.error('Error discovering themes');
+                    showError('Error discovering themes');
                   }
                 }}
               >
@@ -727,12 +873,12 @@ export default function DashboardContent({
               try {
                 await router.post(ROUTE.themes.publishAssets(themeId), {}, {
                   preserveScroll: true,
-                  onSuccess: () => toast.success('Assets published'),
-                  onError: () => toast.error('Failed to publish assets'),
+                  onSuccess: () => showSuccess('Assets published'),
+                  onError: () => showError('Failed to publish assets'),
                 });
               } catch (e) {
                 console.error(e);
-                toast.error('Error publishing assets');
+                showError('Error publishing assets');
               }
             }}
             onCustomize={(themeId) => router.visit(ROUTE.themes.customizer(themeId))}
@@ -752,26 +898,26 @@ export default function DashboardContent({
                 await router.post(ROUTE.themes.activate(slug), {}, {
                   preserveScroll: true,
                   onSuccess: () => {
-                    toast.success('Theme activated');
+                    showSuccess('Theme activated');
                     router.reload({ only: ['themes', 'activeTheme'] });
                   },
-                  onError: () => toast.error('Failed to activate theme'),
+                  onError: () => showError('Failed to activate theme'),
                 });
               } catch (e) {
                 console.error(e);
-                toast.error('Error activating theme');
+                showError('Error activating theme');
               }
             }}
             onPublishAssets={async (id) => {
               try {
                 await router.post(ROUTE.themes.publishAssets(id), {}, {
                   preserveScroll: true,
-                  onSuccess: () => toast.success('Assets published'),
-                  onError: () => toast.error('Failed to publish assets'),
+                  onSuccess: () => showSuccess('Assets published'),
+                  onError: () => showError('Failed to publish assets'),
                 });
               } catch (e) {
                 console.error(e);
-                toast.error('Error publishing theme assets');
+                showError('Error publishing theme assets');
               }
             }}
             onCustomize={(id) => router.visit(ROUTE.themes.customizer(id))}
@@ -781,14 +927,14 @@ export default function DashboardContent({
                 await router.delete(ROUTE.themes.destroy(id), {
                   preserveScroll: true,
                   onSuccess: () => {
-                    toast.success('Theme uninstalled');
+                    showSuccess('Theme uninstalled');
                     router.reload({ only: ['themes', 'discoveredThemes'] });
                   },
-                  onError: () => toast.error('Failed to uninstall theme'),
+                  onError: () => showError('Failed to uninstall theme'),
                 });
               } catch (e) {
                 console.error(e);
-                toast.error('Error uninstalling theme');
+                showError('Error uninstalling theme');
               }
             }}
           />
@@ -824,20 +970,20 @@ export default function DashboardContent({
         onActivate={async (slug) => {
           try {
             await router.post(ROUTE.themes.activate(slug));
-            toast.success('Theme activated');
+            showSuccess('Theme activated');
             router.visit(ROUTE.themes.index());
           } catch (e) {
             console.error(e);
-            toast.error('Failed to activate theme');
+            showError('Failed to activate theme');
           }
         }}
         onPublishAssets={async (id) => {
           try {
             await router.post(ROUTE.themes.publishAssets(id));
-            toast.success('Assets published');
+            showSuccess('Assets published');
           } catch (e) {
             console.error(e);
-            toast.error('Failed to publish assets');
+            showError('Failed to publish assets');
           }
         }}
         onCustomize={(id) => router.visit(ROUTE.themes.customizer(id))}
@@ -845,11 +991,11 @@ export default function DashboardContent({
           if (!confirm(`Uninstall theme "${displayName}"?`)) return;
           try {
             await router.delete(ROUTE.themes.destroy(id), { preserveScroll: true });
-            toast.success('Theme uninstalled');
+            showSuccess('Theme uninstalled');
             router.visit(ROUTE.themes.index());
-          } catch (e) {
-            console.error(e);
-            toast.error('Failed to uninstall theme');
+          } catch (error) {
+            console.error(error);
+            showError('Failed to uninstall theme');
           }
         }}
       />
@@ -875,12 +1021,12 @@ export default function DashboardContent({
           try {
             await router.put(ROUTE.themes.update((theme as any)?.id), { customizer: data }, {
               preserveScroll: true,
-              onSuccess: () => toast.success('Customizer saved'),
-              onError: () => toast.error('Failed to save customizer'),
+              onSuccess: () => showSuccess('Customizer saved'),
+              onError: () => showError('Failed to save customizer'),
             });
           } catch (err) {
             console.error(err);
-            toast.error('Error saving customizer');
+            showError('Error saving customizer');
           }
         }}
       />
@@ -911,83 +1057,148 @@ export default function DashboardContent({
     const section = normalizeSection(adminSection);
     if (!section) {
       return (
-        <div className="px-4 py-6 space-y-6">
+        <div className="px-3 py-3 sm:px-4 sm:py-4 space-y-3">
           {/* Welcome Header */}
-          <Card className="border-0">
-            <CardHeader>
-              <CardTitle className="text-xl">Welcome back, {auth?.user?.name || 'Admin'}!</CardTitle>
-              <CardDescription>Here's what's happening with your CMS today.</CardDescription>
+          <Card className="border border-border/60 shadow-none rounded-md">
+            <CardHeader className="pb-2.5">
+              <CardTitle className="text-base font-semibold text-foreground/90">Welcome back, {auth?.user?.name || 'Admin'}!</CardTitle>
+              <CardDescription className="text-sm text-muted-foreground/90">Here's what's happening with your CMS today.</CardDescription>
             </CardHeader>
           </Card>
 
           {/* Stats Grid */}
           {adminStats && (
-            <DashboardStats users={adminStats.users} roles={adminStats.roles} posts={adminStats.posts} media={adminStats.media} />
+            <DashboardStats 
+              users={adminStats.users} 
+              roles={adminStats.roles} 
+              posts={adminStats.posts} 
+              pages={adminStats.pages}
+              postTypes={adminStats.postTypes}
+              taxonomies={adminStats.taxonomies}
+              themes={adminStats.themes}
+              media={adminStats.media}
+            />
           )}
 
           {/* Dashboard Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Quick Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-2.5">
+            {/* Quick Actions - Left Column */}
             <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
+              <Card className="border border-border/60 shadow-none rounded-md">
+                <CardHeader className="pb-2.5">
+                  <CardTitle className="text-sm font-semibold text-foreground/90">Quick Actions</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-1.5">
                   <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
+                    className="h-8 w-full justify-start px-2 text-xs font-medium" 
+                    size="sm"
+                    variant="secondary"
                     onClick={() => router.visit(ROUTE.posts.create())}
                   >
-                    <span className="mr-2">📝</span> Create New Post
+                    <span className="mr-1.5">📝</span> Create New Post
                   </Button>
                   <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
+                    className="h-8 w-full justify-start px-2 text-xs font-medium" 
+                    size="sm"
+                    variant="secondary"
                     onClick={() => router.visit(ROUTE.pages.create())}
                   >
-                    <span className="mr-2">📄</span> Create New Page
+                    <span className="mr-1.5">📄</span> Create New Page
                   </Button>
                   <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
+                    className="h-8 w-full justify-start px-2 text-xs font-medium" 
+                    size="sm"
+                    variant="secondary"
                     onClick={() => router.visit(ROUTE.users.create())}
                   >
-                    <span className="mr-2">👤</span> Add New User
+                    <span className="mr-1.5">👤</span> Add New User
                   </Button>
                   <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
+                    className="h-8 w-full justify-start px-2 text-xs font-medium" 
+                    size="sm"
+                    variant="secondary"
                     onClick={() => router.visit(ROUTE.themes.index())}
                   >
-                    <span className="mr-2">🎨</span> Manage Themes
+                    <span className="mr-1.5">🎨</span> Manage Themes
                   </Button>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Recent Activity */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {recentActivity && recentActivity.length > 0 ? (
-                    recentActivity.map((activity, index) => (
-                      <div key={index} className="flex items-start space-x-3 p-3 bg-muted/50 rounded-lg">
-                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                          <span className="text-primary text-sm">{activity.icon}</span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{activity.title}</p>
-                          <p className="text-xs text-muted-foreground">{activity.description} - {activity.timestamp}</p>
-                        </div>
-                      </div>
-                    ))
+            {/* Server Stats - Right 3 Columns */}
+            <div className="lg:col-span-3">
+              <Card className="h-full border border-border/60 shadow-none rounded-md">
+                <CardContent className="space-y-2">
+                  {systemStatus ? (
+                    <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                      {Object.entries(systemStatus).map(([key, status]) => {
+                        const colors = getStatusColors(status.color);
+                        const Icon = statusIcons[key] ?? RefreshCcw;
+                        return (
+                          <div
+                            key={key}
+                            className={cn(
+                              'group relative overflow-hidden rounded-sm border bg-card/70 p-1.5 transition-colors',
+                              'hover:border-foreground/10',
+                              colors.border
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <div className={cn('flex size-5 items-center justify-center rounded-full text-[10px] transition-colors', colors.iconBg)}>
+                                  <Icon className="size-2.5" />
+                                </div>
+                                <div className="space-y-1">
+                                  <h3 className="text-[10px] font-semibold leading-none text-foreground">
+                                    {status.label}
+                                  </h3>
+                                </div>
+                              </div>
+                              <div
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide',
+                                  colors.badge
+                                )}
+                              >
+                                <span className={cn('h-2 w-2 rounded-full', colors.indicator, status.indicator === 'pulse' ? 'animate-pulse' : '')} />
+                                {status.status}
+                              </div>
+                            </div>
+                            <div className="mt-1 flex items-center justify-between">
+                              <div className={cn('text-sm font-semibold leading-tight', colors.text)}>
+                                {status.value}
+                              </div>
+                              <div className="text-[8.5px] text-muted-foreground">
+                                {formatLastChecked(status.last_checked_at)}
+                              </div>
+                            </div>
+                            {status.meta && Object.keys(status.meta).length > 0 && (
+                              <dl className="mt-1 grid gap-0.5 text-[8.5px] text-muted-foreground">
+                                {Object.entries(status.meta).map(([metaKey, metaValue]) => (
+                                  <div key={`${key}-${metaKey}`} className="flex items-center justify-between gap-2">
+                                    <dt className="font-medium text-foreground/70">
+                                      {metaKey}
+                                    </dt>
+                                    <dd className="truncate text-right text-foreground/80">
+                                      {metaValue ?? '—'}
+                                    </dd>
+                                  </div>
+                                ))}
+                              </dl>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   ) : (
-                    <div className="text-center text-muted-foreground py-4">
-                      <p className="text-sm">No recent activity</p>
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-muted p-6 text-center">
+                      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                        <RefreshCcw className="size-5 animate-spin text-muted-foreground" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-foreground">Fetching live metrics</p>
+                        <p className="text-xs text-muted-foreground">Gathering the latest server health data…</p>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -995,37 +1206,11 @@ export default function DashboardContent({
             </div>
           </div>
 
-          {/* System Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {systemStatus && Object.entries(systemStatus).map(([key, status]) => {
-              const getColorClasses = (color: string) => {
-                switch (color) {
-                  case 'green': return { text: 'text-green-600', bg: 'bg-green-500' };
-                  case 'red': return { text: 'text-red-600', bg: 'bg-red-500' };
-                  case 'yellow': return { text: 'text-yellow-600', bg: 'bg-yellow-500' };
-                  case 'blue': return { text: 'text-primary', bg: 'bg-primary' };
-                  default: return { text: 'text-gray-600', bg: 'bg-gray-500' };
-                }
-              };
-              const colors = getColorClasses(status.color);
-              return (
-                <Card key={key} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">{status.label}</p>
-                      <p className={`text-lg font-semibold ${colors.text}`}>{status.value}</p>
-                    </div>
-                    <div className={`w-3 h-3 ${colors.bg} rounded-full ${status.indicator === 'pulse' ? 'animate-pulse' : ''}`}></div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
         </div>
       );
     }
 
-    const sectionsMap: Record<string, () => ReactNode> = {
+    const sectionsMap = {
       // Pages
       'pages': renderPagesList,
       'pages.create': renderPageCreate,
@@ -1081,9 +1266,48 @@ export default function DashboardContent({
     </SectionWrapper>
   );
 
+  // Move getPageTitle to the top level of the component
+  const getPageTitle = (): string => {
+    const appName = 'Modulo CMS';
+    const section = normalizeSection(adminSection);
+    const item = editUser || editRole || editPost || editPostType || editTaxonomy || post;
+    
+    if (!section) return `Dashboard | ${appName}`;
+    
+    // Handle edit/create views
+    if (item) {
+      const action = editUser || editRole || editPost || editPostType || editTaxonomy ? 'Edit' : 'View';
+      const type = editUser || (item as any)?.name?.includes('user') ? 'User' : 
+                  editRole || (item as any)?.name?.includes('role') ? 'Role' :
+                  editPost || (item as any)?.title ? 'Post' : 
+                  editPostType ? 'Post Type' : 
+                  editTaxonomy ? 'Taxonomy' : 'Item';
+      
+      const itemName = (item as any)?.title || (item as any)?.name || '';
+      
+      return itemName 
+        ? `${action} ${type}: ${itemName} | ${section.charAt(0).toUpperCase() + section.slice(1)} | ${appName}`
+        : `${action} ${type} | ${section.charAt(0).toUpperCase() + section.slice(1)} | ${appName}`;
+    }
+    
+    // Handle list views
+    return `${section.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')} | ${appName}`;
+  };
+
+  // Get the title once when the component renders
+  const pageTitle = getPageTitle();
+
+  useDocumentTitle(pageTitle);
+
   return (
     <>
-      {renderSection()}
+      <Head>
+        <title key="title">{pageTitle}</title>
+        <meta name="description" content={pageTitle} key="description" />
+      </Head>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        {renderSection()}
+      </div>
     </>
   );
 }

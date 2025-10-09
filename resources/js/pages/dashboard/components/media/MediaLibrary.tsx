@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { useAdminToast } from '@/components/admin/AdminToastProvider';
 import { ROUTE } from '../../routes';
 import type { MediaItem, MediaFolder, Paginated } from '../../types';
 
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export const MediaLibrary: React.FC<Props> = ({ items, pagination, folders = [], allFolders = [], breadcrumb = [], currentFolderId = null, canUpload, canEdit = true, canDelete = true }) => {
+  const { success: showSuccess, error: showError } = useAdminToast();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -55,11 +57,19 @@ export const MediaLibrary: React.FC<Props> = ({ items, pagination, folders = [],
         const formData = new FormData();
         formData.append('file', file);
         if (currentFolderId) formData.append('folder_id', String(currentFolderId));
-        // eslint-disable-next-line no-await-in-loop
-        await router.post(ROUTE.media.store(), formData, { forceFormData: true, preserveScroll: true });
+
+        await router.post(ROUTE.media.store(), formData, {
+          forceFormData: true,
+          preserveScroll: true,
+          onError: () => showError('Failed to upload file'),
+        });
         setUploadCount((c) => c + 1);
       }
+      showSuccess(`Uploaded ${files.length} file${files.length === 1 ? '' : 's'}`);
       router.reload({ only: ['media', 'folders', 'breadcrumb', 'currentFolderId'] });
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      showError('Failed to upload files');
     } finally {
       setUploading(false);
       setUploadCount(0);
@@ -113,10 +123,15 @@ export const MediaLibrary: React.FC<Props> = ({ items, pagination, folders = [],
       await router.post(ROUTE.media.folders.store(), { name, parent_id: currentFolderId ?? null }, {
         preserveScroll: true,
         onSuccess: () => {
+          showSuccess('Folder created');
           setNewFolderName('');
           router.visit(ROUTE.media.index({ folder_id: currentFolderId ?? undefined }));
         },
+        onError: () => showError('Failed to create folder'),
       });
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      showError('Failed to create folder');
     } finally {
       setCreating(false);
     }
@@ -143,15 +158,24 @@ export const MediaLibrary: React.FC<Props> = ({ items, pagination, folders = [],
 
   const doBulk = async (action: 'delete' | 'regenerate') => {
     if (selected.size === 0) return;
-    let payload: Record<string, any> = { action, ids: Array.from(selected) };
+    const payload: Record<string, any> = { action, ids: Array.from(selected) };
     if (action === 'delete' && !confirm(`Delete ${selected.size} item(s)? This cannot be undone.`)) return;
-    await router.post(ROUTE.media.bulk(), payload, {
-      preserveScroll: true,
-      onSuccess: () => {
-        setSelected(new Set());
-        router.reload({ only: ['media', 'folders', 'breadcrumb', 'currentFolderId'] });
-      },
-    });
+    const successMessage = action === 'delete' ? 'Media deleted' : 'Media regenerated';
+    const errorMessage = action === 'delete' ? 'Failed to delete media' : 'Failed to regenerate media';
+    try {
+      await router.post(ROUTE.media.bulk(), payload, {
+        preserveScroll: true,
+        onSuccess: () => {
+          showSuccess(successMessage);
+          setSelected(new Set());
+          router.reload({ only: ['media', 'folders', 'breadcrumb', 'currentFolderId'] });
+        },
+        onError: () => showError(errorMessage),
+      });
+    } catch (error) {
+      console.error('Error performing bulk media action:', error);
+      showError(errorMessage);
+    }
   };
 
   const submitMove = async () => {
@@ -161,16 +185,23 @@ export const MediaLibrary: React.FC<Props> = ({ items, pagination, folders = [],
       ids: Array.from(selected),
       target_folder_id: moveTargetId,
     };
-    await router.post(ROUTE.media.bulk(), payload, {
-      preserveScroll: true,
-      onSuccess: () => {
-        setSelected(new Set());
-        setMoveOpen(false);
-        setMoveTargetId(null);
-        setMoveFilter('');
-        router.reload({ only: ['media', 'folders', 'breadcrumb', 'currentFolderId'] });
-      },
-    });
+    try {
+      await router.post(ROUTE.media.bulk(), payload, {
+        preserveScroll: true,
+        onSuccess: () => {
+          showSuccess('Media moved');
+          setSelected(new Set());
+          setMoveOpen(false);
+          setMoveTargetId(null);
+          setMoveFilter('');
+          router.reload({ only: ['media', 'folders', 'breadcrumb', 'currentFolderId'] });
+        },
+        onError: () => showError('Failed to move media'),
+      });
+    } catch (error) {
+      console.error('Error moving media:', error);
+      showError('Failed to move media');
+    }
   };
 
   return (

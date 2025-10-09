@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ActionButtonGroup } from '@/components/ui/button-groups';
 import { Input } from '@/components/ui/input';
@@ -69,9 +69,10 @@ export function PostForm({
 
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [activeTab, setActiveTab] = useState('content');
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
@@ -138,12 +139,12 @@ export function PostForm({
 
                 <div>
                   <Label>Featured Image</Label>
-                  <div className="mt-1 flex items-center space-x-4">
-                    {featuredImage ? (
+                  <div className="mt-1 flex flex-wrap items-center gap-4">
+                    {featuredImage && (
                       <div className="relative group">
                         <img
-                          src={featuredImage.url}
-                          alt="Featured"
+                          src={featuredImage.thumb || featuredImage.url}
+                          alt={featuredImage.name || featuredImage.file_name || 'Featured image'}
                           className="h-24 w-24 rounded-md object-cover"
                         />
                         <Button
@@ -156,7 +157,8 @@ export function PostForm({
                           <X className="h-3 w-3" />
                         </Button>
                       </div>
-                    ) : (
+                    )}
+                    <div className="flex items-center space-x-2">
                       <Button
                         type="button"
                         variant="outline"
@@ -164,9 +166,12 @@ export function PostForm({
                         onClick={() => setShowMediaPicker(true)}
                       >
                         <ImageIcon className="mr-2 h-4 w-4" />
-                        Set featured image
+                        {featuredImage ? 'Change image' : 'Select featured image'}
                       </Button>
-                    )}
+                      <Badge variant="outline" className="px-2">
+                        {featuredImage ? featuredImage.name || featuredImage.file_name || `ID ${featuredImage.id}` : 'None selected'}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
 
@@ -184,7 +189,7 @@ export function PostForm({
                 <div className="space-y-2">
                   <Label>Content</Label>
                   <div className="rounded-md border">
-                    <SlateEditor value={content} onChange={setContent} />
+                    <SlateEditor initialHTML={content} onHTMLChange={setContent} />
                   </div>
                 </div>
               </div>
@@ -197,9 +202,9 @@ export function PostForm({
                   selectedTerms={selectedTerms}
                   onTermToggle={handleTermToggle}
                 />
-                
+
                 <Separator className="my-6" />
-                
+
                 <div>
                   <h3 className="text-lg font-medium mb-4">SEO</h3>
                   <div className="space-y-4">
@@ -265,10 +270,7 @@ export function PostForm({
                   {availableParents.length > 0 && (
                     <div>
                       <Label htmlFor="parent">Parent</Label>
-                      <Select
-                        value={parentId}
-                        onValueChange={setParentId}
-                      >
+                      <Select value={parentId} onValueChange={setParentId}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select parent (optional)" />
                         </SelectTrigger>
@@ -287,10 +289,7 @@ export function PostForm({
                   {canEditAuthor && authors.length > 0 && (
                     <div>
                       <Label htmlFor="author">Author</Label>
-                      <Select
-                        value={authorId}
-                        onValueChange={setAuthorId}
-                      >
+                      <Select value={authorId} onValueChange={setAuthorId}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select author" />
                         </SelectTrigger>
@@ -319,11 +318,7 @@ export function PostForm({
 
                   <div className="space-y-2">
                     <Label>Custom Fields</Label>
-                    <MetaDataSection
-                      metaData={metaData}
-                      onMetaDataChange={handleMetaDataChange}
-                    />
-
+                    <MetaDataSection metaData={metaData} onMetaDataChange={handleMetaDataChange} />
                   </div>
                 </div>
               </div>
@@ -333,7 +328,7 @@ export function PostForm({
       </Card>
 
       <ActionButtonGroup
-        onSave={onSubmit}
+        onSave={() => formRef.current?.requestSubmit()}
         onCancel={onCancel}
         saveLabel={isEditing ? 'Update Post' : 'Create Post'}
         cancelLabel="Cancel"
@@ -344,9 +339,10 @@ export function PostForm({
       <MediaPickerDialog
         open={showMediaPicker}
         onOpenChange={setShowMediaPicker}
-        onSelect={handleFeaturedImageSelect}
-        title="Select Featured Image"
-        accept="image/*"
+        onSelect={(item) => {
+          handleFeaturedImageSelect(item);
+          setShowMediaPicker(false);
+        }}
       />
     </form>
   );

@@ -15,7 +15,7 @@ export function SectionWrapper({
   className = '' 
 }: SectionWrapperProps) {
   return (
-    <div className={`px-4 py-6 ${className}`}>
+    <div className={`px-3 py-4 sm:px-4 sm:py-5 ${className}`}>
       <SectionHeader title={title} actions={actions} /> 
       {children}
     </div>

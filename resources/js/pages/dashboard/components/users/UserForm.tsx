@@ -60,7 +60,7 @@ export function UserForm({
   onRoleChange,
   currentUserId
 }: UserFormProps) {
-  const { data, setData, errors, processing } = useForm<UserFormData>({
+  const { data, setData, errors } = useForm<UserFormData>({
     name: user?.name || '',
     email: user?.email || '',
     password: '',
@@ -71,6 +71,7 @@ export function UserForm({
 
   const [availableRoles, setAvailableRoles] = useState<Role[]>(allRoles);
   const [selectedRoles, setSelectedRoles] = useState<Role[]>(user?.roles || []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setAvailableRoles(allRoles.filter(role => 
@@ -100,7 +101,7 @@ export function UserForm({
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setProcessing(true);
+    setIsSubmitting(true);
     const formData = {
       name: data.name,
       email: data.email,
@@ -113,7 +114,7 @@ export function UserForm({
     onSubmit(formData).catch((error) => {
       console.error(`Error ${isEditing ? 'updating' : 'creating'} user:`, error);
     }).finally(() => {
-      setProcessing(false);
+      setIsSubmitting(false);
     });
   };
 
@@ -256,7 +257,7 @@ export function UserForm({
         onCancel={onCancel}
         saveLabel={isEditing ? 'Update User' : 'Create User'}
         cancelLabel="Cancel"
-        isSubmitting={processing}
+        isSubmitting={isSubmitting}
         className="mt-6"
       />
     </form>

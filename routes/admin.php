@@ -44,9 +44,15 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Media routes
         Route::prefix('media')->group(function () {
             Route::get('/', [AdminMediaController::class, 'index'])->name('media.index');
-            Route::post('/upload', [AdminMediaController::class, 'upload'])->name('media.upload');
+            Route::post('/', [AdminMediaController::class, 'store'])->name('media.store');
+            Route::match(['put', 'patch'], '/{media}', [AdminMediaController::class, 'update'])->name('media.update');
             Route::delete('/{media}', [AdminMediaController::class, 'destroy'])->name('media.destroy');
-            
+            Route::post('/regenerate/{media?}', [AdminMediaController::class, 'regenerate'])->name('media.regenerate');
+            Route::post('/bulk', [AdminMediaController::class, 'bulk'])->name('media.bulk');
+
+            // Legacy alias for compatibility
+            Route::post('/upload', [AdminMediaController::class, 'store'])->name('media.upload');
+
             // Media folders
             Route::prefix('folders')->group(function () {
                 Route::post('/', [AdminMediaFolderController::class, 'store'])->name('media.folders.store');

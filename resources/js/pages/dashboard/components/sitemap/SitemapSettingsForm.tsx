@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { useAdminToast } from '@/components/admin/AdminToastProvider';
 import type { PostType } from '../../types';
 import { ROUTE } from '../../routes';
 
@@ -22,6 +22,7 @@ export function SitemapSettingsForm({
   settings: SitemapSettings;
   canEdit: boolean;
 }) {
+  const { success: showSuccess, error: showError } = useAdminToast();
   const [included, setIncluded] = useState<Set<number>>(
     new Set((settings.included_post_type_ids ?? undefined) as number[] | undefined)
   );
@@ -62,12 +63,12 @@ export function SitemapSettingsForm({
     try {
       await router.put(ROUTE.sitemap.update(), payload, {
         preserveScroll: true,
-        onSuccess: () => toast.success('Sitemap settings saved'),
-        onError: () => toast.error('Failed to save sitemap settings'),
+        onSuccess: () => showSuccess('Sitemap settings saved'),
+        onError: () => showError('Failed to save sitemap settings'),
       });
     } catch (e) {
       console.error(e);
-      toast.error('Error saving sitemap settings');
+      showError('Error saving sitemap settings');
     }
   };
 
@@ -76,12 +77,12 @@ export function SitemapSettingsForm({
     try {
       await router.post(ROUTE.sitemap.regenerate(), {}, {
         preserveScroll: true,
-        onSuccess: () => toast.success('Sitemap regenerated'),
-        onError: () => toast.error('Failed to regenerate sitemap'),
+        onSuccess: () => showSuccess('Sitemap regenerated'),
+        onError: () => showError('Failed to regenerate sitemap'),
       });
     } catch (e) {
       console.error(e);
-      toast.error('Error regenerating sitemap');
+      showError('Error regenerating sitemap');
     }
   };
 

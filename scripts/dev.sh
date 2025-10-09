@@ -1,3 +1,6 @@
+# PHP runtime limits for dev (increase upload size/memory for media library)
+PHP_RUNTIME_FLAGS="-d upload_max_filesize=64M -d post_max_size=64M -d memory_limit=512M"
+
 #!/usr/bin/env bash
 
 set -euo pipefail
@@ -92,20 +95,20 @@ if (command -v lsof >/dev/null 2>&1 && lsof -iTCP:5173 -sTCP:LISTEN -n -P >/dev/
   VITE_PORT=5174
 fi
 
-VITE_HMR_HOST=127.0.0.1
+VITE_HMR_HOST=localhost
 VITE_HMR_PORT=${VITE_PORT}
 VITE_ORIGIN="http://${VITE_HMR_HOST}:${VITE_PORT}"
 VITE_DEV_SERVER_URL="${VITE_ORIGIN}"
 
 # Start backend
-APP_URL="http://127.0.0.1:${BACKEND_PORT}" VITE_DEV_SERVER_URL="${VITE_DEV_SERVER_URL}" VITE_HMR_HOST="${VITE_HMR_HOST}" php artisan serve --host=127.0.0.1 --port=${BACKEND_PORT} &
+APP_URL="http://localhost:${BACKEND_PORT}" VITE_DEV_SERVER_URL="${VITE_DEV_SERVER_URL}" VITE_HMR_HOST="${VITE_HMR_HOST}" php ${PHP_RUNTIME_FLAGS} artisan serve --host=localhost --port=${BACKEND_PORT} &
 backend_pid=$!
 
 # Start Vite
 VITE_PORT=${VITE_PORT} VITE_HMR_PORT=${VITE_HMR_PORT} VITE_ORIGIN=${VITE_ORIGIN} ${PM_RUN} dev &
 vite_pid=$!
 
-echo -e "${GREEN}Dev running:${NC}\n  Backend:  http://127.0.0.1:${BACKEND_PORT}\n  Vite:     ${VITE_ORIGIN}"
+echo -e "${GREEN}Dev running:${NC}\n  Backend:  http://localhost:${BACKEND_PORT}\n  Vite:     ${VITE_ORIGIN}"
 wait
 
 

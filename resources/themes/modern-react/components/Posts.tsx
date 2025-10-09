@@ -1,7 +1,7 @@
 import React from 'react';
-import { Head } from '@inertiajs/react';
 import Layout from './Layout';
 import LoadingSkeleton from './util/LoadingSkeleton';
+import SEOHead from '@/components/SEOHead';
 
 interface Post {
   id: number;
@@ -91,9 +91,18 @@ export default function Posts({
   // Dynamic header content based on post type
   const dynamicPageTitle = postType?.plural_label || 'Blog Posts';
   const dynamicPageDescription = postType?.description || 'Browse all our latest blog posts and articles';
+  const resolvedTitle = dynamicPageTitle;
+  const resolvedDescription = dynamicPageDescription;
 
   return (
-    <Layout theme={safeTheme} site={safeSite} menus={safeMenus}>
+    <Layout
+      theme={safeTheme}
+      site={safeSite}
+      menus={safeMenus}
+      title={resolvedTitle}
+      description={resolvedDescription}
+    >
+      <SEOHead title={`${resolvedTitle} | ${safeSite.name}`} description={resolvedDescription} />
       <div className="space-y-8">
         <header className="text-center py-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">{dynamicPageTitle}</h1>

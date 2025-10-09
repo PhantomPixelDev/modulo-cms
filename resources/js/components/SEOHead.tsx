@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import React from 'react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export type SEOHeadProps = {
   title?: string;
@@ -35,6 +36,9 @@ export default function SEOHead({
   children,
 }: SEOHeadProps) {
   const appName = (import.meta.env.VITE_APP_NAME as string) || 'Modulo CMS';
+  const pageTitle = title ?? appName;
+
+  useDocumentTitle(pageTitle);
 
   const canonical = canonicalUrl ||
     (typeof window !== 'undefined'
@@ -56,7 +60,7 @@ export default function SEOHead({
   const robotsContent = robots ?? (noindex ? 'noindex,nofollow' : undefined);
 
   return (
-    <Head title={title}>
+    <Head title={pageTitle}>
       {description && <meta key="desc" name="description" content={description} />}
       {canonical && <link key="canonical" rel="canonical" href={canonical} />}
       {robotsContent && <meta key="robots" name="robots" content={robotsContent} />}

@@ -57,7 +57,7 @@ export function PostTypeForm({ postType, isEditing, onSubmit, onCancel }: PostTy
     }))
   }
 
-  const onSubmitInternal = (e: React.FormEvent) => {
+  const onSubmitInternal = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const payload = {
       ...form,
