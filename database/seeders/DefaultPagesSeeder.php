@@ -24,7 +24,8 @@ class DefaultPagesSeeder extends Seeder
                 'has_comments' => false,
                 'supports' => json_encode(['title', 'editor', 'thumbnail', 'excerpt']),
                 'taxonomies' => json_encode([]),
-                'slug' => 'pages',
+                'slug' => 'page',
+                'route_prefix' => null,  // Pages appear at root
                 'is_public' => true,
                 'is_hierarchical' => true,
                 'menu_icon' => 'file',

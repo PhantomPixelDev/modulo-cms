@@ -61,7 +61,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         
         // Sitemap
         Route::get('/sitemap', [SitemapController::class, 'index'])->name('sitemap.index');
-        Route::post('/sitemap/generate', [SitemapController::class, 'generate'])->name('sitemap.generate');
+        Route::post('/sitemap/generate', [SitemapController::class, 'regenerate'])->name('sitemap.generate');
         
         // Settings
         Route::get('/settings', function () {

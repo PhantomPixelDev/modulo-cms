@@ -48,33 +48,30 @@ const Sidebar: React.FC<SidebarProps> = ({
   let props = { categories: [], tags: [] } as any;
   try {
     const pageProps = usePage<any>();
-    props = (pageProps && pageProps.props) ? pageProps.props : { categories: [], tags: [] };
+    // More defensive access to props
+    if (pageProps && typeof pageProps === 'object' && pageProps.props && typeof pageProps.props === 'object') {
+      props = pageProps.props;
+    }
   } catch (error) {
     console.error('Sidebar: Error accessing page props:', error);
+  }
+  
+  // Ensure props is always an object
+  if (!props || typeof props !== 'object') {
     props = { categories: [], tags: [] };
   }
   
-  // Ultra-safe extraction of categories and tags with multiple fallbacks
+  // Ultra-safe extraction of categories and tags: only accept arrays
   let categories: Category[] = [];
   let tags: Tag[] = [];
-  
+
   try {
-    if (props && props.categories) {
-      if (Array.isArray(props.categories)) {
-        categories = props.categories.filter(cat => cat && typeof cat === 'object');
-      } else if (typeof props.categories === 'object') {
-        const catValues = Object.values(props.categories);
-        categories = catValues.filter(cat => cat && typeof cat === 'object');
-      }
+    if (props && Array.isArray(props.categories)) {
+      categories = props.categories.filter((cat: Category) => cat && typeof cat === 'object');
     }
-    
-    if (props && props.tags) {
-      if (Array.isArray(props.tags)) {
-        tags = props.tags.filter(tag => tag && typeof tag === 'object');
-      } else if (typeof props.tags === 'object') {
-        const tagValues = Object.values(props.tags);
-        tags = tagValues.filter(tag => tag && typeof tag === 'object');
-      }
+
+    if (props && Array.isArray(props.tags)) {
+      tags = props.tags.filter((tag: Tag) => tag && typeof tag === 'object');
     }
   } catch (e) {
     console.warn('Sidebar: Error extracting categories/tags:', e);
@@ -157,7 +154,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <h3 className="text-xl font-bold text-gray-800">{widget.title}</h3>
             </div>
             <div className="space-y-3">
-              {categories.map((category, idx) => {
+              {Array.isArray(categories) && categories.length > 0 ? categories.map((category, idx) => {
                 try {
                   if (!category || typeof category !== 'object') return null;
                   
@@ -185,7 +182,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   console.warn('Sidebar: Error rendering category:', catErr, category);
                   return null;
                 }
-              })}
+              }) : null}
             </div>
           </div>
         );
@@ -207,7 +204,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <h3 className="text-xl font-bold text-gray-800">{widget.title}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
-              {tags.map((tag, idx) => {
+              {Array.isArray(tags) && tags.length > 0 ? tags.map((tag, idx) => {
                 try {
                   if (!tag || typeof tag !== 'object') return null;
                   
@@ -230,7 +227,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   console.warn('Sidebar: Error rendering tag:', tagErr, tag);
                   return null;
                 }
-              })}
+              }) : null}
             </div>
           </div>
         );

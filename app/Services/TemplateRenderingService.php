@@ -40,10 +40,19 @@ class TemplateRenderingService
         $data = array_merge($data, $this->buildSeoForTaxonomy($taxonomy, $term));
 
         // React-only: render the archive component defined in theme.json
-        return $this->reactRenderer
-            ->render('archive', $data)
-            ->toResponse(request())
-            ->getContent();
+        try {
+            return $this->reactRenderer
+                ->render('archive', $data)
+                ->toResponse(request())
+                ->getContent();
+        } catch (\Exception $e) {
+            \Log::warning('Failed to render taxonomy archive with React theme', [
+                'taxonomy' => $taxonomy->slug,
+                'term' => $term->slug,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     public function renderPost(Post $post, array $additionalData = [])
@@ -55,10 +64,18 @@ class TemplateRenderingService
             'meta_description' => $post->excerpt ?? '',
         ], $additionalData, $this->buildSeoForPost($post));
 
-        return $this->reactRenderer
-            ->render('post', $data)
-            ->toResponse(request())
-            ->getContent();
+        try {
+            return $this->reactRenderer
+                ->render('post', $data)
+                ->toResponse(request())
+                ->getContent();
+        } catch (\Exception $e) {
+            \Log::warning('Failed to render post with React theme', [
+                'post_id' => $post->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     public function renderPage(Post $page, array $additionalData = [])
@@ -70,10 +87,18 @@ class TemplateRenderingService
             'meta_description' => $page->excerpt ?? '',
         ], $additionalData, $this->buildSeoForPage($page));
 
-        return $this->reactRenderer
-            ->render('page', $data)
-            ->toResponse(request())
-            ->getContent();
+        try {
+            return $this->reactRenderer
+                ->render('page', $data)
+                ->toResponse(request())
+                ->getContent();
+        } catch (\Exception $e) {
+            \Log::warning('Failed to render page with React theme', [
+                'page_id' => $page->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     public function renderIndex($posts, PostType $postType = null, array $additionalData = [])
@@ -87,10 +112,18 @@ class TemplateRenderingService
 
         // Use the "posts" or "index" template from the React theme. Prefer "posts" for listings.
         $templateName = 'posts';
-        return $this->reactRenderer
-            ->render($templateName, $data)
-            ->toResponse(request())
-            ->getContent();
+        try {
+            return $this->reactRenderer
+                ->render($templateName, $data)
+                ->toResponse(request())
+                ->getContent();
+        } catch (\Exception $e) {
+            \Log::warning('Failed to render index with React theme', [
+                'post_type' => $postType?->name,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     public function renderLayout(string $content, array $data = [])

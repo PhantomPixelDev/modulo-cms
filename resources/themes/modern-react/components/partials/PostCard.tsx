@@ -35,27 +35,48 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, theme }: PostCardProps) {
-  const postUrl = post.post_type?.route_prefix 
-    ? `/${post.post_type.route_prefix}/${post.slug}`
-    : `/posts/${post.slug}`;
+  // Safety checks
+  if (!post || typeof post !== 'object') {
+    return null;
+  }
+
+  const safePost = {
+    id: post.id || 0,
+    title: post.title || 'Untitled',
+    slug: post.slug || '',
+    excerpt: post.excerpt,
+    featured_image: post.featured_image,
+    published_at: post.published_at || new Date().toISOString(),
+    author: post.author,
+    post_type: post.post_type,
+    terms: Array.isArray(post.terms) ? post.terms : []
+  };
+
+  const postUrl = safePost.post_type?.route_prefix 
+    ? `/${safePost.post_type.route_prefix}/${safePost.slug}`
+    : `/posts/${safePost.slug}`;
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (e) {
+      return 'Unknown date';
+    }
   };
 
   return (
     <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 group">
       {/* Featured Image */}
-      {post.featured_image && (
+      {safePost.featured_image && (
         <div className="aspect-video overflow-hidden">
           <Link href={postUrl}>
             <img
-              src={post.featured_image}
-              alt={post.title}
+              src={safePost.featured_image}
+              alt={safePost.title}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />
           </Link>
@@ -64,10 +85,10 @@ export default function PostCard({ post, theme }: PostCardProps) {
 
       <div className="p-6">
         {/* Post Type Badge */}
-        {post.post_type && post.post_type.name !== 'post' && (
+        {safePost.post_type && safePost.post_type.name !== 'post' && (
           <div className="mb-4">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-md">
-              {post.post_type.label}
+              {safePost.post_type.label}
             </span>
           </div>
         )}
@@ -78,14 +99,14 @@ export default function PostCard({ post, theme }: PostCardProps) {
             href={postUrl}
             className="hover:text-blue-600 transition-colors duration-300"
           >
-            {post.title}
+            {safePost.title}
           </Link>
         </h2>
 
         {/* Excerpt */}
-        {post.excerpt && (
+        {safePost.excerpt && (
           <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">
-            {post.excerpt}
+            {safePost.excerpt}
           </p>
         )}
 
@@ -94,35 +115,35 @@ export default function PostCard({ post, theme }: PostCardProps) {
           {/* Published Date */}
           <div className="flex items-center gap-2 bg-gray-100/80 px-3 py-1.5 rounded-lg">
             <Calendar className="w-3 h-3 text-blue-500" />
-            <time dateTime={post.published_at}>
-              {formatDate(post.published_at)}
+            <time dateTime={safePost.published_at}>
+              {formatDate(safePost.published_at)}
             </time>
           </div>
 
           {/* Author */}
-          {post.author && (
+          {safePost.author && (
             <div className="flex items-center gap-2 bg-gray-100/80 px-3 py-1.5 rounded-lg">
               <User className="w-3 h-3 text-purple-500" />
-              <span>{post.author.name}</span>
+              <span>{safePost.author.name}</span>
             </div>
           )}
         </div>
 
         {/* Tags */}
-        {post.terms && post.terms.length > 0 && (
+        {safePost.terms && safePost.terms.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
-            {post.terms.slice(0, 3).map((term) => (
+            {safePost.terms.slice(0, 3).map((term: any) => (
               <span
-                key={term.slug}
+                key={term?.slug || Math.random()}
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border border-blue-100 hover:from-blue-100 hover:to-purple-100 transition-all duration-300"
               >
                 <Tag className="w-3 h-3" />
-                {term.name}
+                {term?.name || 'Tag'}
               </span>
             ))}
-            {post.terms.length > 3 && (
+            {safePost.terms.length > 3 && (
               <span className="text-xs text-gray-500 bg-gray-100/80 px-2 py-1 rounded-lg">
-                +{post.terms.length - 3} more
+                +{safePost.terms.length - 3} more
               </span>
             )}
           </div>

@@ -1,11 +1,14 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "phantompixeldev/modulo-cms",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "A modern, modular content management system built on Laravel 12 with a React 19 frontend.",
     "keywords": [
+        "cms",
         "laravel",
-        "framework"
+        "react",
+        "modular",
+        "content-management"
     ],
     "license": "MIT",
     "require": {

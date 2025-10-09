@@ -11,6 +11,7 @@ class Theme extends Model
     protected $fillable = [
         'name',
         'slug',
+        'parent_theme_id',
         'version',
         'description',
         'author',
@@ -52,6 +53,22 @@ class Theme extends Model
     public function installer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'installed_by');
+    }
+
+    /**
+     * Get the parent theme
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Theme::class, 'parent_theme_id');
+    }
+
+    /**
+     * Get child themes
+     */
+    public function children()
+    {
+        return $this->hasMany(Theme::class, 'parent_theme_id');
     }
 
     /**
@@ -150,7 +167,7 @@ class Theme extends Model
     }
 
     /**
-     * Get asset URL
+     * Get asset URL with security validation
      */
     public function getAssetUrl(string $type, ?string $asset = null): string|array|null
     {
@@ -158,19 +175,45 @@ class Theme extends Model
         
         if ($asset && isset($assets[$type]) && is_array($assets[$type])) {
             if (in_array($asset, $assets[$type])) {
-                return asset('themes/' . $this->directory_path . '/' . $asset);
+                // Prevent directory traversal
+                $sanitizedAsset = $this->sanitizeAssetPath($asset);
+                return asset('themes/' . $this->directory_path . '/' . $sanitizedAsset) . '?v=' . urlencode($this->version);
             }
         } elseif (isset($assets[$type])) {
             if (is_string($assets[$type])) {
-                return asset('themes/' . $this->directory_path . '/' . $assets[$type]);
+                $sanitizedPath = $this->sanitizeAssetPath($assets[$type]);
+                return asset('themes/' . $this->directory_path . '/' . $sanitizedPath) . '?v=' . urlencode($this->version);
             } elseif (is_array($assets[$type])) {
                 return collect($assets[$type])->map(function ($assetPath) {
-                    return asset('themes/' . $this->directory_path . '/' . $assetPath);
+                    $sanitizedPath = $this->sanitizeAssetPath($assetPath);
+                    return asset('themes/' . $this->directory_path . '/' . $sanitizedPath) . '?v=' . urlencode($this->version);
                 })->toArray();
             }
         }
         
         return null;
+    }
+
+    /**
+     * Sanitize asset path to prevent directory traversal
+     */
+    protected function sanitizeAssetPath(string $path): string
+    {
+        // Remove directory traversal attempts
+        $path = str_replace(['../', '..\\', '../', '..\\'], '', $path);
+        
+        // Remove leading slashes
+        $path = ltrim($path, '/\\');
+        
+        // Ensure path doesn't start with forbidden patterns
+        $forbidden = ['/', '\\', 'http://', 'https://', 'file://', 'data:'];
+        foreach ($forbidden as $pattern) {
+            if (stripos($path, $pattern) === 0) {
+                throw new \InvalidArgumentException('Invalid asset path: ' . $path);
+            }
+        }
+        
+        return $path;
     }
 
     /**

@@ -6,12 +6,7 @@ interface FooterProps {
     name?: string;
     tagline?: string;
   };
-  menu?: Array<{
-    id: number;
-    label: string;
-    url: string;
-    target: string;
-  }>;
+  menu?: Array<Record<string, any>>;
   theme?: {
     colors?: {
       primary?: string;
@@ -22,24 +17,23 @@ interface FooterProps {
 
 export default function Footer({ site, menu, theme }: FooterProps) {
   const currentYear = new Date().getFullYear();
-  
-  // Ultra-safe menu normalization with multiple fallbacks
+
+  // Ensure menu is always an array
+  const safeMenu = Array.isArray(menu) ? menu : [];
+
+  // Ultra-safe menu normalization with limited shapes (arrays or items arrays)
   let items: Array<any> = [];
   try {
-    if (!menu) {
+    if (!safeMenu) {
       items = [];
-    } else if (Array.isArray(menu)) {
-      items = menu.filter(item => item && typeof item === 'object');
-    } else if (typeof menu === 'object') {
-      // Handle various menu object structures
-      if (Array.isArray(menu.items)) {
-        items = menu.items.filter(item => item && typeof item === 'object');
-      } else if (menu.items && typeof menu.items === 'object') {
-        const itemValues = Object.values(menu.items);
-        items = itemValues.filter(item => item && typeof item === 'object');
+    } else if (Array.isArray(safeMenu)) {
+      items = safeMenu.filter((item: any) => item && typeof item === 'object');
+    } else if (typeof safeMenu === 'object' && safeMenu !== null) {
+      const menuObj = safeMenu as any;
+      if (Array.isArray(menuObj.items)) {
+        items = menuObj.items.filter((item: any) => item && typeof item === 'object');
       } else {
-        const menuValues = Object.values(menu);
-        items = menuValues.filter(item => item && typeof item === 'object' && !('nodeType' in item));
+        items = [];
       }
     }
   } catch (e) {

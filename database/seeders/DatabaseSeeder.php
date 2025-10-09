@@ -16,7 +16,6 @@ class DatabaseSeeder extends Seeder
         // Call the role and permission seeder first
         $this->call([
             RolePermissionSeeder::class,
-            ContentPermissionsSeeder::class,
             PostTypeRoutePrefixSeeder::class,
             ContentSeeder::class,
             DefaultUsersSeeder::class,

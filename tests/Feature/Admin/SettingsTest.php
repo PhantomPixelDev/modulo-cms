@@ -8,6 +8,10 @@ uses(RefreshDatabase::class);
 function settingsUser($perms = ['view settings'])
 {
     $user = User::factory()->create();
+    // Create permissions if they don't exist
+    foreach ($perms as $perm) {
+        \Spatie\Permission\Models\Permission::findOrCreate($perm, 'web');
+    }
     $user->givePermissionTo($perms);
     // Also give access admin permission which is required for admin routes
     \Spatie\Permission\Models\Permission::findOrCreate('access admin', 'web');

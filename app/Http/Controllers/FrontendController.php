@@ -255,7 +255,7 @@ class FrontendController extends Controller
                 abort(404, 'Page not found');
             }
             
-            return $this->renderContent($content, null, null);
+            return $this->renderContent($content, 'frontend/page', 'page');
         }
         
         // For posts with post type prefix (e.g., /news/slug)
@@ -266,7 +266,7 @@ class FrontendController extends Controller
             abort(404);
         }
         
-        return $this->renderContent($content, null, null);
+        return $this->renderContent($content, 'frontend/post', 'post');
     }
 
     public function showPost(Request $request, string $slug)
@@ -277,7 +277,7 @@ class FrontendController extends Controller
             abort(404, 'Post not found');
         }
         
-        return $this->renderContent($content, null, null);
+        return $this->renderContent($content, 'frontend/post', 'post');
     }
     
     public function listPosts(Request $request, $postTypeSlug = null)
@@ -291,10 +291,6 @@ class FrontendController extends Controller
 
         $query = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
             ->published()
-            ->whereHas('postType', function($q) {
-                $q->where('name', 'post')
-                  ->orWhere('slug', 'posts');
-            })
             ->orderBy('published_at', 'desc');
 
         // Use route-provided postTypeId when available (set as a route default in routes/web.php)
@@ -313,17 +309,18 @@ class FrontendController extends Controller
             }
         } elseif ($routeName === 'posts.index' && !$request->has('type')) {
             // For the main posts index, ensure we only show 'post' type
-            $pt = PostType::where('slug', 'post')
-                ->orWhere('route_prefix', 'posts')
-                ->orderByRaw("CASE WHEN slug='post' THEN 0 ELSE 1 END")
-                ->first();
+            $pt = PostType::where('slug', 'post')->first();
             if ($pt) {
                 $query->where('post_type_id', $pt->id);
                 \Log::info('listPosts:defaultToClassicPostType', ['postTypeId' => $pt->id]);
                 // Also make it available for template/UI selection below
                 $request->attributes->set('default_post_type_id', $pt->id);
             } else {
-                \Log::warning('listPosts:classicPostTypeNotFound');
+                \Log::warning('listPosts:classicPostTypeNotFound - filtering by slug=post in query');
+                // Fallback: filter directly by post_type slug if PostType record not found
+                $query->whereHas('postType', function($q) {
+                    $q->where('slug', 'post');
+                });
             }
         }
 
@@ -372,15 +369,46 @@ class FrontendController extends Controller
 
         // Try React template first if active theme is React
         if ($this->shouldUseReact()) {
-            // Use 'index' template for post listings, fallback to 'posts'
-            $templateName = $this->reactRenderer->canRender('index') ? 'index' : 'posts';
+            // Determine template name based on post type
+            // Try plural form first (e.g., 'infos'), fallback to 'posts'
+            $templateName = 'posts'; // default
+            if ($postType && $postType->route_prefix) {
+                // Use route_prefix as template name (e.g., 'infos', 'news')
+                $templateName = $postType->route_prefix;
+            }
+            
+            // Fallback to 'posts' if specific template doesn't exist
+            if (!$this->reactRenderer->canRender($templateName)) {
+                $templateName = 'posts';
+            }
+            
             if ($this->reactRenderer->canRender($templateName)) {
-                return $this->reactRenderer->render($templateName, [
+                $transformedPosts = $this->transformPostsForReact($posts)->toArray();
+                \Log::info('listPosts:reactData', [
+                    'templateName' => $templateName,
+                    'postsCount' => count($transformedPosts),
+                    'total' => $posts->total(),
+                ]);
+                
+                $renderData = [
                     'posts' => [
-                        'data' => $this->transformPostsForReact($posts)->toArray()
+                        'data' => $transformedPosts
                     ],
                     'pagination' => $this->transformPaginationForReact($posts),
-                ]);
+                    'postType' => $postType ? [
+                        'id' => $postType->id,
+                        'name' => $postType->name,
+                        'label' => $postType->label,
+                        'plural_label' => $postType->plural_label,
+                        'description' => $postType->description,
+                        'slug' => $postType->slug,
+                        'route_prefix' => $postType->route_prefix,
+                    ] : null,
+                ];
+                
+                \Log::info('listPosts:renderDataKeys', ['keys' => array_keys($renderData)]);
+                
+                return $this->reactRenderer->render($templateName, $renderData);
             }
         }
 
@@ -536,7 +564,38 @@ class FrontendController extends Controller
      * Transform pagination for React components
      */
     /**
-     * Convert Slate.js JSON to HTML
+     * Sanitize URL to prevent XSS attacks
+     */
+    protected function sanitizeUrl(string $url): string
+    {
+        // Remove javascript:, data:, vbscript: and other dangerous protocols
+        $dangerous_protocols = ['javascript:', 'data:', 'vbscript:', 'file:', 'about:'];
+        $url = trim($url);
+        
+        foreach ($dangerous_protocols as $protocol) {
+            if (stripos($url, $protocol) === 0) {
+                return '#'; // Return safe fallback
+            }
+        }
+        
+        // Only allow http://, https://, mailto:, tel:, and relative URLs
+        if (!empty($url) && !preg_match('/^(https?:\/\/|mailto:|tel:|\/|#)/', $url)) {
+            return '#';
+        }
+        
+        return htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * Sanitize HTML attribute value
+     */
+    protected function sanitizeAttribute(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * Convert Slate.js JSON to HTML with XSS protection
      */
     protected function slateToHtml(array $nodes): string
     {
@@ -544,9 +603,10 @@ class FrontendController extends Controller
         
         foreach ($nodes as $node) {
             if (isset($node['text'])) {
-                $text = htmlspecialchars($node['text']);
+                // Always escape text content to prevent XSS
+                $text = htmlspecialchars($node['text'], ENT_QUOTES, 'UTF-8');
                 
-                // Apply text formatting
+                // Apply text formatting with safe HTML tags
                 if (!empty($node['bold'])) {
                     $text = "<strong>$text</strong>";
                 }
@@ -575,6 +635,15 @@ class FrontendController extends Controller
                     case 'heading-three':
                         $html .= "<h3>$children</h3>";
                         break;
+                    case 'heading-four':
+                        $html .= "<h4>$children</h4>";
+                        break;
+                    case 'heading-five':
+                        $html .= "<h5>$children</h5>";
+                        break;
+                    case 'heading-six':
+                        $html .= "<h6>$children</h6>";
+                        break;
                     case 'block-quote':
                         $html .= "<blockquote>$children</blockquote>";
                         break;
@@ -588,16 +657,24 @@ class FrontendController extends Controller
                         $html .= "<li>$children</li>";
                         break;
                     case 'link':
-                        $url = $node['url'] ?? '#';
-                        $html .= "<a href=\"$url\">$children</a>";
+                        // Sanitize URL to prevent XSS
+                        $url = $this->sanitizeUrl($node['url'] ?? '#');
+                        $title = isset($node['title']) ? ' title="' . $this->sanitizeAttribute($node['title']) . '"' : '';
+                        $target = !empty($node['target']) && $node['target'] === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
+                        $html .= "<a href=\"$url\"$title$target>$children</a>";
                         break;
                     case 'image':
-                        $url = $node['url'] ?? '';
-                        $alt = $node['alt'] ?? '';
-                        $html .= "<img src=\"$url\" alt=\"$alt\" />";
+                        // Sanitize image URL and alt text
+                        $url = $this->sanitizeUrl($node['url'] ?? '');
+                        $alt = $this->sanitizeAttribute($node['alt'] ?? '');
+                        $title = isset($node['title']) ? ' title="' . $this->sanitizeAttribute($node['title']) . '"' : '';
+                        $html .= "<img src=\"$url\" alt=\"$alt\"$title loading=\"lazy\" />";
                         break;
                     case 'code-block':
                         $html .= "<pre><code>$children</code></pre>";
+                        break;
+                    case 'horizontal-rule':
+                        $html .= '<hr />';
                         break;
                     default: // paragraph
                         $html .= "<p>$children</p>";
@@ -610,11 +687,16 @@ class FrontendController extends Controller
     
     private function renderContent($content, $template, $dataKey)
     {
+        // If content doesn't exist, return 404
+        if (!$content) {
+            abort(404);
+        }
+
         // Increment view count once per render
         try { $content->increment('view_count'); } catch (\Throwable $e) {}
 
-        // Determine whether content is a page (route_prefix empty/null/'/')
-        $isPage = in_array(($content->postType->route_prefix ?? null), [null, '', '/'], true);
+        // Determine whether content is a page based on post type's route_prefix
+        $isPage = !$content->postType || empty($content->postType->route_prefix) || in_array($content->postType->route_prefix, ['', '/']);
         $template = $template ?? ($isPage ? 'frontend/page' : 'frontend/post');
         $dataKey = $dataKey ?? ($isPage ? 'page' : 'post');
 

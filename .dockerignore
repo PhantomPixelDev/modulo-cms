@@ -8,10 +8,9 @@
 docs/
 DOCKER_README.md
 
-# Docker
+# Docker (keep docker/ in context because Dockerfile COPY uses it)
 Dockerfile
 docker-compose.yml
-docker/
 .dockerignore
 
 # IDE
@@ -43,6 +42,7 @@ coverage/
 # Dependency directories
 node_modules/
 jspm_packages/
+vendor/
 
 # Optional npm cache directory
 .npm
@@ -91,3 +91,4 @@ public/hot
 # Vite
 node_modules
 dist
+.vite/

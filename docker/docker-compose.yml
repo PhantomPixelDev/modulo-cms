@@ -1,0 +1,66 @@
+services:
+  app:
+    container_name: modulo-php
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: app
+    env_file:
+      - ../.env.docker
+    # Uncomment to auto-run migrations on start in container
+    # environment:
+    #   RUN_MIGRATIONS: "true"
+    volumes:
+      - app_source:/var/www/html
+      - app_storage:/var/www/html/storage
+    expose:
+      - "9000"
+    networks:
+      - modulo
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    container_name: modulo-web
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: web
+    volumes:
+      - app_source:/var/www/html
+    depends_on:
+      app:
+        condition: service_started
+    networks:
+      - modulo
+    ports:
+      - "8080:80"
+
+  db:
+    container_name: modulo-db
+    image: postgres:16-alpine
+    env_file:
+      - ../.env.docker
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-modulo}
+      POSTGRES_USER: ${DB_USERNAME:-modulo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - modulo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  app_source:
+  app_storage:
+  pg_data:
+
+networks:
+  modulo:
+    driver: bridge

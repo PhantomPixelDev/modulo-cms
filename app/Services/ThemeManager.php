@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Theme;
+use App\Services\ThemeValidator;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
@@ -13,11 +14,13 @@ class ThemeManager
     protected string $themesPath;
     protected ?Theme $activeTheme = null;
     protected int $ttl;
+    protected ThemeValidator $validator;
 
-    public function __construct()
+    public function __construct(ThemeValidator $validator)
     {
         $this->themesPath = resource_path('themes');
         $this->ttl = (int) env('THEME_CACHE_TTL', 3600);
+        $this->validator = $validator;
     }
 
     /**
@@ -84,6 +87,21 @@ class ThemeManager
     {
         $config = $themeData['config'];
         
+        // Validate theme configuration
+        if (!$this->validator->validate($config, $themeData['path'])) {
+            throw new \InvalidArgumentException(
+                'Theme validation failed: ' . $this->validator->getErrorsAsString()
+            );
+        }
+        
+        // Security check
+        if (!$this->validator->validateSecurity($themeData['path'])) {
+            \Log::warning('Theme security validation issues', [
+                'slug' => $config['slug'],
+                'errors' => $this->validator->getErrors()
+            ]);
+        }
+        
         $theme = Theme::updateOrCreate(
             ['slug' => $config['slug']],
             [
@@ -95,7 +113,7 @@ class ThemeManager
                 'screenshot' => $config['screenshot'] ?? null,
                 'tags' => $config['tags'] ?? [],
                 'supports' => $config['supports'] ?? [],
-                'template_engine' => $config['template_engine'] ?? 'blade',
+                'template_engine' => 'react',
                 'templates' => $config['templates'] ?? [],
                 'partials' => $config['partials'] ?? [],
                 'assets' => $config['assets'] ?? [],
@@ -290,7 +308,7 @@ class ThemeManager
     }
 
     /**
-     * Get asset URL for active theme
+     * Get asset URL for active theme with versioning
      */
     public function getAssetUrl(string $asset): string
     {
@@ -300,7 +318,10 @@ class ThemeManager
             return '';
         }
         
-        return '/themes/' . $activeTheme->slug . '/assets/' . $asset;
+        $url = '/themes/' . $activeTheme->slug . '/assets/' . $asset;
+        
+        // Add version query string for cache busting
+        return $url . '?v=' . urlencode($activeTheme->version);
     }
 
     /**
@@ -346,7 +367,7 @@ class ThemeManager
     }
 
     /**
-     * Copy theme assets to public directory
+     * Copy theme assets to public directory with hash checking
      */
     public function publishAssets(Theme $theme): bool
     {
@@ -366,16 +387,45 @@ class ThemeManager
                 File::makeDirectory($targetDir, 0755, true);
             }
 
+            // Check if already published with same hash
+            $hashFile = $targetPath . '/.asset-hash';
+            $sourceHash = $this->getDirectoryHash($sourcePath);
+            
+            if (File::exists($hashFile) && File::get($hashFile) === $sourceHash) {
+                \Log::info("Theme assets already up to date for {$theme->slug}");
+                return true; // Already up to date
+            }
+
             if (File::exists($targetPath)) {
                 File::deleteDirectory($targetPath);
             }
 
             File::copyDirectory($sourcePath, $targetPath);
+            
+            // Save hash for future comparisons
+            File::put($hashFile, $sourceHash);
+            
             return true;
         } catch (\Exception $e) {
             \Log::error("Failed to publish assets for theme {$theme->slug}: " . $e->getMessage());
             return false;
         }
+    }
+    
+    /**
+     * Calculate directory hash for asset change detection
+     */
+    protected function getDirectoryHash(string $directory): string
+    {
+        $files = File::allFiles($directory);
+        $hashes = [];
+        
+        foreach ($files as $file) {
+            $hashes[] = md5_file($file->getRealPath()) . ':' . $file->getRelativePathname();
+        }
+        
+        sort($hashes);
+        return md5(implode('|', $hashes));
     }
 
     /**
@@ -413,6 +463,90 @@ class ThemeManager
         $this->activeTheme = null;
         Cache::forget('active_theme');
         Cache::forget('installed_themes');
+    }
+
+    /**
+     * Update a theme to the latest version
+     */
+    public function updateTheme(string $slug): bool
+    {
+        $theme = Theme::where('slug', $slug)->first();
+        
+        if (!$theme) {
+            return false;
+        }
+
+        $discovered = $this->discoverThemes()->firstWhere('config.slug', $slug);
+        
+        if (!$discovered) {
+            return false;
+        }
+
+        $newVersion = $discovered['config']['version'] ?? '1.0.0';
+        
+        // Check if update is needed
+        if (version_compare($newVersion, $theme->version, '<=')) {
+            \Log::info("Theme {$slug} is already up to date");
+            return true;
+        }
+
+        try {
+            \Log::info("Updating theme {$slug} from {$theme->version} to {$newVersion}");
+            
+            // Re-install theme (updates DB record)
+            $this->installTheme($discovered, $theme->installed_by);
+            
+            // Re-publish assets
+            $this->publishAssets($theme->fresh());
+            
+            // Clear cache
+            $this->clearCache();
+            
+            return true;
+        } catch (\Exception $e) {
+            \Log::error("Failed to update theme {$slug}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Check if theme has updates available
+     */
+    public function hasUpdates(string $slug): bool
+    {
+        $theme = Theme::where('slug', $slug)->first();
+        
+        if (!$theme) {
+            return false;
+        }
+
+        $discovered = $this->discoverThemes()->firstWhere('config.slug', $slug);
+        
+        if (!$discovered) {
+            return false;
+        }
+
+        $newVersion = $discovered['config']['version'] ?? '1.0.0';
+        
+        return version_compare($newVersion, $theme->version, '>');
+    }
+
+    /**
+     * Get all themes with available updates
+     */
+    public function getThemesWithUpdates(): Collection
+    {
+        $installed = Theme::installed()->get();
+        $discovered = $this->discoverThemes()->keyBy('config.slug');
+        
+        return $installed->filter(function ($theme) use ($discovered) {
+            if (!isset($discovered[$theme->slug])) {
+                return false;
+            }
+            
+            $newVersion = $discovered[$theme->slug]['config']['version'] ?? '1.0.0';
+            return version_compare($newVersion, $theme->version, '>');
+        });
     }
 
     /**

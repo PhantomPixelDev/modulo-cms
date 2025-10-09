@@ -5,9 +5,18 @@ interface NavigationProps {
   className?: string;
   site?: any;
   menus?: any;
+  auth?: {
+    user?: {
+      id: number;
+      name: string;
+      email: string;
+      roles?: Array<{ id: number; name: string }>;
+      permissions?: Array<{ id: number; name: string }>;
+    } | null;
+  };
 }
 
-const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus }) => {
+const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, auth }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -93,22 +102,56 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus }) 
               <span className="relative z-10">Contact</span>
             </Link>
             <div className="flex items-center space-x-3 ml-6">
-              <Link
-                href="/login"
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                  isScrolled 
-                    ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50' 
-                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
-              >
-                Register
-              </Link>
+              {auth?.user ? (
+                // User is logged in - show dashboard and logout
+                <>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    isScrolled 
+                      ? 'text-gray-600 bg-gray-100' 
+                      : 'text-white/80 bg-white/10'
+                  }`}>
+                    Welcome, {auth.user.name}
+                  </span>
+                  <Link
+                    href="/dashboard"
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                      isScrolled 
+                        ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50' 
+                        : 'text-white/90 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/logout"
+                    method="post"
+                    as="button"
+                    className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-lg font-medium hover:from-red-700 hover:to-red-800 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Logout
+                  </Link>
+                </>
+              ) : (
+                // User is not logged in - show login and register
+                <>
+                  <Link
+                    href="/login"
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                      isScrolled 
+                        ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50' 
+                        : 'text-white/90 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -208,24 +251,58 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus }) 
               <div className={`border-t my-3 ${
                 isScrolled ? 'border-gray-200' : 'border-white/20'
               }`}></div>
-              <Link
-                href="/login"
-                className={`block px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
-                  isScrolled 
-                    ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-600' 
-                    : 'text-white hover:bg-white/20'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="block px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-center"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Register
-              </Link>
+              {auth?.user ? (
+                // User is logged in - mobile menu
+                <>
+                  <div className={`px-4 py-2 text-sm font-medium ${
+                    isScrolled ? 'text-gray-500' : 'text-white/70'
+                  }`}>
+                    Welcome, {auth.user.name}
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    className={`block px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                      isScrolled 
+                        ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-600' 
+                        : 'text-white hover:bg-white/20'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/logout"
+                    method="post"
+                    as="button"
+                    className="block w-full text-left px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg font-medium hover:from-red-700 hover:to-red-800 transition-all duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Logout
+                  </Link>
+                </>
+              ) : (
+                // User is not logged in - mobile menu
+                <>
+                  <Link
+                    href="/login"
+                    className={`block px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                      isScrolled 
+                        ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-600' 
+                        : 'text-white hover:bg-white/20'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="block px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

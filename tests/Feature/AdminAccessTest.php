@@ -25,7 +25,10 @@ class AdminAccessTest extends TestCase
 
     public function test_unverified_user_is_redirected_from_admin()
     {
-        $user = User::factory()->create(); // email not verified
+        $user = User::factory()->unverified()->create(); // email not verified
+        // Give user the required permission so email verification is checked
+        $user->givePermissionTo('access admin');
+        $user->givePermissionTo('view users');
 
         $response = $this->actingAs($user)->get('/dashboard/admin/users');
         $response->assertStatus(302); // should redirect to email verification

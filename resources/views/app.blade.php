@@ -13,13 +13,8 @@
 
     <!-- Scripts -->
     @routes
-    @php
-        $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
-        $appJs = $manifest['resources/js/app.tsx']['file'];
-        $appCss = $manifest['resources/js/app.tsx']['css'][0];
-    @endphp
-    <link rel="stylesheet" href="{{ asset('build/' . $appCss) }}">
-    <script type="module" src="{{ asset('build/' . $appJs) }}"></script>
+    @viteReactRefresh
+    @vite(['resources/css/app.css', 'resources/js/app.tsx'])
     @inertiaHead
 </head>
 <body class="font-sans antialiased">

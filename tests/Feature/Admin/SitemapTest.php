@@ -10,6 +10,10 @@ uses(RefreshDatabase::class);
 function sitemapUser($perms = ['view sitemap'])
 {
     $user = User::factory()->create();
+    // Create permissions if they don't exist
+    foreach ($perms as $perm) {
+        \Spatie\Permission\Models\Permission::findOrCreate($perm, 'web');
+    }
     $user->givePermissionTo($perms);
     // Also give access admin permission which is required for admin routes
     \Spatie\Permission\Models\Permission::findOrCreate('access admin', 'web');
@@ -30,7 +34,7 @@ it('denies sitemap index without permission', function () {
 it('generates sitemap with permission', function () {
     $user = sitemapUser(['edit sitemap']);
     $postType = PostType::factory()->create(['is_public' => true]);
-    Post::factory()->count(3)->create(['post_type_id' => $postType->id, 'status' => 'publish']);
+    Post::factory()->count(3)->create(['post_type_id' => $postType->id, 'status' => 'published']);
 
     $this->actingAs($user)->post(route('dashboard.admin.sitemap.generate'))
         ->assertRedirect();

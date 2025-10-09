@@ -6,7 +6,6 @@
   "author": "Modulo CMS",
   "author_url": "https://github.com/PhantomPixelDev/modulo-cms",
   "tags": ["react", "modern", "typescript", "inertia"],
-  "template_engine": "react",
   "supports": {
     "post_thumbnails": true,
     "menus": true,
@@ -16,89 +15,68 @@
   },
   "templates": {
     "layout": {
-      "type": "react",
       "component": "components/Layout.tsx"
     },
     "header": {
-      "type": "react", 
       "component": "components/Header.tsx"
     },
     "footer": {
-      "type": "react",
       "component": "components/Footer.tsx"
     },
     "post": {
-      "type": "react",
       "component": "components/Post.tsx"
     },
     "posts": {
-      "type": "react",
       "component": "components/Posts.tsx"
     },
     "page": {
-      "type": "react",
       "component": "components/Page.tsx"
     },
     "index": {
-      "type": "react",
       "component": "components/Index.tsx"
     },
     "archive": {
-      "type": "react",
       "component": "components/Archive.tsx"
     },
     "search": {
-      "type": "react",
       "component": "components/Search.tsx"
     },
     "login": {
-      "type": "react",
       "component": "components/Login.tsx"
     },
     "register": {
-      "type": "react",
       "component": "components/Register.tsx"
     },
     "forgot-password": {
-      "type": "react",
       "component": "components/ForgotPassword.tsx"
     },
     "reset-password": {
-      "type": "react",
       "component": "components/ResetPassword.tsx"
     },
     "verify-email": {
-      "type": "react",
       "component": "components/VerifyEmail.tsx"
     },
     "confirm-password": {
-      "type": "react",
       "component": "components/ConfirmPassword.tsx"
     },
     "404": {
-      "type": "react",
       "component": "components/NotFound.tsx"
     },
     "taxonomy": {
-      "type": "react",
       "component": "components/TaxonomyTerm.tsx"
     }
   },
   "partials": {
     "navigation": {
-      "type": "react",
       "component": "components/partials/Navigation.tsx"
     },
     "sidebar": {
-      "type": "react", 
       "component": "components/partials/Sidebar.tsx"
     },
     "post-meta": {
-      "type": "react",
       "component": "components/partials/PostMeta.tsx"
     },
     "comments": {
-      "type": "react",
       "component": "components/partials/Comments.tsx"
     }
   },

@@ -1,143 +1,196 @@
 import React from 'react';
 import Layout from './Layout';
-import PostCard from './partials/PostCard';
-
-interface Post {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt?: string;
-  content: string;
-  featured_image?: string;
-  published_at: string;
-  author?: {
-    name: string;
-    avatar?: string;
-  };
-  post_type?: {
-    name: string;
-    label: string;
-  };
-  terms?: Array<{
-    name: string;
-    slug: string;
-  }>;
-}
+import { Link } from '@inertiajs/react';
 
 interface IndexProps {
-  posts: {
-    data: Post[];
+  posts?: {
+    data: any[];
   };
-  pagination?: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    prev_page_url?: string;
-    next_page_url?: string;
-  };
+  pagination?: any;
   site?: any;
   theme?: any;
   menus?: any;
 }
 
 export default function Index({ posts, pagination, site, theme, menus }: IndexProps) {
-  // Provide default values to prevent undefined errors
-  const safePosts = posts || { data: [] };
-  const safePagination = pagination || { current_page: 1, last_page: 1, per_page: 12, total: 0 };
-  const safeTheme = theme || { name: 'Modern React', slug: 'modern-react', version: '1.0.0' };
   const safeSite = site || { name: 'Modulo CMS', tagline: 'Modern Content Management System' };
+  const safeTheme = theme || { name: 'Modern React', slug: 'modern-react', version: '1.0.0' };
   const safeMenus = menus || {};
+  const recentPosts = posts?.data?.slice(0, 3) || [];
 
   return (
     <Layout
       title="Home"
-      description={safeSite?.tagline || "Welcome to our website"}
+      description={safeSite?.tagline || "Modern Content Management System"}
       site={safeSite}
       theme={safeTheme}
       menus={safeMenus}
     >
-      <div className="py-0">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-3xl mb-16 p-12 md:p-16">
+        <div className="relative z-10 text-center max-w-4xl mx-auto">
+          <div className="inline-flex items-center justify-center space-x-4 mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15" />
               </svg>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {safeSite?.name || 'Welcome'}
-            </h1>
           </div>
-          {safeSite?.tagline && (
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              {safeSite.tagline}
-            </p>
-          )}
+          
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-slate-900 via-blue-700 to-purple-700 bg-clip-text text-transparent leading-tight">
+            {safeSite?.name || 'Modulo CMS'}
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-gray-700 mb-8 leading-relaxed max-w-3xl mx-auto">
+            {safeSite?.tagline || 'A powerful, modern content management system built with Laravel and React'}
+          </p>
+          
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link
+              href="/posts"
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
+              Browse Content
+            </Link>
+            <Link
+              href="/dashboard"
+              className="px-8 py-4 bg-white text-gray-800 font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border border-gray-200"
+            >
+              Admin Dashboard
+            </Link>
+          </div>
         </div>
+        
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
+      </div>
 
-        {/* Posts Grid */}
-        {safePosts?.data && safePosts.data.length > 0 ? (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {safePosts.data.map((post) => (
-                <PostCard 
-                  key={post.id} 
-                  post={post}
-                  theme={safeTheme}
-                />
-              ))}
+      {/* Features Grid */}
+      <div className="mb-16">
+        <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Powerful 222Featu22resddd</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Feature 1 */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+            <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
+              <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
             </div>
-
-            {/* Pagination */}
-            {safePagination && safePagination.last_page > 1 && (
-              <div className="flex justify-center items-center space-x-4 mt-12">
-                {safePagination.prev_page_url && (
-                  <a
-                    href={safePagination.prev_page_url}
-                    className="px-6 py-3 text-sm font-medium text-gray-700 bg-white/80 border border-gray-200 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-                  >
-                    Previous
-                  </a>
-                )}
-                
-                <span className="text-sm text-gray-700 bg-gray-100/80 px-4 py-2 rounded-lg font-medium">
-                  Page {safePagination.current_page} of {safePagination.last_page}
-                </span>
-                
-                {safePagination.next_page_url && (
-                  <a
-                    href={safePagination.next_page_url}
-                    className="px-6 py-3 text-sm font-medium text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  >
-                    Next
-                  </a>
-                )}
-              </div>
-            )}
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Flexible Content Types</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Create custom post types and taxonomies to organize your content exactly how you need it.
+            </p>
           </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="max-w-md mx-auto">
-              <div 
-                className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center shadow-lg"
-                style={{ 
-                  background: `linear-gradient(135deg, ${safeTheme?.colors?.primary || '#3b82f6'}20, ${safeTheme?.colors?.primary || '#8b5cf6'}20)`,
-                  border: `2px solid ${safeTheme?.colors?.primary || '#3b82f6'}30`
-                }}
+
+          {/* Feature 2 */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+            <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
+              <svg className="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Role-Based Access</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Granular permissions system to control who can create, edit, and publish content.
+            </p>
+          </div>
+
+          {/* Feature 3 */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+            <div className="w-14 h-14 bg-pink-100 rounded-xl flex items-center justify-center mb-6">
+              <svg className="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Modern UI/UX</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Beautiful, responsive interface built with React, TypeScript, and Tailwind CSS.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Posts Section */}
+      {recentPosts.length > 0 && (
+        <div className="mb-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">Latest Updates</h2>
+            <Link
+              href="/posts"
+              className="text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-2 group"
+            >
+              View all
+              <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {recentPosts.map((post: any) => (
+              <Link
+                key={post.id}
+                href={`/${post.post_type?.route_prefix || 'posts'}/${post.slug}`}
+                className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100"
               >
-                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">No posts yet</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Check back later for new content, or explore other sections of the site.
-              </p>
-            </div>
+                {post.featured_image && (
+                  <div className="aspect-video overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+                    <img
+                      src={post.featured_image}
+                      alt={post.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                      {post.post_type?.label || 'Post'}
+                    </span>
+                    {post.published_at && (
+                      <span className="text-sm text-gray-500">
+                        {new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                    {post.title}
+                  </h3>
+                  {post.excerpt && (
+                    <p className="text-gray-600 line-clamp-2 leading-relaxed">
+                      {post.excerpt}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* CTA Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 text-center text-white">
+        <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+        <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          Explore the admin dashboard to manage your content, or browse our documentation to learn more.
+        </p>
+        <div className="flex flex-wrap gap-4 justify-center">
+          <Link
+            href="/dashboard"
+            className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+          >
+            Go to Dashboard
+          </Link>
+          <a
+            href="https://github.com/PhantomPixelDev/modulo-cms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-8 py-4 bg-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-blue-400"
+          >
+            View on GitHub
+          </a>
+        </div>
       </div>
     </Layout>
   );

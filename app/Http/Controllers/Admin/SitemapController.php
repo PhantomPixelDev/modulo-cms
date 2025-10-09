@@ -61,7 +61,7 @@ class SitemapController extends Controller
         // Gate by permission if available; otherwise allow admins by role
         $user = auth()->user();
         if (!$user) abort(403);
-        if (method_exists($user, 'can') && $user->can('view settings')) return;
+        if (method_exists($user, 'can') && $user->can('view sitemap')) return;
         if ($user->hasRole(['admin', 'super-admin'])) return;
         abort(403);
     }
@@ -70,7 +70,7 @@ class SitemapController extends Controller
     {
         $user = auth()->user();
         if (!$user) abort(403);
-        if (method_exists($user, 'can') && $user->can('edit settings')) return;
+        if (method_exists($user, 'can') && $user->can('edit sitemap')) return;
         if ($user->hasRole(['admin', 'super-admin'])) return;
         abort(403);
     }

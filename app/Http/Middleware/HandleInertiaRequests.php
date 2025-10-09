@@ -95,8 +95,14 @@ class HandleInertiaRequests extends Middleware
 
         $sidebarData = $this->getSidebarData();
         
+        // Ensure parent::share() returns an array before spreading
+        $parentShared = parent::share($request);
+        if (!is_array($parentShared)) {
+            $parentShared = [];
+        }
+        
         return [
-            ...parent::share($request),
+            ...$parentShared,
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'categories' => $sidebarData['categories'],

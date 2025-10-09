@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
 use App\Models\PostType;
+use App\Providers\DynamicRouteServiceProvider;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -109,6 +110,9 @@ class PostTypeController extends Controller
             'menu_position' => $request->menu_position ?? 5,
         ]);
 
+        // Clear route cache when post types change
+        DynamicRouteServiceProvider::clearRouteCache();
+
         return redirect()->route('dashboard.admin.post-types.index')->with('success', 'Post type created successfully.');
     }
 
@@ -198,6 +202,9 @@ class PostTypeController extends Controller
             'menu_position' => $request->menu_position ?? 5,
         ]);
 
+        // Clear route cache when post types change
+        DynamicRouteServiceProvider::clearRouteCache();
+
         return redirect()->route('dashboard.admin.post-types.index')->with('success', 'Post type updated successfully.');
     }
 
@@ -215,6 +222,10 @@ class PostTypeController extends Controller
         }
 
         $postType->delete();
+        
+        // Clear route cache when post types change
+        DynamicRouteServiceProvider::clearRouteCache();
+        
         // Redirect back to the index to refresh list after deletion
         return redirect()->route('dashboard.admin.post-types.index')
             ->with('success', 'Post type deleted successfully.');

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import ErrorBoundary from './util/ErrorBoundary';
 import Navigation from './partials/Navigation';
 import Footer from './Footer';
@@ -24,58 +25,61 @@ interface LayoutProps {
       container_width?: string;
     };
   };
-  site?: {
-    name?: string;
-    tagline?: string;
-    logo?: string;
-    description?: string;
-    social_links?: {
-      [key: string]: string;
-    };
-  };
-  menus?: {
-    header?: Array<{
-      id: number;
-      label: string;
-      url: string;
-      target: string;
-      children?: Array<any>;
-    }>;
-    footer?: Array<any>;
-  };
+  site?: any;
+  menus?: any;
   widgets?: Array<{
     id: string;
     title: string;
     content: string;
     type: string;
-    settings: Record<string, any>;
+    settings?: Record<string, any>;
   }>;
+  post?: {
+    id?: number;
+    title?: string;
+    excerpt?: string;
+    featured_image?: string;
+    published_at?: string;
+    author?: {
+      name?: string;
+    };
+    post_type?: {
+      name?: string;
+    };
+  };
+  page?: {
+    id?: number;
+    title?: string;
+    excerpt?: string;
+    updated_at?: string;
+    author?: {
+      name?: string;
+    };
+  };
 }
 
 const normalizeMenuItems = (menuData: any): Array<Record<string, any>> => {
-  if (!menuData) {
+  try {
+    if (!menuData) return [];
+    if (Array.isArray(menuData)) {
+      return menuData.filter((item: any) => item && typeof item === 'object') as Array<Record<string, any>>;
+    }
+
+    if (typeof menuData === 'object' && menuData !== null) {
+      if (Array.isArray((menuData as any).items)) {
+        return (menuData as any).items.filter((item: any) => item && typeof item === 'object') as Array<Record<string, any>>;
+      }
+
+      if (Array.isArray((menuData as any).data)) {
+        return (menuData as any).data.filter((item: any) => item && typeof item === 'object') as Array<Record<string, any>>;
+      }
+    }
+
+    return [];
+  } catch (error) {
+    console.error('normalizeMenuItems error:', error, menuData);
     return [];
   }
-
-  if (Array.isArray(menuData)) {
-    return menuData.filter((item) => item && typeof item === 'object');
-  }
-
-  if (typeof menuData === 'object') {
-    if (Array.isArray(menuData.items)) {
-      return menuData.items.filter((item) => item && typeof item === 'object');
-    }
-
-    if (menuData.items && typeof menuData.items === 'object') {
-      return Object.values(menuData.items).filter((item) => item && typeof item === 'object');
-    }
-
-    if (Array.isArray(menuData.data)) {
-      return menuData.data.filter((item) => item && typeof item === 'object');
-    }
-  }
-
-  return [];
 };
 
 export default function Layout({ 
@@ -88,50 +92,113 @@ export default function Layout({
   theme,
   site,
   menus,
-  widgets = []
+  widgets = [],
+  post,
+  page
 }: LayoutProps) {
-  const pageTitle = title ? `${title} | ${site?.name || 'Modulo CMS'}` : site?.name || 'Modulo CMS';
-  const containerWidth = theme?.layout?.container_width || 'container';
-  const primaryColor = theme?.colors?.primary || '#3b82f6';
-  const fontFamily = theme?.typography?.font_family || 'inter';
-  const footerMenuItems = normalizeMenuItems(menus?.footer);
+  const { auth } = usePage().props as any;
+  // Safe defaults with proper null checks - use more defensive approach
+  const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS', tagline: '' };
+  const safeTheme = theme && typeof theme === 'object' ? theme : { colors: { primary: '#3b82f6', secondary: '#64748b' }, typography: { font_family: 'inter' }, layout: { container_width: 'container' } };
+  const safeMenus = menus && typeof menus === 'object' ? menus : { header: [], footer: [] };
+  const safeAuth = auth && typeof auth === 'object' ? auth : { user: null };
+  const pageTitle = title ? `${title} | ${safeSite.name}` : safeSite.name;
+  const containerWidth = safeTheme.layout?.container_width || 'container';
+  const primaryColor = safeTheme.colors?.primary || '#3b82f6';
+  const fontFamily = safeTheme.typography?.font_family || 'inter';
+  
+  // Enhanced SEO data based on content type
+  const isArticle = post && post.id;
+  const isPage = page && page.id;
+  const contentAuthor = post?.author?.name || page?.author?.name || safeSite.name;
+  const contentImage = post?.featured_image || page?.featured_image || ogImage;
+  const canonicalUrlValue = (typeof window !== 'undefined' ? window.location.href : '');
+  const contentDescription = post?.excerpt || page?.excerpt || description || safeSite.description;
+  const contentPublishedDate = post?.published_at || page?.updated_at;
+  
+  let footerMenuItems: Array<Record<string, any>> = [];
+  try {
+    const footerData = safeMenus && safeMenus.footer ? safeMenus.footer : [];
+    footerMenuItems = normalizeMenuItems(footerData);
+  } catch (e) {
+    console.error('Error normalizing footer menu:', e);
+    footerMenuItems = [];
+  }
 
-  if (typeof window !== 'undefined') {
-    console.groupCollapsed('[Layout] Render props snapshot');
-    console.log('site', site);
-    console.log('theme', theme);
-    console.log('menus', menus);
-    console.log('normalized footer menu', footerMenuItems);
-    console.groupEnd();
+  // Ensure footerMenuItems is always an array
+  if (!Array.isArray(footerMenuItems)) {
+    footerMenuItems = [];
   }
 
   return (
     <>
       <Head>
         <title>{pageTitle}</title>
-        {description && <meta name="description" content={description} />}
+        {contentDescription && <meta name="description" content={contentDescription} />}
         {keywords && <meta name="keywords" content={keywords} />}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="author" content={contentAuthor} />
         
-        {/* Open Graph */}
+        {/* Enhanced Open Graph tags */}
         <meta property="og:title" content={pageTitle} />
-        {description && <meta property="og:description" content={description} />}
-        {ogImage && <meta property="og:image" content={ogImage} />}
-        <meta property="og:type" content="website" />
+        <meta property="og:description" content={contentDescription} />
+        {contentImage && <meta property="og:image" content={contentImage} />}
+        <meta property="og:url" content={canonicalUrlValue} />
+        <meta property="og:site_name" content={safeSite.name} />
+        <meta property="og:type" content={isArticle ? "article" : "website"} />
+        {isArticle && contentPublishedDate && (
+          <meta property="article:published_time" content={contentPublishedDate} />
+        )}
+        {isArticle && post?.author?.name && (
+          <meta property="article:author" content={post.author.name} />
+        )}
         
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
+        {/* Enhanced Twitter Card tags */}
+        <meta name="twitter:card" content={contentImage ? "summary_large_image" : "summary"} />
         <meta name="twitter:title" content={pageTitle} />
-        {description && <meta name="twitter:description" content={description} />}
-        {ogImage && <meta name="twitter:image" content={ogImage} />}
+        <meta name="twitter:description" content={contentDescription} />
+        {contentImage && <meta name="twitter:image" content={contentImage} />}
+        <meta name="twitter:site" content={safeSite.name} />
         
-        {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+        {/* Additional SEO meta tags */}
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta name="language" content="en-US" />
+        {canonicalUrlValue && <link rel="canonical" href={canonicalUrlValue} />}
         
-        {/* Theme Styles */}
+        {/* Structured Data (JSON-LD) */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": isArticle ? "Article" : "WebPage",
+            "headline": pageTitle,
+            "description": contentDescription,
+            "author": {
+              "@type": "Person",
+              "name": contentAuthor
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": safeSite.name,
+              "logo": {
+                "@type": "ImageObject",
+                "url": safeSite.logo || contentImage
+              }
+            },
+            "datePublished": contentPublishedDate,
+            "dateModified": contentPublishedDate,
+            "image": contentImage,
+            "url": canonicalUrlValue,
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": canonicalUrlValue
+            }
+          })}
+        </script>
+        
         <style>{`
           :root {
             --color-primary: ${primaryColor};
-            --color-secondary: ${theme?.colors?.secondary || '#64748b'};
+            --color-secondary: ${safeTheme.colors?.secondary || '#64748b'};
           }
           
           body {
@@ -146,9 +213,8 @@ export default function Layout({
       </Head>
 
       <div className="min-h-screen flex flex-col">
-        {/* Re-enabled Navigation */}
         <ErrorBoundary name="Navigation">
-          <Navigation site={site} menus={menus} />
+          <Navigation site={safeSite} menus={safeMenus} auth={safeAuth} />
         </ErrorBoundary>
         <main className="flex-1 pt-20">
           <div className="container mx-auto px-6 py-8">
@@ -168,13 +234,11 @@ export default function Layout({
             </div>
           </div>
         </main>
-        {/* Footer */}
         <ErrorBoundary name="Footer">
           <Footer 
-            site={site} 
-            // Pass only actual menu items to Footer to avoid runtime errors
+            site={safeSite} 
             menu={footerMenuItems}
-            theme={theme}
+            theme={safeTheme}
           />
         </ErrorBoundary>
       </div>

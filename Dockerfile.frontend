@@ -1,5 +1,0 @@
-FROM oven/bun:latest
-
-WORKDIR /var/www
-
-EXPOSE 5173

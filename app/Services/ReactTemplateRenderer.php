@@ -39,10 +39,20 @@ class ReactTemplateRenderer
         $themeData = $this->getThemeData($theme);
         
         // Merge with template data - ensure all data is properly structured
+        $siteData = $this->getSiteData();
+        $menuData = $this->getMenuData();
+        
+        \Log::info('ReactRenderer:dataPrep', [
+            'siteDataKeys' => array_keys($siteData),
+            'menuDataKeys' => array_keys($menuData),
+            'inputDataKeys' => array_keys($data),
+            'menuData' => $menuData,
+        ]);
+        
         $renderData = array_merge($data, [
             'theme' => $themeData,
-            'site' => $this->getSiteData(),
-            'menus' => $this->getMenuData(),
+            'site' => $siteData,
+            'menus' => $menuData,
         ]);
         
         // Ensure posts data structure is correct for React components
