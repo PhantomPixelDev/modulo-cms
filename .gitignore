@@ -4,6 +4,7 @@
 /public/build
 /public/hot
 /public/storage
+/html
 /storage/*.key
 /storage/pail
 /vendor
@@ -14,6 +15,10 @@ Homestead.yaml
 npm-debug.log
 yarn-error.log
 /auth.json
+ENHANCED_CONTENT_SUMMARY.md
+FINAL_SUMMARY.md
+INFOS_ROUTE_FIX.md
+ULTIMATE_CONTENT_SUMMARY.md
 /.fleet
 /.idea
 /.nova

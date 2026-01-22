@@ -43,13 +43,13 @@ export default function Footer({ site, menu, theme }: FooterProps) {
 
   try {
     return (
-    <footer className="bg-gradient-to-r from-slate-900/95 via-blue-900/90 to-purple-900/95 backdrop-blur-sm border-t border-white/10">
+    <footer className="bg-indigo-950/95 backdrop-blur-sm border-t border-white/10">
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Column */}
           <div className="md:col-span-2">
             <div className="flex items-center space-x-4 mb-6">
-              <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg bg-gradient-to-br from-blue-500 to-purple-600">
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg bg-indigo-600">
                 {(site?.name || 'M').charAt(0).toUpperCase()}
               </div>
               <h3 className="text-2xl font-bold text-white">

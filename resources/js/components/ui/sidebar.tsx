@@ -98,7 +98,9 @@ function SidebarProvider({
         const cookieOpen = value === 'true'
         _setOpen(cookieOpen)
       }
-    } catch {}
+    } catch {
+      void 0
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

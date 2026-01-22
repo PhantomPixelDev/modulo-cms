@@ -87,7 +87,7 @@ export default function PostCard({ post, theme }: PostCardProps) {
         {/* Post Type Badge */}
         {safePost.post_type && safePost.post_type.name !== 'post' && (
           <div className="mb-4">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-md">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white bg-indigo-600 shadow-md">
               {safePost.post_type.label}
             </span>
           </div>
@@ -135,7 +135,7 @@ export default function PostCard({ post, theme }: PostCardProps) {
             {safePost.terms.slice(0, 3).map((term: any) => (
               <span
                 key={term?.slug || Math.random()}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border border-blue-100 hover:from-blue-100 hover:to-purple-100 transition-all duration-300"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-all duration-300"
               >
                 <Tag className="w-3 h-3" />
                 {term?.name || 'Tag'}
@@ -152,7 +152,7 @@ export default function PostCard({ post, theme }: PostCardProps) {
         {/* Read More Link */}
         <Link
           href={postUrl}
-          className="inline-flex items-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          className="inline-flex items-center px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
         >
           Read more
           <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

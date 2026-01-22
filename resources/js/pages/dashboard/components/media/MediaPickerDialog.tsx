@@ -119,7 +119,6 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                 onClick={() => onSelect(m)}
               >
                 <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden rounded">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={m.thumb || m.url} alt={m.custom_properties?.alt || m.name} className="object-cover w-full h-full" />
                 </div>
                 <div className="text-xs break-words">

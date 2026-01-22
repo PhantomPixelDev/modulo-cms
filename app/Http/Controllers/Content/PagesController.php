@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Content;
 use App\Http\Controllers\Admin\AdminBaseController;
 use App\Models\Post;
 use App\Models\PostType;
+use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -13,6 +14,12 @@ class PagesController extends AdminBaseController
     protected string $resourceName = 'posts';
     
     protected ?PostType $pageType = null;
+
+    public function __construct(
+        protected SiteSettingsService $settings
+    ) {
+        parent::__construct();
+    }
 
     private function resolvePageType(): PostType
     {
@@ -56,19 +63,20 @@ class PagesController extends AdminBaseController
     public function index()
     {
         $pageType = $this->resolvePageType();
+        $perPage = $this->settings->get('posts_per_page', 15);
         $pages = Post::with(['author', 'postType'])
             ->where('post_type_id', $pageType->id)
             ->orderByDesc('created_at')
-            ->paginate(15)
+            ->paginate($perPage)
             ->through(function ($page) {
                 return [
                     'id' => $page->id,
                     'title' => $page->title,
                     'slug' => $page->slug,
                     'status' => $page->status,
-                    'published_at' => $page->published_at?->format('Y-m-d H:i:s'),
-                    'created_at' => $page->created_at->format('Y-m-d H:i:s'),
-                    'updated_at' => $page->updated_at->format('Y-m-d H:i:s'),
+                    'published_at' => $this->settings->formatDateTime($page->published_at),
+                    'created_at' => $this->settings->formatDateTime($page->created_at),
+                    'updated_at' => $this->settings->formatDateTime($page->updated_at),
                     'author' => $page->author ? [
                         'id' => $page->author->id,
                         'name' => $page->author->name,
@@ -90,8 +98,11 @@ class PagesController extends AdminBaseController
 
     public function create()
     {
+        $defaultStatus = $this->settings->get('default_post_status', 'draft');
+        
         return Inertia::render('Dashboard', [
             'adminSection' => 'pages.create',
+            'defaultStatus' => $defaultStatus,
         ]);
     }
 

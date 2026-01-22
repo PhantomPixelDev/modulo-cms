@@ -1,8 +1,8 @@
 // Define base interfaces to avoid dependency on @/types
 export interface BaseEntity {
   id: number;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface User extends BaseEntity {
@@ -17,8 +17,8 @@ export interface Role extends BaseEntity {
   name: string;
   permissions?: Permission[];
   // Add other required Role properties here
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Permission extends BaseEntity {
@@ -64,6 +64,7 @@ export interface PostType extends BaseEntity {
   slug: string;
   is_public: boolean;
   is_hierarchical: boolean;
+  show_in_menu: boolean;
   menu_icon?: string;
   menu_position: number;
 }
@@ -101,6 +102,17 @@ export interface SitemapSettings {
   last_generated_at?: string | null;
 }
 
+export interface SiteSettings {
+  general?: Record<string, any>;
+  reading?: Record<string, any>;
+  writing?: Record<string, any>;
+  seo?: Record<string, any>;
+  social?: Record<string, any>;
+  analytics?: Record<string, any>;
+  media?: Record<string, any>;
+  advanced?: Record<string, any>;
+}
+
 export interface MediaItem extends BaseEntity {
   name: string;
   file_name: string;
@@ -124,6 +136,31 @@ export interface Paginated<T> {
   last_page: number;
   per_page: number;
   total: number;
+}
+
+export interface ShopProduct extends BaseEntity {
+  sku?: string | null;
+  name: string;
+  slug: string;
+  description?: string | null;
+  price: string;
+  currency: string;
+  is_active: boolean;
+  stock?: number | null;
+  meta?: Record<string, any> | null;
+}
+
+export interface ShopOrder extends BaseEntity {
+  order_number: string;
+  status: string;
+  status_label: string;
+  payment_status: string;
+  payment_status_label: string;
+  total: number;
+  currency: string;
+  customer_name: string;
+  customer_email: string;
+  item_count: number;
 }
 
 export interface Template extends BaseEntity {
@@ -176,20 +213,38 @@ export interface DashboardProps {
   posts?: Post[] | { data: Post[] };
   postTypes?: PostType[];
   taxonomies?: Taxonomy[] | { data: Taxonomy[] };
+  taxonomyTerms?: any;
+  taxonomyTerm?: any;
+  editTaxonomyTerm?: any;
+  parentTerms?: Array<{ id: number; name: string }>;
   templates?: Template[];
   templateTypes?: Record<string, string>;
+  templatesPagination?: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
   allRoles?: Role[];
   permissions?: Array<{ id: number; name: string }>;
   groupedTerms?: Record<string, any>;
   authors?: Array<{ id: number; name: string }>;
   parentsByType?: Record<number | string, Array<{ id: number; title: string }>>;
   sitemapSettings?: SitemapSettings;
+  // Site settings
+  settings?: SiteSettings;
+  settingsGroup?: string;
+  pages?: Array<{ id: number; title: string }>;
+  timezones?: string[];
+  // Plugins
+  plugins?: any[];
+  plugin?: any;
   post?: Post; // single post for show view
   editPost?: Post;
   editPostType?: PostType;
   editTaxonomy?: Taxonomy;
-  editUser?: User;
-  editRole?: Role;
+  editUser?: any;
+  editRole?: any;
   editTemplate?: Template;
   template?: Template;
   themes?: any[];
@@ -209,6 +264,10 @@ export interface DashboardProps {
   allFolders?: MediaFolder[];
   breadcrumb?: MediaFolder[];
   currentFolderId?: number | null;
+  // ModuloShop
+  shopProducts?: Paginated<ShopProduct>;
+  shopOrders?: Paginated<ShopOrder>;
+  shopOrder?: ShopOrder;
   // Dashboard activity and status
   recentActivity?: Array<{
     type: string;
@@ -229,6 +288,7 @@ export interface DashboardProps {
     last_checked_at?: string;
     meta?: Record<string, string | number | null | undefined>;
   }>;
+  globalCommentsEnabled: boolean;
 }
 
 // Post Type List Item

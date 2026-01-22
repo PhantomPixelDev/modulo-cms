@@ -14,16 +14,18 @@ use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
 use App\Models\Theme;
 use App\Models\User;
+use App\Services\SiteSettingsService;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
-
-
-
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected SiteSettingsService $settings
+    ) {}
+
     public function index(): Response
     {
         $user = auth()->user();
@@ -57,6 +59,8 @@ class DashboardController extends Controller
             // System Status
             $data['systemStatus'] = $this->getSystemStatus();
 
+            $perPage = $this->settings->get('posts_per_page', 5);
+
             $data['users'] = UserResource::collection(
                 User::with('roles')->orderByDesc('created_at')->paginate(5)
             );
@@ -72,6 +76,8 @@ class DashboardController extends Controller
             $data['postTypes'] = PostTypeResource::collection(
                 PostType::orderBy('menu_position')->get()
             );
+
+            $data['globalCommentsEnabled'] = (bool) $this->settings->get('enable_comments', false);
         }
 
         return Inertia::render('Dashboard', $data);
@@ -95,6 +101,7 @@ class DashboardController extends Controller
                 'description' => $post->title,
                 'user' => $post->author->name ?? 'Unknown',
                 'timestamp' => $post->created_at->diffForHumans(),
+                'formatted_date' => $this->settings->formatDateTime($post->created_at),
                 'created_at' => $post->created_at,
             ];
         }
@@ -112,6 +119,7 @@ class DashboardController extends Controller
                 'description' => $user->name . ' joined',
                 'user' => $user->name,
                 'timestamp' => $user->created_at->diffForHumans(),
+                'formatted_date' => $this->settings->formatDateTime($user->created_at),
                 'created_at' => $user->created_at,
             ];
         }

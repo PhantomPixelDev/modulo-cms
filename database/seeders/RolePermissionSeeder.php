@@ -80,6 +80,15 @@ class RolePermissionSeeder extends Seeder
             'activate plugins',
             'deactivate plugins',
             'delete plugins',
+
+            // ModuloShop
+            'view shop products',
+            'create shop products',
+            'edit shop products',
+            'delete shop products',
+            'view shop orders',
+            'manage shop orders',
+            'manage shop settings',
             
             // Settings management
             'view settings',
@@ -124,7 +133,9 @@ class RolePermissionSeeder extends Seeder
                 'view post types', 'create post types', 'edit post types', 'delete post types',
                 'view taxonomies', 'create taxonomies', 'edit taxonomies', 'delete taxonomies',
                 'view taxonomy terms', 'create taxonomy terms', 'edit taxonomy terms', 'delete taxonomy terms',
-                'view plugins', 'install plugins', 'activate plugins', 'deactivate plugins',
+                'view plugins', 'install plugins', 'activate plugins', 'deactivate plugins', 'delete plugins',
+                'view shop products', 'create shop products', 'edit shop products', 'delete shop products',
+                'view shop orders', 'manage shop orders', 'manage shop settings',
                 'view settings', 'edit settings',
                 'view analytics', 'export data',
                 'create backups', 'restore backups',
@@ -159,44 +170,23 @@ class RolePermissionSeeder extends Seeder
             $role->syncPermissions($rolePermissions);
         }
 
-        // Create or fetch a super admin user
-        $superAdmin = User::where('email', 'admin@modulo-cms.com')->first();
-        if (!$superAdmin) {
-            $superAdmin = User::factory()->create([
-                'name' => 'Super Admin',
-                'email' => 'admin@modulo-cms.com',
-            ]);
-        }
-        $superAdmin->assignRole('super-admin');
-
-        // Create or fetch a test admin user
+        // Assign roles to existing users (users created by DefaultUsersSeeder)
+        // admin@example.com gets super-admin role (main admin account)
         $admin = User::where('email', 'admin@example.com')->first();
-        if (!$admin) {
-            $admin = User::factory()->create([
-                'name' => 'Admin User',
-                'email' => 'admin@example.com',
-            ]);
+        if ($admin) {
+            $admin->assignRole('super-admin');
         }
-        $admin->assignRole('admin');
 
-        // Create or fetch a test moderator
-        $moderator = User::where('email', 'moderator@example.com')->first();
-        if (!$moderator) {
-            $moderator = User::factory()->create([
-                'name' => 'Moderator User',
-                'email' => 'moderator@example.com',
-            ]);
-        }
-        $moderator->assignRole('moderator');
-
-        // Create or fetch a test editor
+        // editor@example.com gets editor role
         $editor = User::where('email', 'editor@example.com')->first();
-        if (!$editor) {
-            $editor = User::factory()->create([
-                'name' => 'Editor User',
-                'email' => 'editor@example.com',
-            ]);
+        if ($editor) {
+            $editor->assignRole('editor');
         }
-        $editor->assignRole('editor');
+
+        // user@example.com gets user role
+        $user = User::where('email', 'user@example.com')->first();
+        if ($user) {
+            $user->assignRole('user');
+        }
     }
 } 

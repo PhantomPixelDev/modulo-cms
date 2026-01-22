@@ -18,21 +18,6 @@ interface Props {
     roles: Role[];
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Admin',
-        href: '/admin',
-    },
-    {
-        title: 'Users',
-        href: '/admin/users',
-    },
-    {
-        title: 'Create',
-        href: '/admin/users/create',
-    },
-];
-
 export default function CreateUser({ roles }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',

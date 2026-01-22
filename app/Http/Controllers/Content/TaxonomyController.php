@@ -35,7 +35,8 @@ class TaxonomyController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Taxonomy::class);
-        $taxonomies = Taxonomy::orderBy('menu_position')->paginate(15);
+        $perPage = \App\Models\SiteSetting::get('posts_per_page', 15);
+        $taxonomies = Taxonomy::orderBy('menu_position')->paginate($perPage);
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies',

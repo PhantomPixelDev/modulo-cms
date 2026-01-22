@@ -1,172 +1,146 @@
 # Modulo CMS
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/PhantomPixelDev/modulo-cms/blob/main/LICENSE)
-[![Laravel](https://img.shields.io/badge/Laravel-12.x-red.svg)](https://laravel.com)
-[![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org)
+Modern, modular CMS built with Laravel 12 & React 19.
 
-Modulo CMS is a modern, modular content management system built on Laravel 12 with a React 19 frontend. It offers a flexible and extensible platform for creating websites with customizable content types, themes, and user permissions.
+## 🚀 Quick Start
 
-## Features
+### PROD
 
-- **Dynamic Post Types**: Create and manage custom content types with configurable fields and templates.
-- **Modular Theme System**: Easily switch between themes, customize layouts, and manage assets.
-- **Taxonomy Management**: Organize content with hierarchical categories and tags.
-- **Media Library**: Upload, manage, and organize media files in folders.
-- **User & Role Management**: Fine-grained permission control for different user roles.
-- **Sitemap Generation**: Automatic XML sitemap generation for SEO.
-- **Rich Text Editor**: Built-in Slate editor for creating formatted content.
-
-## Requirements
-
-- PHP 8.4 or higher
-- Composer
-- Bun (for frontend asset compilation)
-- Podman Compose or Docker Compose (for containerized development)
-- SQLite (default) or MySQL/PostgreSQL
-
-## Installation
-
-### Docker/Podman Setup (Recommended)
-
-**Quick start:**
 ```bash
-./docker.sh setup
+# 1. Clone & Setup env
+git clone https://github.com/PhantomPixelDev/modulo-cms.git
+cd modulo-cms
+cp .env.example .env.prod
+
+# 2. Start with Docker (production)
+./modulo.sh up prod
 ```
 
-This will:
-- Build backend (PHP 8.3 + Laravel) and frontend (Bun + Vite) containers
-- Install all dependencies
-- Set up database with sample data
-- Install and activate the React theme
-- Start both dev servers with hot-reload
+### DEV
 
-**Customize setup (optional):**
 ```bash
-# Copy and edit the environment file
-cp .env.docker.example .env.docker
+# 1. Clone & Setup env
+git clone https://github.com/PhantomPixelDev/modulo-cms.git
+cd modulo-cms
+cp .env.example .env.dev
 
-# Customize theme, app name, etc.
-vim .env.docker
-
-# Run setup with custom config
-source .env.docker && ./docker.sh setup
+# 2. Start with Docker (development)
+./modulo.sh up dev
 ```
 
-**Available environment variables:**
-- `APP_NAME` - Application name (default: "Modulo CMS")
-- `DEFAULT_THEME` - Theme to install (default: "modern-react")
-- `SEED_EXAMPLE_CONTENT` - Seed with example data (default: "true")
-- `DB_CONNECTION` - Database type (default: "sqlite")
+```
 
 **Access:**
-- Backend: http://localhost:8080
-- Frontend: http://localhost:5173  
-- Login: `admin@example.com` / `password`
+- Dashboard: [http://localhost:8080/dashboard](http://localhost:8080/dashboard)
+- Frontend: [http://localhost:8080](http://localhost:8080)
+- Mailpit (email testing): [http://localhost:8025](http://localhost:8025)
 
-**Other commands:**
+**Admin Credentials:**
+- **Email:** `admin@example.com`
+- **Password:** `admin123`
+
+---
+
+## 🛠 Helper Script
+
+Use `./modulo.sh` for common commands:
+
 ```bash
-./docker.sh start    # Start services
-./docker.sh stop     # Stop services
-./docker.sh logs     # View logs
-./docker.sh shell    # Open backend shell
-./docker.sh rebuild  # Rebuild from scratch
-./docker.sh nuke     # Complete cleanup (destructive)
+# Development (default)
+./modulo.sh up dev          # Start services
+./modulo.sh restart         # Restart dev
+./modulo.sh logs dev        # Show logs
+./modulo.sh shell dev       # Open shell
+./modulo.sh artisan migrate:status dev
+./modulo.sh migrate dev     # Run migrations
+./modulo.sh seed dev        # Run seeders
+./modulo.sh test dev        # Run tests
+./modulo.sh status dev      # Show container status
+
+# Production
+./modulo.sh up prod
+./modulo.sh logs prod
+
+# Help
+./modulo.sh help
 ```
 
 ---
 
-### Manual Installation (Alternative)
+## 📬 Contact Form Plugin
 
-#### Quick Start (Recommended)
+The Contact Form plugin adds a `[contact_form]` shortcode that stores submissions in the database and emails the configured admin address.
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/PhantomPixelDev/modulo-cms.git
-   cd modulo-cms
-   ```
+### Setup
 
-2. Set up the environment file:
-   ```bash
-   cp .env.example .env
-   ```
-   Ensure `DB_CONNECTION=sqlite` for a quick setup, or configure your preferred database.
+1. Activate **Contact Form** in the admin plugin manager.
+2. Run migrations for the submissions table:
 
-3. Run the automated setup script:
-   ```bash
-   chmod +x start-dev.sh
-   ./start-dev.sh
-   ```
+```bash
+./modulo.sh migrate dev
+```
 
-4. Access the application at `http://localhost:8080` and the admin dashboard at `http://localhost:8080/dashboard`.
-   - Default admin credentials: email `admin@example.com`, password `password`
+3. Set an admin recipient in **Site Settings → General → Admin Email** or via `MAIL_ADMIN_ADDRESS` in `.env.dev`.
 
-#### Manual Setup (Alternative)
+### Shortcode Usage
 
-If you prefer manual control over the setup process:
+```
+[contact_form]
+```
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/PhantomPixelDev/modulo-cms.git
-   cd modulo-cms
-   ```
+Optional default subject:
 
-2. Set up the environment file:
-   ```bash
-   cp .env.example .env
-   ```
-   Ensure `DB_CONNECTION=sqlite` for a quick setup, or configure your preferred database.
+```
+[contact_form subject="Support request"]
+```
 
-3. Start the development environment:
-   ```bash
-   podman compose -f docker/docker-compose.yml up -d --build
-   ```
+---
 
-4. Generate application key:
-   ```bash
-   podman compose -f docker/docker-compose.yml exec app php artisan key:generate
-   ```
+## 🛍 Shop Plugin
 
-5. Run migrations and seed the database:
-   ```bash
-   podman compose -f docker/docker-compose.yml exec app php artisan migrate --seed
-   ```
+The Shop plugin provides e‑commerce functionality with products, orders, and email notifications.
 
-6. Access the application at `http://localhost:8080` and the admin dashboard at `http://localhost:8080/dashboard`.
-   - Default admin credentials: email `admin@example.com`, password `password`
+### Features
 
-## Usage
+- Product management (using Posts)
+- Order processing
+- Email notifications (customer & admin)
+- Admin dashboard integration
 
-- **Admin Dashboard**: Access at `/dashboard` to manage content, users, themes, and settings.
-- **Creating Content**: Use the intuitive interface to create posts, pages, and custom content types.
-- **Theme Customization**: Install and customize themes from the admin panel.
-- **Extending Functionality**: Follow the [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) to create custom plugins.
+### Email Notifications
 
-## Project Structure
+Configure `MAIL_ADMIN_ADDRESS` in `.env.dev` to receive:
+- New order notifications
+- Customer order status updates
 
-- `app/`: Laravel application code (models, controllers, policies, etc.)
-- `resources/js/`: React frontend codebase for the dashboard
-- `resources/themes/`: Theme files and assets
-- `public/`: Publicly accessible files and compiled assets
-- `routes/`: API and web routes for frontend and backend
-- `database/`: Migrations, factories, and seeders
-- `docker/`: Configuration files for containerized development
+---
 
-## Contributing
+## 🐳 Docker Environments
 
-Contributions are welcome! Please follow these steps:
+| Environment | Config File | Use Case |
+|-------------|-------------|----------|
+| **Development** | `.env.dev` | Local development with Mailpit |
+| **Production** | `.env.prod` | Production deployment (Redis, PostgreSQL, SMTP) |
 
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a pull request.
+### Development
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+```bash
+./modulo.sh up dev
+```
 
-## License
+### Production
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```bash
+./modulo.sh up prod
+```
 
-## Support
+---
 
-If you encounter any issues or have questions, please file an issue on the GitHub repository or contact the maintainers.
+## 🏗 Tech Stack
+- **Backend:** PHP 8.4, Laravel 12
+- **Frontend:** React 19, Inertia.js, Tailwind CSS 4
+- **Database:** PostgreSQL 16
+- **Tools:** Vite, Docker, Mailpit (dev), Redis (prod)
+
+## 📄 License
+MIT License. See [LICENSE](LICENSE) for details.

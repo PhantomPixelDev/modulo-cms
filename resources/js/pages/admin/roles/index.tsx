@@ -29,19 +29,8 @@ interface Props {
     };
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Admin',
-        href: '/admin',
-    },
-    {
-        title: 'Roles',
-        href: '/admin/roles',
-    },
-];
-
 export default function RolesIndex({ roles }: Props) {
-    const { delete: destroy } = useForm();
+    const { delete: destroy } = useForm({});
     const { hasPermission, isAdmin } = useAcl();
 
     const handleDelete = (roleId: number) => {

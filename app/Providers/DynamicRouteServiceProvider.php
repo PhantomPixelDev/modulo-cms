@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Post;
 use App\Models\PostType;
+use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use App\Http\Controllers\Frontend\PostController;
 
 class DynamicRouteServiceProvider extends ServiceProvider
 {
@@ -31,12 +34,27 @@ class DynamicRouteServiceProvider extends ServiceProvider
      */
     protected function registerDynamicPostTypeRoutes(): void
     {
-        // Check if post_types table exists (for fresh installs)
-        if (!Schema::hasTable('post_types')) {
+        // Check if tables exist (for fresh installs)
+        if (!Schema::hasTable('post_types') || !Schema::hasTable('site_settings')) {
             return;
         }
 
         try {
+            // Only register dynamic routes if tables exist
+            if (!Schema::hasTable('site_settings') || !Schema::hasTable('posts')) {
+                return;
+            }
+
+            // Register posts page route if configured
+            $postsPageId = SiteSetting::get('posts_page_id');
+            if ($postsPageId) {
+                $postsPage = Post::find($postsPageId);
+                if ($postsPage && $postsPage->status === 'published') {
+                    Route::get("/{$postsPage->slug}", [PostController::class, 'index'])
+                        ->name('posts.index.custom');
+                }
+            }
+
             // Cache post type routes for 1 hour to improve performance
             $postTypes = cache()->remember('dynamic_post_type_routes', 3600, function () {
                 return PostType::whereNotNull('route_prefix')
@@ -47,13 +65,8 @@ class DynamicRouteServiceProvider extends ServiceProvider
             });
 
             foreach ($postTypes as $postType) {
-                // Register route without trailing slash
-                Route::get("/{$postType->route_prefix}", [\App\Http\Controllers\FrontendController::class, 'listPosts'])
+                Route::get("/{$postType->route_prefix}", [PostController::class, 'index'])
                     ->name("{$postType->route_prefix}.index")
-                    ->defaults('postTypeId', $postType->id);
-                
-                // Register route with trailing slash
-                Route::get("/{$postType->route_prefix}/", [\App\Http\Controllers\FrontendController::class, 'listPosts'])
                     ->defaults('postTypeId', $postType->id);
             }
 
@@ -69,10 +82,8 @@ class DynamicRouteServiceProvider extends ServiceProvider
             });
 
             if ($pageType) {
-                Route::get('/pages', [\App\Http\Controllers\FrontendController::class, 'listPosts'])
+                Route::get('/pages', [PostController::class, 'index'])
                     ->name('pages.index')
-                    ->defaults('postTypeId', $pageType->id);
-                Route::get('/pages/', [\App\Http\Controllers\FrontendController::class, 'listPosts'])
                     ->defaults('postTypeId', $pageType->id);
             }
         } catch (\Throwable $e) {

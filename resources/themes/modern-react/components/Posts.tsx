@@ -104,7 +104,7 @@ export default function Posts({
     >
       <SEOHead title={`${resolvedTitle} | ${safeSite.name}`} description={resolvedDescription} />
       <div className="space-y-8">
-        <header className="text-center py-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg">
+        <header className="text-center py-12 bg-indigo-700 text-white rounded-lg">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">{dynamicPageTitle}</h1>
           <p className="text-xl opacity-90 max-w-2xl mx-auto">
             {dynamicPageDescription}

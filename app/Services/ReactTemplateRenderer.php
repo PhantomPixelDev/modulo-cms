@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Theme;
 use Illuminate\Support\Facades\View;
+use App\Http\Resources\ThemeResource;
 use Inertia\Inertia;
 use App\Services\MenuService;
 
@@ -35,19 +36,21 @@ class ReactTemplateRenderer
             throw new \Exception("React component not found for template: {$templateName}");
         }
 
-        // Prepare theme data
-        $themeData = $this->getThemeData($theme);
+        // Prepare theme data using the standardized resource
+        $themeData = (new ThemeResource($theme))->toArray(request());
         
         // Merge with template data - ensure all data is properly structured
         $siteData = $this->getSiteData();
         $menuData = $this->getMenuData();
-        
-        \Log::info('ReactRenderer:dataPrep', [
-            'siteDataKeys' => array_keys($siteData),
-            'menuDataKeys' => array_keys($menuData),
-            'inputDataKeys' => array_keys($data),
-            'menuData' => $menuData,
-        ]);
+
+        if (env('THEME_DEBUG', false)) {
+            \Log::debug('ReactRenderer:dataPrep', [
+                'siteDataKeys' => array_keys($siteData),
+                'menuDataKeys' => array_keys($menuData),
+                'inputDataKeys' => array_keys($data),
+                'menuData' => $menuData,
+            ]);
+        }
         
         $renderData = array_merge($data, [
             'theme' => $themeData,
@@ -98,13 +101,10 @@ class ReactTemplateRenderer
             return $this->convertToInertiaPath($theme->slug, "components/{$componentName}");
         }
 
-        if (is_array($templateConfig) && 
-            isset($templateConfig['type']) && 
-            $templateConfig['type'] === 'react' &&
-            isset($templateConfig['component'])) {
-            
+        if (is_array($templateConfig) && isset($templateConfig['component'])) {
+            // theme.json commonly stores templates as { "component": "components/Index.tsx" }
             // Convert theme component path to Inertia component path
-            // themes/modern-react/components/Layout.tsx -> Themes/ModernReact/Layout
+            // components/Layout.tsx -> Themes/ModernReact/Layout
             return $this->convertToInertiaPath($theme->slug, $templateConfig['component']);
         }
 
@@ -171,8 +171,8 @@ class ReactTemplateRenderer
     protected function getSiteData(): array
     {
         return [
-            'name' => config('app.name', 'Modulo CMS'),
-            'tagline' => 'Modern Content Management System',
+            'name' => \App\Models\SiteSetting::get('site_name', config('app.name', 'Modulo CMS')),
+            'tagline' => \App\Models\SiteSetting::get('site_tagline', 'Modern Content Management System'),
             'logo' => null, // TODO: Add site logo support
         ];
     }
@@ -271,6 +271,7 @@ class ReactTemplateRenderer
 
     /**
      * Check if a React template can be rendered
+     * Only returns true if the template is explicitly registered in theme.json
      */
     public function canRender(string $templateName): bool
     {
@@ -280,7 +281,10 @@ class ReactTemplateRenderer
             return false;
         }
 
-        return $this->resolveComponentPath($theme, $templateName) !== null;
+        $templates = $theme->templates ?? [];
+        
+        // Only return true if the template is explicitly defined in theme.json
+        return isset($templates[$templateName]);
     }
 
     /**
@@ -305,9 +309,8 @@ class ReactTemplateRenderer
 
         $templates = [];
         foreach ($theme->templates ?? [] as $name => $config) {
-            if (is_array($config) && 
-                isset($config['type']) && 
-                $config['type'] === 'react') {
+            // Accept both legacy {type: 'react', component: ...} and current {component: ...}
+            if (is_array($config) && isset($config['component'])) {
                 $templates[] = $name;
             }
         }

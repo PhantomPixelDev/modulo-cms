@@ -93,7 +93,9 @@ export const MediaLibrary: React.FC<Props> = ({ items, pagination, folders = [],
       if (uriList && typeof window !== 'undefined' && uriList.includes(window.location.origin)) {
         return;
       }
-    } catch (_) { /* no-op */ }
+    } catch {
+      void 0
+    }
 
     const files = Array.from(e.dataTransfer.files || []);
     if (files.length === 0) return;
@@ -364,12 +366,11 @@ export const MediaLibrary: React.FC<Props> = ({ items, pagination, folders = [],
                 Select
               </label>
               <div className="flex items-center gap-2">
-                <button className="underline" onClick={() => { try { (navigator as any)?.clipboard?.writeText?.(m.url); } catch (_) {} }} title="Copy URL" type="button">Copy URL</button>
+                <button className="underline" onClick={() => { try { (navigator as any)?.clipboard?.writeText?.(m.url); } catch { void 0 } }} title="Copy URL" type="button">Copy URL</button>
                 <a className="underline" href={m.url} target="_blank" rel="noreferrer">Open</a>
               </div>
             </div>
             <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden rounded">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={m.thumb || m.url}
                 alt={m.custom_properties?.alt || m.name}

@@ -67,7 +67,7 @@ export default function TaxonomyTerm(props: TaxonomyTermProps) {
     >
       <div className="space-y-8">
         
-        <header className="text-center py-12 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg">
+        <header className="text-center py-12 bg-indigo-700 text-white rounded-lg">
           <div className="mb-2">
             <span className="inline-block px-3 py-1 text-sm bg-white/20 rounded-full">
               {term.taxonomy.label}

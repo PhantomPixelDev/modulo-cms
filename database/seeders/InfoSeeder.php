@@ -38,7 +38,7 @@ class InfoSeeder extends Seeder
                 'is_public' => true,
                 'is_hierarchical' => false,
                 'menu_icon' => 'info',
-                'menu_position' => 5.5,
+                'menu_position' => 5,
             ]
         );
 

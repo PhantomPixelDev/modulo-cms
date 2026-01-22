@@ -210,7 +210,7 @@ export default function Layout({
                          fontFamily === 'roboto' ? 'Roboto, system-ui, sans-serif' :
                          fontFamily === 'open-sans' ? '"Open Sans", system-ui, sans-serif' :
                          'system-ui, sans-serif'};
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+            background: #eef2ff;
             min-height: 100vh;
           }
         `}</style>

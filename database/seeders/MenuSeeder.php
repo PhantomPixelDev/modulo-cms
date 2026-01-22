@@ -20,7 +20,7 @@ class MenuSeeder extends Seeder
         $this->ensureItems($header, [
             ['label' => 'Home', 'page_slug' => '/', 'order' => 0],
             ['label' => 'Blog', 'page_slug' => 'posts', 'order' => 1],
-            ['label' => 'Products', 'page_slug' => 'products', 'order' => 2],
+            ['label' => 'Shop', 'page_slug' => 'shop', 'order' => 2],
             ['label' => 'Portfolio', 'page_slug' => 'portfolio', 'order' => 3],
             ['label' => 'About', 'page_slug' => 'about', 'order' => 4],
             ['label' => 'Contact', 'page_slug' => 'contact', 'order' => 5],
@@ -99,10 +99,10 @@ class MenuSeeder extends Seeder
         );
 
         $this->ensureItems($adminQuick, [
-            ['label' => '+ New Post', 'route_name' => 'dashboard.admin.posts.create', 'order' => 0, 'visible_to' => 'admin'],
-            ['label' => '+ New Page', 'route_name' => 'dashboard.admin.pages.create', 'order' => 1, 'visible_to' => 'admin'],
-            ['label' => '+ New User', 'route_name' => 'dashboard.admin.users.create', 'order' => 2, 'visible_to' => 'admin'],
-            ['label' => 'Media Library', 'route_name' => 'dashboard.admin.media.index', 'order' => 3, 'visible_to' => 'admin'],
+            ['label' => '+ New Post', 'route_name' => 'dashboard.admin.posts.create', 'order' => 0, 'visible_to' => 'auth'],
+            ['label' => '+ New Page', 'route_name' => 'dashboard.admin.pages.create', 'order' => 1, 'visible_to' => 'auth'],
+            ['label' => '+ New User', 'route_name' => 'dashboard.admin.users.create', 'order' => 2, 'visible_to' => 'auth'],
+            ['label' => 'Media Library', 'route_name' => 'dashboard.admin.media.index', 'order' => 3, 'visible_to' => 'auth'],
         ]);
 
         // Category menu - Blog categories
@@ -128,7 +128,7 @@ class MenuSeeder extends Seeder
         $this->ensureItems($mobile, [
             ['label' => 'Home', 'page_slug' => '/', 'order' => 0],
             ['label' => 'Blog', 'page_slug' => 'posts', 'order' => 1],
-            ['label' => 'Products', 'page_slug' => 'products', 'order' => 2],
+            ['label' => 'Shop', 'page_slug' => 'shop', 'order' => 2],
             ['label' => 'Portfolio', 'page_slug' => 'portfolio', 'order' => 3],
             ['label' => 'About', 'page_slug' => 'about-us', 'order' => 4],
             ['label' => 'Contact', 'page_slug' => 'contact', 'order' => 5],

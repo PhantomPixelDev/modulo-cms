@@ -12,6 +12,8 @@ use App\Http\Controllers\Content\PagesController;
 use App\Http\Controllers\Content\MenuController;
 use App\Http\Controllers\Content\MenuItemController;
 use App\Http\Controllers\Admin\SitemapController;
+use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +42,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
 
         // Theme-specific routes
         Route::post('/themes/discover', [ThemeController::class, 'discover'])->name('themes.discover');
+        Route::post('/themes/{slug}/activate', [ThemeController::class, 'activate'])->name('themes.activate');
+        Route::post('/themes/{theme}/publish-assets', [ThemeController::class, 'publishAssets'])->name('themes.publish-assets');
         
         // Media routes
         Route::prefix('media')->group(function () {
@@ -67,10 +71,20 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         
         // Sitemap
         Route::get('/sitemap', [SitemapController::class, 'index'])->name('sitemap.index');
+        Route::put('/sitemap', [SitemapController::class, 'update'])->name('sitemap.update');
+        Route::post('/sitemap/regenerate', [SitemapController::class, 'regenerate'])->name('sitemap.regenerate');
         Route::post('/sitemap/generate', [SitemapController::class, 'regenerate'])->name('sitemap.generate');
         
-        // Settings
-        Route::get('/settings', function () {
-            return Inertia::render('Admin/Settings/Index');
-        })->name('settings');
+        // Site Settings
+        Route::get('/settings', [SiteSettingsController::class, 'index'])->name('settings.index');
+        Route::put('/settings/{group}', [SiteSettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/clear-cache', [SiteSettingsController::class, 'clearCache'])->name('settings.clear-cache');
+
+        // Plugins
+        Route::get('plugins', [PluginController::class, 'index'])->name('plugins.index');
+        Route::post('plugins/{slug}/activate', [PluginController::class, 'activate'])->name('plugins.activate');
+        Route::post('plugins/{slug}/deactivate', [PluginController::class, 'deactivate'])->name('plugins.deactivate');
+        Route::get('plugins/{slug}/settings', [PluginController::class, 'settings'])->name('plugins.settings');
+        Route::put('plugins/{slug}/settings', [PluginController::class, 'updateSettings'])->name('plugins.update-settings');
+        Route::delete('plugins/{slug}', [PluginController::class, 'destroy'])->name('plugins.destroy');
     });

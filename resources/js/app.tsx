@@ -4,10 +4,7 @@ import React from 'react';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
-// TEMP: disable theme init and toasts to isolate crash
-// import { initializeTheme } from './hooks/use-appearance';
-// import GlobalToasts from './components/GlobalToasts';
-// import { toast } from 'sonner';
+import { initializeTheme } from './hooks/use-appearance';
 import ErrorBoundary from './ErrorBoundary';
 import { AdminToastProvider } from './components/admin/AdminToastProvider';
 
@@ -28,28 +25,30 @@ const themeComponents = import.meta.glob('../themes/**/components/**/*.tsx', { e
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,
     resolve: (name) => {
-        // Check for theme components first (e.g., Themes/ModernReact/Index)
+        // Check for theme components first (e.g., Themes/ModernReact/Index or Themes/ModernReact/Shop/Archive)
         if (name.startsWith('Themes/')) {
             // Convert Themes/ModernReact/Index to modern-react/Index
+            // or Themes/ModernReact/Shop/Archive to modern-react/Shop/Archive
             const parts = name.split('/');
             const themeNamePascal = parts[1]; // ModernReact
-            const componentName = parts[2]; // Index
+            const componentPath = parts.slice(2).join('/'); // Index or Shop/Archive
             
-            // Convert PascalCase to kebab-case
+            // Convert PascalCase to kebab-case for theme slug only
             const themeSlug = themeNamePascal.replace(/([A-Z])/g, (match, p1, offset) => {
                 return offset > 0 ? '-' + p1.toLowerCase() : p1.toLowerCase();
             });
             
-            const themeComponentPath = `../themes/${themeSlug}/components/${componentName}.tsx`;
+            // Try exact path first
+            const themeComponentPath = `../themes/${themeSlug}/components/${componentPath}.tsx`;
             
             if (themeComponents[themeComponentPath]) {
                 return resolvePageComponent(themeComponentPath, themeComponents);
             }
             
-            // Fallback: try direct component name without .tsx
-            const fallbackPath = `../themes/${themeSlug}/components/${componentName}`;
-            if (themeComponents[fallbackPath]) {
-                return resolvePageComponent(fallbackPath, themeComponents);
+            // Try index.tsx for directory-based components
+            const indexPath = `../themes/${themeSlug}/components/${componentPath}/index.tsx`;
+            if (themeComponents[indexPath]) {
+                return resolvePageComponent(indexPath, themeComponents);
             }
         }
 
@@ -97,5 +96,5 @@ createInertiaApp({
     },
 });
 
-// TEMP: disable theme initialization during debugging
-// initializeTheme();
+// Initialize theme
+initializeTheme();

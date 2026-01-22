@@ -16,6 +16,7 @@ class PostResource extends JsonResource
     {
         $postType = $this->whenLoaded('postType');
         $author = $this->whenLoaded('author');
+        $settings = app(\App\Services\SiteSettingsService::class);
 
         return [
             'id' => $this->id,
@@ -24,7 +25,7 @@ class PostResource extends JsonResource
             'status' => $this->status,
             'excerpt' => $this->excerpt,
             'content' => $this->content,
-            'created_at' => optional($this->created_at)->toDateTimeString(),
+            'created_at' => $settings->formatDateTime($this->created_at),
             'post_type_id' => $this->post_type_id,
             'postType' => $postType ? PostTypeResource::make($postType) : null,
             'author' => $author ? [

@@ -6,11 +6,19 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
+use App\Models\PostType;
+use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
+use App\Models\Plugin;
+use App\Services\SiteSettingsService;
 use Illuminate\Support\Facades\Schema;
 
 class HandleInertiaRequests extends Middleware
 {
+    public function __construct(
+        protected SiteSettingsService $settings
+    ) {}
+
     /**
      * The root template that's loaded on the first page visit.
      *
@@ -93,20 +101,21 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
-        $sidebarData = $this->getSidebarData();
-        
         // Ensure parent::share() returns an array before spreading
         $parentShared = parent::share($request);
         if (!is_array($parentShared)) {
             $parentShared = [];
         }
-        
+
         return [
             ...$parentShared,
-            'name' => config('app.name'),
+            'name' => $this->settings->get('site_name', config('app.name')),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
-            'categories' => $sidebarData['categories'],
-            'tags' => $sidebarData['tags'],
+            // Use lazy props to avoid querying DB on every request (e.g. admin actions)
+            'categories' => fn () => $this->getSidebarData()['categories'],
+            'tags' => fn () => $this->getSidebarData()['tags'],
+            // Pass all public settings to frontend
+            'settings' => $this->settings->getPublicSettings(),
             // Expose session flash messages for toasts
             'flash' => [
                 'message' => fn () => $request->session()->get('message'),
@@ -139,6 +148,23 @@ class HandleInertiaRequests extends Middleware
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'activePlugins' => fn () => Schema::hasTable('plugins')
+                ? Plugin::query()->active()->pluck('slug')->values()->toArray()
+                : [],
+            'dynamicMenu' => [
+                'postTypes' => fn () => Schema::hasTable('post_types') 
+                    ? PostType::query()
+                        ->when(Schema::hasColumn('post_types', 'show_in_menu'), fn($q) => $q->where('show_in_menu', true))
+                        ->orderBy(Schema::hasColumn('post_types', 'menu_position') ? 'menu_position' : 'id')
+                        ->get(['id', 'name', 'label', 'menu_icon', 'slug'])
+                    : [],
+                'taxonomies' => fn () => Schema::hasTable('taxonomies')
+                    ? Taxonomy::query()
+                        ->when(Schema::hasColumn('taxonomies', 'show_in_menu'), fn($q) => $q->where('show_in_menu', true))
+                        ->orderBy(Schema::hasColumn('taxonomies', 'menu_position') ? 'menu_position' : 'id')
+                        ->get(['id', 'name', 'label', 'menu_icon', 'slug'])
+                    : [],
+            ],
         ];
     }
 }

@@ -1,5 +1,9 @@
 <?php
 
+use Spatie\Permission\PermissionRegistrar;
+use App\Models\User;
+use Spatie\Permission\Models\Permission;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -12,8 +16,26 @@
 */
 
 uses(Tests\TestCase::class)
-    // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature');
+
+beforeEach(function () {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
+
+function makeAdminUserWithPermissions(array $perms = []): User
+{
+    $user = User::factory()->create();
+
+    $allPerms = array_values(array_unique(array_merge(['access admin'], $perms)));
+    foreach ($allPerms as $perm) {
+        Permission::findOrCreate($perm, 'web');
+    }
+
+    $user->givePermissionTo($allPerms);
+
+    return $user;
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -40,8 +62,3 @@ expect()->extend('toBeOne', function () {
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
-
-function something()
-{
-    // ..
-}

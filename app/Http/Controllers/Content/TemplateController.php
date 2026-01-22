@@ -20,10 +20,11 @@ class TemplateController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Template::class);
+        $perPage = \App\Models\SiteSetting::get('posts_per_page', 15);
         $templates = Template::with('creator')
             ->orderBy('type')
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate($perPage);
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'templates',
@@ -64,9 +65,18 @@ class TemplateController extends Controller
     public function create()
     {
         $this->authorize('create', Template::class);
+
+        $allTypes = Template::getAvailableTypes();
+        $allowed = ['post', 'page', 'partial'];
+        $templateTypes = array_filter(
+            $allTypes,
+            fn ($label, $key) => in_array($key, $allowed, true),
+            ARRAY_FILTER_USE_BOTH
+        );
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'templates.create',
-            'templateTypes' => Template::getAvailableTypes(),
+            'templateTypes' => $templateTypes,
             'adminStats' => [
                 'users' => \App\Models\User::count(),
                 'roles' => \Spatie\Permission\Models\Role::count(),
@@ -82,9 +92,11 @@ class TemplateController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Template::class);
+
+        $allowedTypes = ['post', 'page', 'partial'];
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:' . implode(',', array_keys(Template::getAvailableTypes())),
+            'type' => 'required|string|in:' . implode(',', $allowedTypes),
             'description' => 'nullable|string',
             'content' => 'required|string',
             'variables' => 'nullable|array',
@@ -154,6 +166,15 @@ class TemplateController extends Controller
     public function edit(Template $template)
     {
         $this->authorize('update', $template);
+
+        $allTypes = Template::getAvailableTypes();
+        $allowed = ['post', 'page', 'partial'];
+        $templateTypes = array_filter(
+            $allTypes,
+            fn ($label, $key) => in_array($key, $allowed, true) || $key === $template->type,
+            ARRAY_FILTER_USE_BOTH
+        );
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'templates.edit',
             'editTemplate' => [
@@ -167,7 +188,7 @@ class TemplateController extends Controller
                 'is_default' => $template->is_default,
                 'is_active' => $template->is_active,
             ],
-            'templateTypes' => Template::getAvailableTypes(),
+            'templateTypes' => $templateTypes,
             'adminStats' => [
                 'users' => \App\Models\User::count(),
                 'roles' => \Spatie\Permission\Models\Role::count(),
@@ -183,9 +204,15 @@ class TemplateController extends Controller
     public function update(Request $request, Template $template)
     {
         $this->authorize('update', $template);
+
+        $allowedTypes = ['post', 'page', 'partial'];
+        // Allow legacy templates to keep their existing type, but don't allow switching into legacy types.
+        if (!in_array($template->type, $allowedTypes, true)) {
+            $allowedTypes[] = $template->type;
+        }
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:' . implode(',', array_keys(Template::getAvailableTypes())),
+            'type' => 'required|string|in:' . implode(',', $allowedTypes),
             'description' => 'nullable|string',
             'content' => 'required|string',
             'variables' => 'nullable|array',

@@ -9,7 +9,7 @@ RUN set -eux; \
     if [ -f bun.lockb ]; then echo "bun.lockb detected; using npm with legacy peer deps in this image"; fi; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 make g++; \
-    npm install --legacy-peer-deps; \
+    npm ci --legacy-peer-deps; \
     rm -rf /var/lib/apt/lists/*
 # Copy project (filtered by .dockerignore)
 COPY . .
@@ -17,8 +17,16 @@ COPY . .
 RUN npm run build
 
 # 2) Install PHP dependencies (Composer)
-FROM composer:2 AS vendor
+# Pin to PHP 8.4 because current lockfile requires packages that do not support PHP 8.5 yet.
+FROM php:8.4-cli AS vendor
 WORKDIR /app
+RUN set -eux; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      git unzip curl libzip-dev; \
+    docker-php-ext-install -j"$(nproc)" zip; \
+    rm -rf /var/lib/apt/lists/*
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 COPY composer.json composer.lock ./
 RUN composer install \
   --no-dev \

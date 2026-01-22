@@ -27,17 +27,17 @@ export default function Index({ posts, pagination, site, theme, menus }: IndexPr
       menus={safeMenus}
     >
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-3xl mb-16 p-12 md:p-16">
+      <div className="relative overflow-hidden bg-indigo-50 rounded-3xl mb-16 p-12 md:p-16">
         <div className="relative z-10 text-center max-w-4xl mx-auto">
           <div className="inline-flex items-center justify-center space-x-4 mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3">
+            <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15" />
               </svg>
             </div>
           </div>
           
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-slate-900 via-blue-700 to-purple-700 bg-clip-text text-transparent leading-tight">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-slate-900 leading-tight">
             {safeSite?.name || 'Modulo CMS'}
           </h1>
           
@@ -48,7 +48,7 @@ export default function Index({ posts, pagination, site, theme, menus }: IndexPr
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
               href="/posts"
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
             >
               Browse Content
             </Link>
@@ -62,8 +62,8 @@ export default function Index({ posts, pagination, site, theme, menus }: IndexPr
         </div>
         
         {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
       </div>
 
       {/* Features Grid */}
@@ -135,7 +135,7 @@ export default function Index({ posts, pagination, site, theme, menus }: IndexPr
                 className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100"
               >
                 {post.featured_image && (
-                  <div className="aspect-video overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+                  <div className="aspect-video overflow-hidden bg-indigo-100">
                     <img
                       src={post.featured_image}
                       alt={post.title}
@@ -170,9 +170,9 @@ export default function Index({ posts, pagination, site, theme, menus }: IndexPr
       )}
 
       {/* CTA Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 text-center text-white">
+      <div className="bg-indigo-700 rounded-3xl p-12 text-center text-white">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
-        <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+        <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
           Explore the admin dashboard to manage your content, or browse our documentation to learn more.
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
@@ -186,7 +186,7 @@ export default function Index({ posts, pagination, site, theme, menus }: IndexPr
             href="https://github.com/PhantomPixelDev/modulo-cms"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-8 py-4 bg-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-blue-400"
+            className="px-8 py-4 bg-indigo-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-indigo-400"
           >
             View on GitHub
           </a>

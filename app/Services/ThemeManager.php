@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class ThemeManager
 {
@@ -83,9 +84,14 @@ class ThemeManager
     /**
      * Install a theme from discovery
      */
-    public function installTheme(array $themeData, int $userId = null): Theme
+    public function installTheme(array $themeData, ?int $userId = null): Theme
     {
         $config = $themeData['config'];
+
+        $templateEngine = $config['template_engine'] ?? 'react';
+        if (! in_array($templateEngine, ['react', 'blade'], true)) {
+            $templateEngine = 'react';
+        }
         
         // Validate theme configuration
         if (!$this->validator->validate($config, $themeData['path'])) {
@@ -113,7 +119,7 @@ class ThemeManager
                 'screenshot' => $config['screenshot'] ?? null,
                 'tags' => $config['tags'] ?? [],
                 'supports' => $config['supports'] ?? [],
-                'template_engine' => 'react',
+                'template_engine' => $templateEngine,
                 'templates' => $config['templates'] ?? [],
                 'partials' => $config['partials'] ?? [],
                 'assets' => $config['assets'] ?? [],
@@ -137,7 +143,7 @@ class ThemeManager
     /**
      * Install all discovered themes
      */
-    public function installAllThemes(int $userId = null): Collection
+    public function installAllThemes(?int $userId = null): Collection
     {
         $discovered = $this->discoverThemes();
         $installed = collect();
@@ -161,19 +167,37 @@ class ThemeManager
     public function activateTheme(string $slug): bool
     {
         $theme = Theme::where('slug', $slug)->where('is_installed', true)->first();
-        
+
         if (!$theme || !$theme->filesExist()) {
             return false;
         }
 
-        $activated = $theme->activate();
-        
-        if ($activated) {
-            // Reset in-memory and cached theme state so UI reflects immediately
-            $this->clearCache();
+        // React-only CMS: only allow activation of react themes
+        if (($theme->template_engine ?? null) !== 'react') {
+            return false;
         }
 
-        return $activated;
+        try {
+            DB::transaction(function () use ($theme) {
+                Theme::where('is_active', true)->where('id', '!=', $theme->id)->update(['is_active' => false]);
+                $theme->is_active = true;
+                $theme->save();
+            });
+
+            // Ensure assets are available right after activation
+            $this->publishAssets($theme->fresh());
+
+            // Reset in-memory and cached theme state so UI reflects immediately
+            $this->clearCache();
+
+            return true;
+        } catch (\Throwable $e) {
+            \Log::error('Theme activation failed', [
+                'slug' => $slug,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -253,7 +277,9 @@ class ThemeManager
             foreach ($candidates as $viewName) {
                 try {
                     if (\View::exists($viewName)) {
-                        \Log::info('ThemeManager:renderTemplate:viewName', ['template' => $template, 'view' => $viewName]);
+                        if (env('THEME_DEBUG', false)) {
+                            \Log::debug('ThemeManager:renderTemplate:viewName', ['template' => $template, 'view' => $viewName]);
+                        }
                         return \View::make($viewName, $data)->render();
                     }
                 } catch (\Throwable $e) {
@@ -265,7 +291,9 @@ class ThemeManager
             $templatePath = $activeTheme->getTemplatePath($template);
             if ($templatePath && File::exists($templatePath)) {
                 try {
-                    \Log::info('ThemeManager:renderTemplate:activePath', ['template' => $template, 'path' => $templatePath]);
+                    if (env('THEME_DEBUG', false)) {
+                        \Log::debug('ThemeManager:renderTemplate:activePath', ['template' => $template, 'path' => $templatePath]);
+                    }
                     return \View::file($templatePath, $data)->render();
                 } catch (\Throwable $e) {
                     \Log::error("ThemeManager renderTemplate(file) error for '{$template}': " . $e->getMessage());

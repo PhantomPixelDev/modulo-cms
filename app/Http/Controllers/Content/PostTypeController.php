@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
 use App\Models\PostType;
+use App\Models\SiteSetting;
 use App\Providers\DynamicRouteServiceProvider;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,6 +15,18 @@ class PostTypeController extends Controller
     public function __construct()
     {
         // Policies govern all actions for post types
+    }
+
+    /**
+     * Determine if comments should be enabled based on request and site settings
+     */
+    protected function shouldEnableComments(Request $request): bool
+    {
+        $globalEnabled = SiteSetting::get('enable_comments', true);
+        if (!$globalEnabled) {
+            return false;
+        }
+        return (bool) ($request->has_comments ?? true);
     }
 
     /**
@@ -53,6 +66,7 @@ class PostTypeController extends Controller
         $this->authorize('create', PostType::class);
         return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.create',
+            'globalCommentsEnabled' => SiteSetting::get('enable_comments', true),
             'adminStats' => [
                 'users' => \App\Models\User::count(),
                 'roles' => \Spatie\Permission\Models\Role::count(),
@@ -100,7 +114,7 @@ class PostTypeController extends Controller
             'has_taxonomies' => $request->has_taxonomies ?? true,
             'has_featured_image' => $request->has_featured_image ?? true,
             'has_excerpt' => $request->has_excerpt ?? true,
-            'has_comments' => $request->has_comments ?? true,
+            'has_comments' => $this->shouldEnableComments($request),
             'supports' => $request->supports ?? ['title', 'editor'],
             'taxonomies' => $request->taxonomies ?? [],
             'slug' => Str::slug($request->name),
@@ -145,6 +159,7 @@ class PostTypeController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.edit',
             'editPostType' => $postType,
+            'globalCommentsEnabled' => SiteSetting::get('enable_comments', true),
             'adminStats' => [
                 'users' => \App\Models\User::count(),
                 'roles' => \Spatie\Permission\Models\Role::count(),
@@ -192,7 +207,7 @@ class PostTypeController extends Controller
             'has_taxonomies' => $request->has_taxonomies ?? true,
             'has_featured_image' => $request->has_featured_image ?? true,
             'has_excerpt' => $request->has_excerpt ?? true,
-            'has_comments' => $request->has_comments ?? true,
+            'has_comments' => $this->shouldEnableComments($request),
             'supports' => $request->supports ?? ['title', 'editor'],
             'taxonomies' => $request->taxonomies ?? [],
             'slug' => Str::slug($request->name),

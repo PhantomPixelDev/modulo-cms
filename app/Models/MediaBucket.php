@@ -44,5 +44,18 @@ class MediaBucket extends Model implements HasMedia
         });
     }
 
-    // Media conversions disabled for now to avoid processing issues during uploads
+    /**
+     * Register media conversions for thumbnails
+     */
+    public function registerMediaConversions(Media $media = null): void
+    {
+        $quality = SiteSetting::get('image_quality', 85);
+
+        $this->addMediaConversion('thumb')
+            ->width(300)
+            ->height(300)
+            ->sharpen(10)
+            ->quality((int) $quality)
+            ->nonQueued();
+    }
 }

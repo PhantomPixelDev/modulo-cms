@@ -1,0 +1,19 @@
+{
+    "name": "Modulo Shop",
+    "slug": "modulo-shop",
+    "version": "1.0.0",
+    "description": "A feature-rich e-commerce plugin for Modulo CMS.",
+    "author": "Modulo CMS",
+    "service_provider": "Plugins\\ModuloShop\\ModuloShopServiceProvider",
+    "migrations_path": "database/migrations",
+    "seeder": "Plugins\\ModuloShop\\database\\seeders\\ShopSeeder",
+    "settings": {
+        "currency": "USD",
+        "tax_rate": 10,
+        "enable_checkout": true,
+        "store_name": "My Modulo Store",
+        "inventory_management": true,
+        "shipping_methods": "Standard, Express",
+        "payment_gateways": "Stripe, PayPal"
+    }
+}

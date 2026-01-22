@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->with('roles');
 
         // Apply search filter
         if ($request->has('search')) {
@@ -28,7 +29,9 @@ class UserController extends Controller
 
         // Apply pagination
         $perPage = $request->input('per_page', 10);
-        $users = $query->paginate($perPage);
+        $users = $query->paginate($perPage)->through(function (User $user) use ($request) {
+            return (new UserResource($user))->toArray($request);
+        });
 
         return Inertia::render('Dashboard/Admin/Users/Index', [
             'users' => $users,
@@ -49,15 +52,17 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        $user->load('roles');
         return Inertia::render('Dashboard/Admin/Users/Show', [
-            'user' => $user,
+            'user' => (new UserResource($user))->toArray(request()),
         ]);
     }
 
     public function edit(User $user)
     {
+        $user->load('roles');
         return Inertia::render('Dashboard/Admin/Users/Edit', [
-            'user' => $user,
+            'user' => (new UserResource($user))->toArray(request()),
         ]);
     }
 

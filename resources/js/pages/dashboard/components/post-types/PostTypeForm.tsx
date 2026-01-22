@@ -5,11 +5,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 import type { PostType } from '../../types'
 
 export interface PostTypeFormProps {
   postType?: Partial<PostType>
   isEditing?: boolean
+  globalCommentsEnabled?: boolean
   onSubmit: (data: any) => void
   onCancel: () => void
 }
@@ -17,7 +19,7 @@ export interface PostTypeFormProps {
 const defaultSupports = ['title', 'editor']
 const allSupports = ['title', 'editor', 'excerpt', 'thumbnail', 'comments', 'revisions']
 
-export function PostTypeForm({ postType, isEditing, onSubmit, onCancel }: PostTypeFormProps) {
+export function PostTypeForm({ postType, isEditing, globalCommentsEnabled = true, onSubmit, onCancel }: PostTypeFormProps) {
   const normalizeTaxonomies = (val: any): string[] => {
     if (!val) return []
     if (Array.isArray(val)) return val.map(String).filter(Boolean)
@@ -35,11 +37,12 @@ export function PostTypeForm({ postType, isEditing, onSubmit, onCancel }: PostTy
     has_taxonomies: postType?.has_taxonomies ?? true,
     has_featured_image: postType?.has_featured_image ?? true,
     has_excerpt: postType?.has_excerpt ?? true,
-    has_comments: postType?.has_comments ?? true,
+    has_comments: globalCommentsEnabled ? (postType?.has_comments ?? true) : false,
     supports: (postType?.supports && postType.supports.length ? postType.supports : defaultSupports) as string[],
     taxonomies: normalizeTaxonomies(postType?.taxonomies),
     is_public: postType?.is_public ?? true,
     is_hierarchical: postType?.is_hierarchical ?? false,
+    show_in_menu: postType?.show_in_menu ?? true,
     menu_icon: postType?.menu_icon || '',
     menu_position: postType?.menu_position ?? 5,
   })
@@ -112,10 +115,19 @@ export function PostTypeForm({ postType, isEditing, onSubmit, onCancel }: PostTy
               <div className="grid grid-cols-2 gap-2">
                 <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.is_public} onCheckedChange={(c) => handleChange('is_public', Boolean(c))} /> Public</label>
                 <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.is_hierarchical} onCheckedChange={(c) => handleChange('is_hierarchical', Boolean(c))} /> Hierarchical</label>
+                <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.show_in_menu} onCheckedChange={(c) => handleChange('show_in_menu', Boolean(c))} /> Show in Admin Menu</label>
                 <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.has_taxonomies} onCheckedChange={(c) => handleChange('has_taxonomies', Boolean(c))} /> Taxonomies</label>
                 <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.has_featured_image} onCheckedChange={(c) => handleChange('has_featured_image', Boolean(c))} /> Featured Image</label>
                 <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.has_excerpt} onCheckedChange={(c) => handleChange('has_excerpt', Boolean(c))} /> Excerpt</label>
-                <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.has_comments} onCheckedChange={(c) => handleChange('has_comments', Boolean(c))} /> Comments</label>
+                <label className={cn("flex items-center gap-2 text-sm", !globalCommentsEnabled && "opacity-50 cursor-not-allowed")}>
+                  <Checkbox 
+                    checked={form.has_comments} 
+                    onCheckedChange={(c) => handleChange('has_comments', Boolean(c))} 
+                    disabled={!globalCommentsEnabled}
+                  /> 
+                  Comments
+                  {!globalCommentsEnabled && <span className="text-[10px] text-muted-foreground ml-1">(Disabled globally)</span>}
+                </label>
               </div>
             </div>
           </div>

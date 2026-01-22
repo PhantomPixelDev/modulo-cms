@@ -37,6 +37,27 @@ export const ROUTE = {
     edit: (id: number | string) => route('dashboard.admin.taxonomies.edit', id),
     show: (id: number | string) => route('dashboard.admin.taxonomies.show', id),
   },
+  taxonomyTerms: {
+    index: (params?: { taxonomy_id?: number | string }) =>
+      params?.taxonomy_id
+        ? route('dashboard.admin.taxonomy-terms.index', { taxonomy_id: params.taxonomy_id })
+        : route('dashboard.admin.taxonomy-terms.index'),
+    create: () => route('dashboard.admin.taxonomy-terms.create'),
+    store: () => route('dashboard.admin.taxonomy-terms.store'),
+    edit: (id: number | string) => route('dashboard.admin.taxonomy-terms.edit', { taxonomy_term: id }),
+    update: (id: number | string) => route('dashboard.admin.taxonomy-terms.update', { taxonomy_term: id }),
+    destroy: (id: number | string) => route('dashboard.admin.taxonomy-terms.destroy', { taxonomy_term: id }),
+    show: (id: number | string) => route('dashboard.admin.taxonomy-terms.show', { taxonomy_term: id }),
+  },
+  templates: {
+    index: () => route('dashboard.admin.templates.index'),
+    create: () => route('dashboard.admin.templates.create'),
+    store: () => route('dashboard.admin.templates.store'),
+    edit: (id: number | string) => route('dashboard.admin.templates.edit', { template: id }),
+    update: (id: number | string) => route('dashboard.admin.templates.update', { template: id }),
+    destroy: (id: number | string) => route('dashboard.admin.templates.destroy', { template: id }),
+    show: (id: number | string) => route('dashboard.admin.templates.show', { template: id }),
+  },
   themes: {
     index: () => route('dashboard.admin.themes.index'),
     show: (id: number | string) => route('dashboard.admin.themes.show', id),
@@ -74,6 +95,21 @@ export const ROUTE = {
     update: () => route('dashboard.admin.sitemap.update'),
     regenerate: () => route('dashboard.admin.sitemap.regenerate'),
   },
+  siteSettings: {
+    index: (group?: string) => group 
+      ? route('dashboard.admin.settings.index', { group }) 
+      : route('dashboard.admin.settings.index'),
+    update: (group: string) => route('dashboard.admin.settings.update', { group }),
+    clearCache: () => route('dashboard.admin.settings.clear-cache'),
+  },
+  plugins: {
+    index: () => route('dashboard.admin.plugins.index'),
+    activate: (slug: string) => route('dashboard.admin.plugins.activate', { slug }),
+    deactivate: (slug: string) => route('dashboard.admin.plugins.deactivate', { slug }),
+    settings: (slug: string) => route('dashboard.admin.plugins.settings', { slug }),
+    updateSettings: (slug: string) => route('dashboard.admin.plugins.update-settings', { slug }),
+    destroy: (slug: string) => route('dashboard.admin.plugins.destroy', { slug }),
+  },
   media: {
     index: (params?: { folder_id?: number | string; q?: string; type?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number | string; perPage?: number | string }) => {
       const p: Record<string, any> = {};
@@ -94,6 +130,23 @@ export const ROUTE = {
       store: () => route('dashboard.admin.media.folders.store'),
       update: (id: number | string) => route('dashboard.admin.media.folders.update', { bucket: id }),
       destroy: (id: number | string) => route('dashboard.admin.media.folders.destroy', { bucket: id }),
+    },
+  },
+  shop: {
+    products: {
+      index: () => route('dashboard.admin.shop.products.index'),
+      store: () => route('dashboard.admin.shop.products.store'),
+      update: (id: number | string) => route('dashboard.admin.shop.products.update', { post: id }),
+      destroy: (id: number | string) => route('dashboard.admin.shop.products.destroy', { post: id }),
+    },
+    orders: {
+      index: () => route('dashboard.admin.shop.orders.index'),
+      show: (id: number | string) => route('dashboard.admin.shop.orders.show', { order: id }),
+      update: (id: number | string) => route('dashboard.admin.shop.orders.update', { order: id }),
+      destroy: (id: number | string) => route('dashboard.admin.shop.orders.destroy', { order: id }),
+    },
+    settings: {
+      index: () => route('dashboard.admin.shop.settings.index'),
     },
   },
   misc: {

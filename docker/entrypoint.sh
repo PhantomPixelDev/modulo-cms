@@ -4,7 +4,14 @@ set -e
 cd /var/www/html
 
 # Ensure directories exist and are writable
-mkdir -p storage/framework/{cache,views,sessions} storage/logs bootstrap/cache || true
+mkdir -p \
+  storage/framework/cache/data \
+  storage/framework/views \
+  storage/framework/sessions \
+  storage/logs \
+  storage/app/public \
+  bootstrap/cache \
+  || true
 chmod -R 775 storage bootstrap/cache || true
 # Ensure correct ownership for runtime-mounted volumes
 chown -R www-data:www-data storage bootstrap/cache || true
@@ -15,6 +22,12 @@ rm -f bootstrap/cache/*.php || true
 # Ensure .env exists
 if [ ! -f .env ]; then
   cp .env.example .env || true
+fi
+
+# Install composer dependencies if missing
+if [ ! -f vendor/autoload.php ]; then
+  echo "Installing composer dependencies..."
+  composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev || true
 fi
 
 # Ensure storage symlink exists (idempotent)
@@ -47,9 +60,28 @@ php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
 
-# Optionally run migrations at startup
-if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+# Check if this is a fresh install (no migrations table) or migrations requested
+# Use direct SQL check to avoid loading Laravel app
+FRESH_INSTALL="yes"
+if php artisan migrate:status >/dev/null 2>&1; then
+  FRESH_INSTALL="no"
+fi
+
+if [ "$FRESH_INSTALL" = "yes" ] || [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+  echo "Running migrations..."
   php artisan migrate --force || true
+  
+  # Seed on fresh install
+  echo "Seeding database..."
+  php artisan db:seed --class=DefaultUsersSeeder --force || true
+  php artisan db:seed --class=RolePermissionSeeder --force || true
+  php artisan db:seed --class=SiteSettingsSeeder --force || true
+  
+  # Install and activate theme
+  echo "Setting up theme..."
+  # Install theme (discovers and installs in one step)
+  php artisan theme:install modern-react --no-interaction || true
+  php artisan theme:activate modern-react || true
 fi
 
 exec "$@"

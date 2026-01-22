@@ -2,7 +2,7 @@ import * as React from "react"
 import { Button, ButtonProps } from "./button"
 import { cn } from "@/lib/utils"
 
-type ButtonGroupProps = {
+type ButtonGroupProps = React.HTMLAttributes<HTMLDivElement> & {
   children: React.ReactNode
   className?: string
   align?: 'start' | 'center' | 'end' | 'between'
@@ -86,7 +86,7 @@ export function ActionButtonGroup({
       </Button>
       {onSave && (
         <Button 
-          type={onSave ? 'button' : 'submit'}
+          type="button"
           onClick={onSave}
           disabled={isSubmitting}
         >

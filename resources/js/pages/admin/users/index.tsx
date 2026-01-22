@@ -29,19 +29,8 @@ interface Props {
     };
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Admin',
-        href: '/admin',
-    },
-    {
-        title: 'Users',
-        href: '/admin/users',
-    },
-];
-
 export default function UsersIndex({ users }: Props) {
-    const { delete: destroy } = useForm();
+    const { delete: destroy } = useForm({});
     const { hasPermission, isAdmin } = useAcl();
 
     const handleDelete = (userId: number) => {

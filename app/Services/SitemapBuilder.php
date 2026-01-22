@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\Taxonomy;
 use App\Models\SitemapSetting;
+use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Schema;
@@ -127,12 +128,12 @@ class SitemapBuilder
         // Taxonomy archives if enabled
         if ($settings->include_taxonomies && Schema::hasTable('taxonomies')) {
             $taxonomies = Taxonomy::where('is_public', true)
-                ->whereIn('slug', ['tags', 'categories'])
                 ->get();
             foreach ($taxonomies as $tax) {
+                $base = $tax->slug;
                 $terms = $tax->terms()->orderBy('updated_at', 'desc')->limit(5000)->get();
                 foreach ($terms as $term) {
-                    $loc = url('/' . trim($tax->slug, '/') . '/' . $term->slug);
+                    $loc = url('/' . trim($base, '/') . '/' . $term->slug);
                     $lastmod = $term->updated_at ?? now();
                     $urls[] = $this->urlNode($loc, $lastmod, 'weekly', '0.5');
                 }

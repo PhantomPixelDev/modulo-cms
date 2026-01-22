@@ -14,10 +14,12 @@ use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
 use App\Models\Menu;
 use App\Models\MenuItem;
+use App\Models\SiteSetting;
 use Spatie\Permission\Models\Role;
 use App\Policies\RolePolicy;
 use App\Policies\ThemePolicy;
 use App\Policies\TemplatePolicy;
+use App\Policies\SiteSettingPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -38,6 +40,7 @@ class AuthServiceProvider extends ServiceProvider
         TaxonomyTerm::class => \App\Policies\TaxonomyTermPolicy::class,
         Menu::class => \App\Policies\MenuPolicy::class,
         MenuItem::class => \App\Policies\MenuItemPolicy::class,
+        SiteSetting::class => SiteSettingPolicy::class,
     ];
 
     /**

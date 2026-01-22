@@ -3,12 +3,18 @@
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('registration screen can be rendered', function () {
+    // Enable registration (disabled by default)
+    \App\Models\SiteSetting::set('registration_enabled', true, 'advanced', 'boolean');
+
     $response = $this->get('/register');
 
     $response->assertStatus(200);
 });
 
 test('new users can register', function () {
+    // Enable registration (disabled by default)
+    \App\Models\SiteSetting::set('registration_enabled', true, 'advanced', 'boolean');
+
     $response = $this->post('/register', [
         'name' => 'Test User',
         'email' => 'test@example.com',

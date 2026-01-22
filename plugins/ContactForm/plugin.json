@@ -1,0 +1,13 @@
+{
+    "name": "Contact Form",
+    "slug": "contact-form",
+    "version": "1.0.0",
+    "description": "Simple contact form with shortcode, email notification, and DB storage.",
+    "author": "Modulo CMS",
+    "service_provider": "Plugins\\ContactForm\\ContactFormServiceProvider",
+    "settings": {
+        "recipient_email": "",
+        "default_subject": "Contact request",
+        "success_message": "Thanks! Your message has been sent."
+    }
+}

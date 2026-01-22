@@ -15,15 +15,16 @@ class DatabaseSeeder extends Seeder
     {
         // Call the role and permission seeder first
         $this->call([
-            RolePermissionSeeder::class,
+            DefaultUsersSeeder::class,      // Create users first
+            RolePermissionSeeder::class,    // Then assign roles/permissions
             PostTypeRoutePrefixSeeder::class,
             ContentSeeder::class,
-            DefaultUsersSeeder::class,
             DefaultPagesSeeder::class,
             ExampleContentSeeder::class,
             InfoSeeder::class,
             MenuSeeder::class,
             MediaSeeder::class,
+            SiteSettingsSeeder::class,
         ]);
 
         // Seed dev user accounts if the seeder exists (guard against missing class)

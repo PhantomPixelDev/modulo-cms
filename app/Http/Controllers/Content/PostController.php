@@ -7,14 +7,16 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
 use App\Models\User;
+use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected SiteSettingsService $settings
+    ) {
         $this->middleware('permission:view posts')->only(['index', 'show']);
         $this->middleware('permission:create posts')->only(['create', 'store']);
         $this->middleware('permission:edit posts')->only(['edit', 'update']);
@@ -47,7 +49,8 @@ class PostController extends Controller
             $query->where('author_id', $request->author_id);
         }
 
-        $posts = $query->paginate(15);
+        $perPage = $this->settings->get('posts_per_page', 15);
+        $posts = $query->paginate($perPage);
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'posts',
@@ -58,9 +61,9 @@ class PostController extends Controller
                     'slug' => $post->slug,
                     'status' => $post->status,
                     'author_id' => $post->author_id,
-                    'published_at' => $post->published_at?->format('Y-m-d H:i:s'),
-                    'created_at' => $post->created_at->format('Y-m-d H:i:s'),
-                    'updated_at' => $post->updated_at->format('Y-m-d H:i:s'),
+                    'published_at' => $this->settings->formatDateTime($post->published_at),
+                    'created_at' => $this->settings->formatDateTime($post->created_at),
+                    'updated_at' => $this->settings->formatDateTime($post->updated_at),
                     'post_type' => [
                         'id' => $post->postType->id,
                         'name' => $post->postType->name,
@@ -116,15 +119,19 @@ class PostController extends Controller
         // Group taxonomy terms by taxonomy
         $groupedTerms = $taxonomyTerms->groupBy('taxonomy.name');
 
+        $defaultStatus = \App\Models\SiteSetting::get('default_post_status', 'draft');
+        $defaultTypeName = \App\Models\SiteSetting::get('default_post_type', 'post');
+        $defaultType = $postTypes->where('name', $defaultTypeName)->first() ?: $postTypes->first();
+
         // Return empty post data for the create form
         $postData = [
             'id' => null,
-            'post_type_id' => $postTypes->first()?->id,
+            'post_type_id' => $defaultType?->id,
             'title' => '',
             'slug' => '',
             'excerpt' => '',
             'content' => '',
-            'status' => 'draft',
+            'status' => $defaultStatus,
             'featured_image' => null,
             'published_at' => null,
             'meta_title' => '',
@@ -132,10 +139,10 @@ class PostController extends Controller
             'parent_id' => null,
             'menu_order' => 0,
             'meta_data' => new \stdClass(),
-            'post_type' => $postTypes->first() ? [
-                'id' => $postTypes->first()->id,
-                'name' => $postTypes->first()->name,
-                'label' => $postTypes->first()->label,
+            'post_type' => $defaultType ? [
+                'id' => $defaultType->id,
+                'name' => $defaultType->name,
+                'label' => $defaultType->label,
             ] : null,
             'author' => [
                 'id' => auth()->id(),

@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Inertia\Inertia;
+use App\Models\Post;
+use App\Observers\PostObserver;
 use App\Services\MenuService;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -25,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register PostObserver
+        Post::observe(PostObserver::class);
+
         // Register a Blade namespace for themes so templates can use 'themes::modern.*'
         View::addNamespace('themes', resource_path('themes'));
 
@@ -60,6 +65,12 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(10)->by($key),
                 Limit::perMinute(30)->by($request->ip()),
             ];
+        });
+
+        $this->app->booted(function () {
+            if (function_exists('do_action')) {
+                do_action('cms_booted');
+            }
         });
     }
 }

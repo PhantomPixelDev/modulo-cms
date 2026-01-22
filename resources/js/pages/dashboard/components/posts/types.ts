@@ -8,6 +8,8 @@ export interface PostType {
 export interface Term {
   id: number;
   name: string;
+  slug?: string;
+  count?: number;
 }
 
 export interface Author {

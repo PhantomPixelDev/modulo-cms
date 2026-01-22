@@ -14,11 +14,13 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $settings = app(\App\Services\SiteSettingsService::class);
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'created_at' => optional($this->created_at)->toDateTimeString(),
+            'created_at' => $settings->formatDateTime($this->created_at),
             'roles' => $this->whenLoaded('roles', function () {
                 return $this->roles->map(function ($role) {
                     return [

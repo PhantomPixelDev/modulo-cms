@@ -22,6 +22,7 @@ export interface PageFormProps {
   onCancel: () => void;
   authors?: Array<{ id: number; name: string }>;
   canEditAuthor?: boolean;
+  defaultStatus?: string;
 }
 
 const slugify = (text: string) => {
@@ -30,8 +31,8 @@ const slugify = (text: string) => {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
     .replace(/^-+/, '')
     .replace(/-+$/, '');
 };
@@ -64,6 +65,7 @@ export function PageForm({
   isEditing, 
   authors = [],
   canEditAuthor = false,
+  defaultStatus = 'draft',
   onSubmit, 
   onCancel 
 }: PageFormProps) {
@@ -108,7 +110,7 @@ export function PageForm({
     return {
       title: page?.title ?? '',
       slug: page?.slug ?? '',
-      status: page?.status ?? 'draft',
+      status: page?.status ?? defaultStatus,
       content: initialContent, // This is a string (JSON or HTML)
       excerpt: page?.excerpt ?? '',
       featured_image_id: initialFeaturedImageId,

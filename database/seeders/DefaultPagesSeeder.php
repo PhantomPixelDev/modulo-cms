@@ -61,8 +61,8 @@ class DefaultPagesSeeder extends Seeder
             [
                 'title' => 'Contact',
                 'slug' => 'contact',
-                'content' => '<h1>Contact Us</h1><p>Get in touch with us using the information below.</p><p>Email: hello@example.com<br>Phone: (555) 123-4567</p>',
-                'excerpt' => 'Get in touch with us.',
+                'content' => '<h1>Contact Us</h1><p>Have a question? Send us a message and we’ll get back to you shortly.</p>[contact_form subject="Contact request"]',
+                'excerpt' => 'Get in touch with us via the contact form.',
             ],
             [
                 'title' => 'Privacy Policy',

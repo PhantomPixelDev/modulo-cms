@@ -41,26 +41,7 @@ class ContentSeeder extends Seeder
         // by the PagesController when an admin first uses the Pages section.
 
         // Add more post types
-        $productType = PostType::updateOrCreate(
-            ['name' => 'product'],
-            [
-                'label' => 'Product',
-                'plural_label' => 'Products',
-                'description' => 'Products and services offered by the company',
-                'has_taxonomies' => true,
-                'has_featured_image' => true,
-                'has_excerpt' => true,
-                'has_comments' => false,
-                'supports' => json_encode(['title', 'editor', 'thumbnail', 'excerpt']),
-                'taxonomies' => json_encode(['category', 'post_tag']),
-                'slug' => 'product',
-                'route_prefix' => 'products',
-                'is_public' => true,
-                'is_hierarchical' => false,
-                'menu_icon' => 'package',
-                'menu_position' => 6,
-            ]
-        );
+        // NOTE: Product post type is now handled by ModuloShop plugin - do not seed here
 
         $portfolioType = PostType::updateOrCreate(
             ['name' => 'portfolio'],

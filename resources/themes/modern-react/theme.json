@@ -26,6 +26,12 @@
     "post": {
       "component": "components/Post.tsx"
     },
+    "products-single": {
+      "component": "components/ProductsSingle.tsx"
+    },
+    "products": {
+      "component": "components/Products.tsx"
+    },
     "posts": {
       "component": "components/Posts.tsx"
     },
@@ -64,6 +70,24 @@
     },
     "taxonomy": {
       "component": "components/TaxonomyTerm.tsx"
+    },
+    "Shop/Archive": {
+      "component": "components/Shop/Archive.tsx"
+    },
+    "Shop/Single": {
+      "component": "components/Shop/Single.tsx"
+    },
+    "Shop/Category": {
+      "component": "components/Shop/Category.tsx"
+    },
+    "Shop/Cart": {
+      "component": "components/Shop/Cart.tsx"
+    },
+    "Shop/Checkout": {
+      "component": "components/Shop/Checkout.tsx"
+    },
+    "Shop/OrderConfirmation": {
+      "component": "components/Shop/OrderConfirmation.tsx"
     }
   },
   "partials": {

@@ -27,7 +27,7 @@ export default function Header({ site, menu, theme }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-gradient-to-r from-slate-900/95 via-blue-900/90 to-purple-900/95 backdrop-blur-sm shadow-xl border-b border-white/10">
+    <header className="bg-indigo-950/95 backdrop-blur-sm shadow-xl border-b border-white/10">
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center h-20">
           {/* Logo/Brand */}
@@ -42,7 +42,7 @@ export default function Header({ site, menu, theme }: HeaderProps) {
               ) : (
                 <div 
                   className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl"
-                  style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}
+                  style={{ background: '#4f46e5' }}
                 >
                   {(site?.name || 'M').charAt(0).toUpperCase()}
                 </div>
@@ -70,7 +70,7 @@ export default function Header({ site, menu, theme }: HeaderProps) {
                 className="relative px-5 py-3 text-white/90 hover:text-white font-medium transition-all duration-300 rounded-lg hover:bg-white/10 hover:shadow-lg transform hover:scale-105"
               >
                 <span className="relative z-10">{item.label}</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-white/10 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
               </Link>
             ))}
           </nav>

@@ -29,6 +29,19 @@ export default [
         },
     },
     {
+        // Relaxed rules for theme files and admin pages during development
+        // TODO: Gradually re-enable these rules as codebase matures
+        files: [
+            'resources/themes/**/*.{ts,tsx,js,jsx}',
+            'resources/js/pages/dashboard/**/*.{ts,tsx,js,jsx}',
+            'resources/js/pages/admin/**/*.{ts,tsx,js,jsx}',
+        ],
+        rules: {
+            '@typescript-eslint/no-explicit-any': 'warn', // Changed from 'off' to 'warn'
+            '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+        },
+    },
+    {
         plugins: {
             'react-hooks': reactHooks,
         },

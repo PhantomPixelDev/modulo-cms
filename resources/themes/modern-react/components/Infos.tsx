@@ -74,7 +74,7 @@ export default function Infos({ posts, postType, pagination, site, theme, menus 
   return (
     <Layout theme={safeTheme} site={safeSite} menus={safeMenus}>
       <div className="space-y-8">
-        <header className="text-center py-12 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg">
+        <header className="text-center py-12 bg-indigo-700 text-white rounded-lg">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">{pageTitle}</h1>
           <p className="text-xl opacity-90 max-w-2xl mx-auto">
             {pageDescription}

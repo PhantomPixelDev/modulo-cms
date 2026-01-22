@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
+import { ShoppingCart } from 'lucide-react';
 
 interface NavigationProps {
   className?: string;
@@ -19,6 +20,7 @@ interface NavigationProps {
 const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, auth }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,6 +29,30 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCartCount = async () => {
+      try {
+        const response = await fetch('/shop/cart/count');
+        const data = await response.json();
+        if (isMounted && typeof data.count === 'number') {
+          setCartCount(data.count);
+        }
+      } catch (error) {
+        // Silently ignore cart count errors
+      }
+    };
+
+    fetchCartCount();
+    const interval = window.setInterval(fetchCartCount, 30000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(interval);
+    };
   }, []);
 
   const toggleMenu = () => {
@@ -38,7 +64,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
       className={`fixed w-full z-50 transition-all duration-500 ${
         isScrolled 
           ? 'bg-white/90 backdrop-blur-md shadow-lg border-b border-gray-100/50 py-3' 
-          : 'bg-gradient-to-r from-slate-900/95 via-blue-900/90 to-purple-900/95 backdrop-blur-sm py-5'
+          : 'bg-indigo-950/95 backdrop-blur-sm py-5'
       } ${className}`}
     >
       <div className="container mx-auto px-6">
@@ -48,12 +74,12 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
             <div className="relative">
               <span className={`text-3xl font-bold transition-all duration-300 ${
                 isScrolled 
-                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600' 
+                  ? 'text-indigo-700' 
                   : 'text-white drop-shadow-lg'
               }`}>
                 ModuloCMS
               </span>
-              <div className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ${
+              <div className={`absolute -bottom-1 left-0 h-0.5 bg-indigo-600 transition-all duration-300 ${
                 isScrolled ? 'w-0 group-hover:w-full' : 'w-full'
               }`}></div>
             </div>
@@ -70,6 +96,16 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
               }`}
             >
               <span className="relative z-10">Home</span>
+            </Link>
+            <Link 
+              href="/shop" 
+              className={`relative px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50' 
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <span className="relative z-10">Shop</span>
             </Link>
             <Link 
               href="/posts" 
@@ -102,6 +138,22 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
               <span className="relative z-10">Contact</span>
             </Link>
             <div className="flex items-center space-x-3 ml-6">
+              <Link
+                href="/shop/cart"
+                className={`relative px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 ${
+                  isScrolled 
+                    ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50' 
+                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span>Cart</span>
+                {cartCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center text-xs font-bold bg-indigo-600 text-white rounded-full w-5 h-5">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
               {auth?.user ? (
                 // User is logged in - show dashboard and logout
                 <>
@@ -126,7 +178,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                     href="/logout"
                     method="post"
                     as="button"
-                    className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-lg font-medium hover:from-red-700 hover:to-red-800 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg font-medium transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                   >
                     Logout
                   </Link>
@@ -146,7 +198,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                   </Link>
                   <Link
                     href="/register"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                   >
                     Register
                   </Link>
@@ -216,6 +268,36 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 Home
               </Link>
               <Link
+                href="/shop"
+                className={`block px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  isScrolled 
+                    ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-600' 
+                    : 'text-white hover:bg-white/20'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Shop
+              </Link>
+              <Link
+                href="/shop/cart"
+                className={`flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  isScrolled 
+                    ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-600' 
+                    : 'text-white hover:bg-white/20'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4" />
+                  Cart
+                </span>
+                {cartCount > 0 && (
+                  <span className="inline-flex items-center justify-center text-xs font-bold bg-indigo-600 text-white rounded-full w-5 h-5">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+              <Link
                 href="/posts"
                 className={`block px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
                   isScrolled 
@@ -274,7 +356,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                     href="/logout"
                     method="post"
                     as="button"
-                    className="block w-full text-left px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg font-medium hover:from-red-700 hover:to-red-800 transition-all duration-300"
+                    className="block w-full text-left px-4 py-3 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg font-medium transition-all duration-300"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Logout
@@ -296,7 +378,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                   </Link>
                   <Link
                     href="/register"
-                    className="block px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-center"
+                    className="block px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-all duration-300 text-center"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Register

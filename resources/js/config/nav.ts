@@ -1,5 +1,5 @@
  import { type NavItem } from '@/types';
-import { LayoutGrid, Users, Shield, FileText, Folder, Plus, Palette, List, Settings, BookOpen, Globe, Image } from 'lucide-react';
+import { LayoutGrid, Users, Shield, FileText, Folder, Plus, Palette, List, Settings, BookOpen, Globe, Image, Mail } from 'lucide-react';
 
 export const mainNav: NavItem[] = [
   {
@@ -18,9 +18,12 @@ export const adminNav: NavItem[] = [
   { title: 'Taxonomies', href: '/dashboard/admin/taxonomies', icon: Folder },
   { title: 'Menus', href: '/dashboard/admin/menus', icon: List },
   { title: 'Media', href: '/dashboard/admin/media', icon: Image },
+  { title: 'Shop', href: '/dashboard/admin/shop/products', icon: Plus },
+  { title: 'Contact Form', href: '/dashboard/admin/plugins/contact-form/settings', icon: Mail },
   { title: 'Themes', href: '/dashboard/admin/themes', icon: Palette },
   { title: 'Sitemap', href: '/dashboard/admin/sitemap', icon: Globe },
-  { title: 'Settings', href: '/settings', icon: Settings },
+  { title: 'Plugins', href: '/dashboard/admin/plugins', icon: Plus },
+  { title: 'Site Settings', href: '/dashboard/admin/settings', icon: Settings },
 ];
 
 export const externalNavRight: NavItem[] = [

@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { ActionButtonGroup } from '@/components/ui/button-groups';
@@ -19,7 +20,7 @@ export function RoleForm({ role, allPermissions, isEditing, onSubmit, onCancel }
     permissions: role?.permissions?.map((p: Permission) => p.id) || [],
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onSubmit(data);
   };
@@ -68,7 +69,7 @@ export function RoleForm({ role, allPermissions, isEditing, onSubmit, onCancel }
       </div>
 
       <ActionButtonGroup
-        onSave={handleSubmit}
+        onSave={() => onSubmit(data)}
         onCancel={onCancel}
         saveLabel={isEditing ? 'Update Role' : 'Create Role'}
         cancelLabel="Cancel"

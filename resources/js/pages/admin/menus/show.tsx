@@ -382,7 +382,7 @@ function ItemRow({ item, allItems, isAdmin, hasPermission }: { item: MenuItemDTO
               variant="destructive"
               size="sm"
               onClick={() => {
-                if (!confirm(`Delete item \"${item.label}\"?`)) return;
+                if (!confirm(`Delete item "${item.label}"?`)) return;
                 router.delete(`/dashboard/admin/menu-items/${item.id}`);
               }}
             >Delete</Button>

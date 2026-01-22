@@ -21,10 +21,13 @@ function settingsUser($perms = ['view settings'])
 
 it('allows settings index with permission', function () {
     $user = settingsUser(['view settings']);
-    $this->actingAs($user)->get(route('dashboard.admin.settings'))->assertOk();
+    $this->actingAs($user)->get(route('dashboard.admin.settings.index'))->assertOk();
 });
 
 it('denies settings index without permission', function () {
+    // User needs 'access admin' to reach the controller, then gets denied by policy
+    \Spatie\Permission\Models\Permission::findOrCreate('access admin', 'web');
     $user = User::factory()->create();
-    $this->actingAs($user)->get(route('dashboard.admin.settings'))->assertForbidden();
+    $user->givePermissionTo('access admin');
+    $this->actingAs($user)->get(route('dashboard.admin.settings.index'))->assertForbidden();
 });

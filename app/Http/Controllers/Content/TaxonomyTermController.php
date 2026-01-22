@@ -41,7 +41,8 @@ class TaxonomyTermController extends Controller
             $query->where('taxonomy_id', $request->taxonomy_id);
         }
 
-        $terms = $query->paginate(15);
+        $perPage = \App\Models\SiteSetting::get('posts_per_page', 15);
+        $terms = $query->paginate($perPage);
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomy-terms',

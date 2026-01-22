@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import Layout from './Layout';
 import PostCard from './partials/PostCard';
 
@@ -22,20 +22,18 @@ interface SearchProps {
 const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...props }) => {
   const [query, setQuery] = useState(searchQuery || '');
 
-  // Handle both React data structure (posts.data) and fallback structure (posts as direct array)
-  const results = posts?.data || posts || [];
+  // Normalize results to an array
+  const results: any[] = Array.isArray((posts as any)?.data)
+    ? (posts as any).data
+    : Array.isArray(posts)
+      ? (posts as any)
+      : [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
       router.get('/search', { q: query.trim() });
     }
-  };
-
-  const getPostUrl = (post: any) => {
-    const slug = post.slug || 'unknown';
-    const prefix = post.post_type?.route_prefix;
-    return prefix ? `/${prefix}/${slug}` : `/posts/${slug}`;
   };
 
   return (
@@ -48,7 +46,7 @@ const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...prop
     >
       <div className="space-y-8">
 
-        <header className="text-center py-12 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg">
+        <header className="text-center py-12 bg-indigo-700 text-white rounded-lg">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             {searchQuery ? `Search Results for "${searchQuery}"` : 'Search'}
           </h1>
@@ -69,7 +67,7 @@ const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...prop
             <button
               type="submit"
               disabled={!query.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

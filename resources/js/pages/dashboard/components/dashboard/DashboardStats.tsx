@@ -66,25 +66,25 @@ export function DashboardStats({ users = 0, roles = 0, posts = 0, media = 0, pag
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
       {stats.map((stat) => {
         const IconComponent = stat.icon;
         return (
           <Card
             key={stat.title}
-            className="border-border/60 bg-card/70 shadow-none rounded-sm"
+            className="shadow-sm"
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5">
-              <CardTitle className="text-[9.5px] font-medium uppercase tracking-wide text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 pt-3">
+              <CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {stat.title}
               </CardTitle>
-              <IconComponent className="h-3 w-3 text-muted-foreground/70" />
+              <IconComponent className="h-3.5 w-3.5 text-primary/70" />
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-sm font-semibold text-foreground">
+            <CardContent className="pt-0 pb-3">
+              <div className="text-lg font-bold text-foreground leading-none">
                 {stat.value.toLocaleString()}
               </div>
-              <p className="text-[8.5px] text-muted-foreground">
+              <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">
                 {stat.description}
               </p>
             </CardContent>

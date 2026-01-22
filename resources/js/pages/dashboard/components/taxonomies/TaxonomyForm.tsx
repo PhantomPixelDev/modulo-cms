@@ -61,7 +61,7 @@ export function TaxonomyForm({ taxonomy, postTypes = [], isEditing = false, onSu
   useEffect(() => {
     setForm(createInitialState(taxonomy));
     setSlugDirty(Boolean(taxonomy?.slug));
-  }, [taxonomy?.id]);
+  }, [taxonomy]);
 
   useEffect(() => {
     if (!slugDirty) {

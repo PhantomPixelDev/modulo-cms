@@ -19,6 +19,12 @@ class ExampleContentSeeder extends Seeder
         $postType = PostType::where('name', 'post')->first();
         $pageType = PostType::where('name', 'page')->first();
         $infoType = PostType::where('name', 'info')->first();
+        // Product type is now handled by ModuloShop plugin - do not seed demo products here
+        $portfolioType = PostType::where('name', 'portfolio')->first();
+        $testimonialType = PostType::where('name', 'testimonial')->first();
+        $eventType = PostType::where('name', 'event')->first();
+        $faqType = PostType::where('name', 'faq')->first();
+        $caseStudyType = PostType::where('name', 'case-study')->first();
         if (!$postType || !$pageType || !$infoType) {
             $this->command?->warn('Post types not found. Run ContentSeeder first.');
             return;
@@ -56,6 +62,19 @@ class ExampleContentSeeder extends Seeder
         $tips = TaxonomyTerm::where('slug', 'tips')->first();
         $bestpractices = TaxonomyTerm::where('slug', 'best-practices')->first();
         $mobile = TaxonomyTerm::where('slug', 'mobile')->first();
+
+        $saas = TaxonomyTerm::where('slug', 'saas')->first();
+        $cms = TaxonomyTerm::where('slug', 'cms')->first();
+        $ecommerce = TaxonomyTerm::where('slug', 'ecommerce')->first();
+        $apiintegration = TaxonomyTerm::where('slug', 'api-integration')->first();
+        $uxui = TaxonomyTerm::where('slug', 'ux-ui')->first();
+        $webdev = TaxonomyTerm::where('slug', 'web-development')->first();
+        $fullstack = TaxonomyTerm::where('slug', 'full-stack')->first();
+        $backend = TaxonomyTerm::where('slug', 'backend')->first();
+        $portfolio = TaxonomyTerm::where('slug', 'portfolio')->first();
+        $casestudies = TaxonomyTerm::where('slug', 'case-studies')->first();
+        $cloud = TaxonomyTerm::where('slug', 'cloud-computing')->first();
+        $eventsTerm = TaxonomyTerm::where('slug', 'events')->first();
 
         // Example posts - greatly expanded
         $posts = [
@@ -511,48 +530,7 @@ class ExampleContentSeeder extends Seeder
             );
         }
 
-        // Add content for new post types
-        if ($productType) {
-            $productsContent = [
-                [
-                    'title' => 'Modulo CMS Enterprise',
-                    'excerpt' => 'Advanced content management solution for large organizations.',
-                    'content' => '<p>Modulo CMS Enterprise is our flagship product designed for large organizations that need robust content management capabilities.</p><h3>Features:</h3><ul><li>Multi-site management</li><li>Advanced user permissions</li><li>API integrations</li><li>Custom workflows</li></ul>',
-                    'terms' => [$saas?->id, $cms?->id],
-                ],
-                [
-                    'title' => 'Theme Builder Pro',
-                    'excerpt' => 'Professional theme builder with drag-and-drop interface.',
-                    'content' => '<p>Create stunning websites without coding knowledge using our intuitive theme builder.</p><h3>Capabilities:</h3><ul><li>Visual page builder</li><li>Pre-built templates</li><li>Mobile responsive</li><li>SEO optimized</li></ul>',
-                    'terms' => [$design?->id, $uxui?->id],
-                ],
-                [
-                    'title' => 'E-commerce Integration',
-                    'excerpt' => 'Seamlessly integrate e-commerce functionality into your website.',
-                    'content' => '<p>Add online store capabilities to your Modulo CMS website with our e-commerce integration.</p><h3>Features:</h3><ul><li>Product catalog</li><li>Shopping cart</li><li>Payment processing</li><li>Order management</li></ul>',
-                    'terms' => [$ecommerce?->id, $apiintegration?->id],
-                ],
-            ];
-
-            foreach ($productsContent as $product) {
-                $slug = Str::slug($product['title']);
-                $post = Post::updateOrCreate(
-                    ['slug' => $slug, 'post_type_id' => $productType->id],
-                    [
-                        'author_id' => $authorId,
-                        'title' => $product['title'],
-                        'excerpt' => $product['excerpt'],
-                        'content' => $product['content'],
-                        'status' => 'published',
-                        'published_at' => now()->subDays(rand(1, 30)),
-                    ]
-                );
-
-                if (!empty($product['terms'])) {
-                    $post->taxonomyTerms()->syncWithoutDetaching(array_filter($product['terms']));
-                }
-            }
-        }
+        // Product content is now handled by ModuloShop plugin
 
         if ($portfolioType) {
             $portfolioContent = [
@@ -637,13 +615,13 @@ class ExampleContentSeeder extends Seeder
                     'title' => 'Modulo CMS Developer Conference 2024',
                     'excerpt' => 'Join us for our annual developer conference featuring workshops and networking.',
                     'content' => '<p>The Modulo CMS Developer Conference brings together developers, designers, and business leaders to share knowledge and network.</p><h3>Agenda:</h3><ul><li>Keynote: Future of Content Management</li><li>Workshop: Advanced Theme Development</li><li>Panel: Scaling Web Applications</li><li>Networking Reception</li></ul><p><strong>Date:</strong> March 15-16, 2024<br><strong>Location:</strong> San Francisco, CA<br><strong>Cost:</strong> $299 (Early Bird)</p>',
-                    'terms' => [$events?->id, $tech?->id],
+                    'terms' => [$eventsTerm?->id, $tech?->id],
                 ],
                 [
                     'title' => 'Web Performance Optimization Workshop',
                     'excerpt' => 'Learn advanced techniques for optimizing web application performance.',
                     'content' => '<p>This hands-on workshop covers advanced performance optimization techniques for modern web applications.</p><h3>Topics:</h3><ul><li>Database query optimization</li><li>Asset optimization and caching</li><li>CDN configuration</li><li>Monitoring and analytics</li></ul><p><strong>Instructor:</strong> Performance expert Jane Smith<br><strong>Duration:</strong> 4 hours<br><strong>Format:</strong> Online interactive workshop</p>',
-                    'terms' => [$events?->id, $performance?->id],
+                    'terms' => [$eventsTerm?->id, $performance?->id],
                 ],
             ];
 
@@ -742,4 +720,5 @@ class ExampleContentSeeder extends Seeder
                 }
             }
         }
+    }
 }

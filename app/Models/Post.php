@@ -61,16 +61,6 @@ class Post extends Model
                     ->withTimestamps();
     }
 
-    public function getMetaDataAttribute($value)
-    {
-        return json_decode($value, true) ?? [];
-    }
-
-    public function setMetaDataAttribute($value)
-    {
-        $this->attributes['meta_data'] = json_encode($value);
-    }
-
     // Scopes for filtering
     public function scopePublished($query)
     {

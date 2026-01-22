@@ -32,6 +32,69 @@ export function DataTable<T>({
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
+  const stringifyForSearch = (value: any): string => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+
+    // Arrays: prefer common label fields when present
+    if (Array.isArray(value)) {
+      return value
+        .map((v) => {
+          if (v === null || v === undefined) return '';
+          if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v);
+          if (typeof v === 'object') return (v as any).name ?? (v as any).label ?? '';
+          return '';
+        })
+        .filter(Boolean)
+        .join(' ');
+    }
+
+    // Objects: prefer common label fields
+    if (typeof value === 'object') {
+      return (value as any).name ?? (value as any).label ?? '';
+    }
+
+    return '';
+  };
+
+  const renderValue = (value: any): React.ReactNode => {
+    if (value === null || value === undefined) return null;
+
+    // React nodes should render as-is
+    if (React.isValidElement(value)) return value;
+
+    // Primitive values
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+
+    // Arrays: render React nodes directly when possible, otherwise comma-separated using common fields
+    if (Array.isArray(value)) {
+      if (value.every((v) => React.isValidElement(v))) {
+        return <>{value}</>;
+      }
+
+      const parts = value
+        .map((v) => {
+          if (v === null || v === undefined) return '';
+          if (React.isValidElement(v)) return '';
+          if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v);
+          if (typeof v === 'object') return (v as any).name ?? (v as any).label ?? '';
+          return '';
+        })
+        .filter(Boolean);
+
+      return parts.join(', ');
+    }
+
+    // Objects: render a sensible label if possible
+    if (typeof value === 'object') {
+      return (value as any).name ?? (value as any).label ?? '';
+    }
+
+    return null;
+  };
+
   // Set initial view mode based on screen size
   useEffect(() => {
     const checkScreenSize = () => {
@@ -63,7 +126,8 @@ export function DataTable<T>({
       result = result.filter((item) =>
         searchFields.some((field) => {
           const value = item[field];
-          return value && String(value).toLowerCase().includes(term);
+          const str = stringifyForSearch(value);
+          return str && str.toLowerCase().includes(term);
         })
       );
     }
@@ -101,11 +165,13 @@ export function DataTable<T>({
         <div className="flex justify-between items-start">
           <div className="flex-1">
             {columns.slice(0, 2).map((col) => {
-              const value = col.render ? col.render(item, item[col.key as keyof T]) : item[col.key as keyof T];
+              const raw = item[col.key as keyof T];
+              const value = col.render ? col.render(item, raw) : raw;
+              const rendered = React.isValidElement(value) ? value : renderValue(value);
               return (
                 <div key={String(col.key)} className="mb-2">
                   <span className="text-sm font-medium text-muted-foreground">{col.label}:</span>
-                  <div className="mt-1">{String(value)}</div>
+                  <div className="mt-1">{rendered}</div>
                 </div>
               );
             })}
@@ -120,11 +186,13 @@ export function DataTable<T>({
       <CardContent className="pt-0">
         <div className="grid grid-cols-2 gap-4 text-sm">
           {columns.slice(2).map((col) => {
-            const value = col.render ? col.render(item, item[col.key as keyof T]) : item[col.key as keyof T];
+            const raw = item[col.key as keyof T];
+            const value = col.render ? col.render(item, raw) : raw;
+            const rendered = React.isValidElement(value) ? value : renderValue(value);
             return (
               <div key={String(col.key)}>
                 <span className="font-medium text-muted-foreground">{col.label}:</span>
-                <div className="mt-1">{String(value)}</div>
+                <div className="mt-1">{rendered}</div>
               </div>
             );
           })}
