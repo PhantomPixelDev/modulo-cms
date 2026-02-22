@@ -6,7 +6,7 @@ WORKDIR /var/www/html
 RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      bash git unzip curl libpq-dev libzip-dev \
+      bash git unzip curl libpq-dev libzip-dev postgresql-client \
       libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev; \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
     docker-php-ext-install -j"$(nproc)" \
