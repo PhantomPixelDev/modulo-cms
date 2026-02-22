@@ -38,6 +38,19 @@ Command:
 ./modulo.sh schema-dump dev
 ```
 
+## Squash-release workflow (periodic)
+
+Use a dedicated branch (example: `chore/squash-release-YYYY-MM`) when the migration set gets too large.
+
+1. Create branch from `dev`.
+2. Move historical migrations to an archive folder, e.g.:
+   - `database/migrations_archive/pre-squash-YYYY-MM-DD/`
+3. Keep active path lean:
+   - `database/migrations/` should only contain post-squash migrations (plus optional `.gitkeep`).
+4. Regenerate schema baseline and commit archive + schema together.
+
+This keeps day-to-day migration management simple while preserving full history in-repo.
+
 ## Required checks before merge
 
 1. Migration status is clean:
