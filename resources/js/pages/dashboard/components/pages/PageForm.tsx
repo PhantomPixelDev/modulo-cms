@@ -106,7 +106,7 @@ export function PageForm({
         }
       }
     } catch (e) {
-      console.error('Error parsing page content:', e);
+      // Leave invalid content as empty string if parsing fails.
     }
 
     return {
@@ -159,15 +159,8 @@ export function PageForm({
         author_id: form.author_id ? parseInt(form.author_id, 10) : null,
       };
 
-      // Log the data being submitted for debugging
-      console.log('Submitting form data:', {
-        ...formData,
-        content: formData.content.substring(0, 100) + '...' // Truncate content for logging
-      });
-
       await onSubmit(formData);
     } catch (error) {
-      console.error('Error submitting form:', error);
       throw error; // Re-throw to let the parent component handle the error
     } finally {
       setIsSubmitting(false);

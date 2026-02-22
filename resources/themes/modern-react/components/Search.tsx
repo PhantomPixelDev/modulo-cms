@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import Layout from './Layout';
 import PostCard from './partials/PostCard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SearchProps {
   posts?: {
@@ -21,6 +22,7 @@ interface SearchProps {
 
 const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...props }) => {
   const [query, setQuery] = useState(searchQuery || '');
+  const { t } = useTranslation();
 
   // Normalize results to an array
   const results: any[] = Array.isArray((posts as any)?.data)
@@ -41,17 +43,30 @@ const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...prop
       theme={props.theme}
       site={props.site}
       menus={props.menus}
-      title={`Search Results${searchQuery ? ` for "${searchQuery}"` : ''}`}
-      description={searchQuery ? `Search results for "${searchQuery}"` : 'Search'}
+      title={searchQuery
+        ? t('theme.search.results_for', { query: searchQuery }, `Search Results for "${searchQuery}"`)
+        : t('theme.search.title', {}, 'Search')}
+      description={searchQuery
+        ? t('theme.search.results_for', { query: searchQuery }, `Search results for "${searchQuery}"`)
+        : t('theme.search.title', {}, 'Search')}
     >
       <div className="space-y-8">
 
         <header className="text-center py-12 bg-indigo-700 text-white rounded-lg">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            {searchQuery ? `Search Results for "${searchQuery}"` : 'Search'}
+            {searchQuery
+              ? t('theme.search.results_for', { query: searchQuery }, `Search Results for "${searchQuery}"`)
+              : t('theme.search.title', {}, 'Search')}
           </h1>
           <p className="text-lg opacity-80">
-            {pagination ? `${pagination.total} ${pagination.total === 1 ? 'result' : 'results'} found` : 'Enter search terms to find content'}
+            {pagination
+              ? t('theme.search.results_count', {
+                  count: pagination.total,
+                  label: pagination.total === 1
+                    ? t('theme.search.result_singular', {}, 'result')
+                    : t('theme.search.result_plural', {}, 'results'),
+                }, `${pagination.total} results found`)
+              : t('theme.search.enter_terms', {}, 'Enter search terms to find content')}
           </p>
         </header>
 
@@ -61,7 +76,7 @@ const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...prop
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search posts, pages, and content..."
+              placeholder={t('theme.search.placeholder', {}, 'Search posts, pages, and content...')}
               className="w-full px-6 py-4 pr-16 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 text-lg shadow-lg"
             />
             <button
@@ -90,8 +105,10 @@ const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...prop
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">No results found</h3>
-              <p className="text-gray-600">No posts match your search for "{searchQuery}". Try different keywords or check your spelling.</p>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">{t('theme.search.none_title', {}, 'No results found')}</h3>
+              <p className="text-gray-600">
+                {t('theme.search.none_description', { query: searchQuery || '' }, `No posts match your search for "${searchQuery}". Try different keywords or check your spelling.`)}
+              </p>
             </div>
           </div>
         ) : (
@@ -102,8 +119,8 @@ const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...prop
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Start searching</h3>
-              <p className="text-gray-600">Enter keywords above to search through our posts and pages.</p>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">{t('theme.search.start_title', {}, 'Start searching')}</h3>
+              <p className="text-gray-600">{t('theme.search.start_description', {}, 'Enter keywords above to search through our posts and pages.')}</p>
             </div>
           </div>
         )}
@@ -115,14 +132,14 @@ const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...prop
                 href={`/search?q=${encodeURIComponent(searchQuery || '')}&page=${pagination.current_page - 1}`}
                 className="px-6 py-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-300"
               >
-                ← Previous
+                ← {t('theme.buttons.previous', {}, 'Previous')}
               </a>
             ) : (
-              <span className="px-6 py-3 text-gray-400">← Previous</span>
+              <span className="px-6 py-3 text-gray-400">← {t('theme.buttons.previous', {}, 'Previous')}</span>
             )}
 
             <span className="px-4 py-2 text-sm text-gray-600">
-              Page {pagination.current_page} of {pagination.last_page}
+              {t('theme.posts.pagination', { current: pagination.current_page, total: pagination.last_page }, `Page ${pagination.current_page} of ${pagination.last_page}`)}
             </span>
 
             {pagination.current_page < pagination.last_page ? (
@@ -130,10 +147,10 @@ const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...prop
                 href={`/search?q=${encodeURIComponent(searchQuery || '')}&page=${pagination.current_page + 1}`}
                 className="px-6 py-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-300"
               >
-                Next →
+                {t('theme.buttons.next', {}, 'Next')} →
               </a>
             ) : (
-              <span className="px-6 py-3 text-gray-400">Next →</span>
+              <span className="px-6 py-3 text-gray-400">{t('theme.buttons.next', {}, 'Next')} →</span>
             )}
           </div>
         )}

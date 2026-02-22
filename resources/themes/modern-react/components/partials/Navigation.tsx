@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface NavigationProps {
   className?: string;
@@ -21,6 +22,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -95,7 +97,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                   : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="relative z-10">Home</span>
+              <span className="relative z-10">{t('theme.nav.home', {}, 'Home')}</span>
             </Link>
             <Link 
               href="/shop" 
@@ -105,7 +107,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                   : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="relative z-10">Shop</span>
+              <span className="relative z-10">{t('theme.nav.shop', {}, 'Shop')}</span>
             </Link>
             <Link 
               href="/posts" 
@@ -115,7 +117,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                   : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="relative z-10">Posts</span>
+              <span className="relative z-10">{t('theme.nav.posts', {}, 'Posts')}</span>
             </Link>
             <Link 
               href="/about" 
@@ -125,7 +127,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                   : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="relative z-10">About</span>
+              <span className="relative z-10">{t('theme.nav.about', {}, 'About')}</span>
             </Link>
             <Link 
               href="/contact" 
@@ -135,7 +137,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                   : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="relative z-10">Contact</span>
+              <span className="relative z-10">{t('theme.nav.contact', {}, 'Contact')}</span>
             </Link>
             <div className="flex items-center space-x-3 ml-6">
               <Link
@@ -147,7 +149,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 }`}
               >
                 <ShoppingCart className="w-4 h-4" />
-                <span>Cart</span>
+                <span>{t('theme.nav.cart', {}, 'Cart')}</span>
                 {cartCount > 0 && (
                   <span className="ml-1 inline-flex items-center justify-center text-xs font-bold bg-indigo-600 text-white rounded-full w-5 h-5">
                     {cartCount}
@@ -162,7 +164,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                       ? 'text-gray-600 bg-gray-100' 
                       : 'text-white/80 bg-white/10'
                   }`}>
-                    Welcome, {auth.user.name}
+                    {t('theme.auth.welcome', { name: auth.user.name }, `Welcome, ${auth.user.name}`)}
                   </span>
                   <Link
                     href="/dashboard"
@@ -172,7 +174,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                         : 'text-white/90 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    Dashboard
+                    {t('theme.nav.dashboard', {}, 'Dashboard')}
                   </Link>
                   <Link
                     href="/logout"
@@ -180,7 +182,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                     as="button"
                     className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg font-medium transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                   >
-                    Logout
+                    {t('theme.nav.logout', {}, 'Logout')}
                   </Link>
                 </>
               ) : (
@@ -194,13 +196,13 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                         : 'text-white/90 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    Login
+                    {t('theme.nav.login', {}, 'Login')}
                   </Link>
                   <Link
                     href="/register"
                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                   >
-                    Register
+                    {t('theme.nav.register', {}, 'Register')}
                   </Link>
                 </>
               )}
@@ -265,7 +267,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Home
+                {t('theme.nav.home', {}, 'Home')}
               </Link>
               <Link
                 href="/shop"
@@ -276,7 +278,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Shop
+                {t('theme.nav.shop', {}, 'Shop')}
               </Link>
               <Link
                 href="/shop/cart"
@@ -289,7 +291,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
               >
                 <span className="flex items-center gap-2">
                   <ShoppingCart className="w-4 h-4" />
-                  Cart
+                  {t('theme.nav.cart', {}, 'Cart')}
                 </span>
                 {cartCount > 0 && (
                   <span className="inline-flex items-center justify-center text-xs font-bold bg-indigo-600 text-white rounded-full w-5 h-5">
@@ -306,7 +308,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Posts
+                {t('theme.nav.posts', {}, 'Posts')}
               </Link>
               <Link
                 href="/about"
@@ -317,7 +319,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                About
+                {t('theme.nav.about', {}, 'About')}
               </Link>
               <Link
                 href="/contact"
@@ -328,7 +330,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Contact
+                {t('theme.nav.contact', {}, 'Contact')}
               </Link>
               <div className={`border-t my-3 ${
                 isScrolled ? 'border-gray-200' : 'border-white/20'
@@ -339,7 +341,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                   <div className={`px-4 py-2 text-sm font-medium ${
                     isScrolled ? 'text-gray-500' : 'text-white/70'
                   }`}>
-                    Welcome, {auth.user.name}
+                    {t('theme.auth.welcome', { name: auth.user.name }, `Welcome, ${auth.user.name}`)}
                   </div>
                   <Link
                     href="/dashboard"
@@ -350,7 +352,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                     }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Dashboard
+                    {t('theme.nav.dashboard', {}, 'Dashboard')}
                   </Link>
                   <Link
                     href="/logout"
@@ -359,7 +361,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                     className="block w-full text-left px-4 py-3 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg font-medium transition-all duration-300"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Logout
+                    {t('theme.nav.logout', {}, 'Logout')}
                   </Link>
                 </>
               ) : (
@@ -374,14 +376,14 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                     }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Login
+                    {t('theme.nav.login', {}, 'Login')}
                   </Link>
                   <Link
                     href="/register"
                     className="block px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-all duration-300 text-center"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Register
+                    {t('theme.nav.register', {}, 'Register')}
                   </Link>
                 </>
               )}

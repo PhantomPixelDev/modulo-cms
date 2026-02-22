@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Layout from './Layout';
 import SEOHead from '@/components/SEOHead';
 import { ShoppingCart, Filter, Grid, List, ChevronDown } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Product {
   id: number;
@@ -65,6 +66,7 @@ interface ProductsProps {
 }
 
 export default function Products({ products, posts, categories, filters, pagination, site, theme, menus, postType }: ProductsProps) {
+  const { t } = useTranslation();
   const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
   const safeTheme = theme && typeof theme === 'object' ? theme : {};
   const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -77,7 +79,7 @@ export default function Products({ products, posts, categories, filters, paginat
       : [];
 
   const prefix = postType?.route_prefix || 'shop';
-  const pageTitle = postType?.plural_label || 'Shop';
+  const pageTitle = postType?.plural_label || t('theme.products.shop', {}, 'Shop');
   const pageDescription = postType?.description || 'Browse our products.';
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -105,7 +107,7 @@ export default function Products({ products, posts, categories, filters, paginat
         <header className="text-center py-12 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">{pageTitle}</h1>
           <p className="text-xl opacity-90 max-w-2xl mx-auto">{pageDescription}</p>
-          {pagination && <p className="mt-4 text-sm opacity-75">{pagination.total} products</p>}
+          {pagination && <p className="mt-4 text-sm opacity-75">{t('theme.products.products_count', { count: pagination.total }, `${pagination.total} products`)}</p>}
         </header>
 
         {/* Toolbar */}
@@ -116,7 +118,7 @@ export default function Products({ products, posts, categories, filters, paginat
               className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               <Filter className="w-4 h-4" />
-              Filters
+              {t('theme.products.filters', {}, 'Filters')}
             </button>
             {filters?.category && (
               <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm">
@@ -131,10 +133,10 @@ export default function Products({ products, posts, categories, filters, paginat
               onChange={(e) => window.location.href = `/shop?orderby=${e.target.value}`}
               className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="date">Latest</option>
-              <option value="price">Price: Low to High</option>
-              <option value="title">Name</option>
-              <option value="popularity">Popularity</option>
+              <option value="date">{t('theme.products.latest', {}, 'Latest')}</option>
+              <option value="price">{t('theme.products.price_low_to_high', {}, 'Price: Low to High')}</option>
+              <option value="title">{t('theme.products.name', {}, 'Name')}</option>
+              <option value="popularity">{t('theme.products.popularity', {}, 'Popularity')}</option>
             </select>
             <div className="flex border border-gray-200 rounded-lg overflow-hidden">
               <button
@@ -158,11 +160,11 @@ export default function Products({ products, posts, categories, filters, paginat
           {showFilters && categories && categories.length > 0 && (
             <aside className="w-64 flex-shrink-0">
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-4">
-                <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">{t('theme.products.categories', {}, 'Categories')}</h3>
                 <ul className="space-y-2">
                   <li>
                     <a href="/shop" className={`block py-1 ${!filters?.category ? 'text-indigo-600 font-medium' : 'text-gray-600 hover:text-gray-900'}`}>
-                      All Products
+                      {t('theme.products.all_products', {}, 'All Products')}
                     </a>
                   </li>
                   {categories.map((cat) => (
@@ -188,10 +190,10 @@ export default function Products({ products, posts, categories, filters, paginat
             {list.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
                 <ShoppingCart className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-gray-600 text-lg">No products found.</p>
+                <p className="text-gray-600 text-lg">{t('theme.products.no_products', {}, 'No products found.')}</p>
                 {filters?.category && (
                   <a href="/shop" className="inline-block mt-4 text-indigo-600 hover:text-indigo-700">
-                    View all products →
+                    {t('theme.products.view_all_products', {}, 'View all products')} →
                   </a>
                 )}
               </div>
@@ -226,12 +228,12 @@ export default function Products({ products, posts, categories, filters, paginat
                         )}
                         {p.in_stock === false && (
                           <span className="absolute top-3 left-3 bg-gray-800 text-white text-xs px-2 py-1 rounded-full">
-                            Out of Stock
+                            {t('theme.products.out_of_stock', {}, 'Out of Stock')}
                           </span>
                         )}
                         {p.featured && (
                           <span className="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full">
-                            Featured
+                            {t('theme.products.featured', {}, 'Featured')}
                           </span>
                         )}
                       </div>
@@ -263,7 +265,9 @@ export default function Products({ products, posts, categories, filters, paginat
                           disabled={p.in_stock === false}
                           data-product-id={p.id}
                         >
-                          {p.in_stock === false ? 'Out of Stock' : 'Add to Cart'}
+                          {p.in_stock === false
+                            ? t('theme.products.out_of_stock', {}, 'Out of Stock')
+                            : t('theme.products.add_to_cart', {}, 'Add to Cart')}
                         </button>
                       </div>
                     </article>
@@ -322,7 +326,9 @@ export default function Products({ products, posts, categories, filters, paginat
                             disabled={p.in_stock === false}
                             data-product-id={p.id}
                           >
-                            {p.in_stock === false ? 'Out of Stock' : 'Add to Cart'}
+                            {p.in_stock === false
+                              ? t('theme.products.out_of_stock', {}, 'Out of Stock')
+                              : t('theme.products.add_to_cart', {}, 'Add to Cart')}
                           </button>
                         </div>
                       </div>
@@ -337,15 +343,15 @@ export default function Products({ products, posts, categories, filters, paginat
               <div className="flex justify-center items-center gap-2 mt-10">
                 {pagination.prev_page_url && (
                   <a href={pagination.prev_page_url} className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    ← Previous
+                    ← {t('theme.buttons.previous', {}, 'Previous')}
                   </a>
                 )}
                 <span className="px-4 py-2 text-gray-600">
-                  Page {pagination.current_page} of {pagination.last_page}
+                  {t('theme.posts.pagination', { current: pagination.current_page, total: pagination.last_page }, `Page ${pagination.current_page} of ${pagination.last_page}`)}
                 </span>
                 {pagination.next_page_url && (
                   <a href={pagination.next_page_url} className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    Next →
+                    {t('theme.buttons.next', {}, 'Next')} →
                   </a>
                 )}
               </div>

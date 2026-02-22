@@ -45,10 +45,8 @@ export default function PostMeta({ post, theme }: PostMetaProps) {
     if (navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(currentUrl);
-        // You could add a toast notification here
-        console.log('URL copied to clipboard');
-      } catch (err) {
-        console.error('Failed to copy URL');
+      } catch {
+        // Ignore clipboard write failures.
       }
     }
   };

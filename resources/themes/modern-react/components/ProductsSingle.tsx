@@ -3,6 +3,7 @@ import Layout from './Layout';
 import PostMeta from './partials/PostMeta';
 import { ArrowLeft, Calendar, User, ShoppingCart, Minus, Plus, Check, Heart, Share2, Truck, Shield, RotateCcw } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Product {
   id: number;
@@ -70,16 +71,17 @@ interface ProductsSingleProps {
 }
 
 export default function ProductsSingle({ post, product, relatedProducts, site, theme, menus }: ProductsSingleProps) {
+  const { t } = useTranslation();
   // Support both post and product props
   const item = product || post;
   
   if (!item) {
     return (
-      <Layout site={site} theme={theme} menus={menus} title="Product Not Found">
+      <Layout site={site} theme={theme} menus={menus} title={t('theme.products.not_found', {}, 'Product Not Found')}>
         <div className="text-center py-16">
-          <p className="text-gray-600">Product not found.</p>
+          <p className="text-gray-600">{t('theme.products.not_found', {}, 'Product not found.')}</p>
           <Link href="/shop" className="mt-4 inline-block text-indigo-600 hover:text-indigo-700">
-            ← Back to Shop
+            ← {t('theme.products.back_to_shop', {}, 'Back to Shop')}
           </Link>
         </div>
       </Layout>
@@ -126,9 +128,9 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
         {/* Breadcrumb */}
         <nav className="mb-8">
           <ol className="flex items-center gap-2 text-sm text-gray-500">
-            <li><Link href="/" className="hover:text-gray-700">Home</Link></li>
+            <li><Link href="/" className="hover:text-gray-700">{t('theme.products.home', {}, 'Home')}</Link></li>
             <li>/</li>
-            <li><Link href={backUrl} className="hover:text-gray-700">Shop</Link></li>
+            <li><Link href={backUrl} className="hover:text-gray-700">{t('theme.products.shop', {}, 'Shop')}</Link></li>
             {item.categories && item.categories.length > 0 && (
               <>
                 <li>/</li>
@@ -157,12 +159,12 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
               )}
               {discount && (
                 <span className="absolute top-4 left-4 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
-                  -{discount}% OFF
+                  {t('theme.products.save_percent', { percent: discount }, `Save ${discount}%`)}
                 </span>
               )}
               {!inStock && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                  <span className="bg-white text-gray-900 px-6 py-3 rounded-lg font-semibold">Out of Stock</span>
+                  <span className="bg-white text-gray-900 px-6 py-3 rounded-lg font-semibold">{t('theme.products.out_of_stock', {}, 'Out of Stock')}</span>
                 </div>
               )}
             </div>
@@ -227,11 +229,13 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
                 <>
                   <Check className="w-5 h-5 text-green-600" />
                   <span className="text-green-600 font-medium">
-                    {item.stock ? `In Stock (${item.stock} available)` : 'In Stock'}
+                    {item.stock
+                      ? t('theme.products.in_stock_available', { count: item.stock }, `In Stock (${item.stock} available)`)
+                      : t('theme.products.in_stock', {}, 'In Stock')}
                   </span>
                 </>
               ) : (
-                <span className="text-red-600 font-medium">Out of Stock</span>
+                <span className="text-red-600 font-medium">{t('theme.products.out_of_stock', {}, 'Out of Stock')}</span>
               )}
             </div>
 
@@ -285,7 +289,7 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
                   data-quantity={quantity}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  Add to Cart
+                  {t('theme.products.add_to_cart', {}, 'Add to Cart')}
                 </button>
                 <button
                   onClick={() => setIsWishlisted(!isWishlisted)}
@@ -300,13 +304,13 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
 
             {/* SKU */}
             {item.sku && (
-              <p className="text-sm text-gray-500">SKU: <span className="font-medium">{item.sku}</span></p>
+              <p className="text-sm text-gray-500">{t('theme.products.sku', { sku: item.sku }, `SKU: ${item.sku}`)}</p>
             )}
 
             {/* Tags */}
             {item.tags && item.tags.length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm text-gray-500">Tags:</span>
+                <span className="text-sm text-gray-500">{t('theme.products.tags', {}, 'Tags:')}</span>
                 {item.tags.map((tag) => (
                   <Link
                     key={tag.id}
@@ -323,15 +327,15 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
             <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
               <div className="flex flex-col items-center text-center gap-2">
                 <Truck className="w-6 h-6 text-indigo-600" />
-                <span className="text-sm text-gray-600">Free Shipping</span>
+                <span className="text-sm text-gray-600">{t('theme.products.free_shipping', {}, 'Free Shipping')}</span>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
                 <Shield className="w-6 h-6 text-indigo-600" />
-                <span className="text-sm text-gray-600">Secure Payment</span>
+                <span className="text-sm text-gray-600">{t('theme.products.secure_payment', {}, 'Secure Payment')}</span>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
                 <RotateCcw className="w-6 h-6 text-indigo-600" />
-                <span className="text-sm text-gray-600">Easy Returns</span>
+                <span className="text-sm text-gray-600">{t('theme.products.easy_returns', {}, 'Easy Returns')}</span>
               </div>
             </div>
           </div>
@@ -340,7 +344,7 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
         {/* Full Description */}
         {item.content && (
           <div className="mt-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Product Description</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('theme.products.description', {}, 'Product Description')}</h2>
             <div
               className="prose prose-lg max-w-none"
               dangerouslySetInnerHTML={{ __html: item.content }}
@@ -351,7 +355,7 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
         {/* Related Products */}
         {relatedProducts && relatedProducts.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('theme.products.related', {}, 'Related Products')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {relatedProducts.map((p) => (
                 <Link

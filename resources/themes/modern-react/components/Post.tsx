@@ -3,6 +3,7 @@ import Layout from './Layout';
 import PostMeta from './partials/PostMeta';
 import { Calendar, User, Tag, ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Post {
   id: number;
@@ -46,12 +47,13 @@ interface PostProps {
 }
 
 export default function Post({ post, site, theme, menus, relatedPosts }: PostProps) {
+  const { t, locale } = useTranslation();
   const backUrl = post.post_type?.route_prefix 
     ? `/${post.post_type.route_prefix}`
     : '/';
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -75,7 +77,7 @@ export default function Post({ post, site, theme, menus, relatedPosts }: PostPro
             className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to {post.post_type?.label || 'Posts'}
+            {t('theme.post.back_to', { label: post.post_type?.label || t('theme.nav.posts', {}, 'Posts') }, `Back to ${post.post_type?.label || 'Posts'}`)}
           </Link>
         </div>
 
@@ -113,7 +115,7 @@ export default function Post({ post, site, theme, menus, relatedPosts }: PostPro
               {post.author && (
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  <span>By {post.author.name}</span>
+                  <span>{t('theme.post.by_author', { name: post.author.name }, `By ${post.author.name}`)}</span>
                 </div>
               )}
 
@@ -122,7 +124,7 @@ export default function Post({ post, site, theme, menus, relatedPosts }: PostPro
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>{Math.ceil(post.content.split(' ').length / 200)} min read</span>
+                <span>{t('theme.post.reading_time', { minutes: Math.ceil(post.content.split(' ').length / 200) }, `${Math.ceil(post.content.split(' ').length / 200)} min read`)}</span>
               </div>
             </div>
 
@@ -172,7 +174,7 @@ export default function Post({ post, site, theme, menus, relatedPosts }: PostPro
         {relatedPosts && relatedPosts.length > 0 && (
           <section className="mt-16">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Posts</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">{t('theme.post.related', {}, 'Related Posts')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {relatedPosts.slice(0, 3).map((relatedPost) => (
                   <article key={relatedPost.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">

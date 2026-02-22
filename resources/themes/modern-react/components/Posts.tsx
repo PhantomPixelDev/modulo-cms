@@ -2,6 +2,7 @@ import React from 'react';
 import Layout from './Layout';
 import LoadingSkeleton from './util/LoadingSkeleton';
 import SEOHead from '@/components/SEOHead';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Post {
   id: number;
@@ -79,6 +80,7 @@ export default function Posts({
   pageTitle,
   showFilters
 }: PostsProps) {
+  const { t, locale } = useTranslation();
   const safeTheme = theme && typeof theme === 'object' ? theme : {};
   const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
   const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -89,8 +91,8 @@ export default function Posts({
   const list = allPosts;
 
   // Dynamic header content based on post type
-  const dynamicPageTitle = postType?.plural_label || 'Blog Posts';
-  const dynamicPageDescription = postType?.description || 'Browse all our latest blog posts and articles';
+  const dynamicPageTitle = postType?.plural_label || t('theme.posts.title', {}, 'Blog Posts');
+  const dynamicPageDescription = postType?.description || t('theme.posts.description', {}, 'Browse all our latest blog posts and articles');
   const resolvedTitle = dynamicPageTitle;
   const resolvedDescription = dynamicPageDescription;
 
@@ -125,7 +127,7 @@ export default function Posts({
           </div>
         ) : list.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-gray-600">No posts found.</p>
+            <p className="text-gray-600">{t('theme.posts.empty', {}, 'No posts found.')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -146,7 +148,7 @@ export default function Posts({
                   )}
                   {p.published_at && (
                     <p className="text-xs text-gray-500">
-                      {new Date(p.published_at).toLocaleDateString()}
+                      {new Date(p.published_at).toLocaleDateString(locale)}
                     </p>
                   )}
                 </article>
@@ -163,18 +165,18 @@ export default function Posts({
                 href={pagination.prev_page_url}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 mr-2"
               >
-                Previous
+                {t('theme.buttons.previous', {}, 'Previous')}
               </a>
             )}
             <span className="px-4 py-2 text-gray-600">
-              Page {pagination.current_page} of {pagination.last_page}
+              {t('theme.posts.pagination', { current: pagination.current_page, total: pagination.last_page }, `Page ${pagination.current_page} of ${pagination.last_page}`)}
             </span>
             {pagination.next_page_url && (
               <a
                 href={pagination.next_page_url}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ml-2"
               >
-                Next
+                {t('theme.buttons.next', {}, 'Next')}
               </a>
             )}
           </div>

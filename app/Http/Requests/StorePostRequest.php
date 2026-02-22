@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
 
@@ -14,7 +15,7 @@ class StorePostRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->can('create', Post::class);
+        return (bool) $this->user()?->can('create', Post::class);
     }
 
     /**
@@ -36,7 +37,6 @@ class StorePostRequest extends FormRequest
                 'alpha_dash:ascii',
                 Rule::unique('posts', 'slug')
                     ->where('post_type_id', $postTypeId)
-                    ->ignore($this->route('post'))
             ],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
@@ -51,16 +51,16 @@ class StorePostRequest extends FormRequest
             'meta_data' => ['nullable', 'array'],
         ];
 
-        // Add validation for required fields based on post type
+        // Apply post type-specific validation constraints.
         if ($postType) {
             if ($postType->has_featured_image) {
                 $rules['featured_image'] = ['required', 'string', 'max:255'];
             }
-            
+
             if ($postType->has_excerpt) {
                 $rules['excerpt'] = ['required', 'string', 'max:500'];
             }
-            
+
             // Validate taxonomy terms if post type has taxonomies
             if ($postType->has_taxonomies && !empty($this->input('taxonomy_terms'))) {
                 $rules['taxonomy_terms.*'] = [
@@ -84,7 +84,7 @@ class StorePostRequest extends FormRequest
     protected function prepareForValidation()
     {
         // Generate slug from title if not provided
-        if (!$this->has('slug') && $this->has('title')) {
+        if (!$this->filled('slug') && $this->filled('title')) {
             $this->merge([
                 'slug' => \Illuminate\Support\Str::slug($this->title)
             ]);

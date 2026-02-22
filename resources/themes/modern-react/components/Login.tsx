@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import TextLink from '@/components/text-link';
 import InputError from '@/components/input-error';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   canResetPassword?: boolean;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function Login({ canResetPassword = true, status }: Props) {
+  const { t } = useTranslation();
   const { data, setData, post, processing, errors, reset } = useForm({
     email: '',
     password: '',
@@ -30,13 +32,13 @@ export default function Login({ canResetPassword = true, status }: Props) {
   };
 
   return (
-    <AuthLayout title="Log in">
-      <Head title="Log in Forin TEMPLATE" />
+    <AuthLayout title={t('theme.auth.login.title', {}, 'Log in')}>
+      <Head title={t('theme.auth.login.head', {}, 'Log in')} />
 
       <div className="py-6">
         <div className="">
-          <h1 className="mb-2 text-3xl font-bold tracking-tight">Welcome back</h1>
-          <p className="mb-8 text-muted-foreground">Enter your email and password to sign in</p>
+          <h1 className="mb-2 text-3xl font-bold tracking-tight">{t('theme.auth.login.heading', {}, 'Welcome back')}</h1>
+          <p className="mb-8 text-muted-foreground">{t('theme.auth.login.description', {}, 'Enter your email and password to sign in')}</p>
 
           {status && (
             <div className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">{status}</div>
@@ -44,7 +46,7 @@ export default function Login({ canResetPassword = true, status }: Props) {
 
           <form className="space-y-6" onSubmit={submit}>
             <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email">{t('theme.auth.login.email_label', {}, 'Email address')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -53,17 +55,17 @@ export default function Login({ canResetPassword = true, status }: Props) {
                 autoComplete="email"
                 value={data.email}
                 onChange={(e) => setData('email', e.target.value)}
-                placeholder="you@example.com"
+                placeholder={t('theme.auth.login.email_placeholder', {}, 'you@example.com')}
               />
               <InputError message={errors.email} />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('theme.auth.login.password_label', {}, 'Password')}</Label>
                 {canResetPassword && (
                   <TextLink href={route('password.request')} className="ml-auto text-sm">
-                    Forgot password?
+                    {t('theme.auth.login.forgot_password', {}, 'Forgot password?')}
                   </TextLink>
                 )}
               </div>
@@ -74,7 +76,7 @@ export default function Login({ canResetPassword = true, status }: Props) {
                 autoComplete="current-password"
                 value={data.password}
                 onChange={(e) => setData('password', e.target.value)}
-                placeholder="••••••••"
+                placeholder={t('theme.auth.login.password_placeholder', {}, '••••••••')}
               />
               <InputError message={errors.password} />
             </div>
@@ -85,16 +87,16 @@ export default function Login({ canResetPassword = true, status }: Props) {
                 checked={data.remember}
                 onClick={() => setData('remember', !data.remember)}
               />
-              <Label htmlFor="remember">Remember me</Label>
+              <Label htmlFor="remember">{t('theme.auth.login.remember_me', {}, 'Remember me')}</Label>
             </div>
 
             <Button type="submit" className="w-full" disabled={processing}>
               {processing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-              Log in
+              {t('theme.auth.login.submit', {}, 'Log in')}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Don't have an account? <TextLink href={route('register')}>Sign up</TextLink>
+              {t('theme.auth.login.no_account', {}, "Don't have an account?")} <TextLink href={route('register')}>{t('theme.auth.login.sign_up', {}, 'Sign up')}</TextLink>
             </p>
           </form>
         </div>

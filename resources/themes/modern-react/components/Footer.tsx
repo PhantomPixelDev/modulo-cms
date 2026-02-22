@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface FooterProps {
   site?: {
@@ -17,6 +18,7 @@ interface FooterProps {
 
 export default function Footer({ site, menu, theme }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const { t } = useTranslation();
 
   // Ensure menu is always an array
   const safeMenu = Array.isArray(menu) ? menu : [];
@@ -62,14 +64,14 @@ export default function Footer({ site, menu, theme }: FooterProps) {
               </p>
             )}
             <p className="text-sm text-blue-100/60 leading-relaxed">
-              Built with Modulo CMS - A modern, flexible content management system designed for the future.
+              {t('theme.footer.powered_by', {}, 'Powered by Modulo CMS')}
             </p>
           </div>
 
           {/* Navigation Column */}
           <div>
             <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">
-              Navigation
+              {t('theme.footer.navigation', {}, 'Navigation')}
             </h4>
             <nav className="space-y-3">
               {Array.isArray(items) && items.length > 0 && items.map((raw: any, idx: number) => {
@@ -111,26 +113,26 @@ export default function Footer({ site, menu, theme }: FooterProps) {
           {/* Contact/Social Column */}
           <div>
             <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">
-              Connect
+              {t('theme.footer.connect', {}, 'Connect')}
             </h4>
             <div className="space-y-3">
               <a 
                 href="mailto:hello@example.com" 
                 className="block text-blue-100/80 hover:text-white text-sm transition-all duration-300 hover:translate-x-1"
               >
-                Contact Us
+                {t('theme.footer.contact', {}, 'Contact Us')}
               </a>
               <a 
                 href="/privacy" 
                 className="block text-blue-100/80 hover:text-white text-sm transition-all duration-300 hover:translate-x-1"
               >
-                Privacy Policy
+                {t('theme.footer.privacy', {}, 'Privacy Policy')}
               </a>
               <a 
                 href="/terms" 
                 className="block text-blue-100/80 hover:text-white text-sm transition-all duration-300 hover:translate-x-1"
               >
-                Terms of Service
+                {t('theme.footer.terms', {}, 'Terms of Service')}
               </a>
             </div>
           </div>
@@ -140,7 +142,7 @@ export default function Footer({ site, menu, theme }: FooterProps) {
         <div className="border-t border-white/20 pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-blue-100/60">
-              &copy; {currentYear} {site?.name || 'Modulo CMS'}. All rights reserved.
+              &copy; {currentYear} {site?.name || 'Modulo CMS'}. {t('theme.footer.rights', {}, 'All rights reserved.')}
             </p>
             <p className="text-sm text-blue-100/60 mt-2 md:mt-0">
               Powered by{' '}

@@ -3,6 +3,7 @@ import Layout from '../Layout';
 import SEOHead from '@/components/SEOHead';
 import { Link } from '@inertiajs/react';
 import { ShoppingCart, Minus, Plus, Check, Heart, Truck, Shield, RotateCcw, ChevronRight, Star } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Product {
   id: number;
@@ -45,19 +46,20 @@ interface ShopSingleProps {
 }
 
 export default function Single({ product, relatedProducts, site, theme, menus }: ShopSingleProps) {
+  const { t } = useTranslation();
   const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
   const safeTheme = theme && typeof theme === 'object' ? theme : {};
   const safeMenus = menus && typeof menus === 'object' ? menus : {};
 
   if (!product) {
     return (
-      <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Product Not Found">
+      <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title={t('theme.products.not_found', {}, 'Product Not Found')}>
         <div className="text-center py-20">
           <ShoppingCart className="w-20 h-20 mx-auto text-gray-200 mb-6" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-          <p className="text-gray-500 mb-6">The product you're looking for doesn't exist.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('theme.products.not_found', {}, 'Product Not Found')}</h1>
+          <p className="text-gray-500 mb-6">{t('theme.products.not_found_description', {}, "The product you're looking for doesn't exist.")}</p>
           <Link href="/shop" className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
-            ← Back to Shop
+            ← {t('theme.products.back_to_shop', {}, 'Back to Shop')}
           </Link>
         </div>
       </Layout>
@@ -84,13 +86,13 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
       });
       const data = await response.json();
       if (data.success) {
-        setCartMessage({ type: 'success', text: 'Added to cart!' });
+        setCartMessage({ type: 'success', text: t('theme.products.added_to_cart', {}, 'Added to cart!') });
         setTimeout(() => setCartMessage(null), 3000);
       } else {
-        setCartMessage({ type: 'error', text: data.message || 'Failed to add to cart' });
+        setCartMessage({ type: 'error', text: data.message || t('theme.products.failed_to_add_to_cart', {}, 'Failed to add to cart') });
       }
     } catch (error) {
-      setCartMessage({ type: 'error', text: 'Failed to add to cart' });
+      setCartMessage({ type: 'error', text: t('theme.products.failed_to_add_to_cart', {}, 'Failed to add to cart') });
     }
     setAddingToCart(false);
   };
@@ -127,9 +129,9 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
         {/* Breadcrumb */}
         <nav className="mb-8">
           <ol className="flex items-center gap-2 text-sm text-gray-500">
-            <li><Link href="/" className="hover:text-indigo-600 transition-colors">Home</Link></li>
+            <li><Link href="/" className="hover:text-indigo-600 transition-colors">{t('theme.products.home', {}, 'Home')}</Link></li>
             <li><ChevronRight className="w-4 h-4" /></li>
-            <li><Link href="/shop" className="hover:text-indigo-600 transition-colors">Shop</Link></li>
+            <li><Link href="/shop" className="hover:text-indigo-600 transition-colors">{t('theme.products.shop', {}, 'Shop')}</Link></li>
             {product.categories && product.categories.length > 0 && (
               <>
                 <li><ChevronRight className="w-4 h-4" /></li>
@@ -158,13 +160,13 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
               )}
               {discount && (
                 <span className="absolute top-4 left-4 bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg">
-                  -{discount}% OFF
+                  {t('theme.products.save_percent', { percent: discount }, `Save ${discount}%`)}
                 </span>
               )}
               {!inStock && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
                   <span className="bg-white text-gray-900 px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl">
-                    Out of Stock
+                    {t('theme.products.out_of_stock', {}, 'Out of Stock')}
                   </span>
                 </div>
               )}
@@ -214,7 +216,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                   <Star key={star} className="w-5 h-5 text-yellow-400 fill-current" />
                 ))}
               </div>
-              <span className="text-sm text-gray-500">(0 reviews)</span>
+              <span className="text-sm text-gray-500">{t('theme.products.reviews_count', { count: 0 }, '(0 reviews)')}</span>
             </div>
 
             {/* Price */}
@@ -229,7 +231,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
               </span>
               {discount && (
                 <span className="bg-red-100 text-red-700 text-sm font-semibold px-4 py-1.5 rounded-full">
-                  Save {discount}%
+                  {t('theme.products.save_percent', { percent: discount }, `Save ${discount}%`)}
                 </span>
               )}
             </div>
@@ -240,13 +242,15 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                 <>
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="text-green-600 font-medium">
-                    {product.stock ? `In Stock (${product.stock} available)` : 'In Stock'}
+                    {product.stock
+                      ? t('theme.products.in_stock_available', { count: product.stock }, `In Stock (${product.stock} available)`)
+                      : t('theme.products.in_stock', {}, 'In Stock')}
                   </span>
                 </>
               ) : (
                 <>
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-red-600 font-medium">Out of Stock</span>
+                  <span className="text-red-600 font-medium">{t('theme.products.out_of_stock', {}, 'Out of Stock')}</span>
                 </>
               )}
             </div>
@@ -274,7 +278,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                 {cartMessage.type === 'success' ? <Check className="w-5 h-5" /> : null}
                 {cartMessage.text}
                 {cartMessage.type === 'success' && (
-                  <Link href="/shop/cart" className="ml-auto text-sm font-medium underline">View Cart</Link>
+                  <Link href="/shop/cart" className="ml-auto text-sm font-medium underline">{t('theme.products.view_cart', {}, 'View Cart')}</Link>
                 )}
               </div>
             )}
@@ -312,7 +316,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                   className="flex-1 flex items-center justify-center gap-3 bg-indigo-600 text-white py-4 px-8 rounded-xl font-semibold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  {addingToCart ? 'Adding...' : 'Add to Cart'}
+                  {addingToCart ? t('theme.products.adding', {}, 'Adding...') : t('theme.products.add_to_cart', {}, 'Add to Cart')}
                 </button>
                 <button
                   onClick={() => setIsWishlisted(!isWishlisted)}
@@ -328,14 +332,14 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
             {/* SKU */}
             {product.sku && (
               <p className="text-sm text-gray-500">
-                SKU: <span className="font-mono font-medium text-gray-700">{product.sku}</span>
+                {t('theme.products.sku', { sku: product.sku }, `SKU: ${product.sku}`)}
               </p>
             )}
 
             {/* Tags */}
             {product.tags && product.tags.length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm text-gray-500">Tags:</span>
+                <span className="text-sm text-gray-500">{t('theme.products.tags', {}, 'Tags:')}</span>
                 {product.tags.map((tag) => (
                   <Link
                     key={tag.id}
@@ -353,22 +357,22 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
               <div className="flex flex-col items-center text-center gap-3 p-4 bg-gray-50 rounded-xl">
                 <Truck className="w-8 h-8 text-indigo-600" />
                 <div>
-                  <p className="font-medium text-gray-900 text-sm">Free Shipping</p>
-                  <p className="text-xs text-gray-500">On orders over $50</p>
+                  <p className="font-medium text-gray-900 text-sm">{t('theme.products.free_shipping', {}, 'Free Shipping')}</p>
+                  <p className="text-xs text-gray-500">{t('theme.products.shipping_note', { amount: '$50' }, 'On orders over $50')}</p>
                 </div>
               </div>
               <div className="flex flex-col items-center text-center gap-3 p-4 bg-gray-50 rounded-xl">
                 <Shield className="w-8 h-8 text-indigo-600" />
                 <div>
-                  <p className="font-medium text-gray-900 text-sm">Secure Payment</p>
-                  <p className="text-xs text-gray-500">100% protected</p>
+                  <p className="font-medium text-gray-900 text-sm">{t('theme.products.secure_payment', {}, 'Secure Payment')}</p>
+                  <p className="text-xs text-gray-500">{t('theme.products.secure_payment_note', {}, '100% protected')}</p>
                 </div>
               </div>
               <div className="flex flex-col items-center text-center gap-3 p-4 bg-gray-50 rounded-xl">
                 <RotateCcw className="w-8 h-8 text-indigo-600" />
                 <div>
-                  <p className="font-medium text-gray-900 text-sm">Easy Returns</p>
-                  <p className="text-xs text-gray-500">30 day returns</p>
+                  <p className="font-medium text-gray-900 text-sm">{t('theme.products.easy_returns', {}, 'Easy Returns')}</p>
+                  <p className="text-xs text-gray-500">{t('theme.products.returns_note', { days: 30 }, '30 day returns')}</p>
                 </div>
               </div>
             </div>
@@ -378,7 +382,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
         {/* Product Description */}
         {product.content && (
           <div className="mt-16 bg-white rounded-3xl border border-gray-100 p-8 md:p-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Product Description</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('theme.products.description', {}, 'Product Description')}</h2>
             <div
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-indigo-600"
               dangerouslySetInnerHTML={{ __html: product.content }}
@@ -390,9 +394,9 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
         {relatedProducts && relatedProducts.length > 0 && (
           <div className="mt-16">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">You May Also Like</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{t('theme.products.you_may_also_like', {}, 'You May Also Like')}</h2>
               <Link href="/shop" className="text-indigo-600 hover:text-indigo-700 font-medium">
-                View all →
+                {t('theme.products.view_all_products', {}, 'View all products')} →
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Theme;
-use Illuminate\Support\Facades\View;
 use App\Http\Resources\ThemeResource;
 use Inertia\Inertia;
 use App\Services\MenuService;
@@ -38,6 +37,7 @@ class ReactTemplateRenderer
 
         // Prepare theme data using the standardized resource
         $themeData = (new ThemeResource($theme))->toArray(request());
+        $themeTranslations = $this->themeManager->getTranslations($theme, app()->getLocale());
         
         // Merge with template data - ensure all data is properly structured
         $siteData = $this->getSiteData();
@@ -56,6 +56,7 @@ class ReactTemplateRenderer
             'theme' => $themeData,
             'site' => $siteData,
             'menus' => $menuData,
+            'themeTranslations' => $themeTranslations,
         ]);
         
         // Ensure posts data structure is correct for React components
@@ -138,8 +139,23 @@ class ReactTemplateRenderer
         return [
             'name' => \App\Models\SiteSetting::get('site_name', config('app.name', 'Modulo CMS')),
             'tagline' => \App\Models\SiteSetting::get('site_tagline', 'Modern Content Management System'),
-            'logo' => null, // TODO: Add site logo support
+            'logo' => $this->resolveSiteLogo(),
         ];
+    }
+
+    /**
+     * Resolve site logo URL from common setting keys.
+     */
+    protected function resolveSiteLogo(): ?string
+    {
+        foreach (['site_logo', 'site_logo_url', 'general.site_logo'] as $key) {
+            $value = \App\Models\SiteSetting::get($key);
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -172,18 +188,6 @@ class ReactTemplateRenderer
                 'header' => [],
                 'footer' => [],
             ];
-        }
-    }
-
-    /**
-     * Get menu items for a specific location from database
-     */
-    protected function getMenuItems(string $location): array
-    {
-        try {
-            return $this->menuService->menuArrayByLocation($location) ?: [];
-        } catch (\Throwable $e) {
-            return [];
         }
     }
 

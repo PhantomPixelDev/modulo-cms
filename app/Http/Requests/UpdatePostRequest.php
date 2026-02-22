@@ -13,7 +13,7 @@ class UpdatePostRequest extends FormRequest
     public function authorize(): bool
     {
         $post = $this->route('post');
-        return auth()->check() && auth()->user()->can('update', $post);
+        return (bool) $this->user()?->can('update', $post);
     }
 
     public function rules(): array
@@ -76,7 +76,7 @@ class UpdatePostRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if (!$this->has('slug') && $this->has('title')) {
+        if (!$this->filled('slug') && $this->filled('title')) {
             $this->merge([
                 'slug' => \Illuminate\Support\Str::slug($this->title),
             ]);

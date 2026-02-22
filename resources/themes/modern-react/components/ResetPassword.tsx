@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   email: string;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function ResetPassword({ email, token }: Props) {
+  const { t } = useTranslation();
   const { data, setData, post, processing, errors } = useForm({
     token,
     email: email || '',
@@ -26,19 +28,19 @@ export default function ResetPassword({ email, token }: Props) {
   };
 
   return (
-    <AuthLayout title="Reset password">
-      <Head title="Reset password" />
+    <AuthLayout title={t('theme.auth.reset_password.title', {}, 'Reset password')}>
+      <Head title={t('theme.auth.reset_password.head', {}, 'Reset password')} />
 
       <div className="py-6">
         <div className="">
-          <h1 className="mb-2 text-3xl font-bold tracking-tight">Set a new password</h1>
-          <p className="mb-8 text-muted-foreground">Enter a new password for your account.</p>
+          <h1 className="mb-2 text-3xl font-bold tracking-tight">{t('theme.auth.reset_password.heading', {}, 'Set a new password')}</h1>
+          <p className="mb-8 text-muted-foreground">{t('theme.auth.reset_password.description', {}, 'Enter a new password for your account.')}</p>
 
           <form className="space-y-6" onSubmit={submit}>
             <input type="hidden" name="token" value={data.token} />
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email">{t('theme.auth.reset_password.email_label', {}, 'Email address')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -46,13 +48,13 @@ export default function ResetPassword({ email, token }: Props) {
                 autoComplete="email"
                 value={data.email}
                 onChange={(e) => setData('email', e.target.value)}
-                placeholder="you@example.com"
+                placeholder={t('theme.auth.reset_password.email_placeholder', {}, 'you@example.com')}
               />
               <InputError message={errors.email} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">New password</Label>
+              <Label htmlFor="password">{t('theme.auth.reset_password.password_label', {}, 'New password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -60,13 +62,13 @@ export default function ResetPassword({ email, token }: Props) {
                 autoComplete="new-password"
                 value={data.password}
                 onChange={(e) => setData('password', e.target.value)}
-                placeholder="••••••••"
+                placeholder={t('theme.auth.reset_password.password_placeholder', {}, '••••••••')}
               />
               <InputError message={errors.password} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password_confirmation">Confirm password</Label>
+              <Label htmlFor="password_confirmation">{t('theme.auth.reset_password.password_confirmation_label', {}, 'Confirm password')}</Label>
               <Input
                 id="password_confirmation"
                 type="password"
@@ -74,13 +76,13 @@ export default function ResetPassword({ email, token }: Props) {
                 autoComplete="new-password"
                 value={data.password_confirmation}
                 onChange={(e) => setData('password_confirmation', e.target.value)}
-                placeholder="••••••••"
+                placeholder={t('theme.auth.reset_password.password_confirmation_placeholder', {}, '••••••••')}
               />
               <InputError message={errors.password_confirmation} />
             </div>
 
             <Button type="submit" className="w-full" disabled={processing}>
-              Reset password
+              {t('theme.auth.reset_password.submit', {}, 'Reset password')}
             </Button>
           </form>
         </div>

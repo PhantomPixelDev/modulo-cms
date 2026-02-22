@@ -1,5 +1,6 @@
 import React from 'react';
 import Layout from './Layout';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface TaxonomyTermProps {
   term: {
@@ -49,6 +50,7 @@ interface TaxonomyTermProps {
 }
 
 export default function TaxonomyTerm(props: TaxonomyTermProps) {
+  const { t, locale } = useTranslation();
   const { term, posts, pagination } = props;
   
   const getPostUrl = (post: any) => {
@@ -62,8 +64,8 @@ export default function TaxonomyTerm(props: TaxonomyTermProps) {
       theme={props.theme} 
       site={props.site} 
       menus={props.menus}
-      title={`${term.name} - ${term.taxonomy.label}`}
-      description={term.description || `Browse posts in ${term.name}`}
+      title={t('theme.taxonomy.title', { name: term.name, taxonomy: term.taxonomy.label }, `${term.name} - ${term.taxonomy.label}`)}
+      description={term.description || t('theme.taxonomy.description', { name: term.name }, `Browse posts in ${term.name}`)}
     >
       <div className="space-y-8">
         
@@ -78,7 +80,12 @@ export default function TaxonomyTerm(props: TaxonomyTermProps) {
             <p className="text-xl opacity-90 max-w-2xl mx-auto">{term.description}</p>
           )}
           <p className="text-lg opacity-80 mt-2">
-            {pagination.total} {pagination.total === 1 ? 'post' : 'posts'} found
+            {t('theme.taxonomy.found', {
+              count: pagination.total,
+              label: pagination.total === 1
+                ? t('theme.taxonomy.post_singular', {}, 'post')
+                : t('theme.taxonomy.post_plural', {}, 'posts'),
+            }, `${pagination.total} posts found`)}
           </p>
         </header>
 
@@ -86,7 +93,7 @@ export default function TaxonomyTerm(props: TaxonomyTermProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => {
               const url = getPostUrl(post);
-              const published = post.published_at ? new Date(post.published_at).toLocaleDateString() : '';
+              const published = post.published_at ? new Date(post.published_at).toLocaleDateString(locale) : '';
               
               return (
                 <div key={post.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
@@ -97,9 +104,9 @@ export default function TaxonomyTerm(props: TaxonomyTermProps) {
                   </h3>
                   <p className="text-gray-600 mb-4 line-clamp-3">{post.excerpt}</p>
                   <div className="text-sm text-gray-500 space-y-1">
-                    <p>By: {post.author?.name || 'Unknown Author'}</p>
-                    <p>Type: {post.post_type?.label || 'Post'}</p>
-                    {published && <p>Published: {published}</p>}
+                    <p>{t('theme.taxonomy.by', { name: post.author?.name || t('theme.taxonomy.unknown_author', {}, 'Unknown Author') }, `By: ${post.author?.name || 'Unknown Author'}`)}</p>
+                    <p>{t('theme.taxonomy.type', { type: post.post_type?.label || t('theme.taxonomy.fallback_type', {}, 'Post') }, `Type: ${post.post_type?.label || 'Post'}`)}</p>
+                    {published && <p>{t('theme.taxonomy.published', { date: published }, `Published: ${published}`)}</p>}
                   </div>
                   {post.terms && post.terms.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1">
@@ -122,8 +129,8 @@ export default function TaxonomyTerm(props: TaxonomyTermProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">No posts found in "{term.name}"</h3>
-              <p className="text-gray-600">There are no published posts in this category at the moment.</p>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">{t('theme.taxonomy.empty_title', { term: term.name }, `No posts found in ${term.name}`)}</h3>
+              <p className="text-gray-600">{t('theme.taxonomy.empty_description', {}, 'There are no published posts in this category at the moment.')}</p>
             </div>
           </div>
         )}
