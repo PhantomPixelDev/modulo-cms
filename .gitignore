@@ -27,3 +27,5 @@ ULTIMATE_CONTENT_SUMMARY.md
 /database/seeders/DEVUserAccountsSeeder.php
 .windsurf/*
 .fuse_hidden*
+build/
+public/build

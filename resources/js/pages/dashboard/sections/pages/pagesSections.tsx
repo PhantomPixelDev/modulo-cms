@@ -14,6 +14,7 @@ export function getPagesSections({
   showSuccess,
   showError,
   ROUTE,
+  t,
 }: {
   postsProp: any;
   post: any;
@@ -22,6 +23,7 @@ export function getPagesSections({
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const handlePageSubmit = async (formData: any, editId?: number) => {
     const url = editId ? ROUTE.pages.update(editId) : ROUTE.pages.store();
@@ -30,45 +32,64 @@ export function getPagesSections({
       router[method](url, formData, {
         preserveScroll: true,
         onSuccess: () => {
-          showSuccess(`Page ${editId ? 'updated' : 'created'} successfully`);
+          showSuccess(
+            t(
+              editId
+                ? 'dashboard.pages.messages.updated'
+                : 'dashboard.pages.messages.created'
+            )
+          );
           router.visit(ROUTE.pages.index());
         },
         onError: (errors) => {
           console.error('Validation errors:', errors);
-          showError(`Failed to ${editId ? 'update' : 'create'} page`);
+          showError(
+            t(
+              editId
+                ? 'dashboard.pages.messages.update_failed'
+                : 'dashboard.pages.messages.create_failed'
+            )
+          );
         },
       });
     } catch (error) {
       console.error('Error saving page:', error);
-      showError(`Failed to ${editId ? 'update' : 'create'} page`);
+      showError(
+        t(
+          editId
+            ? 'dashboard.pages.messages.update_failed'
+            : 'dashboard.pages.messages.create_failed'
+        )
+      );
     }
   };
 
   const handleDeletePage = async (page: any) => {
-    const name = page?.title || 'this page';
-    if (!window.confirm(`Delete ${name}? This cannot be undone.`)) return;
+    const name = page?.title || t('dashboard.common.item');
+    if (!window.confirm(t('dashboard.pages.confirm_delete', { name }))) return;
     try {
       await router.delete(ROUTE.pages.destroy(page.id), {
         onSuccess: () => {
-          showSuccess('Page deleted');
+          showSuccess(t('dashboard.pages.messages.deleted'));
           router.visit(ROUTE.pages.index());
         },
-        onError: () => showError('Failed to delete page'),
+        onError: () => showError(t('dashboard.pages.messages.delete_failed')),
         preserveScroll: true,
       });
     } catch (error) {
       console.error('Error deleting page:', error);
-      showError('An error occurred while deleting the page');
+      showError(t('dashboard.pages.messages.delete_error'));
     }
   };
 
   const renderPagesList = () => (
     <SectionWrapper
-      title="Pages"
+      title={t('dashboard.pages.title')}
+      description={t('dashboard.pages.list_description')}
       actions={
         can('create posts') ? (
           <Button size="sm" onClick={() => router.visit(ROUTE.pages.create())}>
-            + New Page
+            {t('dashboard.pages.actions.new')}
           </Button>
         ) : null
       }
@@ -93,10 +114,11 @@ export function getPagesSections({
 
   const renderPageCreate = () => (
     <SectionWrapper
-      title={'Create Page'}
+      title={t('dashboard.pages.create_title')}
+      description={t('dashboard.pages.create_description')}
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.pages.index())}>
-          Back to Pages
+          {t('dashboard.pages.actions.back')}
         </Button>
       }
     >
@@ -110,7 +132,8 @@ export function getPagesSections({
 
   const renderPageEdit = () => (
     <SectionWrapper
-      title={'Edit Page'}
+      title={t('dashboard.pages.edit_title')}
+      description={t('dashboard.pages.edit_description')}
       actions={
         <div className="flex gap-2">
           {can('delete posts') && (
@@ -119,11 +142,11 @@ export function getPagesSections({
               size="sm"
               onClick={() => handleDeletePage((post as any) || (editPost as any))}
             >
-              Delete
+              {t('dashboard.pages.actions.delete')}
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.pages.index())}>
-            Back to Pages
+            {t('dashboard.pages.actions.back')}
           </Button>
         </div>
       }

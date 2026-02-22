@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminToast } from '@/components/admin/AdminToastProvider';
 import { Settings, Globe, FileText, Search, Share2, BarChart3, Image, Wrench, Link2, Trash2 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { Locale } from '../../types';
 
 type SettingsGroup = 'general' | 'reading' | 'writing' | 'permalinks' | 'seo' | 'social' | 'analytics' | 'media' | 'advanced';
 
@@ -31,7 +33,15 @@ interface SiteSettingsFormProps {
   postTypes?: PostType[];
   timezones?: string[];
   canEdit: boolean;
+  locales?: Locale[];
+  currentLocale?: string;
 }
+
+const resolveLocale = (locales?: Locale[], preferred?: string) => {
+  if (preferred) return preferred;
+  const defaultLocale = locales?.find((locale) => locale.is_default)?.code;
+  return defaultLocale || locales?.[0]?.code || 'en';
+};
 
 const groupIcons: Record<SettingsGroup, React.ReactNode> = {
   general: <Settings className="h-4 w-4" />,
@@ -45,18 +55,6 @@ const groupIcons: Record<SettingsGroup, React.ReactNode> = {
   advanced: <Wrench className="h-4 w-4" />,
 };
 
-const groupLabels: Record<SettingsGroup, string> = {
-  general: 'General',
-  reading: 'Reading',
-  writing: 'Writing',
-  permalinks: 'Permalinks',
-  seo: 'SEO',
-  social: 'Social',
-  analytics: 'Analytics',
-  media: 'Media',
-  advanced: 'Advanced',
-};
-
 export function SiteSettingsForm({
   settings,
   currentGroup,
@@ -64,11 +62,38 @@ export function SiteSettingsForm({
   postTypes = [],
   timezones = [],
   canEdit,
+  locales = [],
+  currentLocale,
 }: SiteSettingsFormProps) {
+  const { t } = useTranslation();
+  const groupLabels: Record<SettingsGroup, string> = {
+    general: t('dashboard.settings.groups.general'),
+    reading: t('dashboard.settings.groups.reading'),
+    writing: t('dashboard.settings.groups.writing'),
+    permalinks: t('dashboard.settings.groups.permalinks'),
+    seo: t('dashboard.settings.groups.seo'),
+    social: t('dashboard.settings.groups.social'),
+    analytics: t('dashboard.settings.groups.analytics'),
+    media: t('dashboard.settings.groups.media'),
+    advanced: t('dashboard.settings.groups.advanced'),
+  };
   const { success: showSuccess, error: showError } = useAdminToast();
   const [activeTab, setActiveTab] = useState<SettingsGroup>(currentGroup);
   const [formData, setFormData] = useState<Record<string, Record<string, any>>>(settings);
+  const [selectedLocale, setSelectedLocale] = useState<string>(resolveLocale(locales, currentLocale));
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setFormData(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    setActiveTab(currentGroup);
+  }, [currentGroup]);
+
+  useEffect(() => {
+    setSelectedLocale(resolveLocale(locales, currentLocale));
+  }, [locales, currentLocale]);
 
   const updateField = (group: string, key: string, value: any) => {
     setFormData((prev) => ({
@@ -88,17 +113,17 @@ export function SiteSettingsForm({
       // Ensure all boolean fields are actually booleans, and nulls are handled
       const dataToSave = { ...formData[group] };
       
-      await router.put(`/dashboard/admin/settings/${group}`, dataToSave, {
+      await router.put(`/dashboard/admin/settings/${group}`, { ...dataToSave, locale: selectedLocale }, {
         preserveScroll: true,
-        onSuccess: () => showSuccess(`${groupLabels[group]} settings saved`),
+        onSuccess: () => showSuccess(t('dashboard.settings.messages.saved', { group: groupLabels[group] })),
         onError: (errors) => {
           console.error('Validation errors:', errors);
-          showError('Failed to save settings. Please check your input.');
+          showError(t('dashboard.settings.messages.save_failed'));
         },
       });
     } catch (e) {
       console.error(e);
-      showError('Error saving settings');
+      showError(t('dashboard.settings.messages.save_error'));
     } finally {
       setSaving(false);
     }
@@ -107,65 +132,76 @@ export function SiteSettingsForm({
   const handleTabChange = (value: string): void => {
     setActiveTab(value as SettingsGroup);
     // Use replace to avoid polluting history with every tab click
-    router.get('/dashboard/admin/settings', { group: value }, { 
+    router.get('/dashboard/admin/settings', { group: value, locale: selectedLocale }, { 
       preserveState: true, 
       preserveScroll: true,
       replace: true 
     });
   };
 
+  const handleLocaleSwitch = (localeCode: string) => {
+    setSelectedLocale(localeCode);
+    router.get('/dashboard/admin/settings', { group: activeTab, locale: localeCode }, {
+      preserveState: true,
+      preserveScroll: true,
+      replace: true,
+    });
+  };
+
+  const availableLocales = locales ?? [];
+
   const renderGeneralSettings = () => (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="site_name" className="text-sm font-bold">Site Name</Label>
+          <Label htmlFor="site_name" className="text-sm font-bold">{t('dashboard.settings.fields.site_name')}</Label>
           <Input
             id="site_name"
             value={formData.general?.site_name || ''}
             onChange={(e) => updateField('general', 'site_name', e.target.value)}
             disabled={!canEdit}
-            placeholder="Modulo CMS"
+            placeholder={t('dashboard.settings.placeholders.site_name')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="site_url" className="text-sm font-bold">Site URL</Label>
+          <Label htmlFor="site_url" className="text-sm font-bold">{t('dashboard.settings.fields.site_url')}</Label>
           <Input
             id="site_url"
             type="url"
             value={formData.general?.site_url || ''}
             onChange={(e) => updateField('general', 'site_url', e.target.value)}
             disabled={!canEdit}
-            placeholder="https://example.com"
+            placeholder={t('dashboard.settings.placeholders.site_url')}
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="site_tagline" className="text-sm font-bold">Tagline</Label>
+        <Label htmlFor="site_tagline" className="text-sm font-bold">{t('dashboard.settings.fields.site_tagline')}</Label>
         <Input
           id="site_tagline"
           value={formData.general?.site_tagline || ''}
           onChange={(e) => updateField('general', 'site_tagline', e.target.value)}
-          placeholder="A modern, modular headless CMS"
+          placeholder={t('dashboard.settings.placeholders.site_tagline')}
           disabled={!canEdit}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="admin_email" className="text-sm font-bold">Admin Email</Label>
+        <Label htmlFor="admin_email" className="text-sm font-bold">{t('dashboard.settings.fields.admin_email')}</Label>
         <Input
           id="admin_email"
           type="email"
           value={formData.general?.admin_email || ''}
           onChange={(e) => updateField('general', 'admin_email', e.target.value)}
           disabled={!canEdit}
-          placeholder="admin@example.com"
+          placeholder={t('dashboard.settings.placeholders.admin_email')}
         />
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="timezone" className="text-sm font-bold">Timezone</Label>
+          <Label htmlFor="timezone" className="text-sm font-bold">{t('dashboard.settings.fields.timezone')}</Label>
           <Select
             value={formData.general?.timezone || 'UTC'}
             onValueChange={(v) => updateField('general', 'timezone', v)}
@@ -184,7 +220,7 @@ export function SiteSettingsForm({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="date_format" className="text-sm font-bold">Date Format</Label>
+          <Label htmlFor="date_format" className="text-sm font-bold">{t('dashboard.settings.fields.date_format')}</Label>
           <Select
             value={formData.general?.date_format || 'F j, Y'}
             onValueChange={(v) => updateField('general', 'date_format', v)}
@@ -194,15 +230,15 @@ export function SiteSettingsForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="F j, Y">January 1, 2025</SelectItem>
-              <SelectItem value="Y-m-d">2025-01-01</SelectItem>
-              <SelectItem value="m/d/Y">01/01/2025</SelectItem>
-              <SelectItem value="d/m/Y">01/01/2025</SelectItem>
+              <SelectItem value="F j, Y">{t('dashboard.settings.options.date_format.long')}</SelectItem>
+              <SelectItem value="Y-m-d">{t('dashboard.settings.options.date_format.iso')}</SelectItem>
+              <SelectItem value="m/d/Y">{t('dashboard.settings.options.date_format.us')}</SelectItem>
+              <SelectItem value="d/m/Y">{t('dashboard.settings.options.date_format.eu')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="time_format" className="text-sm font-bold">Time Format</Label>
+          <Label htmlFor="time_format" className="text-sm font-bold">{t('dashboard.settings.fields.time_format')}</Label>
           <Select
             value={formData.general?.time_format || 'g:i a'}
             onValueChange={(v) => updateField('general', 'time_format', v)}
@@ -212,9 +248,9 @@ export function SiteSettingsForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="g:i a">1:30 pm</SelectItem>
-              <SelectItem value="g:i A">1:30 PM</SelectItem>
-              <SelectItem value="H:i">13:30</SelectItem>
+              <SelectItem value="g:i a">{t('dashboard.settings.options.time_format.ampm_lower')}</SelectItem>
+              <SelectItem value="g:i A">{t('dashboard.settings.options.time_format.ampm_upper')}</SelectItem>
+              <SelectItem value="H:i">{t('dashboard.settings.options.time_format.24h')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -225,7 +261,7 @@ export function SiteSettingsForm({
   const renderReadingSettings = () => (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="show_on_front" className="text-sm font-bold">Homepage Display</Label>
+        <Label htmlFor="show_on_front" className="text-sm font-bold">{t('dashboard.settings.fields.homepage')}</Label>
         <Select
           value={formData.reading?.show_on_front || 'posts'}
           onValueChange={(v) => updateField('reading', 'show_on_front', v)}
@@ -235,8 +271,8 @@ export function SiteSettingsForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="posts">Your latest posts</SelectItem>
-            <SelectItem value="page">A static page</SelectItem>
+            <SelectItem value="posts">{t('dashboard.settings.options.homepage.latest_posts')}</SelectItem>
+            <SelectItem value="page">{t('dashboard.settings.options.homepage.static_page')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -244,17 +280,17 @@ export function SiteSettingsForm({
       {formData.reading?.show_on_front === 'page' && (
         <div className="grid gap-6 md:grid-cols-2 p-4 rounded-lg bg-muted/20 border border-dashed">
           <div className="space-y-2">
-            <Label htmlFor="front_page_id" className="text-sm font-bold">Homepage</Label>
+            <Label htmlFor="front_page_id" className="text-sm font-bold">{t('dashboard.settings.fields.front_page')}</Label>
             <Select
               value={formData.reading?.front_page_id ? String(formData.reading.front_page_id) : 'none'}
               onValueChange={(v) => updateField('reading', 'front_page_id', v === 'none' ? null : parseInt(v))}
               disabled={!canEdit}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a page" />
+                <SelectValue placeholder={t('dashboard.settings.placeholders.select_page')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— Select —</SelectItem>
+                <SelectItem value="none">{t('dashboard.settings.placeholders.select_none')}</SelectItem>
                 {pages.map((page) => (
                   <SelectItem key={page.id} value={String(page.id)}>
                     {page.title}
@@ -264,17 +300,17 @@ export function SiteSettingsForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="posts_page_id" className="text-sm font-bold">Posts Page</Label>
+            <Label htmlFor="posts_page_id" className="text-sm font-bold">{t('dashboard.settings.fields.posts_page')}</Label>
             <Select
               value={formData.reading?.posts_page_id ? String(formData.reading.posts_page_id) : 'none'}
               onValueChange={(v) => updateField('reading', 'posts_page_id', v === 'none' ? null : parseInt(v))}
               disabled={!canEdit}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a page" />
+                <SelectValue placeholder={t('dashboard.settings.placeholders.select_page')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— Select —</SelectItem>
+                <SelectItem value="none">{t('dashboard.settings.placeholders.select_none')}</SelectItem>
                 {pages.map((page) => (
                   <SelectItem key={page.id} value={String(page.id)}>
                     {page.title}
@@ -288,7 +324,7 @@ export function SiteSettingsForm({
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="posts_per_page" className="text-sm font-bold">Blog pages show at most</Label>
+          <Label htmlFor="posts_per_page" className="text-sm font-bold">{t('dashboard.settings.fields.posts_per_page')}</Label>
           <div className="flex items-center gap-3">
             <Input
               id="posts_per_page"
@@ -300,11 +336,11 @@ export function SiteSettingsForm({
               onChange={(e) => updateField('reading', 'posts_per_page', parseInt(e.target.value) || 10)}
               disabled={!canEdit}
             />
-            <span className="text-sm text-muted-foreground">posts</span>
+            <span className="text-sm text-muted-foreground">{t('dashboard.settings.units.posts')}</span>
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="feed_limit" className="text-sm font-bold">Syndication feeds show the most recent</Label>
+          <Label htmlFor="feed_limit" className="text-sm font-bold">{t('dashboard.settings.fields.feed_limit')}</Label>
           <div className="flex items-center gap-3">
             <Input
               id="feed_limit"
@@ -316,7 +352,7 @@ export function SiteSettingsForm({
               onChange={(e) => updateField('reading', 'feed_limit', parseInt(e.target.value) || 10)}
               disabled={!canEdit}
             />
-            <span className="text-sm text-muted-foreground">items</span>
+            <span className="text-sm text-muted-foreground">{t('dashboard.settings.units.items')}</span>
           </div>
         </div>
       </div>
@@ -327,7 +363,7 @@ export function SiteSettingsForm({
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="default_post_status" className="text-sm font-bold">Default Post Status</Label>
+          <Label htmlFor="default_post_status" className="text-sm font-bold">{t('dashboard.settings.fields.default_post_status')}</Label>
           <Select
             value={formData.writing?.default_post_status || 'draft'}
             onValueChange={(v) => updateField('writing', 'default_post_status', v)}
@@ -337,14 +373,14 @@ export function SiteSettingsForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="pending">Pending Review</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="draft">{t('dashboard.posts.form.status.draft')}</SelectItem>
+              <SelectItem value="pending">{t('dashboard.settings.options.post_status.pending')}</SelectItem>
+              <SelectItem value="published">{t('dashboard.posts.form.status.published')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="default_post_type" className="text-sm font-bold">Default Post Type</Label>
+          <Label htmlFor="default_post_type" className="text-sm font-bold">{t('dashboard.settings.fields.default_post_type')}</Label>
           <Select
             value={formData.writing?.default_post_type || 'post'}
             onValueChange={(v) => updateField('writing', 'default_post_type', v)}
@@ -369,67 +405,67 @@ export function SiteSettingsForm({
   const renderSeoSettings = () => (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="meta_title_suffix" className="text-sm font-bold">Title Suffix</Label>
+        <Label htmlFor="meta_title_suffix" className="text-sm font-bold">{t('dashboard.settings.fields.meta_title_suffix')}</Label>
         <Input
           id="meta_title_suffix"
           value={formData.seo?.meta_title_suffix || ''}
           onChange={(e) => updateField('seo', 'meta_title_suffix', e.target.value)}
-          placeholder="| My Awesome Site"
+          placeholder={t('dashboard.settings.placeholders.meta_title_suffix')}
           disabled={!canEdit}
         />
-        <p className="text-xs text-muted-foreground">Appended to page titles (e.g., "Home | My Awesome Site")</p>
+        <p className="text-xs text-muted-foreground">{t('dashboard.settings.hints.meta_title_suffix')}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="meta_description" className="text-sm font-bold">Default Meta Description</Label>
+        <Label htmlFor="meta_description" className="text-sm font-bold">{t('dashboard.settings.fields.meta_description')}</Label>
         <Textarea
           id="meta_description"
           value={formData.seo?.meta_description || ''}
           onChange={(e) => updateField('seo', 'meta_description', e.target.value)}
           rows={3}
           disabled={!canEdit}
-          placeholder="Describe your site for search engines..."
+          placeholder={t('dashboard.settings.placeholders.meta_description')}
           className="resize-none"
         />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="google_site_verification" className="text-sm font-bold">Google Search Console</Label>
+          <Label htmlFor="google_site_verification" className="text-sm font-bold">{t('dashboard.settings.fields.google_site_verification')}</Label>
           <Input
             id="google_site_verification"
             value={formData.seo?.google_site_verification || ''}
             onChange={(e) => updateField('seo', 'google_site_verification', e.target.value)}
-            placeholder="verification-code"
+            placeholder={t('dashboard.settings.placeholders.verification_code')}
             disabled={!canEdit}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="bing_site_verification" className="text-sm font-bold">Bing Webmaster Tools</Label>
+          <Label htmlFor="bing_site_verification" className="text-sm font-bold">{t('dashboard.settings.fields.bing_site_verification')}</Label>
           <Input
             id="bing_site_verification"
             value={formData.seo?.bing_site_verification || ''}
             onChange={(e) => updateField('seo', 'bing_site_verification', e.target.value)}
-            placeholder="verification-code"
+            placeholder={t('dashboard.settings.placeholders.verification_code')}
             disabled={!canEdit}
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="indexnow_key" className="text-sm font-bold">IndexNow API Key</Label>
+        <Label htmlFor="indexnow_key" className="text-sm font-bold">{t('dashboard.settings.fields.indexnow_key')}</Label>
         <Input
           id="indexnow_key"
           value={formData.seo?.indexnow_key || ''}
           onChange={(e) => updateField('seo', 'indexnow_key', e.target.value)}
-          placeholder="your-indexnow-key"
+          placeholder={t('dashboard.settings.placeholders.indexnow_key')}
           disabled={!canEdit}
         />
-        <p className="text-xs text-muted-foreground">Allows instant notification to search engines when content is updated.</p>
+        <p className="text-xs text-muted-foreground">{t('dashboard.settings.hints.indexnow_key')}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="robots_txt" className="text-sm font-bold">robots.txt</Label>
+        <Label htmlFor="robots_txt" className="text-sm font-bold">{t('dashboard.settings.fields.robots_txt')}</Label>
         <Textarea
           id="robots_txt"
           value={formData.seo?.robots_txt || ''}
@@ -446,68 +482,68 @@ export function SiteSettingsForm({
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="facebook_url" className="text-sm font-bold">Facebook</Label>
+          <Label htmlFor="facebook_url" className="text-sm font-bold">{t('dashboard.settings.fields.facebook_url')}</Label>
           <Input
             id="facebook_url"
             type="url"
             value={formData.social?.facebook_url || ''}
             onChange={(e) => updateField('social', 'facebook_url', e.target.value)}
-            placeholder="https://facebook.com/yourpage"
+            placeholder={t('dashboard.settings.placeholders.facebook_url')}
             disabled={!canEdit}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="twitter_url" className="text-sm font-bold">Twitter / X</Label>
+          <Label htmlFor="twitter_url" className="text-sm font-bold">{t('dashboard.settings.fields.twitter_url')}</Label>
           <Input
             id="twitter_url"
             type="url"
             value={formData.social?.twitter_url || ''}
             onChange={(e) => updateField('social', 'twitter_url', e.target.value)}
-            placeholder="https://twitter.com/yourhandle"
+            placeholder={t('dashboard.settings.placeholders.twitter_url')}
             disabled={!canEdit}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="instagram_url" className="text-sm font-bold">Instagram</Label>
+          <Label htmlFor="instagram_url" className="text-sm font-bold">{t('dashboard.settings.fields.instagram_url')}</Label>
           <Input
             id="instagram_url"
             type="url"
             value={formData.social?.instagram_url || ''}
             onChange={(e) => updateField('social', 'instagram_url', e.target.value)}
-            placeholder="https://instagram.com/yourhandle"
+            placeholder={t('dashboard.settings.placeholders.instagram_url')}
             disabled={!canEdit}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="linkedin_url" className="text-sm font-bold">LinkedIn</Label>
+          <Label htmlFor="linkedin_url" className="text-sm font-bold">{t('dashboard.settings.fields.linkedin_url')}</Label>
           <Input
             id="linkedin_url"
             type="url"
             value={formData.social?.linkedin_url || ''}
             onChange={(e) => updateField('social', 'linkedin_url', e.target.value)}
-            placeholder="https://linkedin.com/company/yourcompany"
+            placeholder={t('dashboard.settings.placeholders.linkedin_url')}
             disabled={!canEdit}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="youtube_url" className="text-sm font-bold">YouTube</Label>
+          <Label htmlFor="youtube_url" className="text-sm font-bold">{t('dashboard.settings.fields.youtube_url')}</Label>
           <Input
             id="youtube_url"
             type="url"
             value={formData.social?.youtube_url || ''}
             onChange={(e) => updateField('social', 'youtube_url', e.target.value)}
-            placeholder="https://youtube.com/@yourchannel"
+            placeholder={t('dashboard.settings.placeholders.youtube_url')}
             disabled={!canEdit}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="github_url" className="text-sm font-bold">GitHub</Label>
+          <Label htmlFor="github_url" className="text-sm font-bold">{t('dashboard.settings.fields.github_url')}</Label>
           <Input
             id="github_url"
             type="url"
             value={formData.social?.github_url || ''}
             onChange={(e) => updateField('social', 'github_url', e.target.value)}
-            placeholder="https://github.com/yourorg"
+            placeholder={t('dashboard.settings.placeholders.github_url')}
             disabled={!canEdit}
           />
         </div>
@@ -519,22 +555,22 @@ export function SiteSettingsForm({
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="google_analytics_id" className="text-sm font-bold">Google Analytics (G4)</Label>
+          <Label htmlFor="google_analytics_id" className="text-sm font-bold">{t('dashboard.settings.fields.google_analytics_id')}</Label>
           <Input
             id="google_analytics_id"
             value={formData.analytics?.google_analytics_id || ''}
             onChange={(e) => updateField('analytics', 'google_analytics_id', e.target.value)}
-            placeholder="G-XXXXXXXXXX"
+            placeholder={t('dashboard.settings.placeholders.google_analytics_id')}
             disabled={!canEdit}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="gtm_container_id" className="text-sm font-bold">Google Tag Manager</Label>
+          <Label htmlFor="gtm_container_id" className="text-sm font-bold">{t('dashboard.settings.fields.gtm_container_id')}</Label>
           <Input
             id="gtm_container_id"
             value={formData.analytics?.gtm_container_id || ''}
             onChange={(e) => updateField('analytics', 'gtm_container_id', e.target.value)}
-            placeholder="GTM-XXXXXXX"
+            placeholder={t('dashboard.settings.placeholders.gtm_container_id')}
             disabled={!canEdit}
           />
         </div>
@@ -544,13 +580,13 @@ export function SiteSettingsForm({
 
   const renderMediaSettings = () => {
     const commonMimeTypes = [
-      { label: 'JPEG Image', value: 'image/jpeg' },
-      { label: 'PNG Image', value: 'image/png' },
-      { label: 'GIF Image', value: 'image/gif' },
-      { label: 'WebP Image', value: 'image/webp' },
-      { label: 'SVG Image', value: 'image/svg+xml' },
-      { label: 'PDF Document', value: 'application/pdf' },
-      { label: 'ZIP Archive', value: 'application/zip' },
+      { label: t('dashboard.settings.options.mime.jpeg'), value: 'image/jpeg' },
+      { label: t('dashboard.settings.options.mime.png'), value: 'image/png' },
+      { label: t('dashboard.settings.options.mime.gif'), value: 'image/gif' },
+      { label: t('dashboard.settings.options.mime.webp'), value: 'image/webp' },
+      { label: t('dashboard.settings.options.mime.svg'), value: 'image/svg+xml' },
+      { label: t('dashboard.settings.options.mime.pdf'), value: 'application/pdf' },
+      { label: t('dashboard.settings.options.mime.zip'), value: 'application/zip' },
     ];
 
     const currentMimes = formData.media?.allowed_mime_types || [];
@@ -566,7 +602,7 @@ export function SiteSettingsForm({
       <div className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="max_upload_size" className="text-sm font-bold">Maximum Upload Size (MB)</Label>
+            <Label htmlFor="max_upload_size" className="text-sm font-bold">{t('dashboard.settings.fields.max_upload_size')}</Label>
             <Input
               id="max_upload_size"
               type="number"
@@ -578,7 +614,7 @@ export function SiteSettingsForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="image_quality" className="text-sm font-bold">Generated Image Quality (%)</Label>
+            <Label htmlFor="image_quality" className="text-sm font-bold">{t('dashboard.settings.fields.image_quality')}</Label>
             <Input
               id="image_quality"
               type="number"
@@ -592,7 +628,7 @@ export function SiteSettingsForm({
         </div>
 
         <div className="space-y-3">
-          <Label className="text-sm font-bold">Allowed File Types</Label>
+          <Label className="text-sm font-bold">{t('dashboard.settings.fields.allowed_file_types')}</Label>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-4 rounded-lg border bg-muted/5">
             {commonMimeTypes.map((mime) => (
               <div key={mime.value} className="flex items-center space-x-2">
@@ -606,7 +642,7 @@ export function SiteSettingsForm({
               </div>
             ))}
           </div>
-          <p className="text-[11px] text-muted-foreground">Select which file types users are allowed to upload to the media library.</p>
+          <p className="text-[11px] text-muted-foreground">{t('dashboard.settings.hints.allowed_file_types')}</p>
         </div>
       </div>
     );
@@ -617,17 +653,17 @@ export function SiteSettingsForm({
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <div className="h-8 w-1 bg-primary rounded-full" />
-          <h3 className="text-lg font-bold">Permalink Structure</h3>
+          <h3 className="text-lg font-bold">{t('dashboard.settings.permalinks.structure_title')}</h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          Choose the default structure for your permanent URLs. This helps with SEO and user experience.
+          {t('dashboard.settings.permalinks.structure_description')}
         </p>
         <div className="grid gap-4 p-4 rounded-lg border bg-muted/5">
           <div className="space-y-2">
-            <Label htmlFor="permalink_structure" className="text-sm font-bold">Custom Structure</Label>
+            <Label htmlFor="permalink_structure" className="text-sm font-bold">{t('dashboard.settings.permalinks.custom_structure')}</Label>
             <div className="flex gap-2">
               <span className="flex items-center px-3 rounded-md border bg-muted text-muted-foreground text-xs font-mono">
-                {formData.general?.site_url || 'https://example.com'}
+                {formData.general?.site_url || t('dashboard.settings.placeholders.site_url_sample')}
               </span>
               <Input
                 id="permalink_structure"
@@ -638,7 +674,7 @@ export function SiteSettingsForm({
                 className="font-mono text-xs"
               />
             </div>
-            <p className="text-[11px] text-muted-foreground">Available tags: %year%, %monthnum%, %day%, %postname%, %post_id%</p>
+            <p className="text-[11px] text-muted-foreground">{t('dashboard.settings.permalinks.available_tags')}</p>
           </div>
         </div>
       </div>
@@ -646,27 +682,27 @@ export function SiteSettingsForm({
       <div className="space-y-4 pt-6 border-t">
         <div className="flex items-center gap-2">
           <div className="h-8 w-1 bg-primary rounded-full" />
-          <h3 className="text-lg font-bold">Optional Bases</h3>
+          <h3 className="text-lg font-bold">{t('dashboard.settings.permalinks.optional_bases')}</h3>
         </div>
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="category_base" className="text-sm font-bold">Category Base</Label>
+            <Label htmlFor="category_base" className="text-sm font-bold">{t('dashboard.settings.permalinks.category_base')}</Label>
             <Input
               id="category_base"
               value={formData.permalinks?.category_base || 'category'}
               onChange={(e) => updateField('permalinks', 'category_base', e.target.value)}
               disabled={!canEdit}
-              placeholder="category"
+              placeholder={t('dashboard.settings.placeholders.category_base')}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tag_base" className="text-sm font-bold">Tag Base</Label>
+            <Label htmlFor="tag_base" className="text-sm font-bold">{t('dashboard.settings.permalinks.tag_base')}</Label>
             <Input
               id="tag_base"
               value={formData.permalinks?.tag_base || 'tag'}
               onChange={(e) => updateField('permalinks', 'tag_base', e.target.value)}
               disabled={!canEdit}
-              placeholder="tag"
+              placeholder={t('dashboard.settings.placeholders.tag_base')}
             />
           </div>
         </div>
@@ -679,8 +715,8 @@ export function SiteSettingsForm({
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/5">
           <div className="space-y-0.5">
-            <Label className="text-sm font-bold">Maintenance Mode</Label>
-            <p className="text-xs text-muted-foreground">Temporarily disable public access to your site</p>
+            <Label className="text-sm font-bold">{t('dashboard.settings.advanced.maintenance_mode')}</Label>
+            <p className="text-xs text-muted-foreground">{t('dashboard.settings.advanced.maintenance_hint')}</p>
           </div>
           <Switch
             checked={Boolean(formData.advanced?.maintenance_mode)}
@@ -691,7 +727,7 @@ export function SiteSettingsForm({
 
         {formData.advanced?.maintenance_mode && (
           <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-            <Label htmlFor="maintenance_message" className="text-sm font-bold">Maintenance Message</Label>
+            <Label htmlFor="maintenance_message" className="text-sm font-bold">{t('dashboard.settings.advanced.maintenance_message')}</Label>
             <Textarea
               id="maintenance_message"
               value={formData.advanced?.maintenance_message || ''}
@@ -705,8 +741,8 @@ export function SiteSettingsForm({
 
         <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/5">
           <div className="space-y-0.5">
-            <Label className="text-sm font-bold">Enable Comments</Label>
-            <p className="text-xs text-muted-foreground">Allow users to comment on posts and pages (Global setting)</p>
+            <Label className="text-sm font-bold">{t('dashboard.settings.advanced.enable_comments')}</Label>
+            <p className="text-xs text-muted-foreground">{t('dashboard.settings.advanced.enable_comments_hint')}</p>
           </div>
           <Switch
             checked={Boolean(formData.advanced?.enable_comments)}
@@ -717,8 +753,8 @@ export function SiteSettingsForm({
 
         <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/5">
           <div className="space-y-0.5">
-            <Label className="text-sm font-bold">User Registration</Label>
-            <p className="text-xs text-muted-foreground">Allow new users to sign up from the frontend</p>
+            <Label className="text-sm font-bold">{t('dashboard.settings.advanced.registration')}</Label>
+            <p className="text-xs text-muted-foreground">{t('dashboard.settings.advanced.registration_hint')}</p>
           </div>
           <Switch
             checked={Boolean(formData.advanced?.registration_enabled)}
@@ -733,32 +769,40 @@ export function SiteSettingsForm({
   const handleClearCache = () => {
     if (!canEdit) return;
     router.post('/dashboard/admin/settings/clear-cache', {}, {
-      onSuccess: () => showSuccess('Settings cache cleared successfully'),
+      onSuccess: () => showSuccess(t('dashboard.settings.cache_cleared')),
     });
   };
 
   const groups: SettingsGroup[] = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced'];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight">Site Settings</h2>
-          <p className="text-muted-foreground text-sm">Manage your site configuration and global preferences.</p>
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleClearCache}
-          disabled={!canEdit}
-          className="text-xs"
-        >
-          <Trash2 className="h-3.5 w-3.5 mr-2" />
-          Clear Cache
-        </Button>
-      </div>
-
+    <div className="space-y-6">
       <Card className="shadow-sm border-border overflow-hidden">
+        {availableLocales.length > 1 && (
+          <div className="flex items-center justify-end gap-3 px-6 py-3 border-b bg-muted/20">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Globe className="h-4 w-4" />
+              <span>{t('dashboard.settings.locale_selector')}</span>
+            </div>
+            <Select value={selectedLocale} onValueChange={handleLocaleSwitch}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableLocales.map((locale) => (
+                  <SelectItem key={locale.code} value={locale.code}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{locale.code.toUpperCase()}</span>
+                      {locale.native_name && (
+                        <span className="text-xs text-muted-foreground">{locale.native_name}</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <CardContent className="p-0">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <div className="border-b px-6 bg-muted/20">
@@ -783,7 +827,9 @@ export function SiteSettingsForm({
                 {renderGeneralSettings()}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={() => handleSave('general')} disabled={!canEdit || saving} className="px-8">
-                    {saving ? 'Saving...' : 'Save General Settings'}
+                    {saving
+                      ? t('dashboard.settings.actions.saving')
+                      : t('dashboard.settings.actions.save_general')}
                   </Button>
                 </div>
               </TabsContent>
@@ -792,7 +838,9 @@ export function SiteSettingsForm({
                 {renderReadingSettings()}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={() => handleSave('reading')} disabled={!canEdit || saving} className="px-8">
-                    {saving ? 'Saving...' : 'Save Reading Settings'}
+                    {saving
+                      ? t('dashboard.settings.actions.saving')
+                      : t('dashboard.settings.actions.save_reading')}
                   </Button>
                 </div>
               </TabsContent>
@@ -801,7 +849,9 @@ export function SiteSettingsForm({
                 {renderWritingSettings()}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={() => handleSave('writing')} disabled={!canEdit || saving} className="px-8">
-                    {saving ? 'Saving...' : 'Save Writing Settings'}
+                    {saving
+                      ? t('dashboard.settings.actions.saving')
+                      : t('dashboard.settings.actions.save_writing')}
                   </Button>
                 </div>
               </TabsContent>
@@ -810,7 +860,9 @@ export function SiteSettingsForm({
                 {renderPermalinksSettings()}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={() => handleSave('permalinks')} disabled={!canEdit || saving} className="px-8">
-                    {saving ? 'Saving...' : 'Save Permalinks Settings'}
+                    {saving
+                      ? t('dashboard.settings.actions.saving')
+                      : t('dashboard.settings.actions.save_permalinks')}
                   </Button>
                 </div>
               </TabsContent>
@@ -819,7 +871,9 @@ export function SiteSettingsForm({
                 {renderSeoSettings()}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={() => handleSave('seo')} disabled={!canEdit || saving} className="px-8">
-                    {saving ? 'Saving...' : 'Save SEO Settings'}
+                    {saving
+                      ? t('dashboard.settings.actions.saving')
+                      : t('dashboard.settings.actions.save_seo')}
                   </Button>
                 </div>
               </TabsContent>
@@ -828,7 +882,9 @@ export function SiteSettingsForm({
                 {renderSocialSettings()}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={() => handleSave('social')} disabled={!canEdit || saving} className="px-8">
-                    {saving ? 'Saving...' : 'Save Social Settings'}
+                    {saving
+                      ? t('dashboard.settings.actions.saving')
+                      : t('dashboard.settings.actions.save_social')}
                   </Button>
                 </div>
               </TabsContent>
@@ -837,7 +893,9 @@ export function SiteSettingsForm({
                 {renderAnalyticsSettings()}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={() => handleSave('analytics')} disabled={!canEdit || saving} className="px-8">
-                    {saving ? 'Saving...' : 'Save Analytics Settings'}
+                    {saving
+                      ? t('dashboard.settings.actions.saving')
+                      : t('dashboard.settings.actions.save_analytics')}
                   </Button>
                 </div>
               </TabsContent>
@@ -846,7 +904,9 @@ export function SiteSettingsForm({
                 {renderMediaSettings()}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={() => handleSave('media')} disabled={!canEdit || saving} className="px-8">
-                    {saving ? 'Saving...' : 'Save Media Settings'}
+                    {saving
+                      ? t('dashboard.settings.actions.saving')
+                      : t('dashboard.settings.actions.save_media')}
                   </Button>
                 </div>
               </TabsContent>
@@ -855,7 +915,9 @@ export function SiteSettingsForm({
                 {renderAdvancedSettings()}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={() => handleSave('advanced')} disabled={!canEdit || saving} className="px-8">
-                    {saving ? 'Saving...' : 'Save Advanced Settings'}
+                    {saving
+                      ? t('dashboard.settings.actions.saving')
+                      : t('dashboard.settings.actions.save_advanced')}
                   </Button>
                 </div>
               </TabsContent>

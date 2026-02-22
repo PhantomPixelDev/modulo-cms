@@ -3,8 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class TaxonomyTermRequest extends FormRequest
 {
@@ -26,6 +26,14 @@ class TaxonomyTermRequest extends FormRequest
             'term_order' => ['nullable','integer','min:0','max:10000'],
             'meta_title' => ['nullable','string','max:255'],
             'meta_description' => ['nullable','string'],
+            'translations' => ['sometimes','array'],
+            'translations.*.locale' => ['required','string','max:8', Rule::exists('locales', 'code')],
+            'translations.*.name' => ['nullable','string','max:255'],
+            'translations.*.slug' => ['nullable','string','max:255'],
+            'translations.*.description' => ['nullable','string'],
+            'translations.*.meta_title' => ['nullable','string','max:255'],
+            'translations.*.meta_description' => ['nullable','string'],
+            'translations.*.meta_data' => ['nullable','array'],
         ];
     }
 

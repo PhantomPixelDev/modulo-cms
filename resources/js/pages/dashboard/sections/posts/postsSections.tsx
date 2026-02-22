@@ -11,28 +11,41 @@ export function getPostsSections({
   editPost,
   post,
   postTypes,
+  currentPostType,
   groupedTerms,
   authors,
   parentsByType,
+  locales,
+  currentLocale,
+  translation,
   can,
   canEditAuthorFlag,
   showSuccess,
   showError,
   ROUTE,
+  t,
 }: {
   postsProp: any;
   editPost: any;
   post: any;
   postTypes: any;
+  currentPostType?: any;
   groupedTerms: any;
   authors: any;
   parentsByType: any;
+  locales?: any[];
+  currentLocale?: string;
+  translation?: any;
   can: (perm: string) => boolean;
   canEditAuthorFlag: boolean;
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
+  // Get the display name for the current post type
+  const postTypeName = currentPostType?.label || currentPostType?.plural_label || t('dashboard.posts.title');
+  const postTypeSingular = currentPostType?.label || currentPostType?.name || t('dashboard.posts.view_post');
   const handlePostSubmit = async (formData: any, editId?: number) => {
     try {
       const url = editId ? ROUTE.posts.update(editId) : ROUTE.posts.store();
@@ -40,18 +53,41 @@ export function getPostsSections({
       await router[method](url, formData, {
         preserveScroll: true,
         onSuccess: () => {
-          showSuccess(`Post ${editId ? 'updated' : 'created'} successfully`);
+          showSuccess(
+            t(
+              editId
+                ? 'dashboard.posts.messages.updated'
+                : 'dashboard.posts.messages.created'
+            )
+          );
           router.visit(ROUTE.posts.index());
         },
         onError: (errors) => {
           console.error('Validation errors:', errors);
-          showError(`Failed to ${editId ? 'update' : 'create'} post`);
+          showError(
+            t(
+              editId
+                ? 'dashboard.posts.messages.update_failed'
+                : 'dashboard.posts.messages.create_failed'
+            )
+          );
         },
       });
     } catch (error) {
       console.error('Error saving post:', error);
-      showError(`Failed to ${editId ? 'update' : 'create'} post`);
+      showError(
+        t(
+          editId
+            ? 'dashboard.posts.messages.update_failed'
+            : 'dashboard.posts.messages.create_failed'
+        )
+      );
     }
+  };
+
+  const handleLocaleChange = (locale: string) => {
+    const currentUrl = window.location.pathname;
+    router.visit(`${currentUrl}?locale=${locale}`);
   };
 
   const renderPostsList = () => {
@@ -59,26 +95,28 @@ export function getPostsSections({
 
     return (
       <SectionWrapper
-        title="Posts"
+        title={postTypeName}
+        description={t('dashboard.posts.list_description', { type: postTypeName.toLowerCase() })}
         actions={
           can('create posts') ? (
             <Button size="sm" onClick={() => router.visit(ROUTE.posts.create())}>
-              + New Post
+              {t('dashboard.posts.actions.new', { type: postTypeSingular })}
             </Button>
           ) : null
         }
       >
-        <PostList posts={postItems} canCreate={false} canEdit={can('edit posts')} />
+        <PostList posts={postItems} locales={locales} canCreate={false} canEdit={can('edit posts')} />
       </SectionWrapper>
     );
   };
 
   const renderPostCreate = () => (
     <SectionWrapper
-      title="Create Post"
+      title={t('dashboard.posts.create_title', { type: postTypeSingular })}
+      description={t('dashboard.posts.create_description', { type: postTypeSingular.toLowerCase() })}
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.posts.index())}>
-          Back to Posts
+          {t('dashboard.posts.actions.back', { type: postTypeName })}
         </Button>
       }
     >
@@ -88,42 +126,51 @@ export function getPostsSections({
         groupedTerms={(groupedTerms as any) || {}}
         authors={(authors as any) || []}
         parentsByType={(parentsByType as any) || {}}
+        locales={locales}
+        currentLocale={currentLocale || 'en'}
         canEditAuthor={canEditAuthorFlag}
         onSubmit={handlePostSubmit}
         onCancel={() => router.visit(ROUTE.posts.index())}
+        onLocaleChange={handleLocaleChange}
       />
     </SectionWrapper>
   );
 
   const renderPostEdit = () => (
     <SectionWrapper
-      title="Edit Post"
+      title={t('dashboard.posts.edit_title', { type: postTypeSingular })}
+      description={t('dashboard.posts.edit_description', { type: postTypeSingular.toLowerCase() })}
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.posts.index())}>
-          Back to Posts
+          {t('dashboard.posts.actions.back', { type: postTypeName })}
         </Button>
       }
     >
       <PostForm
         post={editPost as any}
+        translation={translation}
         postTypes={(postTypes as any) || []}
         groupedTerms={(groupedTerms as any) || {}}
         authors={(authors as any) || []}
         parentsByType={(parentsByType as any) || {}}
+        locales={locales}
+        currentLocale={currentLocale || 'en'}
         canEditAuthor={canEditAuthorFlag}
         isEditing={true}
         onSubmit={(data) => handlePostSubmit(data, (editPost as any)?.id)}
         onCancel={() => router.visit(ROUTE.posts.index())}
+        onLocaleChange={handleLocaleChange}
       />
     </SectionWrapper>
   );
 
   const renderPostShow = () => (
     <SectionWrapper
-      title="View Post"
+      title={t('dashboard.posts.show_title', { type: postTypeSingular })}
+      description={t('dashboard.posts.show_description', { type: postTypeSingular.toLowerCase() })}
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.posts.index())}>
-          Back to Posts
+          {t('dashboard.posts.actions.back', { type: postTypeName })}
         </Button>
       }
     >

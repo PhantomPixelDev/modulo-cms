@@ -14,6 +14,7 @@ use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
 use App\Models\Theme;
 use App\Models\User;
+use App\Services\AdminStatsService;
 use App\Services\SiteSettingsService;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -34,24 +35,7 @@ class DashboardController extends Controller
         $data = [];
 
         if ($isAdmin) {
-            $pageType = PostType::where('name', 'page')->first();
-            $mediaCount = 0;
-            if (class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
-                $Media = '\\Spatie\\MediaLibrary\\MediaCollections\\Models\\Media';
-                $mediaCount = $Media::count();
-            }
-            $data['adminStats'] = [
-                'users' => User::count(),
-                'roles' => Role::count(),
-                'posts' => Post::count(),
-                'pages' => $pageType ? Post::where('post_type_id', $pageType->id)->count() : 0,
-                'postTypes' => PostType::count(),
-                'taxonomies' => Taxonomy::count(),
-                'taxonomyTerms' => TaxonomyTerm::count(),
-                'themes' => Theme::count(),
-                'media' => $mediaCount,
-                
-            ];
+            $data['adminStats'] = app(AdminStatsService::class)->get();
 
             // Recent Activity Feed
             $data['recentActivity'] = $this->getRecentActivity();
@@ -305,21 +289,13 @@ class DashboardController extends Controller
 
     private function getServerUptime(): string
     {
-        if (function_exists('shell_exec')) {
-            $uptime = shell_exec('uptime -p 2>/dev/null');
-            if ($uptime) {
-                return trim(str_replace('up ', '', $uptime));
-            }
-        }
-        
-        // Fallback: calculate from Laravel start time
         $startTime = defined('LARAVEL_START') ? LARAVEL_START : time();
         $uptimeSeconds = time() - $startTime;
-        
+
         $days = floor($uptimeSeconds / 86400);
         $hours = floor(($uptimeSeconds % 86400) / 3600);
         $minutes = floor(($uptimeSeconds % 3600) / 60);
-        
+
         if ($days > 0) {
             return "{$days}d {$hours}h {$minutes}m";
         } elseif ($hours > 0) {

@@ -6,7 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Inertia\Inertia;
 use App\Models\Post;
+use App\Models\User;
 use App\Observers\PostObserver;
+use App\Services\AdminStatsService;
 use App\Services\MenuService;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -29,6 +31,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register PostObserver
         Post::observe(PostObserver::class);
+
+        // Bust adminStats cache when user count changes
+        User::created(fn () => app(AdminStatsService::class)->forget());
+        User::deleted(fn () => app(AdminStatsService::class)->forget());
 
         // Register a Blade namespace for themes so templates can use 'themes::modern.*'
         View::addNamespace('themes', resource_path('themes'));

@@ -15,6 +15,7 @@ export function getMediaSections({
   canEditMedia,
   canDeleteMedia,
   ROUTE,
+  t,
 }: {
   media: any;
   folders: any;
@@ -25,15 +26,12 @@ export function getMediaSections({
   canEditMedia: boolean;
   canDeleteMedia: boolean;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const renderMedia = () => (
     <SectionWrapper
-      title="Media"
-      actions={
-        <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.misc.dashboard())}>
-          Back to Dashboard
-        </Button>
-      }
+      title={t('dashboard.media.title')}
+      description={t('dashboard.media.description')}
     >
       <MediaLibrary
         items={asArray(media as any)}

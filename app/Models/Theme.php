@@ -23,7 +23,6 @@ class Theme extends Model
         'templates',
         'partials',
         'assets',
-        'customizer',
         'menus',
         'widget_areas',
         'directory_path',
@@ -39,7 +38,6 @@ class Theme extends Model
         'templates' => 'array',
         'partials' => 'array',
         'assets' => 'array',
-        'customizer' => 'array',
         'menus' => 'array',
         'widget_areas' => 'array',
         'is_active' => 'boolean',
@@ -225,31 +223,6 @@ class Theme extends Model
         return isset($supports[$feature]) && $supports[$feature];
     }
 
-    /**
-     * Get customizer setting
-     */
-    public function getCustomizerSetting(string $section, ?string $setting = null)
-    {
-        $customizer = $this->customizer ?? [];
-        
-        if ($setting) {
-            return $customizer[$section][$setting] ?? null;
-        }
-        
-        return $customizer[$section] ?? null;
-    }
-
-    /**
-     * Activate this theme (deactivates others)
-     */
-    public function activate(): bool
-    {
-        // Deactivate all other themes
-        static::where('id', '!=', $this->id)->update(['is_active' => false]);
-        
-        // Activate this theme
-        return $this->update(['is_active' => true]);
-    }
 
     /**
      * Check if theme files exist

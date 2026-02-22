@@ -1,10 +1,10 @@
 import type { FormEvent } from 'react';
 import { useForm } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
 import { ActionButtonGroup } from '@/components/ui/button-groups';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Role, Permission } from '../../types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface RoleFormProps {
   role?: Role;
@@ -15,6 +15,7 @@ interface RoleFormProps {
 }
 
 export function RoleForm({ role, allPermissions, isEditing, onSubmit, onCancel }: RoleFormProps) {
+  const { t } = useTranslation();
   const { data, setData, errors } = useForm({
     name: role?.name || '',
     permissions: role?.permissions?.map((p: Permission) => p.id) || [],
@@ -28,19 +29,19 @@ export function RoleForm({ role, allPermissions, isEditing, onSubmit, onCancel }
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="name">Role Name</Label>
+        <Label htmlFor="name">{t('dashboard.roles.form.name_label')}</Label>
         <Input
           id="name"
           value={data.name}
           onChange={(e) => setData('name', e.target.value)}
           className="mt-1 block w-full"
-          placeholder="e.g., editor, author"
+          placeholder={t('dashboard.roles.form.name_placeholder')}
         />
         {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
       </div>
 
       <div>
-        <Label>Permissions</Label>
+        <Label>{t('dashboard.roles.form.permissions_label')}</Label>
         <div className="mt-2 space-y-2">
           {allPermissions.map((permission) => (
             <div key={permission.id} className="flex items-center space-x-2">
@@ -71,8 +72,12 @@ export function RoleForm({ role, allPermissions, isEditing, onSubmit, onCancel }
       <ActionButtonGroup
         onSave={() => onSubmit(data)}
         onCancel={onCancel}
-        saveLabel={isEditing ? 'Update Role' : 'Create Role'}
-        cancelLabel="Cancel"
+        saveLabel={
+          isEditing
+            ? t('dashboard.roles.form.actions.update')
+            : t('dashboard.roles.form.actions.create')
+        }
+        cancelLabel={t('dashboard.common.cancel')}
         className="mt-6"
       />
     </form>

@@ -63,18 +63,8 @@ class PostType extends Model
         return json_decode($value, true) ?? [];
     }
 
-    public function setSupportsAttribute($value)
-    {
-        $this->attributes['supports'] = json_encode($value);
-    }
-
     public function getTaxonomiesAttribute($value)
     {
         return json_decode($value, true) ?? [];
-    }
-
-    public function setTaxonomiesAttribute($value)
-    {
-        $this->attributes['taxonomies'] = json_encode($value);
     }
 }

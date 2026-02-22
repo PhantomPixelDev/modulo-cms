@@ -4,13 +4,11 @@ import { Button } from '@/components/ui/button';
 export interface ActiveThemeCardProps {
   activeTheme?: any | null;
   canPublishAssets?: boolean;
-  canCustomize?: boolean;
   onPublishAssets?: (themeId: number) => void;
-  onCustomize?: (themeId: number) => void;
   onView?: (themeId: number) => void;
 }
 
-export function ActiveThemeCard({ activeTheme, canPublishAssets = false, canCustomize = false, onPublishAssets, onCustomize, onView }: ActiveThemeCardProps) {
+export function ActiveThemeCard({ activeTheme, canPublishAssets = false, onPublishAssets, onView }: ActiveThemeCardProps) {
   return (
     <div>
       <h3 className="font-semibold mb-3">Active Theme</h3>
@@ -52,9 +50,6 @@ export function ActiveThemeCard({ activeTheme, canPublishAssets = false, canCust
             <div className="flex gap-2">
               {canPublishAssets && (
                 <Button size="sm" variant="secondary" onClick={() => activeTheme?.id && onPublishAssets?.(activeTheme.id)}>Publish Assets</Button>
-              )}
-              {canCustomize && (
-                <Button size="sm" onClick={() => activeTheme?.id && onCustomize?.(activeTheme.id)}>Customize</Button>
               )}
               <Button size="sm" variant="outline" onClick={() => activeTheme?.id && onView?.(activeTheme.id)}>View</Button>
             </div>

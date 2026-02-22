@@ -43,7 +43,7 @@ class ReactTemplateRenderer
         $siteData = $this->getSiteData();
         $menuData = $this->getMenuData();
 
-        if (env('THEME_DEBUG', false)) {
+        if (config('theme.debug')) {
             \Log::debug('ReactRenderer:dataPrep', [
                 'siteDataKeys' => array_keys($siteData),
                 'menuDataKeys' => array_keys($menuData),
@@ -131,41 +131,6 @@ class ReactTemplateRenderer
     }
 
     /**
-     * Prepare theme configuration data
-     */
-    protected function getThemeData(Theme $theme): array
-    {
-        $customizer = $theme->customizer ?? [];
-        $themeData = [
-            'name' => $theme->name ?? 'Unknown Theme',
-            'slug' => $theme->slug ?? 'unknown',
-            'version' => $theme->version ?? '1.0.0',
-            'colors' => [
-                'primary' => '#3b82f6',
-                'secondary' => '#64748b',
-            ],
-            'typography' => [
-                'font_family' => 'Inter, sans-serif',
-            ],
-            'layout' => [
-                'container_width' => '1200px',
-            ],
-        ];
-
-        // Process customizer settings into theme data
-        foreach ($customizer as $section => $settings) {
-            if (is_array($settings)) {
-                $themeData[$section] = $themeData[$section] ?? [];
-                foreach ($settings as $key => $config) {
-                    $themeData[$section][$key] = $config['default'] ?? $themeData[$section][$key] ?? null;
-                }
-            }
-        }
-
-        return $themeData;
-    }
-
-    /**
      * Get site configuration data
      */
     protected function getSiteData(): array
@@ -182,17 +147,32 @@ class ReactTemplateRenderer
      */
     protected function getMenuData(): array
     {
-        $theme = $this->themeManager->getActiveTheme();
-        $menus = [];
+        try {
+            $menus = [
+                'header' => $this->menuService->menuArrayBySlug('main-navigation')
+                    ?: $this->menuService->menuArrayByLocation('header'),
+                'footer' => $this->menuService->menuArrayBySlug('footer-links')
+                    ?: $this->menuService->menuArrayByLocation('footer'),
+            ];
 
-        if ($theme && isset($theme->menus)) {
-            foreach ($theme->menus as $location => $label) {
-                $menus[$location] = $this->getMenuItems($location);
+            $theme = $this->themeManager->getActiveTheme();
+            if ($theme && is_array($theme->menus ?? null)) {
+                foreach (array_keys($theme->menus) as $location) {
+                    if (isset($menus[$location])) {
+                        continue;
+                    }
+
+                    $menus[$location] = $this->menuService->menuArrayByLocation($location) ?: [];
+                }
             }
-        }
 
-        // Ensure we always return a valid structure
-        return $menus ?: ['primary' => [], 'footer' => []];
+            return $menus;
+        } catch (\Throwable $e) {
+            return [
+                'header' => [],
+                'footer' => [],
+            ];
+        }
     }
 
     /**
@@ -201,72 +181,10 @@ class ReactTemplateRenderer
     protected function getMenuItems(string $location): array
     {
         try {
-            $menuData = $this->menuService->menuArrayByLocation($location);
-            return $menuData['items'] ?? [];
+            return $this->menuService->menuArrayByLocation($location) ?: [];
         } catch (\Throwable $e) {
-            // Fallback to default menu items if database query fails
-            return $this->getDefaultMenuItems($location);
+            return [];
         }
-    }
-    
-    /**
-     * Get default menu items as fallback
-     */
-    protected function getDefaultMenuItems(string $location): array
-    {
-        if ($location === 'primary') {
-            return [
-                [
-                    'id' => 1,
-                    'label' => 'Home',
-                    'url' => '/',
-                    'target' => '_self',
-                    'children' => []
-                ],
-                [
-                    'id' => 2,
-                    'label' => 'Posts',
-                    'url' => '/posts',
-                    'target' => '_self',
-                    'children' => []
-                ],
-                [
-                    'id' => 3,
-                    'label' => 'News',
-                    'url' => '/news',
-                    'target' => '_self',
-                    'children' => []
-                ],
-                [
-                    'id' => 4,
-                    'label' => 'About',
-                    'url' => '/about',
-                    'target' => '_self',
-                    'children' => []
-                ]
-            ];
-        }
-        
-        if ($location === 'footer') {
-            return [
-                [
-                    'id' => 5,
-                    'label' => 'Privacy Policy',
-                    'url' => '/privacy',
-                    'target' => '_self',
-                    'children' => []
-                ],
-                [
-                    'id' => 6,
-                    'label' => 'Terms of Service',
-                    'url' => '/terms',
-                    'target' => '_self',
-                    'children' => []
-                ]
-            ];
-        }
-        
-        return [];
     }
 
     /**

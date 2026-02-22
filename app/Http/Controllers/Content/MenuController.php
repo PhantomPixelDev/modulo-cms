@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
+use App\Models\Locale;
 use App\Services\MenuService;
 use App\Models\Menu;
 use App\Models\MenuItem;
@@ -20,7 +21,7 @@ class MenuController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', Menu::class);
-        $menus = Menu::with('items.children')->orderBy('name')->get();
+        $menus = Menu::with('items')->orderBy('name')->get();
         if ($request->wantsJson()) {
             return response()->json($menus);
         }
@@ -50,12 +51,15 @@ class MenuController extends Controller
     public function show(Request $request, Menu $menu)
     {
         $this->authorize('view', $menu);
-        $menu->load('items.children');
+        $menu->load(['items' => function ($query) {
+            $query->with(['translations', 'children']);
+        }]);
         if ($request->wantsJson()) {
             return response()->json($menu);
         }
         return Inertia::render('admin/menus/show', [
             'menu' => $menu,
+            'locales' => Locale::getActive(),
         ]);
     }
 

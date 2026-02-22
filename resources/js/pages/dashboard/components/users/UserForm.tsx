@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Define the Role interface to match the backend
 interface Role {
@@ -60,6 +61,7 @@ export function UserForm({
   onRoleChange,
   currentUserId
 }: UserFormProps) {
+  const { t } = useTranslation();
   const { data, setData, errors } = useForm<UserFormData>({
     name: user?.name || '',
     email: user?.email || '',
@@ -122,11 +124,11 @@ export function UserForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>User Information</CardTitle>
+          <CardTitle>{t('dashboard.users.form.sections.info')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t('dashboard.users.form.fields.name')}</Label>
             <Input
               id="name"
               value={data.name}
@@ -138,7 +140,7 @@ export function UserForm({
           </div>
 
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('dashboard.users.form.fields.email')}</Label>
             <Input
               id="email"
               type="email"
@@ -153,7 +155,7 @@ export function UserForm({
           {!isEditing && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('dashboard.users.form.fields.password')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -167,7 +169,7 @@ export function UserForm({
               </div>
 
               <div>
-                <Label htmlFor="password_confirmation">Confirm Password</Label>
+                <Label htmlFor="password_confirmation">{t('dashboard.users.form.fields.confirm_password')}</Label>
                 <Input
                   id="password_confirmation"
                   type="password"
@@ -187,7 +189,7 @@ export function UserForm({
                   checked={data.send_welcome_email}
                   onCheckedChange={(checked) => setData('send_welcome_email', Boolean(checked))}
                 />
-                <Label htmlFor="send_welcome_email">Send welcome email with login instructions</Label>
+                <Label htmlFor="send_welcome_email">{t('dashboard.users.form.fields.send_welcome')}</Label>
               </div>
             </div>
           )}
@@ -196,12 +198,12 @@ export function UserForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Roles</CardTitle>
+          <CardTitle>{t('dashboard.users.form.sections.roles')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {selectedRoles.length > 0 && (
             <div className="space-y-2">
-              <Label>Assigned Roles</Label>
+              <Label>{t('dashboard.users.form.fields.assigned_roles')}</Label>
               <div className="flex flex-wrap gap-2">
                 {selectedRoles.map(role => (
                   <Badge key={role.id} className="flex items-center gap-1">
@@ -224,7 +226,7 @@ export function UserForm({
 
           {availableRoles.length > 0 && (
             <div className="space-y-2">
-              <Label htmlFor="add-role">Add Role</Label>
+              <Label htmlFor="add-role">{t('dashboard.users.form.fields.add_role')}</Label>
               <select
                 id="add-role"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -240,7 +242,7 @@ export function UserForm({
                 }}
                 value=""
               >
-                <option value="">Select a role to add</option>
+                <option value="">{t('dashboard.users.form.placeholders.select_role')}</option>
                 {availableRoles.map(role => (
                   <option key={role.id} value={role.id}>
                     {role.name}
@@ -255,8 +257,12 @@ export function UserForm({
       <ActionButtonGroup
         onSave={handleSubmit}
         onCancel={onCancel}
-        saveLabel={isEditing ? 'Update User' : 'Create User'}
-        cancelLabel="Cancel"
+        saveLabel={
+          isEditing
+            ? t('dashboard.users.form.actions.update')
+            : t('dashboard.users.form.actions.create')
+        }
+        cancelLabel={t('dashboard.common.cancel')}
         isSubmitting={isSubmitting}
         className="mt-6"
       />

@@ -4,10 +4,8 @@ interface ThemeDetailsProps {
   theme: any;
   canActivate?: boolean;
   canPublishAssets?: boolean;
-  canCustomize?: boolean;
   onActivate: (slug: string) => void;
   onPublishAssets: (id: number) => void;
-  onCustomize: (id: number) => void;
   onUninstall: (id: number, displayName: string) => void;
 }
 
@@ -15,10 +13,8 @@ export function ThemeDetails({
   theme,
   canActivate = false,
   canPublishAssets = false,
-  canCustomize = false,
   onActivate,
   onPublishAssets,
-  onCustomize,
   onUninstall,
 }: ThemeDetailsProps) {
   const t = theme || {};
@@ -64,9 +60,6 @@ export function ThemeDetails({
         )}
         {canPublishAssets && (
           <Button size="sm" variant="secondary" onClick={() => onPublishAssets(t.id)}>Publish Assets</Button>
-        )}
-        {isActive && canCustomize && (
-          <Button size="sm" onClick={() => onCustomize(t.id)}>Customize</Button>
         )}
         {!isActive && (
           <Button size="sm" variant="destructive" onClick={() => onUninstall(t.id, t.name || t.slug)}>Uninstall</Button>

@@ -13,6 +13,29 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: modulo
+          POSTGRES_USER: modulo
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U modulo -d modulo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: modulo
+      DB_USERNAME: modulo
+      DB_PASSWORD: secret
 
     steps:
       - name: Checkout
@@ -44,6 +67,12 @@ jobs:
 
       - name: Generate Application Key
         run: php artisan key:generate
+
+      - name: Verify fresh migration + seed reproducibility
+        run: php artisan migrate:fresh --seed --force
+
+      - name: Verify migration status is clean
+        run: php artisan migrate:status
 
       - name: Tests
         run: ./vendor/bin/pest

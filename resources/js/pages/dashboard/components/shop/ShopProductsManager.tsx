@@ -7,6 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { useAdminToast } from '@/components/admin/AdminToastProvider';
 import { ROUTE } from '../../routes';
 import type { Paginated, ShopProduct } from '../../types';
@@ -36,8 +39,11 @@ export function ShopProductsManager({
     slug: '',
     description: '',
     price: '0',
+    sale_price: '',
     currency: 'USD',
     stock: '',
+    status: 'published' as 'draft' | 'published',
+    featured_image: '',
   });
 
   const rows = useMemo(() => products?.data ?? [], [products]);
@@ -54,9 +60,11 @@ export function ShopProductsManager({
     slug: '',
     description: '',
     price: '0',
+    sale_price: '',
     currency: 'USD',
     stock: '',
-    is_active: true,
+    status: 'published' as 'draft' | 'published',
+    featured_image: '',
   });
 
   const openEdit = (p: ShopProduct) => {
@@ -68,9 +76,11 @@ export function ShopProductsManager({
       slug: p.slug ?? '',
       description: p.description ?? '',
       price: String(p.price ?? '0'),
+      sale_price: p.sale_price ? String(p.sale_price) : '',
       currency: p.currency ?? 'USD',
       stock: p.stock === null || p.stock === undefined ? '' : String(p.stock),
-      is_active: !!p.is_active,
+      status: p.is_active ? 'published' : 'draft',
+      featured_image: p.featured_image ?? '',
     });
     setErrors({});
     setEditOpen(true);
@@ -95,8 +105,11 @@ export function ShopProductsManager({
         slug: form.slug || null,
         description: form.description || null,
         price: Number(form.price),
+        sale_price: form.sale_price === '' ? null : Number(form.sale_price),
         currency: form.currency || null,
         stock: form.stock === '' ? null : Number(form.stock),
+        status: form.status,
+        featured_image: form.featured_image || null,
       },
       {
         preserveScroll: true,
@@ -110,7 +123,10 @@ export function ShopProductsManager({
             slug: '',
             description: '',
             price: '0',
+            sale_price: '',
             stock: '',
+            status: 'published',
+            featured_image: '',
           }));
         },
         onError: (errors) => {
@@ -135,9 +151,11 @@ export function ShopProductsManager({
         slug: editForm.slug || null,
         description: editForm.description || null,
         price: Number(editForm.price),
+        sale_price: editForm.sale_price === '' ? null : Number(editForm.sale_price),
         currency: editForm.currency || null,
         stock: editForm.stock === '' ? null : Number(editForm.stock),
-        is_active: editForm.is_active,
+        status: editForm.status,
+        featured_image: editForm.featured_image || null,
       },
       {
         preserveScroll: true,
@@ -200,7 +218,7 @@ export function ShopProductsManager({
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Slug</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Price</TableHead>
                   <TableHead className="text-right">Stock</TableHead>
                 </TableRow>
@@ -239,7 +257,11 @@ export function ShopProductsManager({
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{p.slug}</TableCell>
+                      <TableCell>
+                        <Badge variant={p.is_active ? 'default' : 'secondary'}>
+                          {p.is_active ? 'Published' : 'Draft'}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">{p.currency} {Number(p.price).toFixed(2)}</TableCell>
                       <TableCell className="text-right">{p.stock ?? '—'}</TableCell>
                     </TableRow>
@@ -375,6 +397,22 @@ export function ShopProductsManager({
               />
               {mergedErrors?.stock ? <div className="text-xs text-destructive">{mergedErrors.stock}</div> : null}
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={form.status}
+                onValueChange={(value: 'draft' | 'published') => setForm((p) => ({ ...p, status: value }))}
+                disabled={!canCreate}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -471,6 +509,21 @@ export function ShopProductsManager({
                   min={0}
                 />
                 {mergedErrors?.stock ? <div className="text-xs text-destructive">{mergedErrors.stock}</div> : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-status">Status</Label>
+                <Select
+                  value={editForm.status}
+                  onValueChange={(value: 'draft' | 'published') => setEditForm((p) => ({ ...p, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

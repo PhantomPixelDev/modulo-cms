@@ -5,6 +5,23 @@ export interface BaseEntity {
   updated_at?: string;
 }
 
+export interface TranslationEntry {
+  key: string;
+  value?: string;
+  override?: string | null;
+  is_overridden: boolean;
+}
+
+export interface TranslationManagerPayload {
+  entries: TranslationEntry[];
+  locales: Locale[];
+  domains: string[];
+  currentLocale: string;
+  currentDomain: string;
+  search?: string;
+  overrideCount: number;
+}
+
 export interface User extends BaseEntity {
   name: string;
   email: string;
@@ -94,12 +111,43 @@ export interface TaxonomyTerm extends BaseEntity {
   taxonomy?: Taxonomy;
 }
 
+export interface Locale {
+  id: number;
+  code: string;
+  name: string;
+  native_name?: string;
+  direction?: string;
+  is_active?: boolean;
+  is_default?: boolean;
+  sort_order?: number;
+}
+
+export interface PostTranslation {
+  id: number;
+  post_id: number;
+  locale: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content?: string;
+  seo_title?: string;
+  seo_description?: string;
+}
+
+export interface SitemapCustomUrl {
+  loc: string;
+  lastmod?: string | null;
+  changefreq?: string | null;
+  priority?: number | null;
+}
+
 export interface SitemapSettings {
   included_post_type_ids?: number[] | null;
   include_taxonomies: boolean;
   enable_cache: boolean;
   cache_ttl: number;
   last_generated_at?: string | null;
+  custom_urls?: SitemapCustomUrl[];
 }
 
 export interface SiteSettings {
@@ -144,9 +192,12 @@ export interface ShopProduct extends BaseEntity {
   slug: string;
   description?: string | null;
   price: string;
+  sale_price?: string | null;
   currency: string;
   is_active: boolean;
+  status?: 'draft' | 'published' | 'pending' | 'private';
   stock?: number | null;
+  featured_image?: string | null;
   meta?: Record<string, any> | null;
 }
 
@@ -212,6 +263,7 @@ export interface DashboardProps {
   };
   posts?: Post[] | { data: Post[] };
   postTypes?: PostType[];
+  currentPostType?: PostType;
   taxonomies?: Taxonomy[] | { data: Taxonomy[] };
   taxonomyTerms?: any;
   taxonomyTerm?: any;
@@ -242,6 +294,10 @@ export interface DashboardProps {
   post?: Post; // single post for show view
   editPost?: Post;
   editPostType?: PostType;
+  // Localization
+  locales?: Locale[];
+  currentLocale?: string;
+  translation?: PostTranslation;
   editTaxonomy?: Taxonomy;
   editUser?: any;
   editRole?: any;
@@ -251,12 +307,9 @@ export interface DashboardProps {
   activeTheme?: any;
   discoveredThemes?: any[];
   theme?: any;
-  // Theme details/customizer specific
+  // Theme details specific
   themeConfig?: any;
   themeAssets?: any;
-  customizerSettings?: Record<string, any>;
-  availableMenus?: Record<string, any>;
-  widgetAreas?: Record<string, any>;
   auth: Auth;
   // Media library
   media?: MediaItem[] | Paginated<MediaItem>;
@@ -268,6 +321,7 @@ export interface DashboardProps {
   shopProducts?: Paginated<ShopProduct>;
   shopOrders?: Paginated<ShopOrder>;
   shopOrder?: ShopOrder;
+  shopSettings?: Record<string, any>;
   // Dashboard activity and status
   recentActivity?: Array<{
     type: string;
@@ -289,6 +343,7 @@ export interface DashboardProps {
     meta?: Record<string, string | number | null | undefined>;
   }>;
   globalCommentsEnabled: boolean;
+  translationManager?: TranslationManagerPayload;
 }
 
 // Post Type List Item
@@ -319,9 +374,10 @@ export interface PageListItem {
 export interface PostListItem {
   id: number;
   title: string;
+  slug?: string;
   status: string;
-  post_type?: { label: string; name: string };
-  author?: { name: string };
+  post_type?: { id: number; label: string; name: string };
+  author?: { id: number; name: string };
   created_at: string;
 }
 

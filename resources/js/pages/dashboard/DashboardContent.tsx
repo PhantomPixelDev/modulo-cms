@@ -16,10 +16,12 @@ import { getSitemapSections } from './sections/sitemap/sitemapSections';
 import { getPluginsSections } from './sections/plugins/pluginsSections';
 import { getSiteSettingsSections } from './sections/site-settings/siteSettingsSections';
 import { getShopSections } from './sections/shop/shopSections';
+import { getTranslationSections } from './sections/translations/translationSections';
 import { DashboardProps, asArray, type User as DashboardUser } from './types';
 import { ROUTE } from './routes';
 import { useAcl } from '@/lib/acl';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function DashboardContent({
   adminStats,
@@ -28,6 +30,7 @@ export default function DashboardContent({
   roles: rolesProp,
   posts: postsProp,
   postTypes,
+  currentPostType,
   taxonomies,
   taxonomyTerms,
   taxonomyTerm,
@@ -35,10 +38,6 @@ export default function DashboardContent({
   discoveredThemes,
   activeTheme,
   theme,
-  // theme details/customizer
-  customizerSettings,
-  availableMenus,
-  widgetAreas,
   allRoles,
   permissions = [],
   editPost,
@@ -66,6 +65,7 @@ export default function DashboardContent({
   shopProducts,
   shopOrders,
   shopOrder,
+  shopSettings,
   editUser,
   editRole,
   editPostType,
@@ -74,7 +74,12 @@ export default function DashboardContent({
   parentTerms,
   auth,
   systemStatus,
+  locales,
+  currentLocale,
+  translation,
+  translationManager,
 }: DashboardProps & { globalCommentsEnabled: boolean }) {
+  const { t } = useTranslation();
   const {
     success: showSuccess,
     error: showError,
@@ -149,7 +154,7 @@ export default function DashboardContent({
   const renderSection = () => {
     const section = normalizeSection(adminSection);
     if (!section) {
-      return renderDashboardHome({ auth, adminStats, systemStatus, ROUTE });
+      return renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t });
     }
 
     const sectionsMap: Record<string, () => ReactNode> = {
@@ -163,60 +168,77 @@ export default function DashboardContent({
         canEditMedia,
         canDeleteMedia,
         ROUTE,
+        t,
       }),
       ...getSitemapSections({
         postTypes,
         sitemapSettings,
         can,
         ROUTE,
+        t,
       }),
       ...getPluginsSections({
         plugins,
         plugin,
         can,
         ROUTE,
+        t,
       }),
       ...getShopSections({
         shopProducts,
         shopOrders,
         shopOrder,
+        shopSettings,
         can,
+        showSuccess,
+        showError,
         ROUTE,
+      }),
+      ...getTranslationSections({
+        translationManager,
+        can,
+        t,
       }),
       ...getSiteSettingsSections({
         settings,
         settingsGroup,
         pages,
         timezones,
+        locales,
+        currentLocale,
         can,
         ROUTE,
+        t,
       }),
       ...getThemesSections({
         themes,
         discoveredThemes,
         activeTheme,
         theme,
-        customizerSettings,
-        availableMenus,
-        widgetAreas,
         can,
         showSuccess,
         showError,
         ROUTE,
+        t,
       }),
       ...getPostsSections({
         postsProp,
         editPost,
         post,
         postTypes,
+        currentPostType,
         groupedTerms,
         authors,
         parentsByType,
+        locales,
+        currentLocale,
+        translation,
         can,
         canEditAuthorFlag,
         showSuccess,
         showError,
         ROUTE,
+        t,
       }),
       ...getPagesSections({
         postsProp,
@@ -226,6 +248,7 @@ export default function DashboardContent({
         showSuccess,
         showError,
         ROUTE,
+        t,
       }),
       ...getPostTypesSections({
         postTypes,
@@ -235,6 +258,7 @@ export default function DashboardContent({
         showSuccess,
         showError,
         ROUTE,
+        t,
       }),
       ...getTaxonomiesSections({
         adminSection,
@@ -245,6 +269,7 @@ export default function DashboardContent({
         showSuccess,
         showError,
         ROUTE,
+        t,
       }),
       ...getUsersSections({
         users,
@@ -256,6 +281,7 @@ export default function DashboardContent({
         showSuccess,
         showError,
         ROUTE,
+        t,
       }),
       ...getRolesSections({
         roles,
@@ -265,6 +291,7 @@ export default function DashboardContent({
         showSuccess,
         showError,
         ROUTE,
+        t,
       }),
       ...getTaxonomyTermsSections({
         adminSection,
@@ -277,6 +304,7 @@ export default function DashboardContent({
         showSuccess,
         showError,
         ROUTE,
+        t,
       }),
       ...getTemplatesSections({
         adminSection,
@@ -288,6 +316,7 @@ export default function DashboardContent({
         showSuccess,
         showError,
         ROUTE,
+        t,
       }),
     };
 

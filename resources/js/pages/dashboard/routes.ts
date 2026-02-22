@@ -4,15 +4,22 @@
 
 declare const route: (name: string, params?: any) => string;
 
+const postParam = (value: number | string | { post: number | string }) =>
+  typeof value === 'object' && value !== null && 'post' in value ? value : { post: value };
+
 export const ROUTE = {
   posts: {
     index: () => route('dashboard.admin.posts.index'),
     create: () => route('dashboard.admin.posts.create'),
     store: () => route('dashboard.admin.posts.store'),
-    update: (id: number | string) => route('dashboard.admin.posts.update', { post: id }),
-    destroy: (id: number | string) => route('dashboard.admin.posts.destroy', { post: id }),
-    edit: (id: number | string) => route('dashboard.admin.posts.edit', { post: id }),
-    show: (id: number | string) => route('dashboard.admin.posts.show', { post: id }),
+    update: (identifier: number | string | { post: number | string }) =>
+      route('dashboard.admin.posts.update', postParam(identifier)),
+    destroy: (identifier: number | string | { post: number | string }) =>
+      route('dashboard.admin.posts.destroy', postParam(identifier)),
+    edit: (identifier: number | string | { post: number | string }) =>
+      route('dashboard.admin.posts.edit', postParam(identifier)),
+    show: (identifier: number | string | { post: number | string }) =>
+      route('dashboard.admin.posts.show', postParam(identifier)),
   },
   pages: {
     index: () => route('dashboard.admin.pages.index'),
@@ -61,10 +68,10 @@ export const ROUTE = {
   themes: {
     index: () => route('dashboard.admin.themes.index'),
     show: (id: number | string) => route('dashboard.admin.themes.show', id),
-    customizer: (id: number | string) => route('dashboard.admin.themes.customizer', id),
     activate: (slug: string) => route('dashboard.admin.themes.activate', slug),
     publishAssets: (id: number | string) => route('dashboard.admin.themes.publish-assets', id),
     discover: () => route('dashboard.admin.themes.discover'),
+    clearCache: () => route('dashboard.admin.themes.clear-cache'),
     update: (id: number | string) => route('dashboard.admin.themes.update', id),
     destroy: (id: number | string) => route('dashboard.admin.themes.destroy', id),
   },
@@ -101,6 +108,19 @@ export const ROUTE = {
       : route('dashboard.admin.settings.index'),
     update: (group: string) => route('dashboard.admin.settings.update', { group }),
     clearCache: () => route('dashboard.admin.settings.clear-cache'),
+  },
+  translations: {
+    index: (params?: { locale?: string; domain?: string; q?: string }) => {
+      const query: Record<string, string> = {};
+      if (params?.locale) query.locale = params.locale;
+      if (params?.domain) query.domain = params.domain;
+      if (params?.q) query.q = params.q;
+      return Object.keys(query).length
+        ? route('dashboard.admin.translations.index', query)
+        : route('dashboard.admin.translations.index');
+    },
+    store: () => route('dashboard.admin.translations.store'),
+    clearCache: () => route('dashboard.admin.translations.clear-cache'),
   },
   plugins: {
     index: () => route('dashboard.admin.plugins.index'),

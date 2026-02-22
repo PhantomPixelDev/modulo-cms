@@ -20,7 +20,7 @@ class ThemeManager
     public function __construct(ThemeValidator $validator)
     {
         $this->themesPath = resource_path('themes');
-        $this->ttl = (int) env('THEME_CACHE_TTL', 3600);
+        $this->ttl = (int) config('theme.cache_ttl', 3600);
         $this->validator = $validator;
     }
 
@@ -123,7 +123,6 @@ class ThemeManager
                 'templates' => $config['templates'] ?? [],
                 'partials' => $config['partials'] ?? [],
                 'assets' => $config['assets'] ?? [],
-                'customizer' => $config['customizer'] ?? [],
                 'menus' => $config['menus'] ?? [],
                 'widget_areas' => $config['widget_areas'] ?? [],
                 'directory_path' => $themeData['directory'],
@@ -277,7 +276,7 @@ class ThemeManager
             foreach ($candidates as $viewName) {
                 try {
                     if (\View::exists($viewName)) {
-                        if (env('THEME_DEBUG', false)) {
+                        if (config('theme.debug')) {
                             \Log::debug('ThemeManager:renderTemplate:viewName', ['template' => $template, 'view' => $viewName]);
                         }
                         return \View::make($viewName, $data)->render();
@@ -291,7 +290,7 @@ class ThemeManager
             $templatePath = $activeTheme->getTemplatePath($template);
             if ($templatePath && File::exists($templatePath)) {
                 try {
-                    if (env('THEME_DEBUG', false)) {
+                    if (config('theme.debug')) {
                         \Log::debug('ThemeManager:renderTemplate:activePath', ['template' => $template, 'path' => $templatePath]);
                     }
                     return \View::file($templatePath, $data)->render();
@@ -304,20 +303,6 @@ class ThemeManager
         // No raw file content fallback; return null so caller can handle properly
 
         return null;
-    }
-
-    /**
-     * Get theme customizer settings
-     */
-    public function getCustomizerSettings(): array
-    {
-        $activeTheme = $this->getActiveTheme();
-        
-        if (!$activeTheme || !$activeTheme->config) {
-            return [];
-        }
-        
-        return $activeTheme->config['customizer'] ?? [];
     }
 
     /**
@@ -358,12 +343,12 @@ class ThemeManager
     public function getAvailableMenus(): array
     {
         $activeTheme = $this->getActiveTheme();
-        
-        if (!$activeTheme || !$activeTheme->config) {
+
+        if (!$activeTheme) {
             return [];
         }
-        
-        return $activeTheme->config['menus'] ?? [];
+
+        return $activeTheme->menus ?? [];
     }
 
     /**
@@ -386,12 +371,42 @@ class ThemeManager
     public function supports(string $feature): bool
     {
         $activeTheme = $this->getActiveTheme();
-        
+
         if (!$activeTheme) {
             return false;
         }
 
         return $activeTheme->supports($feature);
+    }
+
+    /**
+     * Load translations bundled with a theme
+     */
+    public function getTranslations(Theme $theme, ?string $locale = null): array
+    {
+        $locale = $locale ?? app()->getLocale();
+        $directory = $theme->directory_path ?? $theme->slug;
+        $basePath = resource_path('themes/' . $directory . '/lang');
+
+        $paths = [
+            $basePath . '/' . $locale . '.json',
+        ];
+
+        $fallback = config('app.fallback_locale', 'en');
+        if ($fallback !== $locale) {
+            $paths[] = $basePath . '/' . $fallback . '.json';
+        }
+
+        foreach ($paths as $path) {
+            if (File::exists($path)) {
+                $json = json_decode(File::get($path), true);
+                if (is_array($json)) {
+                    return $json;
+                }
+            }
+        }
+
+        return [];
     }
 
     /**

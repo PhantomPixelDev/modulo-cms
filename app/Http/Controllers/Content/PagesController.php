@@ -90,9 +90,6 @@ class PagesController extends AdminBaseController
             'adminSection' => 'pages',
             'posts' => $pages,
             'postTypes' => [],
-            'adminStats' => [
-                'pages' => Post::where('post_type_id', $pageType->id)->count(),
-            ],
         ]);
     }
 

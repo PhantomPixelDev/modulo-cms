@@ -7,6 +7,13 @@ services:
       target: app
     env_file:
       - ../.env.dev
+    environment:
+      LARAVEL_ENV_FILE: /var/www/html/.env.dev
+      FORCE_COMPOSER_INSTALL: "false"
+      RUN_MIGRATIONS: "false"
+      RUN_SEEDERS: "false"
+      ENSURE_DEFAULT_THEME: "true"
+      DEFAULT_THEME_SLUG: "modern-react"
     volumes:
       - ../:/var/www/html:cached
       - app_vendor:/var/www/html/vendor
@@ -36,6 +43,8 @@ services:
   web:
     container_name: modulo-dev-web
     image: nginx:alpine
+    ports:
+      - "8000:80"
     depends_on:
       app:
         condition: service_started
@@ -44,14 +53,12 @@ services:
       - app_storage:/var/www/html/storage:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/health | grep -q ok"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health | grep -q ok"]
       interval: 10s
       timeout: 3s
       retries: 10
     networks:
       - modulo-dev
-    ports:
-      - "8080:80"
 
   vite:
     container_name: modulo-dev-vite
@@ -67,7 +74,7 @@ services:
     networks:
       - modulo-dev
     ports:
-      - "5173:5173"
+      - "5174:5173"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5173').then(()=>process.exit(0)).catch(()=>process.exit(1))\" "]
       interval: 10s

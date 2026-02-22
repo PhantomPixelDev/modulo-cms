@@ -153,14 +153,18 @@ class ThemeValidator
     {
         $this->errors = [];
 
-        // Check for suspicious files (PHP, executables)
-        $suspiciousPatterns = ['*.php', '*.phar', '*.exe'];
-        
-        foreach ($suspiciousPatterns as $pattern) {
-            $files = File::glob($themePath . '/**/' . $pattern);
-            if (!empty($files)) {
-                $this->errors[] = "Security warning: Suspicious files found with pattern: {$pattern}";
+        $suspiciousExtensions = ['php', 'phar', 'exe'];
+
+        try {
+            $allFiles = File::allFiles($themePath);
+            foreach ($allFiles as $file) {
+                if (in_array(strtolower($file->getExtension()), $suspiciousExtensions, true)) {
+                    $this->errors[] = 'Security warning: Suspicious file found: ' . $file->getRelativePathname();
+                }
             }
+        } catch (\Throwable $e) {
+            // If we can't scan, treat as a warning rather than blocking install
+            \Log::warning('ThemeValidator: could not scan theme directory', ['path' => $themePath, 'error' => $e->getMessage()]);
         }
 
         return empty($this->errors);

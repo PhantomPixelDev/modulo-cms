@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Locale;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +24,9 @@ class MenuService
     {
         $key = self::keyForLocation($location);
         return Cache::remember($key, 300, function () use ($location) {
-            return Menu::with(['items.children'])
+            return Menu::with(['items' => function ($query) {
+                $query->with(['translations', 'children']);
+            }])
                 ->where('location', $location)
                 ->first();
         });
@@ -33,7 +36,9 @@ class MenuService
     {
         $key = self::keyForSlug($slug);
         return Cache::remember($key, 300, function () use ($slug) {
-            return Menu::with(['items.children'])
+            return Menu::with(['items' => function ($query) {
+                $query->with(['translations', 'children']);
+            }])
                 ->where('slug', $slug)
                 ->first();
         });
@@ -77,11 +82,12 @@ class MenuService
 
     private function renderItems($items): string
     {
+        $currentLocale = app()->getLocale();
         $html = '';
         foreach ($items as $item) {
             if (!$this->isVisible($item)) continue;
-            $url = $this->resolveUrl($item);
-            $label = e($item->label);
+            $url = $item->resolveUrl($currentLocale);
+            $label = e($item->getLocalizedLabel($currentLocale));
             $target = $item->target ? ' target="' . e($item->target) . '"' : '';
             $html .= '<li><a href="' . e($url) . '"' . $target . ' class="hover:underline">' . $label . '</a>';
             if ($item->children && $item->children->count() > 0) {
@@ -128,14 +134,16 @@ class MenuService
 
     private function itemsToArray($items): array
     {
+        $currentLocale = app()->getLocale();
         $out = [];
         foreach ($items as $item) {
             if (!$this->isVisible($item)) continue;
             $out[] = [
                 'id' => $item->id,
-                'label' => $item->label,
-                'url' => $this->resolveUrl($item),
+                'label' => $item->getLocalizedLabel($currentLocale),
+                'url' => $item->resolveUrl($currentLocale),
                 'target' => $item->target,
+                'localizations' => $item->buildLocalizationMap(),
                 'children' => $this->itemsToArray($item->children ?? collect()),
             ];
         }

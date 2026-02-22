@@ -18,6 +18,7 @@ export function getTaxonomyTermsSections({
   showSuccess,
   showError,
   ROUTE,
+  t,
 }: {
   adminSection?: string;
   taxonomyTerms: any;
@@ -29,6 +30,7 @@ export function getTaxonomyTermsSections({
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const renderTaxonomyTermsList = () => {
     const termItems = asArray((taxonomyTerms as any)?.data ?? taxonomyTerms).map((t: any) => ({
@@ -41,11 +43,11 @@ export function getTaxonomyTermsSections({
 
     return (
       <SectionWrapper
-        title="Taxonomy Terms"
+        title={t('dashboard.taxonomy_terms.title')}
         actions={
           can('create taxonomy terms') ? (
             <Button size="sm" onClick={() => router.visit(ROUTE.taxonomyTerms.create())}>
-              + New Term
+              {t('dashboard.taxonomy_terms.actions.new')}
             </Button>
           ) : null
         }
@@ -58,7 +60,7 @@ export function getTaxonomyTermsSections({
           onView={(id) => router.visit(ROUTE.taxonomyTerms.show(id))}
           onEdit={(id) => router.visit(ROUTE.taxonomyTerms.edit(id))}
           onDelete={(item) => {
-            if (!window.confirm(`Delete term "${item.name}"? This cannot be undone.`)) return;
+            if (!window.confirm(t('dashboard.taxonomy_terms.confirm_delete', { name: item.name }))) return;
             router.delete(ROUTE.taxonomyTerms.destroy(item.id));
           }}
         />
@@ -72,10 +74,10 @@ export function getTaxonomyTermsSections({
 
     return (
       <SectionWrapper
-        title={isEditing ? 'Edit Taxonomy Term' : 'Create Taxonomy Term'}
+        title={isEditing ? t('dashboard.taxonomy_terms.edit_title') : t('dashboard.taxonomy_terms.create_title')}
         actions={
           <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.taxonomyTerms.index())}>
-            Back to Terms
+            {t('dashboard.taxonomy_terms.actions.back')}
           </Button>
         }
       >
@@ -87,7 +89,7 @@ export function getTaxonomyTermsSections({
           canDelete={can('delete taxonomy terms')}
           onDelete={() => {
             if (!term?.id) return;
-            if (!window.confirm(`Delete term "${term.name}"? This cannot be undone.`)) return;
+            if (!window.confirm(t('dashboard.taxonomy_terms.confirm_delete', { name: term.name }))) return;
             router.delete(ROUTE.taxonomyTerms.destroy(term.id));
           }}
           onSubmit={(payload) => {
@@ -96,10 +98,22 @@ export function getTaxonomyTermsSections({
             router[method](url, payload, {
               preserveScroll: true,
               onSuccess: () => {
-                showSuccess(`Term ${isEditing ? 'updated' : 'created'} successfully`);
+                showSuccess(
+                  t(
+                    isEditing
+                      ? 'dashboard.taxonomy_terms.messages.updated'
+                      : 'dashboard.taxonomy_terms.messages.created'
+                  )
+                );
                 router.visit(ROUTE.taxonomyTerms.index());
               },
-              onError: () => showError(`Failed to ${isEditing ? 'update' : 'create'} term`),
+              onError: () => showError(
+                t(
+                  isEditing
+                    ? 'dashboard.taxonomy_terms.messages.update_failed'
+                    : 'dashboard.taxonomy_terms.messages.create_failed'
+                )
+              ),
             });
           }}
           onCancel={() => router.visit(ROUTE.taxonomyTerms.index())}
@@ -110,16 +124,16 @@ export function getTaxonomyTermsSections({
 
   const renderTaxonomyTermShow = () => (
     <SectionWrapper
-      title="Taxonomy Term"
+      title={t('dashboard.taxonomy_terms.show_title')}
       actions={
         <div className="flex gap-2">
           {can('edit taxonomy terms') && taxonomyTerm?.id ? (
             <Button size="sm" onClick={() => router.visit(ROUTE.taxonomyTerms.edit(taxonomyTerm.id))}>
-              Edit
+              {t('dashboard.taxonomy_terms.actions.edit')}
             </Button>
           ) : null}
           <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.taxonomyTerms.index())}>
-            Back to Terms
+            {t('dashboard.taxonomy_terms.actions.back')}
           </Button>
         </div>
       }

@@ -10,13 +10,18 @@ use App\Models\PostType;
 use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
 use App\Models\Plugin;
+use App\Services\AdminStatsService;
 use App\Services\SiteSettingsService;
+use App\Services\TranslationService;
 use Illuminate\Support\Facades\Schema;
 
 class HandleInertiaRequests extends Middleware
 {
+    private ?array $cachedSidebarData = null;
+
     public function __construct(
-        protected SiteSettingsService $settings
+        protected SiteSettingsService $settings,
+        protected TranslationService $translations
     ) {}
 
     /**
@@ -38,6 +43,14 @@ class HandleInertiaRequests extends Middleware
         return parent::version($request);
     }
 
+
+    /**
+     * Memoized wrapper so categories and tags share a single DB call per request.
+     */
+    private function getSidebarDataCached(): array
+    {
+        return $this->cachedSidebarData ??= $this->getSidebarData();
+    }
 
     /**
      * Get sidebar data for all pages
@@ -112,8 +125,8 @@ class HandleInertiaRequests extends Middleware
             'name' => $this->settings->get('site_name', config('app.name')),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             // Use lazy props to avoid querying DB on every request (e.g. admin actions)
-            'categories' => fn () => $this->getSidebarData()['categories'],
-            'tags' => fn () => $this->getSidebarData()['tags'],
+            'categories' => fn () => $this->getSidebarDataCached()['categories'],
+            'tags' => fn () => $this->getSidebarDataCached()['tags'],
             // Pass all public settings to frontend
             'settings' => $this->settings->getPublicSettings(),
             // Expose session flash messages for toasts
@@ -147,6 +160,9 @@ class HandleInertiaRequests extends Middleware
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
+            'adminStats' => fn () => $request->user()?->hasRole(['admin', 'super-admin'])
+                ? app(AdminStatsService::class)->get()
+                : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'activePlugins' => fn () => Schema::hasTable('plugins')
                 ? Plugin::query()->active()->pluck('slug')->values()->toArray()
@@ -165,6 +181,11 @@ class HandleInertiaRequests extends Middleware
                         ->get(['id', 'name', 'label', 'menu_icon', 'slug'])
                     : [],
             ],
+            // Localization - translations and locale info
+            'locale' => fn () => Schema::hasTable('locales') 
+                ? $this->translations->getLocaleInfo() 
+                : ['current' => app()->getLocale(), 'direction' => 'ltr', 'name' => 'English', 'native_name' => 'English', 'available' => []],
+            'translations' => fn () => $this->translations->getAdminTranslations(),
         ];
     }
 }

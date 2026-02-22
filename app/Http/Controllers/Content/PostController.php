@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
 use App\Models\User;
+use App\Models\Locale;
 use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -28,7 +31,7 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy'])
+        $query = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy', 'translations'])
             ->whereHas('postType', function ($q) {
                 $q->where('name', '!=', 'page');
             })
@@ -54,47 +57,85 @@ class PostController extends Controller
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'posts',
-            'posts' => $posts->through(function ($post) {
-                return [
-                    'id' => $post->id,
-                    'title' => $post->title,
-                    'slug' => $post->slug,
-                    'status' => $post->status,
-                    'author_id' => $post->author_id,
-                    'published_at' => $this->settings->formatDateTime($post->published_at),
-                    'created_at' => $this->settings->formatDateTime($post->created_at),
-                    'updated_at' => $this->settings->formatDateTime($post->updated_at),
-                    'post_type' => [
-                        'id' => $post->postType->id,
-                        'name' => $post->postType->name,
-                        'label' => $post->postType->label,
-                    ],
-                    'author' => $post->author ? [
-                        'id' => $post->author->id,
-                        'name' => $post->author->name,
-                    ] : null,
-                    'taxonomy_terms' => $post->taxonomyTerms->map(function ($term) {
-                        return [
-                            'id' => $term->id,
-                            'name' => $term->name,
-                            'taxonomy' => [
-                                'id' => $term->taxonomy->id,
-                                'name' => $term->taxonomy->name,
-                            ]
-                        ];
-                    }),
-                ];
-            }),
+            'posts' => $posts->through(fn ($post) => $this->formatPostForList($post)),
             // Exclude 'page' from selectable post types in the Posts area
             'postTypes' => PostType::where('name', '!=', 'page')->get(),
             'authors' => User::orderBy('name')->get(['id','name']),
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => Post::count(),
-                'postTypes' => PostType::count(),
-            ],
+            'locales' => Locale::getActive(),
         ]);
+    }
+
+    /**
+     * Display a listing of posts by post type.
+     */
+    public function indexByType(Request $request, string $postTypeSlug)
+    {
+        // Find the post type by slug
+        $postType = PostType::where('slug', $postTypeSlug)->firstOrFail();
+        
+        // Check permission for this post type
+        $this->authorize('view', Post::class);
+
+        $query = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy', 'translations'])
+            ->where('post_type_id', $postType->id)
+            ->orderBy('created_at', 'desc');
+
+        // Filter by status
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by author
+        if ($request->has('author_id')) {
+            $query->where('author_id', $request->author_id);
+        }
+
+        $perPage = $this->settings->get('posts_per_page', 15);
+        $posts = $query->paginate($perPage);
+
+        return Inertia::render('Dashboard', [
+            'adminSection' => 'posts',
+            'posts' => $posts->through(fn ($post) => $this->formatPostForList($post)),
+            'postTypes' => PostType::where('name', '!=', 'page')->get(),
+            'currentPostType' => $postType,
+            'authors' => User::orderBy('name')->get(['id','name']),
+            'locales' => Locale::getActive(),
+        ]);
+    }
+
+    private function formatPostForList(Post $post): array
+    {
+        return [
+            'id' => $post->id,
+            'title' => $post->title,
+            'slug' => $post->slug,
+            'status' => $post->status,
+            'author_id' => $post->author_id,
+            'published_at' => $this->settings->formatDateTime($post->published_at),
+            'created_at' => $this->settings->formatDateTime($post->created_at),
+            'updated_at' => $this->settings->formatDateTime($post->updated_at),
+            'post_type' => [
+                'id' => $post->postType->id,
+                'name' => $post->postType->name,
+                'label' => $post->postType->label,
+            ],
+            'author' => $post->author ? [
+                'id' => $post->author->id,
+                'name' => $post->author->name,
+            ] : null,
+            'taxonomy_terms' => $post->taxonomyTerms->map(fn ($term) => [
+                'id' => $term->id,
+                'name' => $term->name,
+                'taxonomy' => [
+                    'id' => $term->taxonomy->id,
+                    'name' => $term->taxonomy->name,
+                ],
+            ]),
+            'translations' => $post->translations->map(fn ($translation) => [
+                'id' => $translation->id,
+                'locale' => $translation->locale,
+            ]),
+        ];
     }
 
     /**
@@ -152,6 +193,8 @@ class PostController extends Controller
             'selected_terms' => [],
         ];
 
+        $currentLocale = $request->query('locale', Locale::getDefault()?->code ?? 'en');
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'posts.create',
             'editPost' => $postData,
@@ -159,38 +202,16 @@ class PostController extends Controller
             'groupedTerms' => $groupedTerms,
             'authors' => $authors,
             'parentsByType' => $parentsByType,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => Post::count(),
-                'postTypes' => PostType::count(),
-            ],
+            'locales' => Locale::getActive(),
+            'currentLocale' => $currentLocale,
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
-        $this->authorize('create', Post::class);
-        $request->validate([
-            'post_type_id' => 'required|exists:post_types,id',
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:posts,slug',
-            'content' => 'required|string',
-            'excerpt' => 'nullable|string',
-            'status' => 'required|in:draft,published,private,archived',
-            'featured_image' => 'nullable|string',
-            'taxonomy_terms' => 'array',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-            'published_at' => 'nullable|date',
-            'author_id' => 'nullable|exists:users,id',
-            'parent_id' => 'nullable|exists:posts,id',
-            'menu_order' => 'nullable|integer',
-            'meta_data' => 'nullable|array',
-        ]);
 
         // Determine published_at
         $publishedAt = null;
@@ -278,22 +299,18 @@ class PostController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'posts.show',
             'post' => $postData,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => Post::count(),
-                'postTypes' => PostType::count(),
-            ],
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Post $post)
+    public function edit(Request $request, Post $post)
     {
         $this->authorize('update', $post);
-        $post->load(['postType', 'author', 'taxonomyTerms.taxonomy']);
+        $post->load(['postType', 'author', 'taxonomyTerms.taxonomy', 'translations']);
+        $currentLocale = $request->query('locale', Locale::getDefault()?->code ?? 'en');
+        $translation = $post->translations->firstWhere('locale', $currentLocale);
         // Exclude 'page' from Posts edit form options
         $postTypes = PostType::where('name', '!=', 'page')->get();
         $taxonomyTerms = TaxonomyTerm::with('taxonomy')->get();
@@ -312,17 +329,17 @@ class PostController extends Controller
         $postData = [
             'id' => $post->id,
             'post_type_id' => $post->post_type_id,
-            'title' => $post->title,
-            'slug' => $post->slug,
-            'excerpt' => $post->excerpt,
-            'content' => $post->content,
+            'title' => $translation?->title ?? $post->title,
+            'slug' => $translation?->slug ?? $post->slug,
+            'excerpt' => $translation?->excerpt ?? $post->excerpt,
+            'content' => $translation?->content ?? $post->content,
             'status' => $post->status,
             'featured_image' => $post->featured_image,
             'published_at' => $post->published_at?->format('Y-m-d H:i:s'),
             'created_at' => $post->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $post->updated_at->format('Y-m-d H:i:s'),
-            'meta_title' => $post->meta_title,
-            'meta_description' => $post->meta_description,
+            'meta_title' => $translation?->seo_title ?? $post->meta_title,
+            'meta_description' => $translation?->seo_description ?? $post->meta_description,
             'post_type' => [
                 'id' => $post->postType->id,
                 'name' => $post->postType->name,
@@ -352,38 +369,20 @@ class PostController extends Controller
             'groupedTerms' => $groupedTerms,
             'authors' => $authors,
             'parentsByType' => $parentsByType,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => Post::count(),
-                'postTypes' => PostType::count(),
-            ],
+            'locales' => Locale::getActive(),
+            'currentLocale' => $currentLocale,
+            'translation' => $translation,
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Post $post)
+    public function update(UpdatePostRequest $request, Post $post)
     {
-        $this->authorize('update', $post);
-        $request->validate([
-            'post_type_id' => 'required|exists:post_types,id',
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:posts,slug,' . $post->id,
-            'content' => 'required|string',
-            'excerpt' => 'nullable|string',
-            'status' => 'required|in:draft,published,private,archived',
-            'featured_image' => 'nullable|string',
-            'taxonomy_terms' => 'array',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-            'published_at' => 'nullable|date',
-            'author_id' => 'nullable|exists:users,id',
-            'parent_id' => 'nullable|exists:posts,id',
-            'menu_order' => 'nullable|integer',
-            'meta_data' => 'nullable|array',
-        ]);
+        $defaultLocale = Locale::getDefault()?->code ?? 'en';
+        $locale = $request->input('locale', $defaultLocale);
+        $isDefaultLocale = $locale === $defaultLocale;
 
         // Determine published_at based on input or status transition
         $newStatus = $request->status;
@@ -402,26 +401,42 @@ class PostController extends Controller
             }
         }
 
-        $post->update([
+        $baseUpdate = [
             'post_type_id' => $request->post_type_id,
             'author_id' => $request->author_id ?: $post->author_id,
-            'title' => $request->title,
-            // Preserve or update slug: use provided slug if present; otherwise derive from title
-            'slug' => Str::slug($request->slug ?: $request->title),
-            'excerpt' => $request->excerpt,
-            'content' => $request->content,
             'featured_image' => $request->featured_image,
             'status' => $newStatus,
             'published_at' => $publishedAt,
-            'meta_title' => $request->meta_title,
-            'meta_description' => $request->meta_description,
             'parent_id' => $request->parent_id,
             'menu_order' => $request->menu_order ?? $post->menu_order,
             'meta_data' => $request->meta_data ?? $post->meta_data,
-        ]);
+        ];
+
+        if ($isDefaultLocale) {
+            $baseUpdate = array_merge($baseUpdate, [
+                'title' => $request->title,
+                'slug' => Str::slug($request->slug ?: $request->title),
+                'excerpt' => $request->excerpt,
+                'content' => $request->content,
+                'meta_title' => $request->meta_title,
+                'meta_description' => $request->meta_description,
+            ]);
+        }
+
+        $post->update($baseUpdate);
 
         // Sync taxonomy terms
         $post->taxonomyTerms()->sync($request->taxonomy_terms ?? []);
+
+        // Update translation data for the selected locale
+        $post->setTranslation($locale, [
+            'title' => $request->title,
+            'slug' => Str::slug($request->slug ?: $request->title),
+            'excerpt' => $request->excerpt,
+            'content' => $request->content,
+            'seo_title' => $request->meta_title,
+            'seo_description' => $request->meta_description,
+        ]);
 
         return redirect()->route('dashboard.admin.posts.index')->with('success', 'Post updated successfully.');
     }

@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
+use App\Http\Controllers\Admin\TranslationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -31,17 +32,27 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
 
         // Resource routes with automatic permission checks
         Route::resource('pages', PagesController::class)->except(['show']);
-        Route::resource('posts', PostController::class);
+        Route::resource('posts', PostController::class)
+            ->scoped(['post' => 'slug']);
+        // Specific route for listing posts by post type
+        Route::get('posts/type/{postType}', [PostController::class, 'indexByType'])->name('posts.byType');
+        // Post translation routes
+        Route::post('posts/{post}/translations', [\App\Http\Controllers\Dashboard\Admin\PostController::class, 'storeTranslation'])->name('posts.translations.store');
+        Route::delete('posts/{post}/translations/{locale}', [\App\Http\Controllers\Dashboard\Admin\PostController::class, 'destroyTranslation'])->name('posts.translations.destroy');
         Route::resource('post-types', PostTypeController::class);
         Route::resource('menus', MenuController::class);
         Route::resource('menu-items', MenuItemController::class);
         Route::resource('taxonomies', TaxonomyController::class);
-        Route::resource('taxonomy-terms', TaxonomyTermController::class);
+        Route::get('taxonomy-terms', [TaxonomyTermController::class, 'index'])->name('taxonomy-terms.index');
+        Route::resource('taxonomy-terms', TaxonomyTermController::class)->except(['index']);
+        // Specific route for listing taxonomy terms by taxonomy slug
+        Route::get('taxonomies/{taxonomy}', [TaxonomyTermController::class, 'indexByTaxonomy'])->name('taxonomy-terms.byTaxonomy');
         Route::resource('templates', TemplateController::class);
         Route::resource('themes', ThemeController::class);
 
         // Theme-specific routes
         Route::post('/themes/discover', [ThemeController::class, 'discover'])->name('themes.discover');
+        Route::post('/themes/clear-cache', [ThemeController::class, 'clearCache'])->name('themes.clear-cache');
         Route::post('/themes/{slug}/activate', [ThemeController::class, 'activate'])->name('themes.activate');
         Route::post('/themes/{theme}/publish-assets', [ThemeController::class, 'publishAssets'])->name('themes.publish-assets');
         
@@ -80,8 +91,14 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::put('/settings/{group}', [SiteSettingsController::class, 'update'])->name('settings.update');
         Route::post('/settings/clear-cache', [SiteSettingsController::class, 'clearCache'])->name('settings.clear-cache');
 
+        // Translations
+        Route::get('/translations', [TranslationController::class, 'index'])->name('translations.index');
+        Route::post('/translations', [TranslationController::class, 'store'])->name('translations.store');
+        Route::post('/translations/clear-cache', [TranslationController::class, 'clearCache'])->name('translations.clear-cache');
+
         // Plugins
         Route::get('plugins', [PluginController::class, 'index'])->name('plugins.index');
+        Route::post('plugins/discover', [PluginController::class, 'discover'])->name('plugins.discover');
         Route::post('plugins/{slug}/activate', [PluginController::class, 'activate'])->name('plugins.activate');
         Route::post('plugins/{slug}/deactivate', [PluginController::class, 'deactivate'])->name('plugins.deactivate');
         Route::get('plugins/{slug}/settings', [PluginController::class, 'settings'])->name('plugins.settings');

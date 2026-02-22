@@ -28,7 +28,7 @@ class PostController extends BaseFrontendController
             return $resp;
         }
 
-        if (env('THEME_DEBUG', false)) {
+        if (config('theme.debug')) {
             \Log::debug('listPosts:start', [
                 'routeName' => optional($request->route())->getName(),
                 'routeParams' => optional($request->route())->parameters(),
@@ -50,14 +50,14 @@ class PostController extends BaseFrontendController
 
         if ($routePostTypeId) {
             $query->where('post_type_id', $routePostTypeId);
-            if (env('THEME_DEBUG', false)) {
+            if (config('theme.debug')) {
                 \Log::debug('listPosts:filterByRouteDefaultPostTypeId', ['postTypeId' => $routePostTypeId]);
             }
         } elseif ($postTypeSlug) {
             $pt = PostType::where('route_prefix', $postTypeSlug)->first();
             if ($pt) {
                 $query->where('post_type_id', $pt->id);
-                if (env('THEME_DEBUG', false)) {
+                if (config('theme.debug')) {
                     \Log::debug('listPosts:filterBySlug', ['route_prefix' => $postTypeSlug, 'postTypeId' => $pt->id]);
                 }
             }
@@ -65,7 +65,7 @@ class PostController extends BaseFrontendController
             $pt = PostType::where('slug', 'post')->first();
             if ($pt) {
                 $query->where('post_type_id', $pt->id);
-                if (env('THEME_DEBUG', false)) {
+                if (config('theme.debug')) {
                     \Log::debug('listPosts:defaultToClassicPostType', ['postTypeId' => $pt->id]);
                 }
                 $request->attributes->set('default_post_type_id', $pt->id);

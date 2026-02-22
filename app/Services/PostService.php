@@ -6,31 +6,55 @@ use App\Models\Post;
 use App\Models\PostType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 
 class PostService
 {
+    /**
+     * Cache TTL in seconds (1 hour)
+     */
+    protected const CACHE_TTL = 3600;
+
     /**
      * Get a post by slug with all necessary relationships
      */
     public function getPostBySlug(string $slug, string $postType = null): ?Post
     {
-        $query = Post::with([
-            'author',
-            'postType',
-            'taxonomyTerms.taxonomy',
-            'parent',
-            'children'
-        ]);
+        $cacheKey = "post:{$slug}" . ($postType ? ":{$postType}" : '');
 
-        if ($postType) {
-            $query->whereHas('postType', function($q) use ($postType) {
-                $q->where('name', $postType);
-            });
-        }
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($slug, $postType) {
+            $query = Post::with([
+                'author',
+                'postType',
+                'taxonomyTerms.taxonomy',
+                'parent',
+                'children',
+                'allComments' => function ($query) {
+                    $query->with('user');
+                },
+                'translations',
+            ]);
 
-        return $query->where('slug', $slug)
-            ->published()
-            ->first();
+            if ($postType) {
+                $query->whereHas('postType', function($q) use ($postType) {
+                    $q->where('name', $postType);
+                });
+            }
+
+            return $query->where('slug', $slug)
+                ->published()
+                ->first();
+        });
+    }
+
+    /**
+     * Clear cache for a specific post
+     */
+    public function clearPostCache(string $slug, string $postType = null): void
+    {
+        $cacheKey = "post:{$slug}" . ($postType ? ":{$postType}" : '');
+        Cache::forget($cacheKey);
+        Cache::forget("post:{$slug}");
     }
 
     /**

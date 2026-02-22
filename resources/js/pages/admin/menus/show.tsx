@@ -10,6 +10,15 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useAcl } from '@/lib/acl';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Locale } from '@/pages/dashboard/types';
+
+interface MenuItemLocalizationMap {
+  [locale: string]: {
+    label?: string | null;
+    url?: string | null;
+  };
+}
 
 interface MenuItemDTO {
   id: number;
@@ -23,6 +32,7 @@ interface MenuItemDTO {
   visible_to?: 'all' | 'guest' | 'auth' | null;
   target?: '_self' | '_blank' | null;
   children?: MenuItemDTO[];
+  localizations?: MenuItemLocalizationMap;
 }
 
 // Render inside the dashboard layout
@@ -42,7 +52,9 @@ interface MenuDTO {
 }
 
 export default function AdminMenusShow() {
-  const menu = (usePage().props as any).menu as MenuDTO;
+  const pageProps = usePage().props as any;
+  const menu = pageProps.menu as MenuDTO;
+  const locales = (pageProps.locales || []) as Locale[];
   const { hasPermission, isAdmin } = useAcl();
 
   const { data, setData, put, processing, errors } = useForm({
@@ -141,7 +153,7 @@ export default function AdminMenusShow() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <CreateItemForm menuId={menu.id} allItems={flatten(menu.items || [])} />
+                <CreateItemForm menuId={menu.id} allItems={flatten(menu.items || [])} locales={locales} />
               </CardContent>
             </Card>
           )}
@@ -169,6 +181,7 @@ export default function AdminMenusShow() {
                         key={it.id}
                         item={it}
                         allItems={flatten(menu.items!)}
+                        locales={locales}
                         isAdmin={isAdmin}
                         hasPermission={hasPermission}
                       />
@@ -187,7 +200,21 @@ export default function AdminMenusShow() {
   );
 }
 
-function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuItemDTO[] }) {
+type TranslationDraft = { locale: string; label?: string; url?: string };
+
+function buildTranslationSeed(locales: Locale[], localizations?: MenuItemLocalizationMap): TranslationDraft[] {
+  return locales.map((locale) => {
+    const existing = localizations?.[locale.code];
+    return {
+      locale: locale.code,
+      label: existing?.label ?? '',
+      url: existing?.url ?? '',
+    };
+  });
+}
+
+function CreateItemForm({ menuId, allItems, locales }: { menuId: number; allItems: MenuItemDTO[]; locales: Locale[] }) {
+  const translationSeed = useMemo(() => buildTranslationSeed(locales), [locales]);
   const { data, setData, post, processing, reset, errors } = useForm({
     menu_id: menuId,
     parent_id: null as number | null,
@@ -198,7 +225,9 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
     order: 0,
     target: '_self' as '_self' | '_blank',
     visible_to: 'all' as 'all' | 'guest' | 'auth',
+    translations: translationSeed,
   });
+  const [activeLocale, setActiveLocale] = useState(locales[0]?.code ?? '');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,6 +239,17 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
 
   const parentOptions = [{ id: 0, label: '— Root —' }, ...allItems.map((i) => ({ id: i.id, label: i.label }))];
   const linkType = data.route_name ? 'route' : data.page_slug ? 'page' : 'url';
+  const getTranslationValue = (localeCode: string, field: keyof Omit<TranslationDraft, 'locale'>) =>
+    data.translations?.find((t) => t.locale === localeCode)?.[field] ?? '';
+  const handleTranslationChange = (localeCode: string, field: keyof Omit<TranslationDraft, 'locale'>, value: string) => {
+    const current = data.translations ?? [];
+    const index = current.findIndex((t) => t.locale === localeCode);
+    const next = index >= 0
+      ? current.map((t, idx) => (idx === index ? { ...t, [field]: value } : t))
+      : [...current, { locale: localeCode, [field]: value } as TranslationDraft];
+    setData('translations', next);
+  };
+  const tabsValue = locales.some((locale) => locale.code === activeLocale) ? activeLocale : locales[0]?.code ?? '';
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -283,6 +323,35 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
           </select>
         </div>
       </div>
+      {locales.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Localized Labels & URLs</label>
+          <Tabs value={tabsValue} onValueChange={setActiveLocale} className="w-full">
+            <TabsList className="flex flex-wrap gap-2">
+              {locales.map((locale) => (
+                <TabsTrigger key={locale.code} value={locale.code} className="text-xs font-semibold">
+                  {locale.code.toUpperCase()}
+                  {locale.is_default && <span className="ml-1 text-[10px] text-muted-foreground">Default</span>}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {locales.map((locale) => (
+              <TabsContent key={locale.code} value={locale.code} className="mt-3 space-y-2">
+                <Input
+                  placeholder={`Label (${locale.native_name || locale.code.toUpperCase()})`}
+                  value={getTranslationValue(locale.code, 'label')}
+                  onChange={(e) => handleTranslationChange(locale.code, 'label', e.target.value)}
+                />
+                <Input
+                  placeholder="Localized URL (optional)"
+                  value={getTranslationValue(locale.code, 'url')}
+                  onChange={(e) => handleTranslationChange(locale.code, 'url', e.target.value)}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      )}
       <div className="flex items-center justify-end gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => reset('label', 'url', 'page_slug', 'route_name', 'parent_id', 'order')} disabled={processing}>
           Reset
@@ -295,7 +364,8 @@ function CreateItemForm({ menuId, allItems }: { menuId: number; allItems: MenuIt
   );
 }
 
-function ItemRow({ item, allItems, isAdmin, hasPermission }: { item: MenuItemDTO; allItems: MenuItemDTO[]; isAdmin: () => boolean; hasPermission: (perm: string) => boolean }) {
+function ItemRow({ item, allItems, locales, isAdmin, hasPermission }: { item: MenuItemDTO; allItems: MenuItemDTO[]; locales: Locale[]; isAdmin: () => boolean; hasPermission: (perm: string) => boolean }) {
+  const translationSeed = useMemo(() => buildTranslationSeed(locales, item.localizations), [locales, item.localizations]);
   const { data, setData, put, processing } = useForm({
     parent_id: item.parent_id ?? null,
     label: item.label,
@@ -305,8 +375,10 @@ function ItemRow({ item, allItems, isAdmin, hasPermission }: { item: MenuItemDTO
     order: item.order ?? 0,
     visible_to: (item.visible_to ?? 'all') as 'all' | 'guest' | 'auth',
     target: (item.target ?? '_self') as '_self' | '_blank',
+    translations: translationSeed,
   });
   const [expanded, setExpanded] = useState(true);
+  const [activeLocale, setActiveLocale] = useState(locales[0]?.code ?? '');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,6 +394,17 @@ function ItemRow({ item, allItems, isAdmin, hasPermission }: { item: MenuItemDTO
   );
 
   const linkType = data.route_name ? 'route' : data.page_slug ? 'page' : 'url';
+  const getTranslationValue = (localeCode: string, field: keyof Omit<TranslationDraft, 'locale'>) =>
+    data.translations?.find((t) => t.locale === localeCode)?.[field] ?? '';
+  const handleTranslationChange = (localeCode: string, field: keyof Omit<TranslationDraft, 'locale'>, value: string) => {
+    const current = data.translations ?? [];
+    const index = current.findIndex((t) => t.locale === localeCode);
+    const next = index >= 0
+      ? current.map((t, idx) => (idx === index ? { ...t, [field]: value } : t))
+      : [...current, { locale: localeCode, [field]: value } as TranslationDraft];
+    setData('translations', next);
+  };
+  const tabsValue = locales.some((locale) => locale.code === activeLocale) ? activeLocale : locales[0]?.code ?? '';
   return (
     <div className="rounded-md border border-border/60 bg-card/50 p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -390,6 +473,34 @@ function ItemRow({ item, allItems, isAdmin, hasPermission }: { item: MenuItemDTO
         </div>
       </form>
 
+      {locales.length > 0 && (
+        <div className="mt-4 rounded-md border border-border/60 bg-muted/20 p-3">
+          <Tabs value={tabsValue} onValueChange={setActiveLocale} className="w-full">
+            <TabsList className="flex flex-wrap gap-2">
+              {locales.map((locale) => (
+                <TabsTrigger key={locale.code} value={locale.code} className="text-xs font-semibold">
+                  {locale.code.toUpperCase()}
+                  {locale.is_default && <span className="ml-1 text-[10px] text-muted-foreground">Default</span>}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {locales.map((locale) => (
+              <TabsContent key={locale.code} value={locale.code} className="mt-3 space-y-2">
+                <Input
+                  placeholder={`Label (${locale.native_name || locale.code.toUpperCase()})`}
+                  value={getTranslationValue(locale.code, 'label')}
+                  onChange={(e) => handleTranslationChange(locale.code, 'label', e.target.value)}
+                />
+                <Input
+                  placeholder="Localized URL (optional)"
+                  value={getTranslationValue(locale.code, 'url')}
+                  onChange={(e) => handleTranslationChange(locale.code, 'url', e.target.value)}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      )}
       {expanded && item.children && item.children.length > 0 && (
         <div className="ml-6 mt-3 space-y-3">
           {item.children
@@ -400,6 +511,7 @@ function ItemRow({ item, allItems, isAdmin, hasPermission }: { item: MenuItemDTO
                 key={child.id}
                 item={child as MenuItemDTO}
                 allItems={allItems}
+                locales={locales}
                 isAdmin={isAdmin}
                 hasPermission={hasPermission}
               />

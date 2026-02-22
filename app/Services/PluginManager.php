@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Plugin;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -12,6 +13,7 @@ class PluginManager
 {
     protected string $pluginPath;
     protected string $uninstallMarker = '.modulo-uninstalled';
+    protected ?string $lastError = null;
 
     public function __construct()
     {
@@ -26,6 +28,8 @@ class PluginManager
      */
     public function discover(): array
     {
+        $this->lastError = null;
+
         if (!File::exists($this->pluginPath)) {
             return [];
         }
@@ -54,6 +58,50 @@ class PluginManager
         }
 
         return $plugins;
+    }
+
+    /**
+     * Sync filesystem plugins into DB only when plugin manifests changed.
+     */
+    public function syncDiscoveredPluginsCached(): void
+    {
+        $cacheKey = 'plugins.discovery.fingerprint';
+        $fingerprint = $this->getDiscoveryFingerprint();
+
+        if (Cache::get($cacheKey) === $fingerprint) {
+            return;
+        }
+
+        $this->discover();
+        Cache::forever($cacheKey, $fingerprint);
+    }
+
+    /**
+     * Build a stable fingerprint for plugin discovery inputs.
+     */
+    protected function getDiscoveryFingerprint(): string
+    {
+        if (!File::exists($this->pluginPath)) {
+            return 'none';
+        }
+
+        $directories = File::directories($this->pluginPath);
+        sort($directories);
+
+        $parts = [];
+        foreach ($directories as $directory) {
+            $name = basename($directory);
+            $manifestPath = $directory . '/plugin.json';
+            $markerPath = rtrim($directory, '/') . '/' . $this->uninstallMarker;
+
+            $manifestMtime = File::exists($manifestPath) ? (string) @filemtime($manifestPath) : 'none';
+            $manifestSize = File::exists($manifestPath) ? (string) @filesize($manifestPath) : 'none';
+            $markerMtime = File::exists($markerPath) ? (string) @filemtime($markerPath) : 'none';
+
+            $parts[] = implode('|', [$name, $manifestMtime, $manifestSize, $markerMtime]);
+        }
+
+        return sha1(implode(';', $parts));
     }
 
     protected function isMarkedUninstalled(string $pluginDirectory): bool
@@ -154,41 +202,50 @@ class PluginManager
      */
     public function activate(string $slug): bool
     {
+        $this->lastError = null;
+
         $plugin = Plugin::where('slug', $slug)->first();
         if (!$plugin) {
+            $this->lastError = 'Plugin not found.';
             return false;
         }
 
         // Run plugin migrations and seeder on first activation
         $wasInactive = !$plugin->is_active;
-        
+
         $plugin->update(['is_active' => true]);
-        
+
         if ($wasInactive) {
-            $this->runPluginSetup($slug);
+            [$ok, $error] = $this->runPluginSetup($slug);
+
+            if (!$ok) {
+                $plugin->update(['is_active' => false]);
+                $this->lastError = $error ?? 'Plugin setup failed.';
+                return false;
+            }
         }
-        
+
         return true;
     }
 
     /**
      * Run plugin migrations and seeder.
      */
-    protected function runPluginSetup(string $slug): void
+    protected function runPluginSetup(string $slug): array
     {
         $pluginDir = $this->findPluginDirectoryBySlug($slug);
         if (!$pluginDir) {
-            return;
+            return [false, "Plugin directory not found for '{$slug}'."];
         }
 
         $manifestPath = $pluginDir . '/plugin.json';
         if (!File::exists($manifestPath)) {
-            return;
+            return [false, "Plugin manifest not found for '{$slug}'."];
         }
 
         $manifest = json_decode(File::get($manifestPath), true);
         if (!is_array($manifest)) {
-            return;
+            return [false, "Plugin manifest is invalid for '{$slug}'."];
         }
 
         // Run migrations if path specified
@@ -200,9 +257,16 @@ class PluginManager
                         '--path' => str_replace(base_path() . '/', '', $migrationsPath),
                         '--force' => true,
                     ]);
+
+                    $exitCode = Artisan::output();
+                    if (str_contains(strtolower($exitCode), 'error') || str_contains(strtolower($exitCode), 'failed')) {
+                        return [false, "Plugin '{$slug}' migration reported an error."];
+                    }
+
                     Log::info("Plugin '{$slug}' migrations executed successfully.");
                 } catch (\Throwable $e) {
                     Log::error("Plugin '{$slug}' migration failed: " . $e->getMessage());
+                    return [false, "Plugin migration failed: {$e->getMessage()}"];
                 }
             }
         }
@@ -216,12 +280,21 @@ class PluginManager
                         '--class' => $seederClass,
                         '--force' => true,
                     ]);
+
+                    $output = Artisan::output();
+                    if (str_contains(strtolower($output), 'error') || str_contains(strtolower($output), 'failed')) {
+                        return [false, "Plugin '{$slug}' seeder reported an error."];
+                    }
+
                     Log::info("Plugin '{$slug}' seeder executed successfully.");
                 } catch (\Throwable $e) {
                     Log::error("Plugin '{$slug}' seeder failed: " . $e->getMessage());
+                    return [false, "Plugin seeder failed: {$e->getMessage()}"];
                 }
             }
         }
+
+        return [true, null];
     }
 
     /**
@@ -229,8 +302,11 @@ class PluginManager
      */
     public function deactivate(string $slug): bool
     {
+        $this->lastError = null;
+
         $plugin = Plugin::where('slug', $slug)->first();
         if (!$plugin) {
+            $this->lastError = 'Plugin not found.';
             return false;
         }
 
@@ -244,8 +320,11 @@ class PluginManager
      */
     public function updateSettings(string $slug, array $settings): bool
     {
+        $this->lastError = null;
+
         $plugin = Plugin::where('slug', $slug)->first();
         if (!$plugin) {
+            $this->lastError = 'Plugin not found.';
             return false;
         }
 
@@ -259,8 +338,11 @@ class PluginManager
      */
     public function uninstall(string $slug): bool
     {
+        $this->lastError = null;
+
         $plugin = Plugin::where('slug', $slug)->first();
         if (!$plugin) {
+            $this->lastError = 'Plugin not found.';
             return false;
         }
 
@@ -278,6 +360,7 @@ class PluginManager
                 File::put(rtrim($dir, '/') . '/' . $this->uninstallMarker, (string) now());
             } catch (\Throwable $e) {
                 // If we can't mark it, don't delete the DB row; otherwise it will re-discover
+                $this->lastError = 'Failed to mark plugin as uninstalled on disk.';
                 return false;
             }
         }
@@ -297,5 +380,10 @@ class PluginManager
     public function getActivePlugins()
     {
         return Plugin::active()->get();
+    }
+
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
     }
 }

@@ -53,7 +53,10 @@ Use `./modulo.sh` for common commands:
 ./modulo.sh shell dev       # Open shell
 ./modulo.sh artisan migrate:status dev
 ./modulo.sh migrate dev     # Run migrations
+./modulo.sh migrate-status dev  # Show migration status
+./modulo.sh schema-dump dev     # Generate database/schema/pgsql-schema.sql baseline
 ./modulo.sh seed dev        # Run seeders
+./modulo.sh bootstrap-dev   # Rebuild from scratch (down -v, up --build, composer install, migrate, seed)
 ./modulo.sh test dev        # Run tests
 ./modulo.sh status dev      # Show container status
 
@@ -64,6 +67,18 @@ Use `./modulo.sh` for common commands:
 # Help
 ./modulo.sh help
 ```
+
+### Dev startup automation toggles
+
+`docker-dev/docker-compose.yml` includes optional startup toggles on the `app` service:
+
+- `FORCE_COMPOSER_INSTALL` (default `false`)
+- `RUN_MIGRATIONS` (default `false`)
+- `RUN_SEEDERS` (default `false`)
+- `ENSURE_DEFAULT_THEME` (default `true`)
+- `DEFAULT_THEME_SLUG` (default `modern-react`)
+
+With defaults, startup remains fast and safe, while still ensuring the default React theme is available/active for the public site.
 
 ---
 

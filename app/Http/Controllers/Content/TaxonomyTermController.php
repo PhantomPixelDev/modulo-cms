@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
 use App\Models\TaxonomyTerm;
+use App\Models\TaxonomyTermTranslation;
 use App\Models\Taxonomy;
+use App\Models\Locale;
 use Illuminate\Http\Request;
 use App\Http\Requests\TaxonomyTermRequest;
 use Inertia\Inertia;
@@ -48,12 +50,30 @@ class TaxonomyTermController extends Controller
             'adminSection' => 'taxonomy-terms',
             'taxonomyTerms' => $terms,
             'taxonomies' => Taxonomy::all(),
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
+        ]);
+    }
+
+    /**
+     * Display a listing of taxonomy terms by taxonomy slug.
+     */
+    public function indexByTaxonomy(Request $request, string $taxonomySlug)
+    {
+        // Find the taxonomy by slug
+        $taxonomy = Taxonomy::where('slug', $taxonomySlug)->firstOrFail();
+        
+        $this->authorize('viewAny', \App\Models\TaxonomyTerm::class);
+        $query = TaxonomyTerm::with('taxonomy')
+            ->where('taxonomy_id', $taxonomy->id)
+            ->orderBy('term_order');
+
+        $perPage = \App\Models\SiteSetting::get('posts_per_page', 15);
+        $terms = $query->paginate($perPage);
+
+        return Inertia::render('Dashboard', [
+            'adminSection' => 'taxonomy-terms',
+            'taxonomyTerms' => $terms,
+            'currentTaxonomy' => $taxonomy,
+            'taxonomies' => Taxonomy::all(),
         ]);
     }
 
@@ -70,12 +90,7 @@ class TaxonomyTermController extends Controller
             'adminSection' => 'taxonomy-terms.create',
             'taxonomies' => $taxonomies,
             'parentTerms' => $parentTerms,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
+            'locales' => Locale::getActive(),
         ]);
     }
 
@@ -86,9 +101,14 @@ class TaxonomyTermController extends Controller
     {
         $this->authorize('create', \App\Models\TaxonomyTerm::class);
         $data = $request->validated();
+        $translationsPayload = $data['translations'] ?? [];
+        unset($data['translations']);
+
         $data['slug'] = $this->makeUniqueSlug($data['name'], (int) $data['taxonomy_id']);
         $data['term_order'] = $data['term_order'] ?? 0;
-        TaxonomyTerm::create($data);
+        $term = TaxonomyTerm::create($data);
+
+        $this->syncTranslations($term, $translationsPayload);
 
         return redirect()->route('dashboard.admin.taxonomy-terms.index')->with('success', 'Taxonomy term created successfully.');
     }
@@ -111,12 +131,6 @@ class TaxonomyTermController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomy-terms.show',
             'taxonomyTerm' => $taxonomyTerm,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
         ]);
     }
 
@@ -131,17 +145,14 @@ class TaxonomyTermController extends Controller
             ->where('id', '!=', $taxonomyTerm->id)
             ->get();
 
+        $taxonomyTerm->load('translations');
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomy-terms.edit',
             'editTaxonomyTerm' => $taxonomyTerm,
             'taxonomies' => $taxonomies,
             'parentTerms' => $parentTerms,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
+            'locales' => Locale::getActive(),
         ]);
     }
 
@@ -152,11 +163,82 @@ class TaxonomyTermController extends Controller
     {
         $this->authorize('update', $taxonomyTerm);
         $data = $request->validated();
+        $translationsPayload = $data['translations'] ?? [];
+        unset($data['translations']);
+
         $data['slug'] = $this->makeUniqueSlug($data['name'], (int) $data['taxonomy_id'], $taxonomyTerm->id);
         $data['term_order'] = $data['term_order'] ?? 0;
         $taxonomyTerm->update($data);
 
+        $this->syncTranslations($taxonomyTerm, $translationsPayload);
+
         return redirect()->route('dashboard.admin.taxonomy-terms.index')->with('success', 'Taxonomy term updated successfully.');
+    }
+
+    protected function syncTranslations(TaxonomyTerm $term, array $translations = []): void
+    {
+        $term->loadMissing('translations');
+        $defaultLocale = Locale::getDefault()?->code ?? config('app.fallback_locale', 'en');
+        $handledLocales = [];
+
+        foreach ($translations as $translation) {
+            $locale = $translation['locale'] ?? null;
+            if (!$locale) {
+                continue;
+            }
+
+            $existing = $term->translations->firstWhere('locale', $locale);
+
+            $name = $translation['name'] ?? $term->name;
+            $slugSeed = $translation['slug'] ?? $name ?? $term->slug;
+            $slug = $this->makeUniqueTranslationSlug($slugSeed, $locale, $existing?->id);
+
+            $payload = [
+                'name' => $name,
+                'slug' => $slug,
+                'description' => $translation['description'] ?? $term->description,
+                'meta_title' => $translation['meta_title'] ?? $term->meta_title,
+                'meta_description' => $translation['meta_description'] ?? $term->meta_description,
+                'meta_data' => $translation['meta_data'] ?? $term->meta_data,
+            ];
+
+            $term->setTranslation($locale, $payload);
+            $handledLocales[] = $locale;
+        }
+
+        if (!in_array($defaultLocale, $handledLocales, true)) {
+            $term->setTranslation($defaultLocale, [
+                'name' => $term->name,
+                'slug' => $term->slug,
+                'description' => $term->description,
+                'meta_title' => $term->meta_title,
+                'meta_description' => $term->meta_description,
+                'meta_data' => $term->meta_data,
+            ]);
+        }
+    }
+
+    protected function makeUniqueTranslationSlug(string $base, string $locale, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($base) ?: Str::slug($base . '-' . uniqid());
+        if (!$slug) {
+            $slug = 'term-' . uniqid();
+        }
+
+        $original = $slug;
+        $counter = 2;
+
+        while (
+            TaxonomyTermTranslation::where('locale', $locale)
+                ->where('slug', $slug)
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $original . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
     }
 
     /**

@@ -14,6 +14,7 @@ export function getPostTypesSections({
   showSuccess,
   showError,
   ROUTE,
+  t,
 }: {
   postTypes: any;
   editPostType: any;
@@ -22,22 +23,23 @@ export function getPostTypesSections({
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const handleDeletePostType = async (pt: any) => {
-    const name = pt?.label || pt?.name || 'this post type';
-    if (!window.confirm(`Delete ${name}? This cannot be undone.`)) return;
+    const name = pt?.label || pt?.name || t('dashboard.common.item');
+    if (!window.confirm(t('dashboard.post_types.confirm_delete', { name }))) return;
     try {
       await router.delete(ROUTE.postTypes.destroy(pt.id), {
         onSuccess: () => {
-          showSuccess('Post type deleted');
+          showSuccess(t('dashboard.post_types.messages.deleted'));
           router.visit(ROUTE.postTypes.index());
         },
-        onError: () => showError('Failed to delete post type'),
+        onError: () => showError(t('dashboard.post_types.messages.delete_failed')),
         preserveScroll: true,
       });
     } catch (error) {
       console.error('Error deleting post type:', error);
-      showError('An error occurred while deleting the post type');
+      showError(t('dashboard.post_types.messages.delete_error'));
     }
   };
 
@@ -48,27 +50,46 @@ export function getPostTypesSections({
       await router[method](url, formData, {
         preserveScroll: true,
         onSuccess: () => {
-          showSuccess(`Post type ${(editPostType as any) ? 'updated' : 'created'} successfully`);
+          showSuccess(
+            t(
+              (editPostType as any)
+                ? 'dashboard.post_types.messages.updated'
+                : 'dashboard.post_types.messages.created'
+            )
+          );
           router.visit(ROUTE.postTypes.index());
         },
         onError: (errors) => {
           console.error('Validation errors:', errors);
-          showError(`Failed to ${(editPostType as any) ? 'update' : 'create'} post type`);
+          showError(
+            t(
+              (editPostType as any)
+                ? 'dashboard.post_types.messages.update_failed'
+                : 'dashboard.post_types.messages.create_failed'
+            )
+          );
         },
       });
     } catch (error) {
       console.error('Error saving post type:', error);
-      showError(`Failed to ${(editPostType as any) ? 'update' : 'create'} post type`);
+      showError(
+        t(
+          (editPostType as any)
+            ? 'dashboard.post_types.messages.update_failed'
+            : 'dashboard.post_types.messages.create_failed'
+        )
+      );
     }
   };
 
   const renderPostTypesList = () => (
     <SectionWrapper
-      title="Post Types"
+      title={t('dashboard.post_types.title')}
+      description={t('dashboard.post_types.description')}
       actions={
         can('create post types') ? (
           <Button size="sm" onClick={() => router.visit(ROUTE.postTypes.create())}>
-            + New Post Type
+            {t('dashboard.post_types.actions.new')}
           </Button>
         ) : null
       }
@@ -92,10 +113,11 @@ export function getPostTypesSections({
 
   const renderPostTypeCreate = () => (
     <SectionWrapper
-      title={'Create Post Type'}
+      title={t('dashboard.post_types.create_title')}
+      description={t('dashboard.post_types.create_description')}
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.postTypes.index())}>
-          Back to Post Types
+          {t('dashboard.post_types.actions.back')}
         </Button>
       }
     >
@@ -110,16 +132,17 @@ export function getPostTypesSections({
 
   const renderPostTypeEdit = () => (
     <SectionWrapper
-      title={'Edit Post Type'}
+      title={t('dashboard.post_types.edit_title')}
+      description={t('dashboard.post_types.edit_description')}
       actions={
         <div className="flex gap-2">
           {can('delete post types') && (
             <Button variant="destructive" size="sm" onClick={() => handleDeletePostType(editPostType)}>
-              Delete
+              {t('dashboard.post_types.actions.delete')}
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.postTypes.index())}>
-            Back to Post Types
+            {t('dashboard.post_types.actions.back')}
           </Button>
         </div>
       }

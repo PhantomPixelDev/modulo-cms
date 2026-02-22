@@ -1,0 +1,87 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "shop": "Tienda",
+    "posts": "Entradas",
+    "about": "Nosotros",
+    "contact": "Contacto",
+    "cart": "Carrito",
+    "dashboard": "Panel",
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar sesión",
+    "welcome": "Hola, :name"
+  },
+  "footer": {
+    "powered_by": "Impulsado por Modulo CMS",
+    "rights": "Todos los derechos reservados.",
+    "contact": "Contáctanos",
+    "privacy": "Política de privacidad",
+    "terms": "Términos del servicio",
+    "navigation": "Navegación",
+    "connect": "Conectar"
+  },
+  "buttons": {
+    "view_post": "Leer artículo",
+    "view_product": "Ver producto",
+    "add_to_cart": "Agregar al carrito",
+    "checkout": "Pagar",
+    "previous": "Anterior",
+    "next": "Siguiente"
+  },
+  "statuses": {
+    "in_stock": "Disponible",
+    "out_of_stock": "Agotado",
+    "sale": "Oferta"
+  },
+  "home": {
+    "title": "Inicio",
+    "hero": {
+      "title": "Crea experiencias digitales audaces",
+      "tagline": "Un CMS moderno y potente construido con Laravel y React.",
+      "primary_cta": "Ver contenido",
+      "secondary_cta": "Ir al panel"
+    },
+    "features": {
+      "title": "Funciones poderosas",
+      "items": {
+        "flexible": {
+          "title": "Tipos de contenido flexibles",
+          "description": "Crea tipos de publicación y taxonomías personalizados para organizar tu contenido a tu manera."
+        },
+        "roles": {
+          "title": "Acceso por roles",
+          "description": "Sistema de permisos granular para controlar quién puede crear, editar y publicar contenido."
+        },
+        "modern": {
+          "title": "UI/UX moderna",
+          "description": "Interfaz hermosa y responsiva construida con React, TypeScript y Tailwind CSS."
+        }
+      }
+    },
+    "latest": {
+      "title": "Últimas novedades",
+      "view_all": "Ver todo",
+      "badge_fallback": "Entrada"
+    },
+    "cta": {
+      "title": "¿Listo para comenzar?",
+      "description": "Explora el panel de administración para gestionar tu contenido o consulta la documentación para saber más.",
+      "primary": "Ir al panel",
+      "secondary": "Ver en GitHub"
+    }
+  },
+  "posts": {
+    "title": "Entradas del blog",
+    "description": "Explora nuestras últimas entradas y artículos.",
+    "empty": "No se encontraron entradas.",
+    "pagination": "Página :current de :total",
+    "filters": "Filtros"
+  },
+  "post": {
+    "back_to": "Volver a :label",
+    "by_author": "Por :name",
+    "reading_time": ":minutes min de lectura",
+    "related": "Entradas relacionadas"
+  }
+}

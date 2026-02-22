@@ -17,6 +17,7 @@ export function getTaxonomiesSections({
   showSuccess,
   showError,
   ROUTE,
+  t,
 }: {
   adminSection?: string;
   taxonomies: any;
@@ -26,14 +27,16 @@ export function getTaxonomiesSections({
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const renderTaxonomiesList = () => (
     <SectionWrapper
-      title="Taxonomies"
+      title={t('dashboard.taxonomies.title')}
+      description={t('dashboard.taxonomies.description')}
       actions={
         can('create taxonomies') ? (
           <Button size="sm" onClick={() => router.visit(ROUTE.taxonomies.create())}>
-            + New Taxonomy
+            {t('dashboard.taxonomies.actions.new')}
           </Button>
         ) : null
       }
@@ -54,10 +57,19 @@ export function getTaxonomiesSections({
 
   const renderTaxonomyForm = () => (
     <SectionWrapper
-      title={adminSection === 'taxonomies.create' ? 'Create Taxonomy' : 'Edit Taxonomy'}
+      title={
+        adminSection === 'taxonomies.create'
+          ? t('dashboard.taxonomies.create_title')
+          : t('dashboard.taxonomies.edit_title')
+      }
+      description={
+        adminSection === 'taxonomies.create'
+          ? t('dashboard.taxonomies.create_description')
+          : t('dashboard.taxonomies.edit_description')
+      }
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.taxonomies.index())}>
-          Back to Taxonomies
+          {t('dashboard.taxonomies.actions.back')}
         </Button>
       }
     >
@@ -75,17 +87,35 @@ export function getTaxonomiesSections({
             await router[method](url, payload, {
               preserveScroll: true,
               onSuccess: () => {
-                showSuccess(`Taxonomy ${isEditingTaxonomy ? 'updated' : 'created'} successfully`);
+                showSuccess(
+                  t(
+                    isEditingTaxonomy
+                      ? 'dashboard.taxonomies.messages.updated'
+                      : 'dashboard.taxonomies.messages.created'
+                  )
+                );
                 router.visit(ROUTE.taxonomies.index());
               },
               onError: (errors) => {
                 console.error('Failed to save taxonomy', errors);
-                showError(`Failed to ${isEditingTaxonomy ? 'update' : 'create'} taxonomy`);
+                showError(
+                  t(
+                    isEditingTaxonomy
+                      ? 'dashboard.taxonomies.messages.update_failed'
+                      : 'dashboard.taxonomies.messages.create_failed'
+                  )
+                );
               },
             });
           } catch (error) {
             console.error('Error submitting taxonomy form:', error);
-            showError(`Failed to ${isEditingTaxonomy ? 'update' : 'create'} taxonomy`);
+            showError(
+              t(
+                isEditingTaxonomy
+                  ? 'dashboard.taxonomies.messages.update_failed'
+                  : 'dashboard.taxonomies.messages.create_failed'
+              )
+            );
           }
         }}
         onCancel={() => router.visit(ROUTE.taxonomies.index())}

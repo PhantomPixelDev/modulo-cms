@@ -10,20 +10,18 @@ export function getPluginsSections({
   plugin,
   can,
   ROUTE,
+  t,
 }: {
   plugins: any;
   plugin: any;
   can: (perm: string) => boolean;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const renderPlugins = () => (
     <SectionWrapper
-      title="Plugins"
-      actions={
-        <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.misc.dashboard())}>
-          Back to Dashboard
-        </Button>
-      }
+      title={t('dashboard.plugins.title')}
+      description={t('dashboard.plugins.description')}
     >
       <PluginsList plugins={plugins || []} canEdit={can('edit settings')} />
     </SectionWrapper>
@@ -31,10 +29,11 @@ export function getPluginsSections({
 
   const renderPluginSettings = () => (
     <SectionWrapper
-      title="Plugin Settings"
+      title={t('dashboard.plugins.settings_title')}
+      description={t('dashboard.plugins.settings_description')}
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.plugins.index())}>
-          Back to Plugins
+          {t('dashboard.plugins.actions.back')}
         </Button>
       }
     >

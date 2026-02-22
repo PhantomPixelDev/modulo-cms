@@ -3,7 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
+use App\Models\Locale;
+use App\Models\SiteSettingTranslation;
 
 class SiteSetting extends Model
 {
@@ -21,29 +25,83 @@ class SiteSetting extends Model
 
     protected static string $cacheKey = 'site_settings.all';
     protected static int $cacheTtl = 3600;
+    protected static array $translatableKeys = [
+        'site_name',
+        'site_tagline',
+        'meta_title_suffix',
+        'meta_description',
+        'maintenance_message',
+    ];
 
     /**
      * Get a setting value by key
      */
-    public static function get(string $key, mixed $default = null): mixed
+    public function translations(): HasMany
+    {
+        return $this->hasMany(SiteSettingTranslation::class);
+    }
+
+    public static function translatableKeys(): array
+    {
+        return static::$translatableKeys;
+    }
+
+    public static function isTranslatableKey(string $key): bool
+    {
+        return in_array($key, static::$translatableKeys, true);
+    }
+
+    public static function get(string $key, mixed $default = null, ?string $locale = null): mixed
     {
         $settings = static::getAllCached();
-        
+        $locale = $locale ?: app()->getLocale();
+        $defaultLocale = Locale::getDefault()?->code ?? config('app.fallback_locale', 'en');
+
         // Try exact match first
         if (isset($settings[$key])) {
-            return static::castValue($settings[$key]['value'], $settings[$key]['type']);
+            $entry = $settings[$key];
+
+            if ($locale && static::isTranslatableKey($key)) {
+                $translated = static::getTranslationValue($entry['id'], $entry['type'], $locale);
+                if ($translated !== null) {
+                    return $translated;
+                }
+
+                if ($locale !== $defaultLocale) {
+                    $fallbackTranslated = static::getTranslationValue($entry['id'], $entry['type'], $defaultLocale);
+                    if ($fallbackTranslated !== null) {
+                        return $fallbackTranslated;
+                    }
+                }
+            }
+
+            return static::castValue($entry['value'], $entry['type']);
         }
 
         // Try grouped keys like 'reading.show_on_front'
         foreach ($settings as $settingKey => $data) {
             if ($settingKey === $key || "{$data['group']}.{$settingKey}" === $key) {
+                if ($locale && static::isTranslatableKey($settingKey)) {
+                    $translated = static::getTranslationValue($data['id'], $data['type'], $locale);
+                    if ($translated !== null) {
+                        return $translated;
+                    }
+
+                    if ($locale !== $defaultLocale) {
+                        $fallbackTranslated = static::getTranslationValue($data['id'], $data['type'], $defaultLocale);
+                        if ($fallbackTranslated !== null) {
+                            return $fallbackTranslated;
+                        }
+                    }
+                }
+
                 return static::castValue($data['value'], $data['type']);
             }
         }
 
         // Fallback to database for non-autoloaded settings
         // Check if table exists (for fresh installs)
-        if (!\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+        if (!Schema::hasTable('site_settings')) {
             return $default;
         }
 
@@ -57,6 +115,20 @@ class SiteSetting extends Model
             ->first();
 
         if ($setting) {
+            if ($locale && static::isTranslatableKey($setting->key)) {
+                $translated = static::getTranslationValue($setting->id, $setting->type, $locale);
+                if ($translated !== null) {
+                    return $translated;
+                }
+
+                if ($locale !== $defaultLocale) {
+                    $fallbackTranslated = static::getTranslationValue($setting->id, $setting->type, $defaultLocale);
+                    if ($fallbackTranslated !== null) {
+                        return $fallbackTranslated;
+                    }
+                }
+            }
+
             return static::castValue($setting->value, $setting->type);
         }
 
@@ -98,14 +170,14 @@ class SiteSetting extends Model
     /**
      * Get all settings for a group
      */
-    public static function getGroup(string $group): array
+    public static function getGroup(string $group, ?string $locale = null): array
     {
         $settings = static::getAllCached();
         $grouped = [];
 
         foreach ($settings as $key => $data) {
             if ($data['group'] === $group) {
-                $grouped[$key] = static::castValue($data['value'], $data['type']);
+                $grouped[$key] = static::get($key, static::castValue($data['value'], $data['type']), $locale);
             }
         }
 
@@ -118,7 +190,7 @@ class SiteSetting extends Model
     public static function getAllCached(): array
     {
         // Check if table exists (for fresh installs)
-        if (!\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+        if (!Schema::hasTable('site_settings')) {
             return [];
         }
 
@@ -127,12 +199,44 @@ class SiteSetting extends Model
                 ->get()
                 ->keyBy('key')
                 ->map(fn ($item) => [
+                    'id' => $item->id,
                     'value' => $item->value,
                     'type' => $item->type,
                     'group' => $item->group,
                 ])
                 ->toArray();
         });
+    }
+
+    public static function setTranslation(string $key, string $locale, mixed $value, string $group = 'general', string $type = 'string'): void
+    {
+        $setting = static::firstOrCreate(
+            ['key' => $key],
+            [
+                'group' => $group,
+                'value' => static::prepareValue($value, $type),
+                'type' => $type,
+            ]
+        );
+
+        SiteSettingTranslation::updateOrCreate(
+            [
+                'site_setting_id' => $setting->id,
+                'locale' => $locale,
+            ],
+            [
+                'value' => static::prepareValue($value, $type),
+            ]
+        );
+    }
+
+    protected static function getTranslationValue(int $settingId, string $type, string $locale): mixed
+    {
+        $translation = SiteSettingTranslation::where('site_setting_id', $settingId)
+            ->where('locale', $locale)
+            ->first();
+
+        return $translation ? static::castValue($translation->value, $type) : null;
     }
 
     /**

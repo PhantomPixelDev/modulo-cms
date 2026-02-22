@@ -1,0 +1,87 @@
+{
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "posts": "Posts",
+    "about": "About",
+    "contact": "Contact",
+    "cart": "Cart",
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "welcome": "Welcome, :name"
+  },
+  "footer": {
+    "powered_by": "Powered by Modulo CMS",
+    "rights": "All rights reserved.",
+    "contact": "Contact Us",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "navigation": "Navigation",
+    "connect": "Connect"
+  },
+  "buttons": {
+    "view_post": "Read Article",
+    "view_product": "View Product",
+    "add_to_cart": "Add to Cart",
+    "checkout": "Checkout",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "statuses": {
+    "in_stock": "In Stock",
+    "out_of_stock": "Out of Stock",
+    "sale": "Sale"
+  },
+  "home": {
+    "title": "Home",
+    "hero": {
+      "title": "Create bold digital experiences",
+      "tagline": "A powerful, modern content management system built with Laravel and React.",
+      "primary_cta": "Browse Content",
+      "secondary_cta": "Admin Dashboard"
+    },
+    "features": {
+      "title": "Powerful Features",
+      "items": {
+        "flexible": {
+          "title": "Flexible Content Types",
+          "description": "Create custom post types and taxonomies to organize your content exactly how you need it."
+        },
+        "roles": {
+          "title": "Role-Based Access",
+          "description": "Granular permissions system to control who can create, edit, and publish content."
+        },
+        "modern": {
+          "title": "Modern UI/UX",
+          "description": "Beautiful, responsive interface built with React, TypeScript, and Tailwind CSS."
+        }
+      }
+    },
+    "latest": {
+      "title": "Latest Updates",
+      "view_all": "View all",
+      "badge_fallback": "Post"
+    },
+    "cta": {
+      "title": "Ready to Get Started?",
+      "description": "Explore the admin dashboard to manage your content, or browse our documentation to learn more.",
+      "primary": "Go to Dashboard",
+      "secondary": "View on GitHub"
+    }
+  },
+  "posts": {
+    "title": "Blog Posts",
+    "description": "Browse all our latest posts and articles.",
+    "empty": "No posts found.",
+    "pagination": "Page :current of :total",
+    "filters": "Filters"
+  },
+  "post": {
+    "back_to": "Back to :label",
+    "by_author": "By :name",
+    "reading_time": ":minutes min read",
+    "related": "Related Posts"
+  }
+}

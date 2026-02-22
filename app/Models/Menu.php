@@ -16,7 +16,10 @@ class Menu extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(MenuItem::class)->whereNull('parent_id')->orderBy('order');
+        return $this->hasMany(MenuItem::class)
+            ->whereNull('parent_id')
+            ->orderBy('order')
+            ->with(['translations', 'children']);
     }
 
     public function allItems(): HasMany

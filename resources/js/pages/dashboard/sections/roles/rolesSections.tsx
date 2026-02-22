@@ -12,6 +12,7 @@ export function getRolesSections({
   showSuccess,
   showError,
   ROUTE,
+  t,
 }: {
   roles: any[];
   editRole: any;
@@ -20,6 +21,7 @@ export function getRolesSections({
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const handleRoleSubmit = async (data: any) => {
     const url = editRole ? ROUTE.roles.update(editRole.id) : ROUTE.roles.store();
@@ -29,27 +31,46 @@ export function getRolesSections({
       await router[method](url, data, {
         preserveScroll: true,
         onSuccess: () => {
-          showSuccess(`Role ${editRole ? 'updated' : 'created'} successfully`);
+          showSuccess(
+            t(
+              editRole
+                ? 'dashboard.roles.messages.updated'
+                : 'dashboard.roles.messages.created'
+            )
+          );
           router.visit(ROUTE.roles.index());
         },
         onError: (errors) => {
           console.error('Failed to save role:', errors);
-          showError(`Failed to ${editRole ? 'update' : 'create'} role`);
+          showError(
+            t(
+              editRole
+                ? 'dashboard.roles.messages.update_failed'
+                : 'dashboard.roles.messages.create_failed'
+            )
+          );
         },
       });
     } catch (error) {
       console.error('Error saving role:', error);
-      showError(`Failed to ${editRole ? 'update' : 'create'} role`);
+      showError(
+        t(
+          editRole
+            ? 'dashboard.roles.messages.update_failed'
+            : 'dashboard.roles.messages.create_failed'
+        )
+      );
     }
   };
 
   const renderRolesList = () => (
     <SectionWrapper
-      title="Roles"
+      title={t('dashboard.roles.title')}
+      description={t('dashboard.roles.description')}
       actions={
         can('create roles') ? (
           <Button size="sm" onClick={() => router.visit(ROUTE.roles.create())}>
-            + New Role
+            {t('dashboard.roles.actions.new')}
           </Button>
         ) : null
       }
@@ -60,10 +81,11 @@ export function getRolesSections({
 
   const renderRoleCreateEdit = () => (
     <SectionWrapper
-      title={editRole ? 'Edit Role' : 'Create New Role'}
+      title={editRole ? t('dashboard.roles.edit_title') : t('dashboard.roles.create_title')}
+      description={editRole ? t('dashboard.roles.edit_description') : t('dashboard.roles.create_description')}
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.roles.index())}>
-          Back to Roles
+          {t('dashboard.roles.actions.back')}
         </Button>
       }
     >

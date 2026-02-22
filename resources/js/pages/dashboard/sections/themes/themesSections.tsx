@@ -6,7 +6,6 @@ import { ActiveThemeCard } from '../../components/themes/ActiveThemeCard';
 import { InstalledThemesGrid } from '../../components/themes/InstalledThemesGrid';
 import { DiscoveredThemesList } from '../../components/themes/DiscoveredThemesList';
 import { ThemeDetails } from '../../components/themes/ThemeDetails';
-import { ThemeCustomizerForm } from '../../components/themes/ThemeCustomizerForm';
 import { asArray } from '../../types';
 
 export function getThemesSections({
@@ -14,25 +13,21 @@ export function getThemesSections({
   discoveredThemes,
   activeTheme,
   theme,
-  customizerSettings,
-  availableMenus,
-  widgetAreas,
   can,
   showSuccess,
   showError,
   ROUTE,
+  t,
 }: {
   themes: any;
   discoveredThemes: any;
   activeTheme: any;
   theme: any;
-  customizerSettings: any;
-  availableMenus: any;
-  widgetAreas: any;
   can: (perm: string) => boolean;
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const renderThemesMain = () => {
     const installedThemesArr = asArray(themes as any);
@@ -40,55 +35,49 @@ export function getThemesSections({
 
     return (
       <SectionWrapper
-        title="Themes"
+        title={t('dashboard.themes.title')}
+        description={t('dashboard.themes.description')}
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.misc.dashboard())}>
-              Back to Dashboard
+          can('install themes') ? (
+            <Button
+              size="sm"
+              onClick={async () => {
+                try {
+                  await router.post(ROUTE.themes.discover(), {}, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                      showSuccess(t('dashboard.themes.messages.discovered'));
+                      router.reload({ only: ['themes', 'discoveredThemes', 'activeTheme'] });
+                    },
+                    onError: () => showError(t('dashboard.themes.messages.discover_failed')),
+                  });
+                } catch (e) {
+                  console.error(e);
+                  showError(t('dashboard.themes.messages.discover_error'));
+                }
+              }}
+            >
+              {t('dashboard.themes.actions.discover')}
             </Button>
-            {can('install themes') && (
-              <Button
-                size="sm"
-                onClick={async () => {
-                  try {
-                    await router.post(ROUTE.themes.discover(), {}, {
-                      preserveScroll: true,
-                      onSuccess: () => {
-                        showSuccess('Discovered and installed themes');
-                        router.reload({ only: ['themes', 'discoveredThemes', 'activeTheme'] });
-                      },
-                      onError: () => showError('Failed to discover/install themes'),
-                    });
-                  } catch (e) {
-                    console.error(e);
-                    showError('Error discovering themes');
-                  }
-                }}
-              >
-                Discover & Install All
-              </Button>
-            )}
-          </div>
+          ) : null
         }
       >
         <div className="space-y-8">
           <ActiveThemeCard
             activeTheme={activeTheme as any}
             canPublishAssets={can('publish theme assets')}
-            canCustomize={can('customize themes')}
             onPublishAssets={async (themeId) => {
               try {
                 await router.post(ROUTE.themes.publishAssets(themeId), {}, {
                   preserveScroll: true,
-                  onSuccess: () => showSuccess('Assets published'),
-                  onError: () => showError('Failed to publish assets'),
+                  onSuccess: () => showSuccess(t('dashboard.themes.messages.assets_published')),
+                  onError: () => showError(t('dashboard.themes.messages.assets_failed')),
                 });
               } catch (e) {
                 console.error(e);
-                showError('Error publishing assets');
+                showError(t('dashboard.themes.messages.assets_error'));
               }
             }}
-            onCustomize={(themeId) => router.visit(ROUTE.themes.customizer(themeId))}
             onView={(themeId) => router.visit(ROUTE.themes.show(themeId))}
           />
 
@@ -97,7 +86,6 @@ export function getThemesSections({
             activeSlug={(activeTheme as any)?.slug}
             canActivate={can('activate themes')}
             canPublishAssets={can('publish theme assets')}
-            canCustomize={can('customize themes')}
             canDelete={can('delete themes')}
             onView={(id) => router.visit(ROUTE.themes.show(id))}
             onActivate={async (slug) => {
@@ -105,43 +93,42 @@ export function getThemesSections({
                 await router.post(ROUTE.themes.activate(slug), {}, {
                   preserveScroll: true,
                   onSuccess: () => {
-                    showSuccess('Theme activated');
+                    showSuccess(t('dashboard.themes.messages.activated'));
                     router.reload({ only: ['themes', 'activeTheme'] });
                   },
-                  onError: () => showError('Failed to activate theme'),
+                  onError: () => showError(t('dashboard.themes.messages.activate_failed')),
                 });
               } catch (e) {
                 console.error(e);
-                showError('Error activating theme');
+                showError(t('dashboard.themes.messages.activate_error'));
               }
             }}
             onPublishAssets={async (id) => {
               try {
                 await router.post(ROUTE.themes.publishAssets(id), {}, {
                   preserveScroll: true,
-                  onSuccess: () => showSuccess('Assets published'),
-                  onError: () => showError('Failed to publish assets'),
+                  onSuccess: () => showSuccess(t('dashboard.themes.messages.assets_published')),
+                  onError: () => showError(t('dashboard.themes.messages.assets_failed')),
                 });
               } catch (e) {
                 console.error(e);
-                showError('Error publishing theme assets');
+                showError(t('dashboard.themes.messages.assets_error'));
               }
             }}
-            onCustomize={(id) => router.visit(ROUTE.themes.customizer(id))}
             onUninstall={async (id, displayName) => {
-              if (!confirm(`Uninstall theme "${displayName}"? This will remove it from the database.`)) return;
+              if (!confirm(t('dashboard.themes.confirm_uninstall', { name: displayName ?? '' }))) return;
               try {
                 await router.delete(ROUTE.themes.destroy(id), {
                   preserveScroll: true,
                   onSuccess: () => {
-                    showSuccess('Theme uninstalled');
+                    showSuccess(t('dashboard.themes.messages.uninstalled'));
                     router.reload({ only: ['themes', 'discoveredThemes'] });
                   },
-                  onError: () => showError('Failed to uninstall theme'),
+                  onError: () => showError(t('dashboard.themes.messages.uninstall_failed')),
                 });
               } catch (e) {
                 console.error(e);
-                showError('Error uninstalling theme');
+                showError(t('dashboard.themes.messages.uninstall_error'));
               }
             }}
           />
@@ -162,10 +149,11 @@ export function getThemesSections({
 
   const renderThemeDetails = () => (
     <SectionWrapper
-      title="Theme Details"
+      title={t('dashboard.themes.details_title')}
+      description={t('dashboard.themes.details_description')}
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.themes.index())}>
-          Back to Themes
+          {t('dashboard.themes.actions.back')}
         </Button>
       }
     >
@@ -173,49 +161,47 @@ export function getThemesSections({
         theme={theme as any}
         canActivate={can('activate themes')}
         canPublishAssets={can('publish theme assets')}
-        canCustomize={can('customize themes')}
         onActivate={async (slug) => {
           try {
             await router.post(ROUTE.themes.activate(slug), {}, {
               preserveScroll: true,
               onSuccess: () => {
-                showSuccess('Theme activated');
+                showSuccess(t('dashboard.themes.messages.activated'));
                 router.reload({ only: ['themes', 'activeTheme'] });
               },
-              onError: () => showError('Failed to activate theme'),
+              onError: () => showError(t('dashboard.themes.messages.activate_failed')),
             });
           } catch (e) {
             console.error(e);
-            showError('Error activating theme');
+            showError(t('dashboard.themes.messages.activate_error'));
           }
         }}
         onPublishAssets={async (id) => {
           try {
             await router.post(ROUTE.themes.publishAssets(id), {}, {
               preserveScroll: true,
-              onSuccess: () => showSuccess('Assets published'),
-              onError: () => showError('Failed to publish assets'),
+              onSuccess: () => showSuccess(t('dashboard.themes.messages.assets_published')),
+              onError: () => showError(t('dashboard.themes.messages.assets_failed')),
             });
           } catch (e) {
             console.error(e);
-            showError('Error publishing assets');
+            showError(t('dashboard.themes.messages.assets_error'));
           }
         }}
-        onCustomize={(id) => router.visit(ROUTE.themes.customizer(id))}
         onUninstall={async (id, displayName) => {
-          if (!confirm(`Uninstall theme "${displayName}"? This will remove it from the database.`)) return;
+          if (!confirm(t('dashboard.themes.confirm_uninstall', { name: displayName }))) return;
           try {
             await router.delete(ROUTE.themes.destroy(id), {
               preserveScroll: true,
               onSuccess: () => {
-                showSuccess('Theme uninstalled');
+                showSuccess(t('dashboard.themes.messages.uninstalled'));
                 router.reload({ only: ['themes', 'discoveredThemes'] });
               },
-              onError: () => showError('Failed to uninstall theme'),
+              onError: () => showError(t('dashboard.themes.messages.uninstall_failed')),
             });
           } catch (e) {
             console.error(e);
-            showError('Error uninstalling theme');
+            showError(t('dashboard.themes.messages.uninstall_error'));
           }
         }}
       />
@@ -225,31 +211,9 @@ export function getThemesSections({
   const renderThemeCustomizer = () => (
     <SectionWrapper
       title="Theme Customizer"
-      actions={
-        <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.themes.index())}>
-          Back to Themes
-        </Button>
-      }
+      description="Theme customizer has been removed."
     >
-      <ThemeCustomizerForm
-        theme={theme as any}
-        settings={(customizerSettings as any) || {}}
-        availableMenus={(availableMenus as any) || {}}
-        widgetAreas={(widgetAreas as any) || {}}
-        initial={typeof (theme as any)?.customizer === 'object' && (theme as any)?.customizer ? (theme as any).customizer : {}}
-        onSave={async (data) => {
-          try {
-            await router.put(ROUTE.themes.update((theme as any)?.id), { customizer: data }, {
-              preserveScroll: true,
-              onSuccess: () => showSuccess('Customizer saved'),
-              onError: () => showError('Failed to save customizer'),
-            });
-          } catch (err) {
-            console.error(err);
-            showError('Error saving customizer');
-          }
-        }}
-      />
+      <div className="text-muted-foreground text-sm">The theme customizer is no longer available. Edit theme files directly.</div>
     </SectionWrapper>
   );
 

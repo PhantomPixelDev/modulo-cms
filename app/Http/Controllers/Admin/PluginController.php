@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdatePluginSettingsRequest;
+use App\Models\Plugin;
 use App\Services\PluginManager;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PluginController extends Controller
@@ -21,13 +22,24 @@ class PluginController extends Controller
      */
     public function index()
     {
-        $this->authorizeView();
-        $this->pluginManager->discover();
-        
-        return Inertia::render('dashboard/DashboardContent', [
+        $this->authorizePermission('view plugins');
+
+        return Inertia::render('Dashboard', [
             'adminSection' => 'plugins',
-            'plugins' => \App\Models\Plugin::all(),
+            'plugins' => Plugin::orderBy('name')->get(),
         ]);
+    }
+
+    /**
+     * Sync filesystem plugins into DB (explicit action, not on every page load).
+     */
+    public function discover()
+    {
+        $this->authorizePermission('install plugins');
+
+        $this->pluginManager->discover();
+
+        return back()->with('success', 'Plugins synced from filesystem.');
     }
 
     /**
@@ -35,12 +47,13 @@ class PluginController extends Controller
      */
     public function activate(string $slug)
     {
-        $this->authorizeActivate();
+        $this->authorizePermission('activate plugins');
+
         if ($this->pluginManager->activate($slug)) {
             return back()->with('success', 'Plugin activated successfully.');
         }
 
-        return back()->with('error', 'Failed to activate plugin.');
+        return back()->with('error', $this->pluginManager->getLastError() ?? 'Failed to activate plugin.');
     }
 
     /**
@@ -48,12 +61,13 @@ class PluginController extends Controller
      */
     public function deactivate(string $slug)
     {
-        $this->authorizeDeactivate();
+        $this->authorizePermission('deactivate plugins');
+
         if ($this->pluginManager->deactivate($slug)) {
             return back()->with('success', 'Plugin deactivated successfully.');
         }
 
-        return back()->with('error', 'Failed to deactivate plugin.');
+        return back()->with('error', $this->pluginManager->getLastError() ?? 'Failed to deactivate plugin.');
     }
 
     /**
@@ -61,10 +75,11 @@ class PluginController extends Controller
      */
     public function settings(string $slug)
     {
-        $this->authorizeView();
-        $plugin = \App\Models\Plugin::where('slug', $slug)->firstOrFail();
-        
-        return Inertia::render('dashboard/DashboardContent', [
+        $this->authorizePermission('view plugins');
+
+        $plugin = Plugin::where('slug', $slug)->firstOrFail();
+
+        return Inertia::render('Dashboard', [
             'adminSection' => 'plugin-settings',
             'plugin' => $plugin,
         ]);
@@ -73,18 +88,15 @@ class PluginController extends Controller
     /**
      * Update the specified plugin settings.
      */
-    public function updateSettings(Request $request, string $slug)
+    public function updateSettings(UpdatePluginSettingsRequest $request, string $slug)
     {
-        $this->authorizeEdit();
-        $validated = $request->validate([
-            'settings' => 'required|array',
-        ]);
+        $this->authorizePermission('install plugins');
 
-        if ($this->pluginManager->updateSettings($slug, $validated['settings'])) {
+        if ($this->pluginManager->updateSettings($slug, $request->validated('settings'))) {
             return back()->with('success', 'Plugin settings updated successfully.');
         }
 
-        return back()->with('error', 'Failed to update plugin settings.');
+        return back()->with('error', $this->pluginManager->getLastError() ?? 'Failed to update plugin settings.');
     }
 
     /**
@@ -92,52 +104,23 @@ class PluginController extends Controller
      */
     public function destroy(string $slug)
     {
-        $this->authorizeDelete();
+        $this->authorizePermission('delete plugins');
+
         if ($this->pluginManager->uninstall($slug)) {
             return redirect()->route('dashboard.admin.plugins.index')
                 ->with('success', 'Plugin uninstalled successfully.');
         }
 
-        return back()->with('error', 'Failed to uninstall plugin.');
+        return back()->with('error', $this->pluginManager->getLastError() ?? 'Failed to uninstall plugin.');
     }
 
-    protected function authorizeView(): void
+    protected function authorizePermission(string $permission): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('view plugins') || $user->hasRole(['admin', 'super-admin'])) return;
-        abort(403);
-    }
 
-    protected function authorizeEdit(): void
-    {
-        $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('install plugins') || $user->hasRole(['admin', 'super-admin'])) return;
-        abort(403);
-    }
-
-    protected function authorizeActivate(): void
-    {
-        $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('activate plugins') || $user->hasRole(['admin', 'super-admin'])) return;
-        abort(403);
-    }
-
-    protected function authorizeDeactivate(): void
-    {
-        $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('deactivate plugins') || $user->hasRole(['admin', 'super-admin'])) return;
-        abort(403);
-    }
-
-    protected function authorizeDelete(): void
-    {
-        $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('delete plugins') || $user->hasRole(['admin', 'super-admin'])) return;
-        abort(403);
+        abort_unless(
+            $user && ($user->can($permission) || $user->hasRole(['admin', 'super-admin'])),
+            403
+        );
     }
 }

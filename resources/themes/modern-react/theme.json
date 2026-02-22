@@ -121,43 +121,5 @@
     "footer-1": "Footer Column 1",
     "footer-2": "Footer Column 2",
     "footer-3": "Footer Column 3"
-  },
-  "customizer": {
-    "colors": {
-      "primary": {
-        "label": "Primary Color",
-        "type": "color",
-        "default": "#3b82f6"
-      },
-      "secondary": {
-        "label": "Secondary Color", 
-        "type": "color",
-        "default": "#64748b"
-      }
-    },
-    "typography": {
-      "font_family": {
-        "label": "Font Family",
-        "type": "select",
-        "default": "inter",
-        "options": [
-          {"value": "inter", "label": "Inter"},
-          {"value": "roboto", "label": "Roboto"},
-          {"value": "open-sans", "label": "Open Sans"}
-        ]
-      }
-    },
-    "layout": {
-      "container_width": {
-        "label": "Container Width",
-        "type": "select", 
-        "default": "max-w-6xl",
-        "options": [
-          {"value": "max-w-4xl", "label": "Narrow"},
-          {"value": "max-w-6xl", "label": "Medium"},
-          {"value": "max-w-7xl", "label": "Wide"}
-        ]
-      }
-    }
   }
 }

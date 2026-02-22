@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, Image as ImageIcon, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import type { FeaturedImagePreview } from '../posts/types';
 
@@ -69,6 +70,7 @@ export function PageForm({
   onSubmit, 
   onCancel 
 }: PageFormProps) {
+  const { t } = useTranslation();
   const formRef = useRef<HTMLFormElement | null>(null);
   const [activeTab, setActiveTab] = useState('content');
   const [showMediaPicker, setShowMediaPicker] = useState(false);
@@ -216,11 +218,15 @@ export function PageForm({
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2 sm:flex sm:items-start sm:justify-between sm:space-y-0">
         <div className="max-w-xl text-sm text-muted-foreground">
-          <p>{isEditing ? 'Update the page content, metadata, and publishing options.' : 'Fill in the page details, configure SEO, and prepare it for publishing.'}</p>
+          <p>
+            {isEditing
+              ? t('dashboard.pages.form.description.edit')
+              : t('dashboard.pages.form.description.create')}
+          </p>
           <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground/90">
-            <li key="content">Provide the main content, excerpt, and featured image.</li>
-            <li key="seo">Fine-tune SEO metadata for better visibility.</li>
-            <li key="publish">Set publication status, author, and scheduling.</li>
+            <li key="content">{t('dashboard.pages.form.description.bullets.content')}</li>
+            <li key="seo">{t('dashboard.pages.form.description.bullets.seo')}</li>
+            <li key="publish">{t('dashboard.pages.form.description.bullets.publish')}</li>
           </ul>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -230,47 +236,51 @@ export function PageForm({
             onClick={onCancel}
             disabled={isSubmitting}
           >
-            Cancel
+            {t('dashboard.common.cancel')}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isEditing ? 'Updating...' : 'Creating...'}
+                {isEditing
+                  ? t('dashboard.pages.form.actions.saving_edit')
+                  : t('dashboard.pages.form.actions.saving_create')}
               </>
-            ) : isEditing ? 'Update Page' : 'Create Page'}
+            ) : isEditing
+              ? t('dashboard.pages.form.actions.update')
+              : t('dashboard.pages.form.actions.create')}
           </Button>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="seo">SEO</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
+          <TabsTrigger value="content">{t('dashboard.pages.form.tabs.content')}</TabsTrigger>
+          <TabsTrigger value="seo">{t('dashboard.pages.form.tabs.seo')}</TabsTrigger>
+          <TabsTrigger value="advanced">{t('dashboard.pages.form.tabs.advanced')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="content" className="space-y-6 pt-4">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">{t('dashboard.pages.form.fields.title')}</Label>
               <Input
                 id="title"
                 value={form.title}
                 onChange={handleTitleChange}
-                placeholder="Enter page title"
+                placeholder={t('dashboard.pages.form.placeholders.title')}
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="slug">URL Slug</Label>
+              <Label htmlFor="slug">{t('dashboard.pages.form.fields.slug')}</Label>
               <div className="flex space-x-2">
                 <Input
                   id="slug"
                   value={form.slug}
                   onChange={handleSlugChange}
-                  placeholder="page-url-slug"
+                  placeholder={t('dashboard.pages.form.placeholders.slug')}
                   className="flex-1"
                 />
                 <Button
@@ -278,13 +288,13 @@ export function PageForm({
                   variant="outline"
                   onClick={handleSlugGenerate}
                 >
-                  Generate
+                  {t('dashboard.pages.form.actions.generate_slug')}
                 </Button>
               </div>
             </div>
 
             <div>
-              <Label>Featured Image</Label>
+              <Label>{t('dashboard.pages.form.fields.featured_image')}</Label>
               <div className="mt-1 flex flex-wrap items-center gap-4">
                 {form.featured_image && typeof form.featured_image === 'object' && (
                   <div className="relative group">
@@ -312,30 +322,38 @@ export function PageForm({
                     onClick={() => setShowMediaPicker(true)}
                   >
                     <ImageIcon className="mr-2 h-4 w-4" />
-                    {form.featured_image ? 'Change image' : 'Select featured image'}
+                    {form.featured_image
+                      ? t('dashboard.pages.form.actions.change_image')
+                      : t('dashboard.pages.form.actions.select_image')}
                   </Button>
                   <Badge variant="outline" className="px-2">
                     {form.featured_image
-                      ? form.featured_image.name || form.featured_image.file_name || (form.featured_image_id ? `ID ${form.featured_image_id}` : 'Selected')
-                      : 'None selected'}
+                      ? form.featured_image.name ||
+                        form.featured_image.file_name ||
+                        (form.featured_image_id
+                          ? t('dashboard.pages.form.selected_image_id', {
+                              id: form.featured_image_id,
+                            })
+                          : t('dashboard.pages.form.selected_image'))
+                      : t('dashboard.pages.form.no_image_selected')}
                   </Badge>
                 </div>
               </div>
             </div>
 
             <div>
-              <Label htmlFor="excerpt">Excerpt</Label>
+              <Label htmlFor="excerpt">{t('dashboard.pages.form.fields.excerpt')}</Label>
               <Textarea
                 id="excerpt"
                 value={form.excerpt}
                 onChange={(e) => setForm(f => ({ ...f, excerpt: e.target.value }))}
-                placeholder="A short excerpt for this page"
+                placeholder={t('dashboard.pages.form.placeholders.excerpt')}
                 rows={3}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Content</Label>
+              <Label>{t('dashboard.pages.form.fields.content')}</Label>
               <div className="rounded-md border">
                 <SlateEditor 
                   key={page?.id || 'new-page'}
@@ -350,35 +368,35 @@ export function PageForm({
         <TabsContent value="seo" className="space-y-6 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Search Engine Optimization</CardTitle>
+              <CardTitle>{t('dashboard.pages.form.seo.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="meta_title">Meta Title</Label>
+                <Label htmlFor="meta_title">{t('dashboard.pages.form.seo.meta_title')}</Label>
                 <Input
                   id="meta_title"
                   value={form.meta_title}
                   onChange={(e) => setForm(f => ({ ...f, meta_title: e.target.value }))}
-                  placeholder="Title to show in search results"
+                  placeholder={t('dashboard.pages.form.placeholders.meta_title')}
                   maxLength={60}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {form.meta_title.length}/60 characters. Most search engines use a maximum of 60 chars for the title.
+                  {t('dashboard.pages.form.seo.meta_title_hint', { count: form.meta_title.length })}
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="meta_description">Meta Description</Label>
+                <Label htmlFor="meta_description">{t('dashboard.pages.form.seo.meta_description')}</Label>
                 <Textarea
                   id="meta_description"
                   value={form.meta_description}
                   onChange={(e) => setForm(f => ({ ...f, meta_description: e.target.value }))}
-                  placeholder="Description to show in search results"
+                  placeholder={t('dashboard.pages.form.placeholders.meta_description')}
                   rows={3}
                   maxLength={160}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {form.meta_description.length}/160 characters. Most search engines use a maximum of 160 chars for the description.
+                  {t('dashboard.pages.form.seo.meta_description_hint', { count: form.meta_description.length })}
                 </p>
               </div>
             </CardContent>
@@ -388,35 +406,35 @@ export function PageForm({
         <TabsContent value="advanced" className="space-y-6 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Advanced Settings</CardTitle>
+              <CardTitle>{t('dashboard.pages.form.advanced.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">{t('dashboard.pages.form.fields.status')}</Label>
                   <select
                     id="status"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={form.status}
                     onChange={(e) => setForm(f => ({ ...f, status: e.target.value }))}
                   >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="private">Private</option>
-                    <option value="archived">Archived</option>
+                    <option value="draft">{t('dashboard.posts.form.status.draft')}</option>
+                    <option value="published">{t('dashboard.posts.form.status.published')}</option>
+                    <option value="private">{t('dashboard.posts.form.status.private')}</option>
+                    <option value="archived">{t('dashboard.posts.form.status.archived')}</option>
                   </select>
                 </div>
 
                 {canEditAuthor && authors.length > 0 && (
                   <div>
-                    <Label htmlFor="author">Author</Label>
+                    <Label htmlFor="author">{t('dashboard.pages.form.fields.author')}</Label>
                     <select
                       id="author"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={form.author_id}
                       onChange={(e) => setForm(f => ({ ...f, author_id: e.target.value }))}
                     >
-                      <option value="">Select author</option>
+                      <option value="">{t('dashboard.pages.form.placeholders.author')}</option>
                       {authors.map((author) => (
                         <option key={author.id} value={author.id}>
                           {author.name}
@@ -428,7 +446,7 @@ export function PageForm({
               </div>
 
               <div>
-                <Label htmlFor="published_at">Publish Date</Label>
+                <Label htmlFor="published_at">{t('dashboard.pages.form.fields.publish_date')}</Label>
                 <input
                   type="datetime-local"
                   id="published_at"
@@ -450,8 +468,8 @@ export function PageForm({
 
       <ActionButtonGroup
         onCancel={onCancel}
-        saveLabel={isEditing ? 'Update Page' : 'Create Page'}
-        cancelLabel="Cancel"
+        saveLabel={isEditing ? t('dashboard.pages.form.actions.update') : t('dashboard.pages.form.actions.create')}
+        cancelLabel={t('dashboard.common.cancel')}
         isSubmitting={isSubmitting}
         onSave={() => formRef.current?.requestSubmit()}
         className="mt-6"

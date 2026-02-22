@@ -25,6 +25,8 @@ class SiteSettingsController extends Controller
         $this->authorize('viewAny', SiteSetting::class);
 
         $group = $request->query('group', 'general');
+        $currentLocale = $request->query('locale', \App\Models\Locale::getDefault()?->code ?? config('app.fallback_locale', 'en'));
+        $locales = \App\Models\Locale::getActive();
         $validGroups = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced'];
         
         if (!in_array($group, $validGroups)) {
@@ -32,7 +34,7 @@ class SiteSettingsController extends Controller
         }
 
         // Get all settings organized by group
-        $allSettings = $this->settings->getAllByGroup();
+        $allSettings = $this->settings->getAllByGroup($currentLocale);
         $defaults = SiteSetting::getDefaults();
 
         // Merge with defaults to ensure all keys exist
@@ -63,6 +65,8 @@ class SiteSettingsController extends Controller
             'pages' => $pages,
             'postTypes' => $postTypes,
             'timezones' => $this->getTimezones(),
+            'locales' => $locales,
+            'currentLocale' => $currentLocale,
         ]);
     }
 
@@ -80,9 +84,10 @@ class SiteSettingsController extends Controller
         }
 
         $rules = $this->getValidationRules($group);
+        $currentLocale = $request->input('locale');
         $data = $request->validate($rules);
 
-        $this->settings->updateGroup($group, $data);
+        $this->settings->updateGroup($group, $data, $currentLocale);
 
         return back()->with('success', ucfirst($group) . ' settings updated successfully');
     }

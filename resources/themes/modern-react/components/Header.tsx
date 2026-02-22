@@ -25,9 +25,26 @@ interface HeaderProps {
 
 export default function Header({ site, menu, theme }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS', tagline: '' };
+  const themeColors = theme?.colors || {};
+  const primary = themeColors.primary || '#3b82f6';
+  const secondary = themeColors.secondary || '#64748b';
+  const gradientFrom = themeColors.gradient_from || primary;
+  const gradientTo = themeColors.gradient_to || secondary;
+  const textPrimary = themeColors.text_primary || '#0f172a';
+  const textMuted = themeColors.text_muted || '#94a3b8';
+  const borderColor = themeColors.border || 'rgba(255,255,255,0.12)';
+  const cardBg = themeColors.card || '#0f172a';
+  const buttonText = themeColors.button_text || '#ffffff';
 
   return (
-    <header className="bg-indigo-950/95 backdrop-blur-sm shadow-xl border-b border-white/10">
+    <header
+      className="backdrop-blur-sm shadow-xl"
+      style={{
+        background: `linear-gradient(120deg, ${gradientFrom}ee, ${gradientTo}ee)` ,
+        borderBottom: `1px solid ${borderColor}`
+      }}
+    >
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center h-20">
           {/* Logo/Brand */}
@@ -41,19 +58,19 @@ export default function Header({ site, menu, theme }: HeaderProps) {
                 />
               ) : (
                 <div 
-                  className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl"
-                  style={{ background: '#4f46e5' }}
+                  className="h-12 w-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl"
+                  style={{ background: secondary, color: buttonText }}
                 >
-                  {(site?.name || 'M').charAt(0).toUpperCase()}
+                  {(safeSite?.name || 'M').charAt(0).toUpperCase()}
                 </div>
               )}
               <div>
-                <h1 className="text-2xl font-bold text-white drop-shadow-lg group-hover:text-blue-100 transition-colors duration-300">
-                  {site?.name || 'Modulo CMS'}
+                <h1 className="text-2xl font-bold drop-shadow-lg transition-colors duration-300" style={{ color: buttonText }}>
+                  {safeSite?.name || 'Modulo CMS'}
                 </h1>
-                {site?.tagline && (
-                  <p className="text-sm text-blue-100/80 hidden sm:block mt-0.5">
-                    {site.tagline}
+                {safeSite?.tagline && (
+                  <p className="text-sm hidden sm:block mt-0.5" style={{ color: `${buttonText}cc` }}>
+                    {safeSite.tagline}
                   </p>
                 )}
               </div>
@@ -67,10 +84,14 @@ export default function Header({ site, menu, theme }: HeaderProps) {
                 key={item.id}
                 href={item.url}
                 target={item.target}
-                className="relative px-5 py-3 text-white/90 hover:text-white font-medium transition-all duration-300 rounded-lg hover:bg-white/10 hover:shadow-lg transform hover:scale-105"
+                className="relative px-5 py-3 font-medium transition-all duration-300 rounded-lg hover:shadow-lg transform hover:scale-105"
+                style={{ color: `${buttonText}dd` }}
               >
                 <span className="relative z-10">{item.label}</span>
-                <div className="absolute inset-0 bg-white/10 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                <div
+                  className="absolute inset-0 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"
+                  style={{ backgroundColor: `${buttonText}1a` }}
+                ></div>
               </Link>
             ))}
           </nav>
@@ -79,7 +100,8 @@ export default function Header({ site, menu, theme }: HeaderProps) {
           <div className="md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-white hover:text-blue-100 p-3 rounded-lg hover:bg-white/10 transition-all duration-300"
+              className="p-3 rounded-lg transition-all duration-300"
+              style={{ color: buttonText, backgroundColor: mobileMenuOpen ? `${buttonText}22` : 'transparent' }}
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -94,14 +116,18 @@ export default function Header({ site, menu, theme }: HeaderProps) {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden pb-6">
-            <div className="mt-4 p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
+            <div
+              className="mt-4 p-4 rounded-xl backdrop-blur-md"
+              style={{ backgroundColor: `${cardBg}dd`, border: `1px solid ${borderColor}` }}
+            >
               <nav className="flex flex-col space-y-2">
                 {menu?.map((item) => (
                   <Link
                     key={item.id}
                     href={item.url}
                     target={item.target}
-                    className="text-white hover:text-blue-100 px-4 py-3 text-base font-medium transition-all duration-300 rounded-lg hover:bg-white/20 transform hover:scale-105"
+                    className="px-4 py-3 text-base font-medium transition-all duration-300 rounded-lg transform hover:scale-105"
+                    style={{ color: buttonText, backgroundColor: `${buttonText}14` }}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.label}

@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useAdminToast } from '@/components/admin/AdminToastProvider';
 import { ROUTE } from '../../routes';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Plugin {
   id: number;
@@ -35,6 +36,7 @@ interface PluginsListProps {
 }
 
 export function PluginsList({ plugins = [], canEdit }: PluginsListProps) {
+  const { t } = useTranslation();
   const { success: showSuccess, error: showError } = useAdminToast();
 
   const togglePlugin = (slug: string, isActive: boolean) => {
@@ -47,24 +49,39 @@ export function PluginsList({ plugins = [], canEdit }: PluginsListProps) {
     router.post(route, {}, {
       preserveScroll: true,
       onSuccess: () => {
-        showSuccess(`Plugin ${isActive ? 'deactivated' : 'activated'} successfully`);
+        showSuccess(
+          t(
+            isActive
+              ? 'dashboard.plugins.messages.deactivated'
+              : 'dashboard.plugins.messages.activated'
+          )
+        );
       },
       onError: () => {
-        showError(`Failed to ${isActive ? 'deactivate' : 'activate'} plugin`);
+        showError(
+          t(
+            isActive
+              ? 'dashboard.plugins.messages.deactivate_failed'
+              : 'dashboard.plugins.messages.activate_failed'
+          )
+        );
       }
     });
   };
 
   const uninstallPlugin = (slug: string, name: string) => {
-    if (!canEdit || !confirm(`Are you sure you want to uninstall "${name}"? This will remove all its settings from the database.`)) return;
+    if (
+      !canEdit ||
+      !confirm(t('dashboard.plugins.confirm_uninstall', { name }))
+    ) return;
 
     router.delete(ROUTE.plugins.destroy(slug), {
       preserveScroll: true,
       onSuccess: () => {
-        showSuccess(`Plugin "${name}" uninstalled successfully`);
+        showSuccess(t('dashboard.plugins.messages.uninstalled', { name }));
       },
       onError: () => {
-        showError(`Failed to uninstall plugin "${name}"`);
+        showError(t('dashboard.plugins.messages.uninstall_failed', { name }));
       }
     });
   };
@@ -74,10 +91,9 @@ export function PluginsList({ plugins = [], canEdit }: PluginsListProps) {
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-10 text-center">
           <Package className="h-10 w-10 text-muted-foreground mb-4" />
-          <CardTitle className="mb-2">No plugins found</CardTitle>
+          <CardTitle className="mb-2">{t('dashboard.plugins.empty.title')}</CardTitle>
           <CardDescription>
-            Plugins allow you to extend the functionality of your CMS.
-            Drop a plugin into the <code>plugins/</code> directory to get started.
+            {t('dashboard.plugins.empty.description')}
           </CardDescription>
         </CardContent>
       </Card>
@@ -95,12 +111,14 @@ export function PluginsList({ plugins = [], canEdit }: PluginsListProps) {
                   {plugin.name}
                   {plugin.is_active && (
                     <Badge variant="default" className="bg-primary/20 text-primary border-none text-[10px] h-4">
-                      Active
+                      {t('dashboard.plugins.badges.active')}
                     </Badge>
                   )}
                 </CardTitle>
                 <CardDescription className="text-xs flex items-center gap-1.5">
-                  <span className="font-medium text-foreground/70">v{plugin.version}</span>
+                  <span className="font-medium text-foreground/70">
+                    {t('dashboard.plugins.version', { version: plugin.version })}
+                  </span>
                   {plugin.author && (
                     <>
                       <span className="text-muted-foreground">•</span>
@@ -121,7 +139,7 @@ export function PluginsList({ plugins = [], canEdit }: PluginsListProps) {
           </CardHeader>
           <CardContent className="flex-grow pb-4">
             <p className="text-sm text-muted-foreground line-clamp-3">
-              {plugin.description || 'No description provided.'}
+              {plugin.description || t('dashboard.plugins.no_description')}
             </p>
           </CardContent>
           <CardFooter className="pt-0 flex justify-between gap-2">
@@ -134,7 +152,7 @@ export function PluginsList({ plugins = [], canEdit }: PluginsListProps) {
                 onClick={() => router.visit(ROUTE.plugins.settings(plugin.slug))}
               >
                 <Settings className="h-3.5 w-3.5" />
-                Settings
+                {t('dashboard.plugins.actions.settings')}
               </Button>
               <Button 
                 variant="outline" 
@@ -144,12 +162,12 @@ export function PluginsList({ plugins = [], canEdit }: PluginsListProps) {
                 disabled={!canEdit}
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Uninstall
+                {t('dashboard.plugins.actions.uninstall')}
               </Button>
             </div>
             <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground">
               <Info className="h-3.5 w-3.5 mr-1" />
-              Details
+              {t('dashboard.plugins.actions.details')}
             </Button>
           </CardFooter>
         </Card>

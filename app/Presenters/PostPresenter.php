@@ -3,7 +3,11 @@
 namespace App\Presenters;
 
 use App\Models\Post;
+use App\Models\Comment;
+use App\Models\SiteSetting;
+use App\Models\Locale;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class PostPresenter
 {
@@ -36,6 +40,8 @@ class PostPresenter
                 ]);
             }
         }
+
+        $commentsEnabled = $this->commentsEnabled($post);
 
         return [
             'id' => $post->id ?? 0,
@@ -84,6 +90,9 @@ class PostPresenter
                     ],
                 ];
             })->toArray() : [],
+            'comments' => $commentsEnabled ? $this->presentComments($post) : [],
+            'allow_comments' => $commentsEnabled,
+            'localizations' => $this->buildLocalizationMap($post),
         ];
     }
 
@@ -213,5 +222,106 @@ class PostPresenter
         }
 
         return $html;
+    }
+
+    public function presentComments(Post $post): array
+    {
+        $comments = $post->allComments ?? collect();
+
+        if (!$comments instanceof Collection) {
+            $comments = collect($comments);
+        }
+
+        $grouped = $comments
+            ->sortBy('created_at')
+            ->groupBy(function (Comment $comment) {
+                return $comment->parent_id ?? 'root';
+            });
+
+        return $this->buildCommentBranch($grouped, 'root');
+    }
+
+    protected function buildCommentBranch(Collection $grouped, int|string $parentKey): array
+    {
+        $branch = [];
+        $children = $grouped->get($parentKey, collect());
+
+        foreach ($children as $comment) {
+            $branch[] = $this->formatComment($comment, $grouped);
+        }
+
+        return $branch;
+    }
+
+    protected function formatComment(Comment $comment, Collection $grouped): array
+    {
+        return [
+            'id' => $comment->id,
+            'user_id' => $comment->user_id,
+            'author_name' => $comment->author_name,
+            'author_email' => $comment->author_email,
+            'author_avatar' => $comment->author_avatar,
+            'content' => $comment->content,
+            'created_at' => optional($comment->created_at)->toIso8601String(),
+            'replies' => $this->buildCommentBranch($grouped, $comment->id),
+        ];
+    }
+
+    protected function commentsEnabled(Post $post): bool
+    {
+        $global = SiteSetting::get('enable_comments', true);
+        if (!$global) {
+            return false;
+        }
+
+        return (bool) ($post->postType?->has_comments ?? false);
+    }
+
+    protected function buildLocalizationMap(Post $post): array
+    {
+        $localizations = [];
+        $defaultLocale = Locale::getDefault()?->code ?? config('app.fallback_locale', config('app.locale', 'en'));
+
+        $localizations[$defaultLocale] = [
+            'slug' => $post->slug,
+            'path' => $this->buildContentPath($post, $post->slug),
+        ];
+
+        $translations = $post->relationLoaded('translations')
+            ? $post->translations
+            : $post->translations()->get();
+
+        foreach ($translations as $translation) {
+            if (!$translation->slug) {
+                continue;
+            }
+
+            $localizations[$translation->locale] = [
+                'slug' => $translation->slug,
+                'path' => $this->buildContentPath($post, $translation->slug),
+            ];
+        }
+
+        return array_filter($localizations, fn ($entry) => !empty($entry['path']));
+    }
+
+    protected function buildContentPath(Post $post, ?string $slug): string
+    {
+        $segments = [];
+        $prefix = $post->postType?->route_prefix;
+
+        if ($prefix && $prefix !== '/') {
+            $segments[] = trim($prefix, '/');
+        }
+
+        if ($slug) {
+            $segments[] = trim($slug, '/');
+        }
+
+        if (empty($segments)) {
+            return '/';
+        }
+
+        return '/' . implode('/', $segments);
     }
 }

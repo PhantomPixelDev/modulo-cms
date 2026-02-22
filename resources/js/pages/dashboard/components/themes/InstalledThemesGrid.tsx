@@ -20,16 +20,14 @@ export interface InstalledThemesGridProps {
   activeSlug?: string | null;
   canActivate?: boolean;
   canPublishAssets?: boolean;
-  canCustomize?: boolean;
   canDelete?: boolean;
   onView?: (id: number) => void;
   onActivate?: (slug: string) => void;
   onPublishAssets?: (id: number) => void;
-  onCustomize?: (id: number) => void;
   onUninstall?: (id: number, displayName?: string) => void;
 }
 
-export function InstalledThemesGrid({ items, activeSlug, canActivate = false, canPublishAssets = false, canCustomize = false, canDelete = false, onView, onActivate, onPublishAssets, onCustomize, onUninstall }: InstalledThemesGridProps) {
+export function InstalledThemesGrid({ items, activeSlug, canActivate = false, canPublishAssets = false, canDelete = false, onView, onActivate, onPublishAssets, onUninstall }: InstalledThemesGridProps) {
   return (
     <div>
       <h3 className="font-semibold mb-3">Installed Themes</h3>
@@ -78,9 +76,6 @@ export function InstalledThemesGrid({ items, activeSlug, canActivate = false, ca
                 )}
                 {canPublishAssets && (
                   <Button size="sm" variant="secondary" onClick={() => onPublishAssets?.(t.id)}>Publish Assets</Button>
-                )}
-                {isActive && canCustomize && (
-                  <Button size="sm" onClick={() => onCustomize?.(t.id)}>Customize</Button>
                 )}
                 {!isActive && canDelete && (
                   <Button size="sm" variant="destructive" onClick={() => onUninstall?.(t.id, t.name || t.slug)}>Uninstall</Button>

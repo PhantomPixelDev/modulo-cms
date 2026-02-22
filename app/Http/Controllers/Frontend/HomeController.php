@@ -39,7 +39,8 @@ class HomeController extends BaseFrontendController
         $query = Post::with([
                 'postType', 
                 'author.roles', 
-                'taxonomyTerms.taxonomy'
+                'taxonomyTerms.taxonomy',
+                'translations'
             ])
             ->published()
             ->orderBy('published_at', 'desc');

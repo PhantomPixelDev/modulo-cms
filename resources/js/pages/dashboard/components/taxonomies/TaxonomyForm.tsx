@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { IconPicker } from '@/components/ui/icon-picker';
 import type { PostType, Taxonomy } from '../../types';
 
 export interface TaxonomyFormProps {
@@ -193,11 +194,9 @@ export function TaxonomyForm({ taxonomy, postTypes = [], isEditing = false, onSu
               <div className="text-sm font-semibold text-muted-foreground">Menu Settings</div>
               <div className="space-y-1.5">
                 <Label htmlFor="taxonomy-menu-icon">Menu Icon</Label>
-                <Input
-                  id="taxonomy-menu-icon"
+                <IconPicker
                   value={form.menu_icon}
-                  onChange={event => handleChange('menu_icon', event.target.value)}
-                  placeholder="Optional icon class"
+                  onChange={value => handleChange('menu_icon', value)}
                 />
               </div>
               <div className="space-y-1.5">

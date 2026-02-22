@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             \App\Http\Middleware\CheckMaintenanceMode::class,
+            \App\Http\Middleware\SetLocale::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
@@ -31,6 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             // Use custom implementation to avoid hard dependency on Spatie middleware class
             'role_or_permission' => \App\Http\Middleware\RoleOrPermission::class,
+            // Cache response headers for public pages
+            'cache.response' => \App\Http\Middleware\CacheResponseHeaders::class,
+            // Locale from URL prefix
+            'locale.url' => \App\Http\Middleware\LocaleFromUrl::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -31,16 +31,40 @@ export interface ParentPost {
   title: string;
 }
 
+export interface Locale {
+  id: number;
+  code: string;
+  name: string;
+  native_name?: string;
+  is_default?: boolean;
+}
+
+export interface PostTranslation {
+  id: number;
+  post_id: number;
+  locale: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content?: string;
+  seo_title?: string;
+  seo_description?: string;
+}
+
 export interface PostFormProps {
   post?: any;
+  translation?: PostTranslation;
   postTypes?: PostType[];
   groupedTerms?: Record<string, Term[]>;
   authors?: Author[];
   parentsByType?: Record<string | number, ParentPost[]>;
+  locales?: Locale[];
+  currentLocale?: string;
   canEditAuthor?: boolean;
   isEditing: boolean;
   onSubmit: (data: any) => Promise<void> | void;
   onCancel: () => void;
+  onLocaleChange?: (locale: string) => void;
 }
 
 export interface MetaData {

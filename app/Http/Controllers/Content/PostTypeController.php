@@ -49,12 +49,6 @@ class PostTypeController extends Controller
                 'per_page' => $postTypesPaginated->perPage(),
                 'total' => $postTypesPaginated->total(),
             ],
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => PostType::count(),
-            ],
         ]);
     }
 
@@ -67,12 +61,6 @@ class PostTypeController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.create',
             'globalCommentsEnabled' => SiteSetting::get('enable_comments', true),
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => PostType::count(),
-            ],
         ]);
     }
 
@@ -141,12 +129,6 @@ class PostTypeController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.show',
             'postType' => $postType,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => PostType::count(),
-            ],
         ]);
     }
 
@@ -160,12 +142,6 @@ class PostTypeController extends Controller
             'adminSection' => 'post-types.edit',
             'editPostType' => $postType,
             'globalCommentsEnabled' => SiteSetting::get('enable_comments', true),
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => PostType::count(),
-            ],
         ]);
     }
 

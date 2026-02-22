@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MenuItemRequest;
+use App\Models\Locale;
+use App\Models\Menu;
 use App\Models\MenuItem;
+use App\Services\MenuService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
@@ -27,7 +31,7 @@ class MenuItemController extends Controller
     {
         $this->authorize('viewAny', \App\Models\MenuItem::class);
         $menuId = $request->query('menu_id');
-        $query = MenuItem::query();
+        $query = MenuItem::query()->with(['translations', 'children']);
         if ($menuId) {
             $query->where('menu_id', $menuId)->whereNull('parent_id');
         }
@@ -42,41 +46,34 @@ class MenuItemController extends Controller
         return redirect()->route('dashboard.admin.menus.index');
     }
 
-    public function store(Request $request)
+    public function store(MenuItemRequest $request)
     {
         $this->authorize('create', \App\Models\MenuItem::class);
-        $data = $request->validate([
-            'menu_id' => 'required|exists:menus,id',
-            'parent_id' => 'nullable|exists:menu_items,id',
-            'label' => 'required|string|max:255',
-            'url' => 'nullable|string|max:2048',
-            'page_slug' => 'nullable|string|max:255',
-            'route_name' => 'nullable|string|max:255',
-            'order' => 'nullable|integer',
-            'visible_to' => 'nullable|in:all,guest,auth',
-            'target' => 'nullable|in:_self,_blank',
-        ]);
+        $data = $request->validated();
+        $translations = $data['translations'] ?? [];
+        unset($data['translations']);
+
         $item = MenuItem::create($data);
+        $this->syncTranslations($item, $translations);
+        $this->forgetMenuCacheFromMenu($item->menu);
+
         if ($request->wantsJson()) {
             return response()->json($item, Response::HTTP_CREATED);
         }
         return redirect()->route('dashboard.admin.menus.show', ['menu' => $item->menu_id]);
     }
 
-    public function update(Request $request, MenuItem $menuItem)
+    public function update(MenuItemRequest $request, MenuItem $menuItem)
     {
         $this->authorize('update', $menuItem);
-        $data = $request->validate([
-            'parent_id' => 'nullable|exists:menu_items,id',
-            'label' => 'required|string|max:255',
-            'url' => 'nullable|string|max:2048',
-            'page_slug' => 'nullable|string|max:255',
-            'route_name' => 'nullable|string|max:255',
-            'order' => 'nullable|integer',
-            'visible_to' => 'nullable|in:all,guest,auth',
-            'target' => 'nullable|in:_self,_blank',
-        ]);
+        $data = $request->validated();
+        $translations = $data['translations'] ?? [];
+        unset($data['translations']);
+
         $menuItem->update($data);
+        $this->syncTranslations($menuItem, $translations);
+        $this->forgetMenuCacheFromMenu($menuItem->menu);
+
         if ($request->wantsJson()) {
             return response()->json($menuItem);
         }
@@ -86,11 +83,51 @@ class MenuItemController extends Controller
     public function destroy(Request $request, MenuItem $menuItem)
     {
         $this->authorize('delete', $menuItem);
+        $menu = $menuItem->menu()->first();
         // Recursively delete full subtree
         $this->deleteSubtree($menuItem);
+        $this->forgetMenuCacheFromMenu($menu);
         if ($request->wantsJson()) {
             return response()->noContent();
         }
         return redirect()->route('dashboard.admin.menus.show', ['menu' => $menuItem->menu_id]);
+    }
+
+    protected function syncTranslations(MenuItem $menuItem, array $translations = []): void
+    {
+        $menuItem->loadMissing('translations');
+        $defaultLocale = Locale::getDefault()?->code ?? config('app.fallback_locale', 'en');
+        $handled = [];
+
+        foreach ($translations as $translation) {
+            $locale = $translation['locale'] ?? null;
+            if (!$locale) {
+                continue;
+            }
+
+            $payload = [
+                'label' => $translation['label'] ?? $menuItem->label,
+                'url' => $translation['url'] ?? $menuItem->url,
+            ];
+
+            $menuItem->setTranslation($locale, $payload);
+            $handled[] = $locale;
+        }
+
+        if (!in_array($defaultLocale, $handled, true)) {
+            $menuItem->setTranslation($defaultLocale, [
+                'label' => $menuItem->label,
+                'url' => $menuItem->url,
+            ]);
+        }
+    }
+
+    protected function forgetMenuCacheFromMenu(?Menu $menu): void
+    {
+        if (!$menu) {
+            return;
+        }
+
+        app(MenuService::class)->forgetMenu($menu);
     }
 }

@@ -12,7 +12,7 @@ export function Table({ className, dense, ...props }: TableProps) {
     <TableContext.Provider value={{ dense }}>
       <table
         className={cn(
-          'w-full text-sm',
+          'w-full text-sm text-[var(--foreground)]',
           className,
         )}
         {...props}
@@ -28,7 +28,7 @@ export function TableContainer({ className, ...props }: React.HTMLAttributes<HTM
 }
 
 export function TableHeader({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn('bg-muted/30', className)} {...props} />;
+  return <thead className={cn('bg-[var(--muted)]/80 text-[var(--foreground)]/80', className)} {...props} />;
 }
 
 export function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
@@ -39,7 +39,7 @@ export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTable
   return (
     <tr
       className={cn(
-        'border-b last:border-0 hover:bg-accent/50',
+        'border-b last:border-0 hover:bg-[var(--muted)]/40 odd:bg-[var(--muted)]/20 even:bg-transparent transition-colors',
         'transition-colors',
         className,
       )}
@@ -53,7 +53,7 @@ export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTa
   return (
     <th
       className={cn(
-        'text-left font-medium text-muted-foreground',
+        'text-left font-semibold text-[var(--foreground)]/80 uppercase tracking-wide text-xs',
         dense ? 'py-1.5 pr-3' : 'py-2.5 pr-4',
         className,
       )}
@@ -67,6 +67,7 @@ export function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTa
   return (
     <td
       className={cn(
+        'text-[var(--foreground)]/90',
         dense ? 'py-1.5 pr-3' : 'py-2.5 pr-4',
         className,
       )}

@@ -5,29 +5,32 @@ import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { ShopProductsManager } from '../../components/shop/ShopProductsManager';
 import { ShopOrdersManager } from '../../components/shop/ShopOrdersManager';
 import { ShopOrderView } from '../../components/shop/ShopOrderView';
+import { ShopSettingsForm } from '../../components/shop/ShopSettingsForm';
 import type { Paginated, ShopProduct, ShopOrder } from '../../types';
 
 export function getShopSections({
   shopProducts,
   shopOrders,
   shopOrder,
+  shopSettings,
   can,
+  showSuccess,
+  showError,
   ROUTE,
 }: {
   shopProducts: Paginated<ShopProduct> | undefined;
   shopOrders: Paginated<ShopOrder> | undefined;
   shopOrder: ShopOrder | undefined;
+  shopSettings?: Record<string, any>;
   can: (perm: string) => boolean;
+  showSuccess: (msg: string) => void;
+  showError: (msg: string) => void;
   ROUTE: any;
 }): Record<string, () => ReactNode> {
   const renderShopProducts = () => (
     <SectionWrapper
       title="Shop Products"
-      actions={
-        <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.misc.dashboard())}>
-          Back to Dashboard
-        </Button>
-      }
+      description="Manage your store products and inventory."
     >
       <ShopProductsManager
         products={shopProducts}
@@ -42,6 +45,7 @@ export function getShopSections({
   const renderShopOrderView = () => (
     <SectionWrapper
       title="Order Details"
+      description="View order information and update status."
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.shop.orders.index())}>
           Back to Orders
@@ -55,11 +59,7 @@ export function getShopSections({
   const renderShopOrders = () => (
     <SectionWrapper
       title="Shop Orders"
-      actions={
-        <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.misc.dashboard())}>
-          Back to Dashboard
-        </Button>
-      }
+      description="Track and manage customer orders."
     >
       <ShopOrdersManager
         orders={shopOrders}
@@ -69,9 +69,34 @@ export function getShopSections({
     </SectionWrapper>
   );
 
+  const renderShopSettings = () => (
+    <SectionWrapper
+      title="Shop Settings"
+      description="Configure your store settings and preferences."
+    >
+      <ShopSettingsForm
+        settings={shopSettings || {}}
+        canEdit={can('manage shop settings')}
+        onSave={async (data) => {
+          try {
+            await router.put('/dashboard/admin/shop/settings', data, {
+              preserveScroll: true,
+              onSuccess: () => showSuccess('Shop settings saved successfully'),
+              onError: () => showError('Failed to save shop settings'),
+            });
+          } catch (err) {
+            console.error(err);
+            showError('Error saving shop settings');
+          }
+        }}
+      />
+    </SectionWrapper>
+  );
+
   return {
     'shop-products': renderShopProducts,
     'shop-orders': renderShopOrders,
     'shop-orders-view': renderShopOrderView,
+    'shop-settings': renderShopSettings,
   };
 }

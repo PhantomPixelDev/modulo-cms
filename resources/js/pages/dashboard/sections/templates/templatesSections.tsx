@@ -17,6 +17,7 @@ export function getTemplatesSections({
   showSuccess,
   showError,
   ROUTE,
+  t,
 }: {
   adminSection?: string;
   templates: any;
@@ -27,6 +28,7 @@ export function getTemplatesSections({
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const renderTemplatesList = () => {
     const templateItems = asArray((templates as any)?.data ?? templates).map((t: any) => ({
@@ -41,11 +43,11 @@ export function getTemplatesSections({
 
     return (
       <SectionWrapper
-        title="Templates"
+        title={t('dashboard.templates.title')}
         actions={
           can('create templates') ? (
             <Button size="sm" onClick={() => router.visit(ROUTE.templates.create())}>
-              + New Template
+              {t('dashboard.templates.actions.new')}
             </Button>
           ) : null
         }
@@ -58,11 +60,11 @@ export function getTemplatesSections({
           onView={(id) => router.visit(ROUTE.templates.show(id))}
           onEdit={(id) => router.visit(ROUTE.templates.edit(id))}
           onDelete={(item) => {
-            if (!window.confirm(`Delete template "${item.name}"?`)) return;
+            if (!window.confirm(t('dashboard.templates.confirm_delete', { name: item.name }))) return;
             router.delete(ROUTE.templates.destroy(item.id), {
               preserveScroll: true,
-              onSuccess: () => showSuccess('Template deleted'),
-              onError: () => showError('Failed to delete template'),
+              onSuccess: () => showSuccess(t('dashboard.templates.messages.deleted')),
+              onError: () => showError(t('dashboard.templates.messages.delete_failed')),
             });
           }}
         />
@@ -76,10 +78,11 @@ export function getTemplatesSections({
 
     return (
       <SectionWrapper
-        title={isEditing ? 'Edit Template' : 'Create Template'}
+        title={isEditing ? t('dashboard.templates.edit_title') : t('dashboard.templates.create_title')}
+        description={isEditing ? t('dashboard.templates.edit_description') : t('dashboard.templates.create_description')}
         actions={
           <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.templates.index())}>
-            Back to Templates
+            {t('dashboard.templates.actions.back')}
           </Button>
         }
       >
@@ -90,7 +93,7 @@ export function getTemplatesSections({
           canDelete={can('delete templates')}
           onDelete={() => {
             if (!tpl?.id) return;
-            if (!window.confirm(`Delete template "${tpl.name}"?`)) return;
+            if (!window.confirm(t('dashboard.templates.confirm_delete', { name: tpl.name }))) return;
             router.delete(ROUTE.templates.destroy(tpl.id));
           }}
           onSubmit={(payload) => {
@@ -99,10 +102,22 @@ export function getTemplatesSections({
             router[method](url, payload, {
               preserveScroll: true,
               onSuccess: () => {
-                showSuccess(`Template ${isEditing ? 'updated' : 'created'} successfully`);
+                showSuccess(
+                  t(
+                    isEditing
+                      ? 'dashboard.templates.messages.updated'
+                      : 'dashboard.templates.messages.created'
+                  )
+                );
                 router.visit(ROUTE.templates.index());
               },
-              onError: () => showError(`Failed to ${isEditing ? 'update' : 'create'} template`),
+              onError: () => showError(
+                t(
+                  isEditing
+                    ? 'dashboard.templates.messages.update_failed'
+                    : 'dashboard.templates.messages.create_failed'
+                )
+              ),
             });
           }}
           onCancel={() => router.visit(ROUTE.templates.index())}
@@ -113,16 +128,16 @@ export function getTemplatesSections({
 
   const renderTemplateShow = () => (
     <SectionWrapper
-      title="Template"
+      title={t('dashboard.templates.show_title')}
       actions={
         <div className="flex gap-2">
           {can('edit templates') && template?.id ? (
             <Button size="sm" onClick={() => router.visit(ROUTE.templates.edit(template.id))}>
-              Edit
+              {t('dashboard.templates.actions.edit')}
             </Button>
           ) : null}
           <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.templates.index())}>
-            Back to Templates
+            {t('dashboard.templates.actions.back')}
           </Button>
         </div>
       }

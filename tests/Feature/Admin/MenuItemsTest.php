@@ -53,10 +53,12 @@ it('denies creating/updating/deleting menu items without permissions', function 
 
     // Update/Delete denied
     $this->put(route('dashboard.admin.menu-items.update', $item), [
+        'menu_id' => $menu->id,
         'label' => 'Temp 2',
     ])->assertForbidden();
-    $this->delete(route('dashboard.admin.menu-items.destroy', $item))
-        ->assertForbidden();
+    $this->delete(route('dashboard.admin.menu-items.destroy', $item), [
+        'menu_id' => $menu->id,
+    ])->assertForbidden();
 });
 
 it('creates, updates, and deletes menu items with proper permissions', function () {
@@ -92,6 +94,7 @@ it('creates, updates, and deletes menu items with proper permissions', function 
 
     // Update root
     $resp3 = $this->put(route('dashboard.admin.menu-items.update', $item), [
+        'menu_id' => $menu->id,
         'label' => 'Home Updated',
         'url' => '/',
         'order' => 3,
@@ -104,7 +107,9 @@ it('creates, updates, and deletes menu items with proper permissions', function 
     expect($item->order)->toBe(3);
 
     // Destroy parent should recursively delete child (controller deleteSubtree)
-    $resp4 = $this->delete(route('dashboard.admin.menu-items.destroy', $item));
+    $resp4 = $this->delete(route('dashboard.admin.menu-items.destroy', $item), [
+        'menu_id' => $menu->id,
+    ]);
     $resp4->assertRedirect(route('dashboard.admin.menus.show', ['menu' => $menu->id]));
     expect(MenuItem::whereKey($item->id)->exists())->toBeFalse();
     expect(MenuItem::whereKey($child->id)->exists())->toBeFalse();

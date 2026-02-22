@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DefaultUsersSeeder::class,      // Create users first
             RolePermissionSeeder::class,    // Then assign roles/permissions
+            LocaleSeeder::class,            // Seed available locales
             PostTypeRoutePrefixSeeder::class,
             ContentSeeder::class,
             DefaultPagesSeeder::class,

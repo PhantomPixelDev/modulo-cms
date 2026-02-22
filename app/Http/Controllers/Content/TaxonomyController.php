@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Content;
 use App\Http\Controllers\Controller;
 use App\Models\Taxonomy;
 use App\Models\PostType;
+use App\Models\Locale;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class TaxonomyController extends Controller
 {
@@ -41,12 +43,6 @@ class TaxonomyController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies',
             'taxonomies' => $taxonomies,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
         ]);
     }
 
@@ -61,12 +57,7 @@ class TaxonomyController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies.create',
             'postTypes' => $postTypes,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
+            'locales' => Locale::getActive(),
         ]);
     }
 
@@ -76,7 +67,7 @@ class TaxonomyController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Taxonomy::class);
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255|unique:taxonomies',
             'label' => 'required|string|max:255',
             'plural_label' => 'required|string|max:255',
@@ -87,21 +78,28 @@ class TaxonomyController extends Controller
             'show_in_menu' => 'boolean',
             'menu_icon' => 'nullable|string',
             'menu_position' => 'integer|min:0|max:100',
+            'translations' => 'sometimes|array',
+            'translations.*.locale' => ['required','string','max:8', Rule::exists('locales', 'code')],
+            'translations.*.label' => 'nullable|string|max:255',
+            'translations.*.plural_label' => 'nullable|string|max:255',
+            'translations.*.description' => 'nullable|string',
         ]);
 
-        Taxonomy::create([
-            'name' => $request->name,
-            'label' => $request->label,
-            'plural_label' => $request->plural_label,
-            'description' => $request->description,
-            'slug' => $this->makeUniqueSlug($request->name),
-            'is_hierarchical' => (bool) ($request->is_hierarchical ?? false),
-            'is_public' => (bool) ($request->is_public ?? true),
-            'post_types' => $request->post_types ?? [],
-            'show_in_menu' => (bool) ($request->show_in_menu ?? true),
-            'menu_icon' => $request->menu_icon,
-            'menu_position' => $request->menu_position ?? 5,
+        $taxonomy = Taxonomy::create([
+            'name' => $validated['name'],
+            'label' => $validated['label'],
+            'plural_label' => $validated['plural_label'],
+            'description' => $validated['description'] ?? null,
+            'slug' => $this->makeUniqueSlug($validated['name']),
+            'is_hierarchical' => (bool) ($validated['is_hierarchical'] ?? false),
+            'is_public' => (bool) ($validated['is_public'] ?? true),
+            'post_types' => $validated['post_types'] ?? [],
+            'show_in_menu' => (bool) ($validated['show_in_menu'] ?? true),
+            'menu_icon' => $validated['menu_icon'] ?? null,
+            'menu_position' => $validated['menu_position'] ?? 5,
         ]);
+
+        $this->syncTaxonomyTranslations($taxonomy, $validated['translations'] ?? []);
 
         return redirect()->route('dashboard.admin.taxonomies.index')->with('success', 'Taxonomy created successfully.');
     }
@@ -122,12 +120,6 @@ class TaxonomyController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies.show',
             'taxonomy' => $taxonomy,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
         ]);
     }
 
@@ -138,17 +130,13 @@ class TaxonomyController extends Controller
     {
         $this->authorize('update', $taxonomy);
         $postTypes = PostType::all();
+        $taxonomy->load('translations');
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies.edit',
             'editTaxonomy' => $taxonomy,
             'postTypes' => $postTypes,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
+            'locales' => Locale::getActive(),
         ]);
     }
 
@@ -158,7 +146,7 @@ class TaxonomyController extends Controller
     public function update(Request $request, Taxonomy $taxonomy)
     {
         $this->authorize('update', $taxonomy);
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255|unique:taxonomies,name,' . $taxonomy->id,
             'label' => 'required|string|max:255',
             'plural_label' => 'required|string|max:255',
@@ -169,23 +157,60 @@ class TaxonomyController extends Controller
             'show_in_menu' => 'boolean',
             'menu_icon' => 'nullable|string',
             'menu_position' => 'integer|min:0|max:100',
+            'translations' => 'sometimes|array',
+            'translations.*.locale' => ['required','string','max:8', Rule::exists('locales', 'code')],
+            'translations.*.label' => 'nullable|string|max:255',
+            'translations.*.plural_label' => 'nullable|string|max:255',
+            'translations.*.description' => 'nullable|string',
         ]);
 
         $taxonomy->update([
-            'name' => $request->name,
-            'label' => $request->label,
-            'plural_label' => $request->plural_label,
-            'description' => $request->description,
-            'slug' => $this->makeUniqueSlug($request->name, $taxonomy->id),
-            'is_hierarchical' => (bool) ($request->is_hierarchical ?? false),
-            'is_public' => (bool) ($request->is_public ?? true),
-            'post_types' => $request->post_types ?? [],
-            'show_in_menu' => (bool) ($request->show_in_menu ?? true),
-            'menu_icon' => $request->menu_icon,
-            'menu_position' => $request->menu_position ?? 5,
+            'name' => $validated['name'],
+            'label' => $validated['label'],
+            'plural_label' => $validated['plural_label'],
+            'description' => $validated['description'] ?? null,
+            'slug' => $this->makeUniqueSlug($validated['name'], $taxonomy->id),
+            'is_hierarchical' => (bool) ($validated['is_hierarchical'] ?? false),
+            'is_public' => (bool) ($validated['is_public'] ?? true),
+            'post_types' => $validated['post_types'] ?? [],
+            'show_in_menu' => (bool) ($validated['show_in_menu'] ?? true),
+            'menu_icon' => $validated['menu_icon'] ?? null,
+            'menu_position' => $validated['menu_position'] ?? 5,
         ]);
 
+        $this->syncTaxonomyTranslations($taxonomy, $validated['translations'] ?? []);
+
         return redirect()->route('dashboard.admin.taxonomies.index')->with('success', 'Taxonomy updated successfully.');
+    }
+
+    protected function syncTaxonomyTranslations(Taxonomy $taxonomy, array $translations = []): void
+    {
+        $defaultLocale = Locale::getDefault()?->code ?? config('app.fallback_locale', 'en');
+        $handledLocales = [];
+
+        foreach ($translations as $translation) {
+            $locale = $translation['locale'] ?? null;
+            if (!$locale) {
+                continue;
+            }
+
+            $payload = [
+                'label' => $translation['label'] ?? $taxonomy->label,
+                'plural_label' => $translation['plural_label'] ?? $taxonomy->plural_label,
+                'description' => $translation['description'] ?? $taxonomy->description,
+            ];
+
+            $taxonomy->setTranslation($locale, $payload);
+            $handledLocales[] = $locale;
+        }
+
+        if (!in_array($defaultLocale, $handledLocales, true)) {
+            $taxonomy->setTranslation($defaultLocale, [
+                'label' => $taxonomy->label,
+                'plural_label' => $taxonomy->plural_label,
+                'description' => $taxonomy->description,
+            ]);
+        }
     }
 
     /**

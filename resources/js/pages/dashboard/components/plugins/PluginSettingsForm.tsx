@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminToast } from '@/components/admin/AdminToastProvider';
 import { ROUTE } from '../../routes';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Plugin {
   id: number;
@@ -30,6 +31,7 @@ interface PluginSettingsFormProps {
 }
 
 export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps) {
+  const { t } = useTranslation();
   const { success: showSuccess, error: showError } = useAdminToast();
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<Record<string, any>>(plugin.settings || {});
@@ -48,11 +50,11 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
     router.put(ROUTE.plugins.updateSettings(plugin.slug), { settings }, {
       preserveScroll: true,
       onSuccess: () => {
-        showSuccess('Plugin settings updated successfully');
+        showSuccess(t('dashboard.plugins.settings.messages.updated'));
         setSaving(false);
       },
       onError: () => {
-        showError('Failed to update plugin settings');
+        showError(t('dashboard.plugins.settings.messages.update_failed'));
         setSaving(false);
       }
     });
@@ -69,16 +71,18 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-2xl font-bold tracking-tight">{plugin.name} Settings</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {t('dashboard.plugins.settings.title', { name: plugin.name })}
+        </h2>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Configuration</CardTitle>
+              <CardTitle>{t('dashboard.plugins.settings.configuration_title')}</CardTitle>
               <CardDescription>
-                Manage specific settings for the {plugin.name} plugin.
+                {t('dashboard.plugins.settings.configuration_description', { name: plugin.name })}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -89,7 +93,9 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
               {Object.keys(settings).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-6 text-center border-2 border-dashed rounded-lg">
                   <Cpu className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">This plugin has no configurable settings.</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('dashboard.plugins.settings.no_settings')}
+                  </p>
                 </div>
               ) : (
                 Object.entries(settings).map(([key, value]) => (
@@ -111,10 +117,10 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
                 disabled={saving || !canEdit || Object.keys(settings).length === 0}
                 className="gap-2"
               >
-                {saving ? 'Saving...' : (
+                {saving ? t('dashboard.plugins.settings.actions.saving') : (
                   <>
                     <Save className="h-4 w-4" />
-                    Save Settings
+                    {t('dashboard.plugins.settings.actions.save')}
                   </>
                 )}
               </Button>
@@ -125,21 +131,23 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Plugin Info</CardTitle>
+              <CardTitle>{t('dashboard.plugins.settings.info_title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div className="flex justify-between py-1 border-b">
-                <span className="text-muted-foreground">Version</span>
+                <span className="text-muted-foreground">{t('dashboard.plugins.settings.labels.version')}</span>
                 <span className="font-medium">{plugin.version}</span>
               </div>
               <div className="flex justify-between py-1 border-b">
-                <span className="text-muted-foreground">Status</span>
+                <span className="text-muted-foreground">{t('dashboard.plugins.settings.labels.status')}</span>
                 <span className={`font-medium ${plugin.is_active ? 'text-green-600' : 'text-yellow-600'}`}>
-                  {plugin.is_active ? 'Active' : 'Inactive'}
+                  {plugin.is_active
+                    ? t('dashboard.plugins.settings.labels.active')
+                    : t('dashboard.plugins.settings.labels.inactive')}
                 </span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Slug</span>
+                <span className="text-muted-foreground">{t('dashboard.plugins.settings.labels.slug')}</span>
                 <code className="text-xs bg-muted px-1 rounded">{plugin.slug}</code>
               </div>
             </CardContent>
@@ -151,9 +159,11 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
                 <div className="flex gap-3">
                   <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0" />
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-yellow-800 dark:text-yellow-400">Plugin Inactive</p>
+                    <p className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
+                      {t('dashboard.plugins.settings.inactive.title')}
+                    </p>
                     <p className="text-xs text-yellow-700 dark:text-yellow-500">
-                      Settings may not take effect until the plugin is activated.
+                      {t('dashboard.plugins.settings.inactive.description')}
                     </p>
                   </div>
                 </div>

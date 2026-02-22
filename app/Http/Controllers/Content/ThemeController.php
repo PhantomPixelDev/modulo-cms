@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InstallThemeRequest;
+use App\Http\Requests\UpdateThemeRequest;
 use App\Models\Theme;
 use App\Services\ThemeManager;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 
@@ -40,15 +41,12 @@ class ThemeController extends Controller
     /**
      * Install discovered themes
      */
-    public function install(Request $request)
+    public function install(InstallThemeRequest $request)
     {
         $this->authorize('install', \App\Models\Theme::class);
-        $request->validate([
-            'slug' => 'required|string',
-        ]);
 
         $discoveredThemes = $this->themeManager->discoverThemes();
-        $themeToInstall = $discoveredThemes->firstWhere('config.slug', $request->slug);
+        $themeToInstall = $discoveredThemes->firstWhere('config.slug', $request->validated('slug'));
 
         if (!$themeToInstall) {
             return back()->withErrors(['theme' => 'Theme not found']);
@@ -67,7 +65,7 @@ class ThemeController extends Controller
     /**
      * Activate a theme
      */
-    public function activate(Request $request, string $slug)
+    public function activate(string $slug)
     {
         // Find the theme to authorize activation; fallback to manager if not installed yet
         $themeModel = \App\Models\Theme::where('slug', $slug)->first();
@@ -110,17 +108,13 @@ class ThemeController extends Controller
     /**
      * Update theme settings
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateThemeRequest $request, string $id)
     {
         $theme = Theme::findOrFail($id);
         $this->authorize('update', $theme);
 
-        $request->validate([
-            'customizer' => 'sometimes|array',
-        ]);
-
         try {
-            $theme->update($request->only(['customizer']));
+            $theme->update($request->validated());
 
             return back()->with('success', 'Theme settings updated successfully');
         } catch (\Exception $e) {
@@ -192,19 +186,14 @@ class ThemeController extends Controller
     }
 
     /**
-     * Get theme customizer settings
+     * Clear theme caches (active theme + installed themes list)
      */
-    public function customizer(string $id)
+    public function clearCache()
     {
-        $theme = Theme::findOrFail($id);
-        $this->authorize('customize', $theme);
+        $this->authorize('viewAny', Theme::class);
+        $this->themeManager->clearCache();
 
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'themes.customizer',
-            'theme' => $theme,
-            'customizerSettings' => $this->themeManager->getCustomizerSettings(),
-            'availableMenus' => $this->themeManager->getAvailableMenus(),
-            'widgetAreas' => $this->themeManager->getWidgetAreas(),
-        ]);
+        return back()->with('success', 'Theme cache cleared');
     }
+
 }

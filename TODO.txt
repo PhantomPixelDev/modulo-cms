@@ -1,7 +1,0 @@
-#### TODO
-
-- [] Customizer for themes
-- [] Improve contact form plugin add mising features and admin panel
-- [] Test and improve Shop plugin
-- [] Cleate new Simple Template simple-template in based on modern-react but super simple!
-- [] Check whole project logic instalation domain etc 

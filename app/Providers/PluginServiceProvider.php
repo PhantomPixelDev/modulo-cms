@@ -31,7 +31,7 @@ class PluginServiceProvider extends ServiceProvider
 
         $pluginManager = $this->app->make(PluginManager::class);
         // Ensure filesystem plugins are synced into DB (idempotent)
-        $pluginManager->discover();
+        $pluginManager->syncDiscoveredPluginsCached();
         $activePlugins = $pluginManager->getActivePlugins();
 
         foreach ($activePlugins as $plugin) {

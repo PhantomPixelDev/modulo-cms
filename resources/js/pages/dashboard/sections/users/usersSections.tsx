@@ -14,6 +14,7 @@ export function getUsersSections({
   showSuccess,
   showError,
   ROUTE,
+  t,
 }: {
   users: any[];
   auth: any;
@@ -24,6 +25,7 @@ export function getUsersSections({
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   ROUTE: any;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const handleUserSubmit = async (formData: any) => {
     try {
@@ -33,27 +35,46 @@ export function getUsersSections({
       await router[method](url, formData, {
         preserveScroll: true,
         onSuccess: () => {
-          showSuccess(`User ${editUser ? 'updated' : 'created'} successfully`);
+          showSuccess(
+            t(
+              editUser
+                ? 'dashboard.users.messages.updated'
+                : 'dashboard.users.messages.created'
+            )
+          );
           router.visit(ROUTE.users.index());
         },
         onError: (errors) => {
           console.error('Validation errors:', errors);
-          showError(`Failed to ${editUser ? 'update' : 'create'} user`);
+          showError(
+            t(
+              editUser
+                ? 'dashboard.users.messages.update_failed'
+                : 'dashboard.users.messages.create_failed'
+            )
+          );
         },
       });
     } catch (error) {
       console.error('Error saving user:', error);
-      showError(`Failed to ${editUser ? 'update' : 'create'} user`);
+      showError(
+        t(
+          editUser
+            ? 'dashboard.users.messages.update_failed'
+            : 'dashboard.users.messages.create_failed'
+        )
+      );
     }
   };
 
   const renderUsersList = () => (
     <SectionWrapper
-      title="Users"
+      title={t('dashboard.users.title')}
+      description={t('dashboard.users.description')}
       actions={
         can('create users') ? (
           <Button size="sm" onClick={() => router.visit(ROUTE.users.create())}>
-            + New User
+            {t('dashboard.users.actions.new')}
           </Button>
         ) : null
       }
@@ -69,14 +90,20 @@ export function getUsersSections({
             await router.post(url, {}, {
               preserveScroll: true,
               onSuccess: () => {
-                showSuccess(`Role ${action === 'assign' ? 'assigned' : 'removed'} successfully`);
+                showSuccess(
+                  t(
+                    action === 'assign'
+                      ? 'dashboard.users.messages.role_assigned'
+                      : 'dashboard.users.messages.role_removed'
+                  )
+                );
                 router.reload({ only: ['users'] });
               },
-              onError: () => showError(`Failed to ${action} role`),
+              onError: () => showError(t('dashboard.users.messages.role_failed')),
             });
           } catch (error) {
             console.error('Error updating user role:', error);
-            showError('An error occurred while updating the role');
+            showError(t('dashboard.users.messages.role_error'));
           }
         }}
         currentUserId={auth.user?.id}
@@ -89,10 +116,11 @@ export function getUsersSections({
 
   const renderUserCreate = () => (
     <SectionWrapper
-      title="Create New User"
+      title={t('dashboard.users.create_title')}
+      description={t('dashboard.users.create_description')}
       actions={
         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.users.index())}>
-          Back to Users
+          {t('dashboard.users.actions.back')}
         </Button>
       }
     >
@@ -110,15 +138,15 @@ export function getUsersSections({
   const renderUserEdit = () => {
     if (!editUser) {
       return (
-        <SectionWrapper title="User Not Found">
-          <p>User not found. Please try again.</p>
+        <SectionWrapper title={t('dashboard.users.not_found.title')}>
+          <p>{t('dashboard.users.not_found.description')}</p>
           <Button
             variant="outline"
             size="sm"
             onClick={() => router.visit(ROUTE.users.index())}
             className="mt-4"
           >
-            Back to Users
+            {t('dashboard.users.actions.back')}
           </Button>
         </SectionWrapper>
       );
@@ -126,10 +154,11 @@ export function getUsersSections({
 
     return (
       <SectionWrapper
-        title="Edit User"
+        title={t('dashboard.users.edit_title')}
+        description={t('dashboard.users.edit_description')}
         actions={
           <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.users.index())}>
-            Back to Users
+            {t('dashboard.users.actions.back')}
           </Button>
         }
       >

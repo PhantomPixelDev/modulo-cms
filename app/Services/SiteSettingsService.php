@@ -12,9 +12,9 @@ class SiteSettingsService
     /**
      * Get a setting value
      */
-    public function get(string $key, mixed $default = null): mixed
+    public function get(string $key, mixed $default = null, ?string $locale = null): mixed
     {
-        return SiteSetting::get($key, $default);
+        return SiteSetting::get($key, $default, $locale);
     }
 
     /**
@@ -28,15 +28,15 @@ class SiteSettingsService
     /**
      * Get all settings for a group
      */
-    public function getGroup(string $group): array
+    public function getGroup(string $group, ?string $locale = null): array
     {
-        return SiteSetting::getGroup($group);
+        return SiteSetting::getGroup($group, $locale);
     }
 
     /**
      * Get all settings organized by group
      */
-    public function getAllByGroup(): array
+    public function getAllByGroup(?string $locale = null): array
     {
         $settings = SiteSetting::all();
         $grouped = [];
@@ -45,7 +45,7 @@ class SiteSettingsService
             if (!isset($grouped[$setting->group])) {
                 $grouped[$setting->group] = [];
             }
-            $grouped[$setting->group][$setting->key] = SiteSetting::get($setting->key);
+            $grouped[$setting->group][$setting->key] = SiteSetting::get($setting->key, null, $locale);
         }
 
         return $grouped;
@@ -54,18 +54,18 @@ class SiteSettingsService
     /**
      * Get settings for frontend (public, non-sensitive)
      */
-    public function getPublicSettings(): array
+    public function getPublicSettings(?string $locale = null): array
     {
         return [
-            'site_name' => $this->get('site_name', config('app.name')),
-            'site_tagline' => $this->get('site_tagline', ''),
+            'site_name' => $this->get('site_name', config('app.name'), $locale),
+            'site_tagline' => $this->get('site_tagline', '', $locale),
             'site_url' => $this->get('site_url', config('app.url')),
             'timezone' => $this->get('timezone', config('app.timezone')),
             'date_format' => $this->get('date_format', 'F j, Y'),
             'time_format' => $this->get('time_format', 'g:i a'),
             'posts_per_page' => $this->get('posts_per_page', 10),
             'maintenance_mode' => $this->isMaintenanceMode(),
-            'maintenance_message' => $this->getMaintenanceMessage(),
+            'maintenance_message' => $this->getMaintenanceMessage($locale),
             'registration_enabled' => (bool) $this->get('registration_enabled', false),
             'social' => [
                 'facebook' => $this->get('facebook_url', ''),
@@ -81,25 +81,29 @@ class SiteSettingsService
     /**
      * Update multiple settings at once
      */
-    public function updateGroup(string $group, array $settings): void
+    public function updateGroup(string $group, array $settings, ?string $locale = null): void
     {
         $defaults = SiteSetting::getDefaults();
         $groupDefaults = $defaults[$group] ?? [];
 
         foreach ($settings as $key => $value) {
             $type = $groupDefaults[$key]['type'] ?? 'string';
-            SiteSetting::set($key, $value, $group, $type);
+            if ($locale && SiteSetting::isTranslatableKey($key)) {
+                SiteSetting::setTranslation($key, $locale, $value, $group, $type);
+            } else {
+                SiteSetting::set($key, $value, $group, $type);
+            }
         }
     }
 
     /**
      * Get SEO meta tags for head
      */
-    public function getSeoMeta(): array
+    public function getSeoMeta(?string $locale = null): array
     {
         return [
-            'title_suffix' => $this->get('meta_title_suffix', ''),
-            'description' => $this->get('meta_description', ''),
+            'title_suffix' => $this->get('meta_title_suffix', '', $locale),
+            'description' => $this->get('meta_description', '', $locale),
             'google_verification' => $this->get('google_site_verification', ''),
             'bing_verification' => $this->get('bing_site_verification', ''),
         ];
@@ -127,9 +131,9 @@ class SiteSettingsService
     /**
      * Get maintenance message
      */
-    public function getMaintenanceMessage(): string
+    public function getMaintenanceMessage(?string $locale = null): string
     {
-        return $this->get('maintenance_message', 'We are currently undergoing maintenance.');
+        return $this->get('maintenance_message', 'We are currently undergoing maintenance.', $locale);
     }
 
     /**

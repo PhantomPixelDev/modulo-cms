@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Image as ImageIcon, X } from 'lucide-react';
+import { Loader2, Image as ImageIcon, X, Globe, ChevronDown } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 import SlateEditor from './SlateEditor';
 import MediaPickerDialog from '../media/MediaPickerDialog';
@@ -18,18 +19,27 @@ import { usePostForm } from './usePostForm';
 import { PostTaxonomySection } from './PostTaxonomySection';
 import { MetaDataSection } from './MetaDataSection';
 import { toDatetimeLocalStr, slugify } from './utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function PostForm({ 
   post, 
+  translation,
   postTypes = [], 
   groupedTerms = {}, 
   authors = [], 
-  parentsByType = {}, 
+  parentsByType = {},
+  locales = [],
+  currentLocale = 'en',
   canEditAuthor = false, 
   isEditing, 
   onSubmit, 
-  onCancel 
+  onCancel,
+  onLocaleChange,
 }: PostFormProps) {
+  const { t } = useTranslation();
+  
+  const currentLocaleData = locales.find(l => l.code === currentLocale);
+  const hasMultipleLocales = locales.length > 1;
   const {
     // Form state
     title,
@@ -71,29 +81,63 @@ export function PostForm({
   const [activeTab, setActiveTab] = useState('content');
   const formRef = useRef<HTMLFormElement | null>(null);
 
+  const statusOptions = useMemo(() => ([
+    { value: 'draft', label: t('common.status.draft') },
+    { value: 'published', label: t('common.status.published') },
+    { value: 'private', label: t('common.status.private') },
+  ]), [t]);
+
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-8 max-w-5xl mx-auto pb-20">
       <Card className="shadow-sm border-border overflow-hidden">
         <CardHeader className="border-b bg-muted/30 py-4 px-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <CardTitle className="text-xl font-bold">{isEditing ? 'Edit Post' : 'Create New Post'}</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Fill in the details for your content.</p>
+            <div className="flex items-center gap-3">
+              <div>
+                <CardTitle className="text-xl font-bold">{isEditing ? t('dashboard.posts.edit_post') : t('dashboard.posts.add_new')}</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">{t('dashboard.posts.form.description')}</p>
+              </div>
+              {hasMultipleLocales && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Globe className="h-4 w-4" />
+                      <span className="font-medium">{currentLocale.toUpperCase()}</span>
+                      <ChevronDown className="h-3 w-3 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {locales.map((locale) => (
+                      <DropdownMenuItem
+                        key={locale.code}
+                        onClick={() => onLocaleChange?.(locale.code)}
+                        className={currentLocale === locale.code ? 'bg-accent' : ''}
+                      >
+                        <span className="font-medium mr-2">{locale.code.toUpperCase()}</span>
+                        <span className="text-muted-foreground">{locale.native_name || locale.name}</span>
+                        {locale.is_default && (
+                          <Badge variant="secondary" className="ml-2 text-xs">Default</Badge>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
             <div className="flex items-center space-x-3 w-full sm:w-auto">
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-full sm:w-[140px] h-9">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('dashboard.posts.post_status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="private">Private</SelectItem>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Button type="submit" disabled={isSubmitting} className="h-9 px-6">
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? 'Update' : 'Create'}
+                {isEditing ? t('dashboard.posts.form.buttons.update') : t('dashboard.posts.form.buttons.publish')}
               </Button>
             </div>
           </div>
@@ -103,9 +147,9 @@ export function PostForm({
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="px-6 border-b bg-muted/10">
               <TabsList className="h-12 bg-transparent gap-6 p-0">
-                <TabsTrigger value="content" className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 text-xs font-semibold uppercase tracking-wider">Content</TabsTrigger>
-                <TabsTrigger value="metadata" className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 text-xs font-semibold uppercase tracking-wider">Metadata</TabsTrigger>
-                <TabsTrigger value="advanced" className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 text-xs font-semibold uppercase tracking-wider">Advanced</TabsTrigger>
+                <TabsTrigger value="content" className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 text-xs font-semibold uppercase tracking-wider">{t('dashboard.posts.form.tabs.content')}</TabsTrigger>
+                <TabsTrigger value="metadata" className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 text-xs font-semibold uppercase tracking-wider">{t('dashboard.posts.form.tabs.metadata')}</TabsTrigger>
+                <TabsTrigger value="advanced" className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 text-xs font-semibold uppercase tracking-wider">{t('dashboard.posts.form.tabs.advanced')}</TabsTrigger>
               </TabsList>
             </div>
 
@@ -113,26 +157,26 @@ export function PostForm({
               <TabsContent value="content" className="mt-0 space-y-8 focus-visible:outline-none">
                 <div className="grid gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-sm font-bold">Title</Label>
+                    <Label htmlFor="title" className="text-sm font-bold">{t('dashboard.posts.post_title')}</Label>
                     <Input
                       id="title"
                       className="h-11 text-base"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Enter post title"
+                      placeholder={t('dashboard.posts.form.placeholders.title')}
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="slug" className="text-sm font-bold">URL Slug</Label>
+                    <Label htmlFor="slug" className="text-sm font-bold">{t('dashboard.posts.post_slug')}</Label>
                     <div className="flex gap-2">
                       <Input
                         id="slug"
                         value={slug}
                         onChange={(e) => setSlug(e.target.value)}
                         onBlur={() => !slug && setSlug(slugify(title))}
-                        placeholder="post-url-slug"
+                        placeholder={t('dashboard.posts.form.placeholders.slug')}
                         className="font-mono text-xs"
                       />
                       <Button
@@ -142,19 +186,19 @@ export function PostForm({
                         onClick={() => setSlug(slugify(title))}
                         className="shrink-0"
                       >
-                        Auto
+                        {t('dashboard.posts.form.buttons.auto_slug')}
                       </Button>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-sm font-bold">Featured Image</Label>
+                    <Label className="text-sm font-bold">{t('dashboard.posts.featured_image')}</Label>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border bg-muted/20 border-dashed">
                       {featuredImage ? (
                         <div className="relative group">
                           <img
                             src={featuredImage.thumb || featuredImage.url}
-                            alt={featuredImage.name || featuredImage.file_name || 'Featured image'}
+                            alt={featuredImage.name || featuredImage.file_name || t('dashboard.posts.featured_image')}
                             className="h-20 w-20 rounded-md object-cover ring-1 ring-border"
                           />
                           <Button
@@ -179,29 +223,29 @@ export function PostForm({
                           size="sm"
                           onClick={() => setShowMediaPicker(true)}
                         >
-                          {featuredImage ? 'Change image' : 'Select image'}
+                          {featuredImage ? t('dashboard.posts.form.featured_image.change') : t('dashboard.posts.form.featured_image.select')}
                         </Button>
                         <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                          {featuredImage ? featuredImage.name || featuredImage.file_name : 'No image selected'}
+                          {featuredImage ? featuredImage.name || featuredImage.file_name : t('dashboard.posts.form.featured_image.none')}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="excerpt" className="text-sm font-bold">Excerpt</Label>
+                    <Label htmlFor="excerpt" className="text-sm font-bold">{t('dashboard.posts.post_excerpt')}</Label>
                     <Textarea
                       id="excerpt"
                       value={excerpt}
                       onChange={(e) => setExcerpt(e.target.value)}
-                      placeholder="Brief summary for listings..."
+                      placeholder={t('dashboard.posts.form.placeholders.excerpt')}
                       rows={3}
                       className="resize-none"
                     />
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <Label className="text-sm font-bold">Content</Label>
+                    <Label className="text-sm font-bold">{t('dashboard.posts.post_content')}</Label>
                     <div className="rounded-lg border shadow-xs overflow-hidden bg-input-bg">
                       <SlateEditor initialHTML={content} onHTMLChange={setContent} />
                     </div>
@@ -219,12 +263,12 @@ export function PostForm({
                 <div className="space-y-6 pt-6 border-t">
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-1 bg-primary rounded-full" />
-                    <h3 className="text-lg font-bold">Search Engine Optimization</h3>
+                    <h3 className="text-lg font-bold">{t('dashboard.posts.form.seo.title')}</h3>
                   </div>
                   
                   <div className="grid gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="metaTitle" className="text-sm font-bold">SEO Title</Label>
+                      <Label htmlFor="metaTitle" className="text-sm font-bold">{t('dashboard.posts.form.fields.seo_title')}</Label>
                       <Input
                         id="metaTitle"
                         value={metaData.meta_title || ''}
@@ -234,13 +278,13 @@ export function PostForm({
                             meta_title: e.target.value,
                           })
                         }
-                        placeholder="Leave blank to use post title"
+                        placeholder={t('dashboard.posts.form.placeholders.seo_title')}
                       />
-                      <p className="text-[11px] text-muted-foreground">Appears in search results and browser tabs.</p>
+                      <p className="text-[11px] text-muted-foreground">{t('dashboard.posts.form.seo.meta_hint')}</p>
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="metaDescription" className="text-sm font-bold">SEO Description</Label>
+                      <Label htmlFor="metaDescription" className="text-sm font-bold">{t('dashboard.posts.form.fields.seo_description')}</Label>
                       <Textarea
                         id="metaDescription"
                         value={metaData.meta_description || ''}
@@ -250,11 +294,11 @@ export function PostForm({
                             meta_description: e.target.value,
                           })
                         }
-                        placeholder="Leave blank to use excerpt"
+                        placeholder={t('dashboard.posts.form.placeholders.seo_description')}
                         rows={3}
                         className="resize-none"
                       />
-                      <p className="text-[11px] text-muted-foreground">Recommended length: 150-160 characters.</p>
+                      <p className="text-[11px] text-muted-foreground">{t('dashboard.posts.form.seo.description_hint')}</p>
                     </div>
                   </div>
                 </div>
@@ -264,7 +308,7 @@ export function PostForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="postType" className="text-sm font-bold">Content Type</Label>
+                      <Label htmlFor="postType" className="text-sm font-bold">{t('dashboard.posts.form.fields.content_type')}</Label>
                       <Select
                         value={postType}
                         onValueChange={(value) => {
@@ -273,7 +317,7 @@ export function PostForm({
                         }}
                       >
                         <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Select type" />
+                          <SelectValue placeholder={t('dashboard.posts.form.select_type_placeholder')} />
                         </SelectTrigger>
                         <SelectContent>
                           {postTypes.map((type) => (
@@ -287,13 +331,13 @@ export function PostForm({
 
                     {availableParents.length > 0 && (
                       <div className="space-y-2">
-                        <Label htmlFor="parent" className="text-sm font-bold">Parent</Label>
+                        <Label htmlFor="parent" className="text-sm font-bold">{t('dashboard.posts.form.fields.parent')}</Label>
                         <Select value={parentId} onValueChange={setParentId}>
                           <SelectTrigger className="h-10">
-                            <SelectValue placeholder="None" />
+                            <SelectValue placeholder={t('dashboard.posts.form.select_parent_none')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">None (Top Level)</SelectItem>
+                            <SelectItem value="none">{t('dashboard.posts.form.select_parent_none')}</SelectItem>
                             {availableParents.map((parent) => (
                               <SelectItem key={parent.id} value={String(parent.id)}>
                                 {parent.title}
@@ -306,10 +350,10 @@ export function PostForm({
 
                     {canEditAuthor && authors.length > 0 && (
                       <div className="space-y-2">
-                        <Label htmlFor="author" className="text-sm font-bold">Author</Label>
+                        <Label htmlFor="author" className="text-sm font-bold">{t('dashboard.posts.form.fields.author')}</Label>
                         <Select value={authorId} onValueChange={setAuthorId}>
                           <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Select author" />
+                            <SelectValue placeholder={t('dashboard.posts.form.author_placeholder')} />
                           </SelectTrigger>
                           <SelectContent>
                             {authors.map((author) => (
@@ -325,7 +369,7 @@ export function PostForm({
 
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="publishedAt" className="text-sm font-bold">Publishing Date</Label>
+                      <Label htmlFor="publishedAt" className="text-sm font-bold">{t('dashboard.posts.form.fields.publishing_date')}</Label>
                       <Input
                         id="publishedAt"
                         type="datetime-local"
@@ -333,11 +377,11 @@ export function PostForm({
                         value={toDatetimeLocalStr(publishedAt || new Date().toISOString())}
                         onChange={(e) => setPublishedAt(e.target.value)}
                       />
-                      <p className="text-[11px] text-muted-foreground">Set a future date to schedule the post.</p>
+                      <p className="text-[11px] text-muted-foreground">{t('dashboard.posts.form.seo.schedule_hint')}</p>
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-sm font-bold">Custom Fields</Label>
+                      <Label className="text-sm font-bold">{t('dashboard.posts.form.seo.custom_fields')}</Label>
                       <div className="rounded-lg border bg-muted/5 p-4">
                         <MetaDataSection metaData={metaData} onMetaDataChange={handleMetaDataChange} />
                       </div>
@@ -352,11 +396,11 @@ export function PostForm({
 
       <div className="fixed bottom-0 left-0 right-0 sm:left-64 bg-background/80 backdrop-blur-md border-t p-4 z-40">
         <div className="max-w-5xl mx-auto flex justify-between items-center px-4">
-          <Button variant="ghost" onClick={onCancel} type="button">Cancel</Button>
+          <Button variant="ghost" onClick={onCancel} type="button">{t('dashboard.posts.form.buttons.cancel')}</Button>
           <div className="flex gap-3">
-             <Button variant="outline" onClick={() => { setStatus('draft'); formRef.current?.requestSubmit(); }} disabled={isSubmitting}>Save Draft</Button>
+             <Button variant="outline" onClick={() => { setStatus('draft'); formRef.current?.requestSubmit(); }} disabled={isSubmitting}>{t('dashboard.posts.form.buttons.save_draft')}</Button>
              <Button type="submit" disabled={isSubmitting}>
-               {isSubmitting ? 'Saving...' : (isEditing ? 'Update Post' : 'Publish Post')}
+               {isSubmitting ? t('dashboard.posts.form.buttons.saving') : (isEditing ? t('dashboard.posts.form.buttons.update') : t('dashboard.posts.form.buttons.publish'))}
              </Button>
           </div>
         </div>

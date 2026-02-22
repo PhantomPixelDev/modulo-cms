@@ -6,6 +6,7 @@ use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\PostController;
 use App\Http\Controllers\Frontend\TaxonomyController;
 use App\Http\Controllers\Frontend\SearchController;
+use App\Http\Controllers\Frontend\CommentController;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -78,25 +79,53 @@ require __DIR__.'/admin.php';
 // Explicit route for /posts FIRST (before dynamic routes)
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 
-// Dynamic post type routes are now registered in DynamicRouteServiceProvider
-// This allows route caching and better performance
-
 // Handle posts with 'posts' prefix (e.g., /posts/getting-started-guide)
 Route::get('/posts/{slug}', [PostController::class, 'show'])
     ->where('slug', '[a-zA-Z0-9\-_]+')
     ->name('post.show');
+
+// Dynamic post type routes are now registered in DynamicRouteServiceProvider
+// This allows route caching and better performance
+
+Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
+    ->middleware('throttle:15,1')
+    ->name('posts.comments.store');
 
 // Dynamic routes for all post types (like /news/some-news)
 // Reserved slugs are defined in config/routes.php for easy maintenance
 $reservedPrefixes = implode('|', array_map('preg_quote', config('routes.reserved_post_type_prefixes', [])));
 $reservedSlugs = implode('|', array_map('preg_quote', config('routes.reserved_slugs', [])));
 
+// Locale-prefixed routes (e.g., /es/posts/my-post, /es/about). Placed before catch-all routes.
+Route::prefix('{locale}')
+    ->where(['locale' => '[a-z]{2}'])
+    ->middleware(['locale.url'])
+    ->group(function () use ($reservedPrefixes, $reservedSlugs) {
+        Route::get('/', [HomeController::class, '__invoke'])->name('locale.home');
+
+        Route::get('/posts', [PostController::class, 'index'])->name('locale.posts.index');
+
+        Route::get('/posts/{slug}', [PostController::class, 'show'])
+            ->where('slug', '[a-zA-Z0-9\-_]+')
+            ->name('locale.post.show');
+
+        Route::get('/{postTypeSlug}/{slug}', [PostController::class, 'showContent'])
+            ->where('postTypeSlug', "^(?!{$reservedPrefixes}).+$")
+            ->where('slug', '[a-zA-Z0-9\-_]+')
+            ->name('locale.content.show');
+
+        Route::get('/{slug}', [PostController::class, 'showContent'])
+            ->where('slug', "^(?!{$reservedSlugs}).+$")
+            ->name('locale.page.show');
+    });
+
+// Catch-all non-locale routes must come last
 Route::get('/{postTypeSlug}/{slug}', [PostController::class, 'showContent'])
     ->where('postTypeSlug', "^(?!{$reservedPrefixes}).+$")
     ->where('slug', '[a-zA-Z0-9\-_]+')
     ->name('content.show');
 
-// Handle top-level pages (like /about) - this is now after post types
+// Handle top-level pages (like /about). Prevent collisions with two-letter locale codes.
 Route::get('/{slug}', [PostController::class, 'showContent'])
-    ->where('slug', "^(?!{$reservedSlugs}).+$")
+    ->where('slug', "^(?!{$reservedSlugs})(?![a-z]{2}$)[a-zA-Z0-9\-_]+$")
     ->name('page.show');

@@ -50,12 +50,6 @@ class TemplateController extends Controller
                 'per_page' => $templates->perPage(),
                 'total' => $templates->total(),
             ],
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
         ]);
     }
 
@@ -77,12 +71,6 @@ class TemplateController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'templates.create',
             'templateTypes' => $templateTypes,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
         ]);
     }
 
@@ -151,12 +139,6 @@ class TemplateController extends Controller
                     'name' => $template->creator->name,
                 ] : null,
             ],
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
         ]);
     }
 
@@ -189,12 +171,6 @@ class TemplateController extends Controller
                 'is_active' => $template->is_active,
             ],
             'templateTypes' => $templateTypes,
-            'adminStats' => [
-                'users' => \App\Models\User::count(),
-                'roles' => \Spatie\Permission\Models\Role::count(),
-                'posts' => \App\Models\Post::count(),
-                'postTypes' => \App\Models\PostType::count(),
-            ],
         ]);
     }
 
