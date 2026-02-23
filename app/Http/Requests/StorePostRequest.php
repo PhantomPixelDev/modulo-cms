@@ -36,7 +36,6 @@ class StorePostRequest extends FormRequest
                 'max:255',
                 'alpha_dash:ascii',
                 Rule::unique('posts', 'slug')
-                    ->where('post_type_id', $postTypeId)
             ],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],

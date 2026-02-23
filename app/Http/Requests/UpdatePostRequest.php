@@ -31,7 +31,6 @@ class UpdatePostRequest extends FormRequest
                 'max:255',
                 'alpha_dash:ascii',
                 Rule::unique('posts', 'slug')
-                    ->where('post_type_id', $postTypeId)
                     ->ignore($post?->id),
             ],
             'content' => ['required', 'string'],

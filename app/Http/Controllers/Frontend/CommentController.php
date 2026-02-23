@@ -42,8 +42,8 @@ class CommentController extends Controller
         $comment->post_id = $post->id;
         $comment->parent_id = $data['parent_id'] ?? null;
         $comment->content = $data['content'];
-        $comment->status = 'approved';
-        $comment->approved_at = now();
+        $comment->status = 'pending';
+        $comment->approved_at = null;
         $comment->ip_address = $request->ip();
         $comment->user_agent = $request->userAgent();
 
@@ -59,7 +59,7 @@ class CommentController extends Controller
 
         $comment->save();
 
-        return back()->with('success', 'Thanks! Your comment has been posted.');
+        return back()->with('success', 'Thanks! Your comment is awaiting moderation.');
     }
 
     protected function commentsEnabled(Post $post): bool

@@ -31,7 +31,13 @@ class PostObserver
         $this->postService->clearPostCache($post->slug);
         $this->adminStats->forget();
 
-        if ($post->status === 'published') {
+        $publishedNow = $post->status === 'published';
+        $becamePublished = $post->wasRecentlyCreated
+            ? $publishedNow
+            : ($post->wasChanged('status') && $post->getOriginal('status') !== 'published' && $publishedNow);
+        $urlRelevantChange = $post->wasChanged(['slug', 'post_type_id', 'published_at']);
+
+        if ($publishedNow && ($becamePublished || $urlRelevantChange)) {
             $this->pingingService->ping($post);
         }
     }

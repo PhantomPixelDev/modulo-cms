@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Locale;
 use App\Models\Post;
 use App\Models\PostType;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,11 +19,13 @@ class PostService
     /**
      * Get a post by slug with all necessary relationships
      */
-    public function getPostBySlug(string $slug, string $postType = null): ?Post
+    public function getPostBySlug(string $slug, string $postType = null, ?string $locale = null): ?Post
     {
-        $cacheKey = "post:{$slug}" . ($postType ? ":{$postType}" : '');
+        $resolvedLocale = $locale ?: app()->getLocale();
+        $defaultLocale = Locale::getDefault()?->code ?? config('app.fallback_locale', 'en');
+        $cacheKey = "post:{$slug}" . ($postType ? ":{$postType}" : '') . ":{$resolvedLocale}";
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($slug, $postType) {
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($slug, $postType, $resolvedLocale, $defaultLocale) {
             $query = Post::with([
                 'author',
                 'postType',
@@ -41,7 +44,18 @@ class PostService
                 });
             }
 
-            return $query->where('slug', $slug)
+            $query->where(function ($q) use ($slug, $resolvedLocale, $defaultLocale) {
+                $q->where('slug', $slug);
+
+                if ($resolvedLocale !== $defaultLocale) {
+                    $q->orWhereHas('translations', function ($tq) use ($slug, $resolvedLocale) {
+                        $tq->where('locale', $resolvedLocale)
+                            ->where('slug', $slug);
+                    });
+                }
+            });
+
+            return $query
                 ->published()
                 ->first();
         });
@@ -52,8 +66,19 @@ class PostService
      */
     public function clearPostCache(string $slug, string $postType = null): void
     {
-        $cacheKey = "post:{$slug}" . ($postType ? ":{$postType}" : '');
-        Cache::forget($cacheKey);
+        $locales = Locale::query()->pluck('code')->all();
+        if (empty($locales)) {
+            $locales = [Locale::getDefault()?->code ?? config('app.fallback_locale', 'en')];
+        }
+
+        foreach ($locales as $locale) {
+            $cacheKey = "post:{$slug}" . ($postType ? ":{$postType}" : '') . ":{$locale}";
+            Cache::forget($cacheKey);
+            Cache::forget("post:{$slug}:{$locale}");
+        }
+
+        // Backward compatibility with previous cache key format.
+        Cache::forget("post:{$slug}" . ($postType ? ":{$postType}" : ''));
         Cache::forget("post:{$slug}");
     }
 
@@ -84,7 +109,7 @@ class PostService
         }
 
         // Only published posts for non-authenticated users
-        if (!auth()->check()) {
+        if (!request()->user()) {
             $query->published();
         }
 

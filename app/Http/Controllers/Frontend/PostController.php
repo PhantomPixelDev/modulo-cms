@@ -117,7 +117,7 @@ class PostController extends BaseFrontendController
             return $resp;
         }
 
-        $content = $this->postService->getPostBySlug($slug, 'post');
+        $content = $this->postService->getPostBySlug($slug, 'post', app()->getLocale());
         
         if (!$content) {
             abort(404, 'Post not found');
@@ -140,7 +140,7 @@ class PostController extends BaseFrontendController
         }
         
         if (!$postTypeSlug) {
-            $content = $this->postService->getPostBySlug($slug, 'page');
+            $content = $this->postService->getPostBySlug($slug, 'page', app()->getLocale());
             
             if (!$content) {
                 abort(404, 'Page not found');
@@ -155,7 +155,7 @@ class PostController extends BaseFrontendController
         }
         
         $postType = PostType::where('route_prefix', $postTypeSlug)->firstOrFail();
-        $content = $this->postService->getPostBySlug($slug);
+        $content = $this->postService->getPostBySlug($slug, $postType->name, app()->getLocale());
         
         if (!$content || $content->post_type_id !== $postType->id) {
             abort(404);

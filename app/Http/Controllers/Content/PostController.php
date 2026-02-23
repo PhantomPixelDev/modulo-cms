@@ -14,6 +14,7 @@ use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class PostController extends Controller
 {
@@ -163,6 +164,7 @@ class PostController extends Controller
         $defaultStatus = \App\Models\SiteSetting::get('default_post_status', 'draft');
         $defaultTypeName = \App\Models\SiteSetting::get('default_post_type', 'post');
         $defaultType = $postTypes->where('name', $defaultTypeName)->first() ?: $postTypes->first();
+        $currentUser = $request->user();
 
         // Return empty post data for the create form
         $postData = [
@@ -186,8 +188,8 @@ class PostController extends Controller
                 'label' => $defaultType->label,
             ] : null,
             'author' => [
-                'id' => auth()->id(),
-                'name' => auth()->user()->name,
+                'id' => $currentUser?->id,
+                'name' => $currentUser?->name,
             ],
             'taxonomy_terms' => [],
             'selected_terms' => [],
@@ -225,28 +227,32 @@ class PostController extends Controller
             $publishedAt = $request->status === 'published' ? now() : null;
         }
 
-        $post = Post::create([
-            'post_type_id' => $request->post_type_id,
-            'author_id' => $request->author_id ?: auth()->id(),
-            'title' => $request->title,
-            // Use provided slug if present; otherwise derive from title
-            'slug' => Str::slug($request->slug ?: $request->title),
-            'excerpt' => $request->excerpt,
-            'content' => $request->content,
-            'featured_image' => $request->featured_image,
-            'status' => $request->status,
-            'published_at' => $publishedAt,
-            'meta_title' => $request->meta_title,
-            'meta_description' => $request->meta_description,
-            'parent_id' => $request->parent_id,
-            'menu_order' => $request->menu_order ?? 0,
-            'meta_data' => $request->meta_data ?? [],
-        ]);
+        DB::transaction(function () use ($request, $publishedAt) {
+            $authorId = $request->author_id ?: $request->user()?->id;
 
-        // Attach taxonomy terms
-        if ($request->taxonomy_terms) {
-            $post->taxonomyTerms()->attach($request->taxonomy_terms);
-        }
+            $post = Post::create([
+                'post_type_id' => $request->post_type_id,
+                'author_id' => $authorId,
+                'title' => $request->title,
+                // Use provided slug if present; otherwise derive from title
+                'slug' => Str::slug($request->slug ?: $request->title),
+                'excerpt' => $request->excerpt,
+                'content' => $request->content,
+                'featured_image' => $request->featured_image,
+                'status' => $request->status,
+                'published_at' => $publishedAt,
+                'meta_title' => $request->meta_title,
+                'meta_description' => $request->meta_description,
+                'parent_id' => $request->parent_id,
+                'menu_order' => $request->menu_order ?? 0,
+                'meta_data' => $request->meta_data ?? [],
+            ]);
+
+            // Attach taxonomy terms
+            if ($request->taxonomy_terms) {
+                $post->taxonomyTerms()->attach($request->taxonomy_terms);
+            }
+        });
 
         return redirect()->route('dashboard.admin.posts.index')->with('success', 'Post created successfully.');
     }
@@ -423,20 +429,22 @@ class PostController extends Controller
             ]);
         }
 
-        $post->update($baseUpdate);
+        DB::transaction(function () use ($post, $baseUpdate, $request, $locale) {
+            $post->update($baseUpdate);
 
-        // Sync taxonomy terms
-        $post->taxonomyTerms()->sync($request->taxonomy_terms ?? []);
+            // Sync taxonomy terms
+            $post->taxonomyTerms()->sync($request->taxonomy_terms ?? []);
 
-        // Update translation data for the selected locale
-        $post->setTranslation($locale, [
-            'title' => $request->title,
-            'slug' => Str::slug($request->slug ?: $request->title),
-            'excerpt' => $request->excerpt,
-            'content' => $request->content,
-            'seo_title' => $request->meta_title,
-            'seo_description' => $request->meta_description,
-        ]);
+            // Update translation data for the selected locale
+            $post->setTranslation($locale, [
+                'title' => $request->title,
+                'slug' => Str::slug($request->slug ?: $request->title),
+                'excerpt' => $request->excerpt,
+                'content' => $request->content,
+                'seo_title' => $request->meta_title,
+                'seo_description' => $request->meta_description,
+            ]);
+        });
 
         return redirect()->route('dashboard.admin.posts.index')->with('success', 'Post updated successfully.');
     }
