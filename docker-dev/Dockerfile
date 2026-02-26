@@ -6,11 +6,11 @@ WORKDIR /var/www/html
 RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      bash git unzip curl libpq-dev libzip-dev postgresql-client \
+      bash git unzip curl libpq-dev libzip-dev libsqlite3-dev postgresql-client \
       libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev; \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
     docker-php-ext-install -j"$(nproc)" \
-      gd pdo pdo_mysql pgsql pdo_pgsql opcache exif bcmath zip; \
+      gd pdo pdo_mysql pgsql pdo_pgsql pdo_sqlite opcache exif bcmath zip; \
     rm -rf /var/lib/apt/lists/*; \
     sed -ri \
       -e 's#^listen\s*=\s*.*#listen = 0.0.0.0:9000#' \

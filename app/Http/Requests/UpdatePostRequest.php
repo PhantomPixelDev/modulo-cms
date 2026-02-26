@@ -50,7 +50,7 @@ class UpdatePostRequest extends FormRequest
 
         if ($postType) {
             if ($postType->has_featured_image) {
-                $rules['featured_image'] = ['required', 'string', 'max:255'];
+                $rules['featured_image'] = ['nullable', 'string', 'max:255'];
             }
 
             if ($postType->has_excerpt) {

@@ -12,7 +12,7 @@ cd modulo-cms
 ### Development
 
 ```bash
-cp .env.example .env.dev
+cp .env.example .env
 ./modulo.sh up dev
 ```
 
@@ -24,12 +24,21 @@ Open:
 ### Production (local containerized)
 
 ```bash
-cp .env.example .env.prod
+cp .env.example .env.production
+# set APP_KEY in .env.production before first start
 ./modulo.sh up prod
 ```
 
 Open:
 - App: http://localhost:8080
+
+## Documentation
+
+- Docs hub: [`docs/README.md`](docs/README.md)
+- Structured nav: [`docs/SUMMARY.md`](docs/SUMMARY.md)
+- Architecture: [`docs/00-overview/system-architecture.md`](docs/00-overview/system-architecture.md)
+- Plugin development: [`docs/03-plugins/plugin-development-guide.md`](docs/03-plugins/plugin-development-guide.md)
+- Operations runbooks: [`docs/05-operations/`](docs/05-operations/)
 
 ---
 
@@ -55,11 +64,15 @@ Open:
 ## Docker folders
 
 - `docker-dev/` → Development stack (nginx + php-fpm + postgres + vite + mailpit)
-- `docker-prod/` → Production stack (nginx + php-fpm + postgres + redis)
+- `docker-prod/` → Production stack (nginx + php-fpm + postgres + redis + queue-worker + scheduler)
 
-Each stack reads its own env file:
-- Dev: `.env.dev`
-- Prod: `.env.prod`
+Env files:
+- Dev: `.env`
+- Prod: `.env.production`
+
+Production endpoints:
+- Liveness: `/health`
+- Readiness: `/ready`
 
 ---
 

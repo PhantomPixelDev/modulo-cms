@@ -23,7 +23,12 @@ class SiteSettingsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (!Schema::hasTable('site_settings')) {
+        try {
+            if (!Schema::hasTable('site_settings')) {
+                return;
+            }
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Table check failed (e.g. missing driver during tests)
             return;
         }
 

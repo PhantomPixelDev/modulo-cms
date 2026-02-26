@@ -1,0 +1,35 @@
+# Docs Summary
+
+- Overview
+  - [What is Modulo CMS](./00-overview/what-is-modulo.md)
+  - [System Architecture](./00-overview/system-architecture.md)
+  - [Glossary](./00-overview/glossary.md)
+- Getting Started
+  - [Local Development](./01-getting-started/local-development.md)
+  - [Production (Local Containerized)](./01-getting-started/production-local.md)
+  - [Configuration and Environment](./01-getting-started/configuration-and-env.md)
+- Core CMS
+  - [Content Model](./02-core-cms/content-model.md)
+  - [Taxonomies and Locales](./02-core-cms/taxonomies-and-locales.md)
+  - [Media and Comments](./02-core-cms/media-and-comments.md)
+  - [Themes](./02-core-cms/themes.md)
+- Plugins
+  - [Plugin Manifest Spec](./03-plugins/plugin-manifest-spec.md)
+  - [Plugin Lifecycle](./03-plugins/plugin-lifecycle.md)
+  - [Plugin Development Guide](./03-plugins/plugin-development-guide.md)
+  - [ModuloShop Plugin Guide](./03-plugins/moduloshop-plugin-guide.md)
+- API
+  - [Public Routes](./04-api/public-routes.md)
+  - [Menu API](./04-api/menu-api.md)
+  - [Auth and Rate Limits](./04-api/auth-and-rate-limits.md)
+- Operations
+  - [Deployment Checklist](./05-operations/deployment-checklist.md)
+  - [Healthchecks and Observability](./05-operations/healthchecks-and-observability.md)
+  - [Queues and Scheduler](./05-operations/queues-and-scheduler.md)
+  - [Backup and Restore](./05-operations/backup-and-restore.md)
+  - [Incident Runbook](./05-operations/incident-runbook.md)
+- Contributing
+  - [Testing Strategy](./06-contributing/testing-strategy.md)
+  - [Database Changes](./06-contributing/database-changes.md)
+  - [Coding Standards](./06-contributing/coding-standards.md)
+  - [Release Process](./06-contributing/release-process.md)

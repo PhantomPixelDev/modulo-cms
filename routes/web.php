@@ -7,11 +7,14 @@ use App\Http\Controllers\Frontend\PostController;
 use App\Http\Controllers\Frontend\TaxonomyController;
 use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\Frontend\CommentController;
+use App\Http\Controllers\HealthController;
+use App\Http\Controllers\ReadinessController;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
 // Health check endpoint for container orchestration (no closure to support route:cache)
-Route::get('/health', \App\Http\Controllers\HealthController::class);
+Route::get('/health', HealthController::class);
+Route::get('/ready', ReadinessController::class);
 
 Route::get('/', HomeController::class)->name('home');
 

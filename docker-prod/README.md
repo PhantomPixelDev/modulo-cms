@@ -14,6 +14,8 @@ App runs on **http://localhost:8080** by default.
 - php-fpm (Laravel app)
 - PostgreSQL
 - Redis
+- queue-worker (`queue:work`)
+- scheduler (`schedule:work`)
 
 ## Useful commands
 
@@ -27,5 +29,9 @@ App runs on **http://localhost:8080** by default.
 
 ## Notes
 
-- Uses `.env.prod` via `env_file`.
+- Uses `.env.production` via `env_file`.
+- `APP_KEY` is required in production and startup will fail if missing.
 - Set `RUN_MIGRATIONS=true` only when you intentionally want startup migrations.
+- Health endpoints:
+  - Liveness: `/health`
+  - Readiness: `/ready`

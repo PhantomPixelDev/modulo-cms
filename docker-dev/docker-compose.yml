@@ -6,9 +6,8 @@ services:
       dockerfile: docker-dev/Dockerfile
       target: app
     env_file:
-      - ../.env.dev
+      - ../.env
     environment:
-      LARAVEL_ENV_FILE: /var/www/html/.env.dev
       FORCE_COMPOSER_INSTALL: "false"
       RUN_MIGRATIONS: "false"
       RUN_SEEDERS: "false"
@@ -67,7 +66,7 @@ services:
       dockerfile: docker-dev/Dockerfile
       target: vite
     env_file:
-      - ../.env.dev
+      - ../.env
     volumes:
       - ../:/app:cached
       - vite_node_modules:/app/node_modules
@@ -85,7 +84,7 @@ services:
     container_name: modulo-dev-db
     image: postgres:16-alpine
     env_file:
-      - ../.env.dev
+      - ../.env
     environment:
       POSTGRES_DB: ${DB_DATABASE:-modulo}
       POSTGRES_USER: ${DB_USERNAME:-modulo}

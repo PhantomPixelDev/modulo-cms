@@ -7,6 +7,13 @@ cd docker-dev
 docker compose up -d --build
 ```
 
+Uses the root `.env` for configuration (copy from `.env.example` if missing).
+
+```bash
+# from repo root
+cp .env.example .env
+```
+
 Then open **http://localhost:8000**
 
 ## What's Running

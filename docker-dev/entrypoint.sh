@@ -84,28 +84,8 @@ ensure_default_theme() {
 }
 
 prepare_env_file() {
-  # Allow containers to specify a custom env file (e.g. .env.dev, .env.prod)
-  ENV_FILE_PATH="${LARAVEL_ENV_FILE:-}"
-
-  if [ -n "$ENV_FILE_PATH" ] && [ -f "$ENV_FILE_PATH" ]; then
-    if [ -L .env ] || [ -f .env ]; then
-      CURRENT_TARGET=$(readlink .env 2>/dev/null || true)
-      if [ "${CURRENT_TARGET:-}" != "$ENV_FILE_PATH" ]; then
-        rm -f .env || true
-      fi
-    fi
-
-    ln -sf "$ENV_FILE_PATH" .env 2>/dev/null || cp "$ENV_FILE_PATH" .env || true
-    return
-  fi
-
-  if [ -f .env ]; then
-    return
-  fi
-
-  if [ -f .env.docker-dev ]; then
-    ln -sf .env.docker-dev .env 2>/dev/null || cp .env.docker-dev .env || true
-  elif [ -f .env.example ]; then
+  # Prefer existing .env; otherwise bootstrap from example.
+  if [ ! -f .env ] && [ -f .env.example ]; then
     cp .env.example .env || true
   fi
 }

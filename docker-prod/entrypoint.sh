@@ -4,26 +4,20 @@ set -e
 cd /var/www/html
 
 prepare_env_file() {
-  ENV_FILE_PATH="${LARAVEL_ENV_FILE:-}"
-
-  if [ -n "$ENV_FILE_PATH" ] && [ -f "$ENV_FILE_PATH" ]; then
-    ln -sf "$ENV_FILE_PATH" .env 2>/dev/null || cp "$ENV_FILE_PATH" .env || true
-    return
-  fi
-
-  if [ ! -f .env ] && [ -f .env.prod ]; then
-    ln -sf .env.prod .env 2>/dev/null || cp .env.prod .env || true
+  if [ ! -f .env ] && [ -f .env.production ]; then
+    ln -sf .env.production .env 2>/dev/null || cp .env.production .env || true
   fi
 }
 
-ensure_app_key() {
-  if [ ! -f .env ]; then
-    return
+ensure_required_secrets() {
+  APP_KEY_VALUE="${APP_KEY:-}"
+  if [ -z "$APP_KEY_VALUE" ] && [ -f .env ]; then
+    APP_KEY_VALUE=$(grep '^APP_KEY=' .env 2>/dev/null | head -n1 | cut -d '=' -f2-)
   fi
 
-  CURRENT_KEY=$(grep '^APP_KEY=' .env 2>/dev/null | head -n1 | cut -d '=' -f2-)
-  if [ -z "$CURRENT_KEY" ]; then
-    php artisan key:generate --force || true
+  if [ -z "$APP_KEY_VALUE" ]; then
+    echo "ERROR: APP_KEY is required in production. Set it in .env.production or environment variables." >&2
+    exit 1
   fi
 }
 
@@ -52,7 +46,7 @@ wait_for_db() {
 
 prepare_env_file
 fix_permissions
-ensure_app_key
+ensure_required_secrets
 wait_for_db
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
