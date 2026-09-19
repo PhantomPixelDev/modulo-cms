@@ -1,125 +1,121 @@
 {
-  "name": "Modern React",
-  "slug": "modern-react",
-  "version": "1.0.0",
-  "description": "Modern React-based theme using Inertia.js with TypeScript components and Tailwind CSS.",
-  "author": "Modulo CMS",
-  "author_url": "https://github.com/PhantomPixelDev/modulo-cms",
-  "tags": ["react", "modern", "typescript", "inertia"],
-  "supports": {
-    "post_thumbnails": true,
-    "menus": true,
-    "widgets": true,
-    "custom_logo": true,
-    "responsive": true
-  },
-  "templates": {
-    "layout": {
-      "component": "components/Layout.tsx"
+    "name": "Modern React",
+    "slug": "modern-react",
+    "version": "1.0.0",
+    "description": "Modern React-based theme using Inertia.js with TypeScript components and Tailwind CSS.",
+    "author": "Modulo CMS",
+    "author_url": "https://github.com/PhantomPixelDev/modulo-cms",
+    "tags": ["react", "modern", "typescript", "inertia"],
+    "supports": {
+        "post_thumbnails": true,
+        "menus": true,
+        "widgets": true,
+        "custom_logo": true,
+        "responsive": true
     },
-    "header": {
-      "component": "components/Header.tsx"
+    "templates": {
+        "layout": {
+            "component": "components/Layout.tsx"
+        },
+        "header": {
+            "component": "components/Header.tsx"
+        },
+        "footer": {
+            "component": "components/Footer.tsx"
+        },
+        "post": {
+            "component": "components/Post.tsx"
+        },
+        "products-single": {
+            "component": "components/ProductsSingle.tsx"
+        },
+        "products": {
+            "component": "components/Products.tsx"
+        },
+        "posts": {
+            "component": "components/Posts.tsx"
+        },
+        "page": {
+            "component": "components/Page.tsx"
+        },
+        "index": {
+            "component": "components/Index.tsx"
+        },
+        "archive": {
+            "component": "components/Archive.tsx"
+        },
+        "search": {
+            "component": "components/Search.tsx"
+        },
+        "login": {
+            "component": "components/Login.tsx"
+        },
+        "register": {
+            "component": "components/Register.tsx"
+        },
+        "forgot-password": {
+            "component": "components/ForgotPassword.tsx"
+        },
+        "reset-password": {
+            "component": "components/ResetPassword.tsx"
+        },
+        "verify-email": {
+            "component": "components/VerifyEmail.tsx"
+        },
+        "confirm-password": {
+            "component": "components/ConfirmPassword.tsx"
+        },
+        "404": {
+            "component": "components/NotFound.tsx"
+        },
+        "taxonomy": {
+            "component": "components/TaxonomyTerm.tsx"
+        },
+        "Shop/Archive": {
+            "component": "components/Shop/Archive.tsx"
+        },
+        "Shop/Single": {
+            "component": "components/Shop/Single.tsx"
+        },
+        "Shop/Category": {
+            "component": "components/Shop/Category.tsx"
+        },
+        "Shop/Cart": {
+            "component": "components/Shop/Cart.tsx"
+        },
+        "Shop/Checkout": {
+            "component": "components/Shop/Checkout.tsx"
+        },
+        "Shop/OrderConfirmation": {
+            "component": "components/Shop/OrderConfirmation.tsx"
+        }
     },
-    "footer": {
-      "component": "components/Footer.tsx"
+    "partials": {
+        "navigation": {
+            "component": "components/partials/Navigation.tsx"
+        },
+        "sidebar": {
+            "component": "components/partials/Sidebar.tsx"
+        },
+        "post-meta": {
+            "component": "components/partials/PostMeta.tsx"
+        },
+        "comments": {
+            "component": "components/partials/Comments.tsx"
+        }
     },
-    "post": {
-      "component": "components/Post.tsx"
+    "assets": {
+        "css": ["assets/css/theme.css"],
+        "js": ["assets/js/theme.js"]
     },
-    "products-single": {
-      "component": "components/ProductsSingle.tsx"
+    "menus": {
+        "header": "Header Navigation",
+        "footer": "Footer Links"
     },
-    "products": {
-      "component": "components/Products.tsx"
-    },
-    "posts": {
-      "component": "components/Posts.tsx"
-    },
-    "page": {
-      "component": "components/Page.tsx"
-    },
-    "index": {
-      "component": "components/Index.tsx"
-    },
-    "archive": {
-      "component": "components/Archive.tsx"
-    },
-    "search": {
-      "component": "components/Search.tsx"
-    },
-    "login": {
-      "component": "components/Login.tsx"
-    },
-    "register": {
-      "component": "components/Register.tsx"
-    },
-    "forgot-password": {
-      "component": "components/ForgotPassword.tsx"
-    },
-    "reset-password": {
-      "component": "components/ResetPassword.tsx"
-    },
-    "verify-email": {
-      "component": "components/VerifyEmail.tsx"
-    },
-    "confirm-password": {
-      "component": "components/ConfirmPassword.tsx"
-    },
-    "404": {
-      "component": "components/NotFound.tsx"
-    },
-    "taxonomy": {
-      "component": "components/TaxonomyTerm.tsx"
-    },
-    "Shop/Archive": {
-      "component": "components/Shop/Archive.tsx"
-    },
-    "Shop/Single": {
-      "component": "components/Shop/Single.tsx"
-    },
-    "Shop/Category": {
-      "component": "components/Shop/Category.tsx"
-    },
-    "Shop/Cart": {
-      "component": "components/Shop/Cart.tsx"
-    },
-    "Shop/Checkout": {
-      "component": "components/Shop/Checkout.tsx"
-    },
-    "Shop/OrderConfirmation": {
-      "component": "components/Shop/OrderConfirmation.tsx"
+    "widget_areas": {
+        "sidebar": "Main Sidebar",
+        "footer-1": "Footer Column 1",
+        "footer-2": "Footer Column 2",
+        "footer-3": "Footer Column 3"
     }
-  },
-  "partials": {
-    "navigation": {
-      "component": "components/partials/Navigation.tsx"
-    },
-    "sidebar": {
-      "component": "components/partials/Sidebar.tsx"
-    },
-    "post-meta": {
-      "component": "components/partials/PostMeta.tsx"
-    },
-    "comments": {
-      "component": "components/partials/Comments.tsx"
-    }
-  },
-  "assets": {
-    "css": [
-      "assets/css/theme.css"
-    ],
-    "js": [
-      "assets/js/theme.js"
-    ]
-  },
-  "menus": {
-    "header": "Header Navigation",
-    "footer": "Footer Links"
-  },
-  "widget_areas": {
-    "sidebar": "Main Sidebar",
-    "footer-1": "Footer Column 1",
-    "footer-2": "Footer Column 2",
-    "footer-3": "Footer Column 3"
-  }
 }

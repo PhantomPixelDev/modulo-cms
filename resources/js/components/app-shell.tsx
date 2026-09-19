@@ -1,6 +1,6 @@
- import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
- interface AppShellProps {
+interface AppShellProps {
     children: React.ReactNode;
     variant?: 'header' | 'sidebar';
 }

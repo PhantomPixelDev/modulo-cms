@@ -1,10 +1,10 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { LocaleSwitcher } from '@/components/locale-switcher';
+import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
-import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { LocaleSwitcher } from '@/components/locale-switcher';
+import { ExternalLink } from 'lucide-react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     return (

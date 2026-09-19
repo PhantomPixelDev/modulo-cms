@@ -1,13 +1,23 @@
-import React from 'react';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
-import { Link, usePage } from '@inertiajs/react';
-import AppLogo from './app-logo';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
 import { adminNav, mainNav } from '@/config/nav';
 import { useAcl } from '@/lib/acl';
 import { getIcon } from '@/lib/icons';
-import { FileText, FolderTree, Boxes, MessageSquare } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { Boxes, FileText, FolderTree, MessageSquare } from 'lucide-react';
+import React from 'react';
+import AppLogo from './app-logo';
 
 interface SidebarEntry {
     id: number;
@@ -34,17 +44,20 @@ export function AppSidebar() {
     const isModuloShopActive = Array.isArray(activePlugins) && activePlugins.includes('modulo-shop');
     const isContactFormActive = Array.isArray(activePlugins) && activePlugins.includes('contact-form');
 
-    const filteredAdminNav = adminNav.filter(item =>
-        !['Posts', 'Pages', 'Post Types', 'Taxonomies'].includes(item.title)
-    ).filter(item => {
-        if (item.title === 'Shop') {
-            return isModuloShopActive && (isAdmin() || canAny(['view shop products', 'create shop products', 'edit shop products', 'delete shop products']));
-        }
-        if (item.title === 'Contact Form') {
-            return isContactFormActive && (isAdmin() || hasPermission('manage contact form'));
-        }
-        return true;
-    });
+    const filteredAdminNav = adminNav
+        .filter((item) => !['Posts', 'Pages', 'Post Types', 'Taxonomies'].includes(item.title))
+        .filter((item) => {
+            if (item.title === 'Shop') {
+                return (
+                    isModuloShopActive &&
+                    (isAdmin() || canAny(['view shop products', 'create shop products', 'edit shop products', 'delete shop products']))
+                );
+            }
+            if (item.title === 'Contact Form') {
+                return isContactFormActive && (isAdmin() || hasPermission('manage contact form'));
+            }
+            return true;
+        });
 
     return (
         <Sidebar collapsible="icon" variant="inset" className="overflow-hidden">
@@ -60,7 +73,7 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="overflow-y-auto overflow-x-hidden">
+            <SidebarContent className="overflow-x-hidden overflow-y-auto">
                 <NavMain items={mainNav} />
 
                 {/* Content Section - keep a single entry (modular post types managed under Posts) */}
@@ -78,7 +91,11 @@ export function AppSidebar() {
                             </SidebarMenuItem>
                             {(isAdmin() || hasPermission('moderate comments')) && (
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton asChild isActive={url.startsWith('/dashboard/admin/comments')} tooltip={{ children: 'Comments' }}>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={url.startsWith('/dashboard/admin/comments')}
+                                        tooltip={{ children: 'Comments' }}
+                                    >
                                         <Link href="/dashboard/admin/comments" prefetch>
                                             <MessageSquare className="h-4 w-4" />
                                             <span>Comments</span>
@@ -96,7 +113,11 @@ export function AppSidebar() {
                         <SidebarGroupLabel>Organization</SidebarGroupLabel>
                         <SidebarMenu>
                             <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={url.startsWith('/dashboard/admin/taxonomies') || url.startsWith('/dashboard/admin/taxonomy-terms')} tooltip={{ children: 'Taxonomies' }}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={url.startsWith('/dashboard/admin/taxonomies') || url.startsWith('/dashboard/admin/taxonomy-terms')}
+                                    tooltip={{ children: 'Taxonomies' }}
+                                >
                                     <Link href="/dashboard/admin/taxonomies" prefetch>
                                         <FolderTree className="h-4 w-4" />
                                         <span>Taxonomies</span>
@@ -106,15 +127,13 @@ export function AppSidebar() {
                         </SidebarMenu>
                     </SidebarGroup>
                 )}
-                
+
                 {/* Dynamic Post Types */}
                 {dynamicMenu?.postTypes && dynamicMenu.postTypes.length > 0 && (
                     <SidebarGroup className="px-2 py-0">
                         <SidebarGroupLabel>Content Types</SidebarGroupLabel>
                         <SidebarMenu>
-                            {[...dynamicMenu.postTypes]
-                                .sort(byMenuPosition)
-                                .map((postType) => (
+                            {[...dynamicMenu.postTypes].sort(byMenuPosition).map((postType) => (
                                 <SidebarMenuItem key={postType.id}>
                                     <SidebarMenuButton
                                         asChild
@@ -137,11 +156,13 @@ export function AppSidebar() {
                     <SidebarGroup className="px-2 py-0">
                         <SidebarGroupLabel>Categories</SidebarGroupLabel>
                         <SidebarMenu>
-                            {[...dynamicMenu.taxonomies]
-                                .sort(byMenuPosition)
-                                .map((taxonomy) => (
+                            {[...dynamicMenu.taxonomies].sort(byMenuPosition).map((taxonomy) => (
                                 <SidebarMenuItem key={taxonomy.id}>
-                                    <SidebarMenuButton asChild isActive={url.startsWith(`/dashboard/admin/taxonomies/${taxonomy.slug}/terms`)} tooltip={{ children: taxonomy.label || taxonomy.name }}>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={url.startsWith(`/dashboard/admin/taxonomies/${taxonomy.slug}/terms`)}
+                                        tooltip={{ children: taxonomy.label || taxonomy.name }}
+                                    >
                                         <Link href={`/dashboard/admin/taxonomies/${taxonomy.slug}/terms`} prefetch>
                                             {taxonomy.menu_icon && React.createElement(getIcon(taxonomy.menu_icon), { className: 'h-4 w-4' })}
                                             <span>{taxonomy.label || taxonomy.name}</span>
@@ -154,7 +175,21 @@ export function AppSidebar() {
                 )}
 
                 {/* Admin Navigation - Only show for admins or users with any admin feature permissions */}
-                {(isAdmin() || hasPermission('view users') || canAny(['view roles','view templates','view themes','view menus','view taxonomies','view taxonomy terms','view post types','view shop products','create shop products','edit shop products','delete shop products'])) && (
+                {(isAdmin() ||
+                    hasPermission('view users') ||
+                    canAny([
+                        'view roles',
+                        'view templates',
+                        'view themes',
+                        'view menus',
+                        'view taxonomies',
+                        'view taxonomy terms',
+                        'view post types',
+                        'view shop products',
+                        'create shop products',
+                        'edit shop products',
+                        'delete shop products',
+                    ])) && (
                     <>
                         <SidebarGroup className="px-2 py-0">
                             <SidebarGroupLabel>Administration</SidebarGroupLabel>
@@ -173,7 +208,11 @@ export function AppSidebar() {
                                 {canAny(['view post types', 'view taxonomies']) && (
                                     <>
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={url.startsWith('/dashboard/admin/post-types')} tooltip={{ children: 'Post Types' }}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                isActive={url.startsWith('/dashboard/admin/post-types')}
+                                                tooltip={{ children: 'Post Types' }}
+                                            >
                                                 <Link href="/dashboard/admin/post-types" prefetch>
                                                     <Boxes className="h-4 w-4" />
                                                     <span>Post Types</span>

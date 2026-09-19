@@ -1,271 +1,255 @@
-import { useForm } from '@inertiajs/react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ActionButtonGroup } from '@/components/ui/button-groups';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState, useEffect } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useForm } from '@inertiajs/react';
+import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 // Define the Role interface to match the backend
 interface Role {
-  id: number;
-  name: string;
-  created_at?: string;
-  updated_at?: string;
-  [key: string]: any; // For any additional properties
+    id: number;
+    name: string;
+    created_at?: string;
+    updated_at?: string;
+    [key: string]: any; // For any additional properties
 }
 
 export interface User {
-  id: number;
-  name: string;
-  email: string;
-  roles: Role[];
-  email_verified_at?: string | null;
-  created_at?: string;
-  updated_at?: string;
+    id: number;
+    name: string;
+    email: string;
+    roles: Role[];
+    email_verified_at?: string | null;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface UserFormData {
-  name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-  roles: number[];
-  send_welcome_email: boolean;
-  [key: string]: any;
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+    roles: number[];
+    send_welcome_email: boolean;
+    [key: string]: any;
 }
 
 export interface UserFormProps {
-  user?: User;
-  allRoles: Role[];
-  isEditing: boolean;
-  permissions?: Array<{ id: number; name: string }>;
-  onSubmit: (data: UserFormData) => Promise<void>;
-  onCancel: () => void;
-  onRoleChange?: (userId: number, roleId: number, action: 'assign' | 'remove') => void;
-  currentUserId?: number;
+    user?: User;
+    allRoles: Role[];
+    isEditing: boolean;
+    permissions?: Array<{ id: number; name: string }>;
+    onSubmit: (data: UserFormData) => Promise<void>;
+    onCancel: () => void;
+    onRoleChange?: (userId: number, roleId: number, action: 'assign' | 'remove') => void;
+    currentUserId?: number;
 }
 
-
-export function UserForm({ 
-  user, 
-  allRoles, 
-  isEditing, 
-  permissions = [], 
-  onSubmit, 
-  onCancel, 
-  onRoleChange,
-  currentUserId
-}: UserFormProps) {
-  const { t } = useTranslation();
-  const { data, setData, errors } = useForm<UserFormData>({
-    name: user?.name || '',
-    email: user?.email || '',
-    password: '',
-    password_confirmation: '',
-    roles: user?.roles?.map(r => r.id) || [],
-    send_welcome_email: false,
-  });
-
-  const [availableRoles, setAvailableRoles] = useState<Role[]>(allRoles);
-  const [selectedRoles, setSelectedRoles] = useState<Role[]>(user?.roles || []);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    setAvailableRoles(allRoles.filter(role => 
-      !selectedRoles.some(selected => selected.id === role.id)
-    ));
-  }, [allRoles, selectedRoles]);
-
-  const handleRoleAdd = (role: Role) => {
-    if (!selectedRoles.some(r => r.id === role.id)) {
-      const newSelectedRoles = [...selectedRoles, role];
-      setSelectedRoles(newSelectedRoles);
-      setData('roles', newSelectedRoles.map(r => r.id));
-      if (onRoleChange && user?.id) {
-        onRoleChange(user.id, role.id, 'assign');
-      }
-    }
-  };
-
-  const handleRoleRemove = (roleId: number) => {
-    const newSelectedRoles = selectedRoles.filter(role => role.id !== roleId);
-    setSelectedRoles(newSelectedRoles);
-    setData('roles', newSelectedRoles.map(r => r.id));
-    if (onRoleChange && user?.id) {
-      onRoleChange(user.id, roleId, 'remove');
-    }
-  };
-
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setIsSubmitting(true);
-    const formData = {
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      password_confirmation: data.password_confirmation,
-      roles: data.roles,
-      send_welcome_email: data.send_welcome_email,
-    };
-    
-    onSubmit(formData).catch((error) => {
-      console.error(`Error ${isEditing ? 'updating' : 'creating'} user:`, error);
-    }).finally(() => {
-      setIsSubmitting(false);
+export function UserForm({ user, allRoles, isEditing, permissions = [], onSubmit, onCancel, onRoleChange, currentUserId }: UserFormProps) {
+    const { t } = useTranslation();
+    const { data, setData, errors } = useForm<UserFormData>({
+        name: user?.name || '',
+        email: user?.email || '',
+        password: '',
+        password_confirmation: '',
+        roles: user?.roles?.map((r) => r.id) || [],
+        send_welcome_email: false,
     });
-  };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('dashboard.users.form.sections.info')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="name">{t('dashboard.users.form.fields.name')}</Label>
-            <Input
-              id="name"
-              value={data.name}
-              onChange={(e) => setData('name', e.target.value)}
-              className="mt-1 block w-full"
-              required
-            />
-            {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
-          </div>
+    const [availableRoles, setAvailableRoles] = useState<Role[]>(allRoles);
+    const [selectedRoles, setSelectedRoles] = useState<Role[]>(user?.roles || []);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-          <div>
-            <Label htmlFor="email">{t('dashboard.users.form.fields.email')}</Label>
-            <Input
-              id="email"
-              type="email"
-              value={data.email}
-              onChange={(e) => setData('email', e.target.value)}
-              className="mt-1 block w-full"
-              required
-            />
-            {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
-          </div>
+    useEffect(() => {
+        setAvailableRoles(allRoles.filter((role) => !selectedRoles.some((selected) => selected.id === role.id)));
+    }, [allRoles, selectedRoles]);
 
-          {!isEditing && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="password">{t('dashboard.users.form.fields.password')}</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={data.password}
-                  onChange={(e) => setData('password', e.target.value)}
-                  className="mt-1 block w-full"
-                  required
-                  minLength={8}
-                />
-                {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
-              </div>
-
-              <div>
-                <Label htmlFor="password_confirmation">{t('dashboard.users.form.fields.confirm_password')}</Label>
-                <Input
-                  id="password_confirmation"
-                  type="password"
-                  value={data.password_confirmation}
-                  onChange={(e) => setData('password_confirmation', e.target.value)}
-                  className="mt-1 block w-full"
-                  required
-                />
-                {errors.password_confirmation && (
-                  <p className="text-sm text-red-500 mt-1">{errors.password_confirmation}</p>
-                )}
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="send_welcome_email"
-                  checked={data.send_welcome_email}
-                  onCheckedChange={(checked) => setData('send_welcome_email', Boolean(checked))}
-                />
-                <Label htmlFor="send_welcome_email">{t('dashboard.users.form.fields.send_welcome')}</Label>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('dashboard.users.form.sections.roles')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {selectedRoles.length > 0 && (
-            <div className="space-y-2">
-              <Label>{t('dashboard.users.form.fields.assigned_roles')}</Label>
-              <div className="flex flex-wrap gap-2">
-                {selectedRoles.map(role => (
-                  <Badge key={role.id} className="flex items-center gap-1">
-                    {role.name}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRoleRemove(role.id)}
-                      className="ml-1 h-5 w-5"
-                      disabled={user?.id === currentUserId && role.name === 'admin'}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {availableRoles.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="add-role">{t('dashboard.users.form.fields.add_role')}</Label>
-              <select
-                id="add-role"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                onChange={(e) => {
-                  const roleId = parseInt(e.target.value);
-                  if (roleId) {
-                    const role = availableRoles.find(r => r.id === roleId);
-                    if (role) {
-                      handleRoleAdd(role);
-                      e.target.value = '';
-                    }
-                  }
-                }}
-                value=""
-              >
-                <option value="">{t('dashboard.users.form.placeholders.select_role')}</option>
-                {availableRoles.map(role => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <ActionButtonGroup
-        onSave={handleSubmit}
-        onCancel={onCancel}
-        saveLabel={
-          isEditing
-            ? t('dashboard.users.form.actions.update')
-            : t('dashboard.users.form.actions.create')
+    const handleRoleAdd = (role: Role) => {
+        if (!selectedRoles.some((r) => r.id === role.id)) {
+            const newSelectedRoles = [...selectedRoles, role];
+            setSelectedRoles(newSelectedRoles);
+            setData(
+                'roles',
+                newSelectedRoles.map((r) => r.id),
+            );
+            if (onRoleChange && user?.id) {
+                onRoleChange(user.id, role.id, 'assign');
+            }
         }
-        cancelLabel={t('dashboard.common.cancel')}
-        isSubmitting={isSubmitting}
-        className="mt-6"
-      />
-    </form>
-  );
+    };
+
+    const handleRoleRemove = (roleId: number) => {
+        const newSelectedRoles = selectedRoles.filter((role) => role.id !== roleId);
+        setSelectedRoles(newSelectedRoles);
+        setData(
+            'roles',
+            newSelectedRoles.map((r) => r.id),
+        );
+        if (onRoleChange && user?.id) {
+            onRoleChange(user.id, roleId, 'remove');
+        }
+    };
+
+    const handleSubmit = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        setIsSubmitting(true);
+        const formData = {
+            name: data.name,
+            email: data.email,
+            password: data.password,
+            password_confirmation: data.password_confirmation,
+            roles: data.roles,
+            send_welcome_email: data.send_welcome_email,
+        };
+
+        onSubmit(formData)
+            .catch((error) => {
+                console.error(`Error ${isEditing ? 'updating' : 'creating'} user:`, error);
+            })
+            .finally(() => {
+                setIsSubmitting(false);
+            });
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t('dashboard.users.form.sections.info')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div>
+                        <Label htmlFor="name">{t('dashboard.users.form.fields.name')}</Label>
+                        <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} className="mt-1 block w-full" required />
+                        {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+                    </div>
+
+                    <div>
+                        <Label htmlFor="email">{t('dashboard.users.form.fields.email')}</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            className="mt-1 block w-full"
+                            required
+                        />
+                        {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+                    </div>
+
+                    {!isEditing && (
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="password">{t('dashboard.users.form.fields.password')}</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={data.password}
+                                    onChange={(e) => setData('password', e.target.value)}
+                                    className="mt-1 block w-full"
+                                    required
+                                    minLength={8}
+                                />
+                                {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+                            </div>
+
+                            <div>
+                                <Label htmlFor="password_confirmation">{t('dashboard.users.form.fields.confirm_password')}</Label>
+                                <Input
+                                    id="password_confirmation"
+                                    type="password"
+                                    value={data.password_confirmation}
+                                    onChange={(e) => setData('password_confirmation', e.target.value)}
+                                    className="mt-1 block w-full"
+                                    required
+                                />
+                                {errors.password_confirmation && <p className="mt-1 text-sm text-red-500">{errors.password_confirmation}</p>}
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="send_welcome_email"
+                                    checked={data.send_welcome_email}
+                                    onCheckedChange={(checked) => setData('send_welcome_email', Boolean(checked))}
+                                />
+                                <Label htmlFor="send_welcome_email">{t('dashboard.users.form.fields.send_welcome')}</Label>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t('dashboard.users.form.sections.roles')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {selectedRoles.length > 0 && (
+                        <div className="space-y-2">
+                            <Label>{t('dashboard.users.form.fields.assigned_roles')}</Label>
+                            <div className="flex flex-wrap gap-2">
+                                {selectedRoles.map((role) => (
+                                    <Badge key={role.id} className="flex items-center gap-1">
+                                        {role.name}
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleRoleRemove(role.id)}
+                                            className="ml-1 h-5 w-5"
+                                            disabled={user?.id === currentUserId && role.name === 'admin'}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {availableRoles.length > 0 && (
+                        <div className="space-y-2">
+                            <Label htmlFor="add-role">{t('dashboard.users.form.fields.add_role')}</Label>
+                            <select
+                                id="add-role"
+                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                onChange={(e) => {
+                                    const roleId = parseInt(e.target.value);
+                                    if (roleId) {
+                                        const role = availableRoles.find((r) => r.id === roleId);
+                                        if (role) {
+                                            handleRoleAdd(role);
+                                            e.target.value = '';
+                                        }
+                                    }
+                                }}
+                                value=""
+                            >
+                                <option value="">{t('dashboard.users.form.placeholders.select_role')}</option>
+                                {availableRoles.map((role) => (
+                                    <option key={role.id} value={role.id}>
+                                        {role.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <ActionButtonGroup
+                onSave={handleSubmit}
+                onCancel={onCancel}
+                saveLabel={isEditing ? t('dashboard.users.form.actions.update') : t('dashboard.users.form.actions.create')}
+                cancelLabel={t('dashboard.common.cancel')}
+                isSubmitting={isSubmitting}
+                className="mt-6"
+            />
+        </form>
+    );
 }

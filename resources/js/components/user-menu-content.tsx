@@ -1,10 +1,10 @@
 import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
-import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { useAppearance } from '@/hooks/use-appearance';
+import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings, Sun, Moon, Monitor } from 'lucide-react';
+import { LogOut, Monitor, Moon, Settings, Sun } from 'lucide-react';
 
 interface UserMenuContentProps {
     user: User;

@@ -55,10 +55,10 @@ function replacePlaceholders(text: string, replacements: Record<string, string |
 
     for (const [key, value] of Object.entries(replacements)) {
         const stringValue = String(value);
-        
+
         // Replace :key with value
         result = result.replace(new RegExp(`:${key}`, 'g'), stringValue);
-        
+
         // Replace :Key (capitalized) with capitalized value
         const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
         const capitalizedValue = stringValue.charAt(0).toUpperCase() + stringValue.slice(1);
@@ -70,16 +70,16 @@ function replacePlaceholders(text: string, replacements: Record<string, string |
 
 /**
  * Hook for accessing translations in React components
- * 
+ *
  * Usage:
  * const { t, locale, availableLocales, switchLocale } = useTranslation();
- * 
+ *
  * // Simple translation
  * t('common.actions.save') // "Save"
- * 
+ *
  * // With replacements
  * t('common.success.created', { item: 'Post' }) // "Post created successfully."
- * 
+ *
  * // With fallback
  * t('missing.key', {}, 'Default text') // "Default text"
  */
@@ -127,7 +127,7 @@ export function useTranslation() {
             // Return fallback or key if not found
             return fallback ?? key;
         },
-        [combinedTranslations]
+        [combinedTranslations],
     );
 
     /**
@@ -138,7 +138,7 @@ export function useTranslation() {
             if (!combinedTranslations) return false;
             return getNestedValue(combinedTranslations, key) !== undefined;
         },
-        [combinedTranslations]
+        [combinedTranslations],
     );
 
     /**
@@ -151,7 +151,7 @@ export function useTranslation() {
             }
             return combinedTranslations[domainName];
         },
-        [combinedTranslations]
+        [combinedTranslations],
     );
 
     /**
@@ -171,17 +171,17 @@ export function useTranslation() {
     const choice = useCallback(
         (key: string, count: number, replacements: Record<string, string | number> = {}): string => {
             const value = t(key, {}, key);
-            
+
             // Check if value has plural forms (separated by |)
             if (value.includes('|')) {
-                const forms = value.split('|').map(s => s.trim());
-                
+                const forms = value.split('|').map((s) => s.trim());
+
                 // Simple singular/plural
                 if (forms.length === 2) {
                     const selected = count === 1 ? forms[0] : forms[1];
                     return replacePlaceholders(selected, { ...replacements, count });
                 }
-                
+
                 // Multiple forms (0, 1, many)
                 if (forms.length >= 3) {
                     let selected: string;
@@ -198,7 +198,7 @@ export function useTranslation() {
 
             return replacePlaceholders(value, { ...replacements, count });
         },
-        [t]
+        [t],
     );
 
     return useMemo(
@@ -213,7 +213,7 @@ export function useTranslation() {
             switchLocale,
             isRTL: direction === 'rtl',
         }),
-        [t, has, domain, choice, currentLocale, direction, availableLocales, switchLocale]
+        [t, has, domain, choice, currentLocale, direction, availableLocales, switchLocale],
     );
 }
 

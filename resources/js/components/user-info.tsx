@@ -5,7 +5,7 @@ import { type User } from '@/types';
 
 export function UserInfo({ user, showEmail = false }: { user: User; showEmail?: boolean }) {
     const getInitials = useInitials();
-    
+
     // Get the primary role (first role or 'user' as default)
     const primaryRole = user.roles?.[0]?.name || 'user';
 
@@ -20,7 +20,7 @@ export function UserInfo({ user, showEmail = false }: { user: User; showEmail?: 
             <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
                 <div className="flex items-center gap-1">
-                    <Badge variant="secondary" className="text-xs px-1 py-0 h-4">
+                    <Badge variant="secondary" className="h-4 px-1 py-0 text-xs">
                         {primaryRole}
                     </Badge>
                     {showEmail && <span className="truncate text-xs text-muted-foreground">{user.email}</span>}

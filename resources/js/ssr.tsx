@@ -13,7 +13,7 @@ createServer((page) =>
     createInertiaApp({
         page,
         render: ReactDOMServer.renderToString,
-        title: (title) => title ? `${title} - ${appName}` : appName,
+        title: (title) => (title ? `${title} - ${appName}` : appName),
         resolve: (name) => {
             if (name.startsWith('Themes/')) {
                 const parts = name.split('/');

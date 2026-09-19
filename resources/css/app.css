@@ -104,7 +104,7 @@
     --destructive-foreground: #fff8f6;
 
     --border: #c9ced8;
-    --input: #d7dbe6; 
+    --input: #d7dbe6;
     --ring: #0d6efd;
 
     --radius: 0.5rem;
@@ -174,40 +174,60 @@
 }
 
 @layer components {
-  .rich-text {
-    /* Base typography without @tailwindcss/typography */
-    line-height: 1.7;
-    font-size: 0.95rem;
-    max-width: 100%;
-  }
+    .rich-text {
+        /* Base typography without @tailwindcss/typography */
+        line-height: 1.7;
+        font-size: 0.95rem;
+        max-width: 100%;
+    }
 
-  .rich-text h1 { @apply text-3xl font-bold mt-4 mb-2; }
-  .rich-text h2 { @apply text-2xl font-semibold mt-4 mb-2; }
-  .rich-text h3 { @apply text-xl font-semibold mt-3 mb-2; }
+    .rich-text h1 {
+        @apply mt-4 mb-2 text-3xl font-bold;
+    }
+    .rich-text h2 {
+        @apply mt-4 mb-2 text-2xl font-semibold;
+    }
+    .rich-text h3 {
+        @apply mt-3 mb-2 text-xl font-semibold;
+    }
 
-  .rich-text p { @apply my-2 leading-relaxed; }
+    .rich-text p {
+        @apply my-2 leading-relaxed;
+    }
 
-  .rich-text a { @apply text-primary underline underline-offset-2 hover:opacity-80; }
+    .rich-text a {
+        @apply text-primary underline underline-offset-2 hover:opacity-80;
+    }
 
-  .rich-text blockquote {
-    @apply border-l-4 pl-4 italic text-muted-foreground my-3;
-  }
+    .rich-text blockquote {
+        @apply my-3 border-l-4 pl-4 text-muted-foreground italic;
+    }
 
-  .rich-text code {
-    @apply bg-muted px-1 py-0.5 rounded text-sm font-mono;
-  }
-  .rich-text pre {
-    @apply bg-muted p-3 rounded overflow-x-auto my-3;
-  }
-  .rich-text pre code {
-    @apply bg-transparent p-0; /* avoid double background */
-  }
+    .rich-text code {
+        @apply rounded bg-muted px-1 py-0.5 font-mono text-sm;
+    }
+    .rich-text pre {
+        @apply my-3 overflow-x-auto rounded bg-muted p-3;
+    }
+    .rich-text pre code {
+        @apply bg-transparent p-0; /* avoid double background */
+    }
 
-  .rich-text ul { @apply list-disc pl-6 my-2; }
-  .rich-text ol { @apply list-decimal pl-6 my-2; }
-  .rich-text li { @apply my-1; }
+    .rich-text ul {
+        @apply my-2 list-disc pl-6;
+    }
+    .rich-text ol {
+        @apply my-2 list-decimal pl-6;
+    }
+    .rich-text li {
+        @apply my-1;
+    }
 
-  .rich-text hr { @apply my-4 border-border; }
+    .rich-text hr {
+        @apply my-4 border-border;
+    }
 
-  .rich-text img { @apply max-w-full h-auto my-2 rounded; }
+    .rich-text img {
+        @apply my-2 h-auto max-w-full rounded;
+    }
 }

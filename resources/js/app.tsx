@@ -1,12 +1,11 @@
 import '../css/app.css';
 
-import React from 'react';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
-import { initializeTheme } from './hooks/use-appearance';
 import ErrorBoundary from './ErrorBoundary';
 import { AdminToastProvider } from './components/admin/AdminToastProvider';
+import { initializeTheme } from './hooks/use-appearance';
 
 declare global {
     interface Window {
@@ -23,7 +22,7 @@ const pages = import.meta.glob('./pages/**/*.tsx', { eager: false });
 const themeComponents = import.meta.glob('../themes/**/components/**/*.tsx', { eager: false });
 
 createInertiaApp({
-    title: (title) => title ? `${title} - ${appName}` : appName,
+    title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => {
         // Check for theme components first (e.g., Themes/ModernReact/Index or Themes/ModernReact/Shop/Archive)
         if (name.startsWith('Themes/')) {
@@ -32,19 +31,19 @@ createInertiaApp({
             const parts = name.split('/');
             const themeNamePascal = parts[1]; // ModernReact
             const componentPath = parts.slice(2).join('/'); // Index or Shop/Archive
-            
+
             // Convert PascalCase to kebab-case for theme slug only
             const themeSlug = themeNamePascal.replace(/([A-Z])/g, (match, p1, offset) => {
                 return offset > 0 ? '-' + p1.toLowerCase() : p1.toLowerCase();
             });
-            
+
             // Try exact path first
             const themeComponentPath = `../themes/${themeSlug}/components/${componentPath}.tsx`;
-            
+
             if (themeComponents[themeComponentPath]) {
                 return resolvePageComponent(themeComponentPath, themeComponents);
             }
-            
+
             // Try index.tsx for directory-based components
             const indexPath = `../themes/${themeSlug}/components/${componentPath}/index.tsx`;
             if (themeComponents[indexPath]) {
@@ -88,7 +87,7 @@ createInertiaApp({
                 <AdminToastProvider>
                     <App {...props} />
                 </AdminToastProvider>
-            </ErrorBoundary>
+            </ErrorBoundary>,
         );
     },
     progress: {

@@ -1,5 +1,5 @@
-import React from 'react';
 import { Head, Link } from '@inertiajs/react';
+import React from 'react';
 
 interface Post {
     id: number;
@@ -45,16 +45,12 @@ const Posts: React.FC<PostsProps> = ({ posts, pageTitle }) => {
     return (
         <>
             <Head title={pageTitle} />
-            
+
             <div className="min-h-screen bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    <div className="text-center mb-12">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                            Welcome to Modulo CMS
-                        </h1>
-                        <p className="text-xl text-gray-600">
-                            A modern, modular content management system
-                        </p>
+                <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+                    <div className="mb-12 text-center">
+                        <h1 className="mb-4 text-4xl font-bold text-gray-900">Welcome to Modulo CMS</h1>
+                        <p className="text-xl text-gray-600">A modern, modular content management system</p>
                     </div>
 
                     {posts && posts.data && posts.data.length > 0 ? (
@@ -62,51 +58,35 @@ const Posts: React.FC<PostsProps> = ({ posts, pageTitle }) => {
                             {posts.data.map((post: Post) => (
                                 <article
                                     key={post.id}
-                                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                                    className="overflow-hidden rounded-lg bg-white shadow-md transition-shadow duration-300 hover:shadow-lg"
                                 >
-                                    {post.featured_image && (
-                                        <img
-                                            src={post.featured_image}
-                                            alt={post.title}
-                                            className="w-full h-48 object-cover"
-                                        />
-                                    )}
+                                    {post.featured_image && <img src={post.featured_image} alt={post.title} className="h-48 w-full object-cover" />}
                                     <div className="p-6">
                                         <div className="mb-2">
-                                            <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded-full">
+                                            <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-600">
                                                 {post.post_type.label}
                                             </span>
                                         </div>
-                                        <h2 className="text-xl font-bold text-gray-900 mb-2">
+                                        <h2 className="mb-2 text-xl font-bold text-gray-900">
                                             <Link
                                                 href={`/${post.post_type.route_prefix}/${post.slug}`}
-                                                className="hover:text-blue-600 transition-colors"
+                                                className="transition-colors hover:text-blue-600"
                                             >
                                                 {post.title}
                                             </Link>
                                         </h2>
-                                        {post.excerpt && (
-                                            <p className="text-gray-600 mb-4 line-clamp-3">
-                                                {post.excerpt}
-                                            </p>
-                                        )}
+                                        {post.excerpt && <p className="mb-4 line-clamp-3 text-gray-600">{post.excerpt}</p>}
                                         <div className="flex items-center justify-between text-sm text-gray-500">
-                                            {post.author && (
-                                                <span>By {post.author.name}</span>
-                                            )}
-                                            <time dateTime={post.published_at}>
-                                                {new Date(post.published_at).toLocaleDateString()}
-                                            </time>
+                                            {post.author && <span>By {post.author.name}</span>}
+                                            <time dateTime={post.published_at}>{new Date(post.published_at).toLocaleDateString()}</time>
                                         </div>
                                     </div>
                                 </article>
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12">
-                            <p className="text-gray-600 text-lg">
-                                No posts found.
-                            </p>
+                        <div className="py-12 text-center">
+                            <p className="text-lg text-gray-600">No posts found.</p>
                         </div>
                     )}
                 </div>
