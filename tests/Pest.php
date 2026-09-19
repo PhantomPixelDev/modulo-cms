@@ -37,6 +37,70 @@ function makeAdminUserWithPermissions(array $perms = []): User
     return $user;
 }
 
+/**
+ * Register the ModuloShop plugin and run its migrations for the current test.
+ */
+function bootShopPlugin(\Tests\TestCase $test): void
+{
+    app()->register(\Plugins\ModuloShop\ModuloShopServiceProvider::class);
+    // Routes added after boot need their names indexed for route()
+    app('router')->getRoutes()->refreshNameLookups();
+
+    $test->artisan('migrate', [
+        '--path' => 'plugins/ModuloShop/database/migrations',
+        '--realpath' => false,
+    ]);
+}
+
+function createShopProduct(array $meta = []): \App\Models\Post
+{
+    $postType = \App\Models\PostType::where('name', 'product')->first()
+        ?? \App\Models\PostType::factory()->create([
+            'name' => 'product',
+            'slug' => 'product',
+            'route_prefix' => 'shop',
+        ]);
+
+    return \App\Models\Post::factory()->published()->create([
+        'post_type_id' => $postType->id,
+        'meta_data' => array_merge([
+            'price' => 29.99,
+            'currency' => 'USD',
+            'sku' => 'SKU-TEST',
+        ], $meta),
+    ]);
+}
+
+/**
+ * Install and activate a bundled React theme so frontend routes can render.
+ */
+function activateReactTheme(string $slug = 'modern-react'): void
+{
+    $manager = app(\App\Services\ThemeManager::class);
+    $theme = $manager->discoverThemes()->firstWhere('config.slug', $slug);
+    $manager->installTheme($theme);
+    $manager->activateTheme($slug);
+}
+
+/**
+ * Create a published page (post type "page", served at /{slug}).
+ */
+function makePublishedPage(array $attributes = []): \App\Models\Post
+{
+    $pageType = \App\Models\PostType::where('name', 'page')->first()
+        ?? \App\Models\PostType::factory()->create([
+            'name' => 'page',
+            'slug' => 'page',
+            'label' => 'Page',
+            'route_prefix' => null,
+            'has_comments' => false,
+        ]);
+
+    return \App\Models\Post::factory()->published()->create(array_merge([
+        'post_type_id' => $pageType->id,
+    ], $attributes));
+}
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

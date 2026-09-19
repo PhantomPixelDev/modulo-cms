@@ -8,14 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $indexes = \DB::select("SELECT indexname FROM pg_indexes WHERE tablename = 'posts'");
-        $existing = array_column($indexes, 'indexname');
+        // Driver-agnostic existence check (pg_indexes broke SQLite test runs)
+        $hasTypeIndex = Schema::hasIndex('posts', 'posts_type_status_published_idx');
+        $hasAuthorIndex = Schema::hasIndex('posts', 'posts_author_status_idx');
 
-        Schema::table('posts', function (Blueprint $table) use ($existing) {
-            if (!in_array('posts_type_status_published_idx', $existing)) {
+        Schema::table('posts', function (Blueprint $table) use ($hasTypeIndex, $hasAuthorIndex) {
+            if (!$hasTypeIndex) {
                 $table->index(['post_type_id', 'status', 'published_at'], 'posts_type_status_published_idx');
             }
-            if (!in_array('posts_author_status_idx', $existing)) {
+            if (!$hasAuthorIndex) {
                 $table->index(['author_id', 'status'], 'posts_author_status_idx');
             }
         });

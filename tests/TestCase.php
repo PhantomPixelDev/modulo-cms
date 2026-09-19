@@ -15,6 +15,9 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        // Render Inertia pages without requiring a Vite build or dev server
+        $this->withoutVite();
+
         // Ensure Spatie permissions are not served from a stale cache between tests/runs.
         if (class_exists(PermissionRegistrar::class)) {
             app(PermissionRegistrar::class)->forgetCachedPermissions();
