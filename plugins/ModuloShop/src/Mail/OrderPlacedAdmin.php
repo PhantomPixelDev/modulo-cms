@@ -3,11 +3,12 @@
 namespace Plugins\ModuloShop\src\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Plugins\ModuloShop\src\Models\Order;
 
-class OrderPlacedAdmin extends Mailable
+class OrderPlacedAdmin extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

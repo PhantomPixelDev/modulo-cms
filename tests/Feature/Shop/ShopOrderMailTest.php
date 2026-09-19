@@ -39,11 +39,11 @@ test('checkout sends order placed emails', function () {
 
     $response->assertSessionHasNoErrors()->assertRedirectContains('/shop/order/');
 
-    Mail::assertSent(OrderPlacedCustomer::class, function ($mail) use ($payload) {
+    Mail::assertQueued(OrderPlacedCustomer::class, function ($mail) use ($payload) {
         return $mail->hasTo($payload['customer_email']);
     });
 
-    Mail::assertSent(OrderPlacedAdmin::class, function ($mail) {
+    Mail::assertQueued(OrderPlacedAdmin::class, function ($mail) {
         return $mail->hasTo('admin@example.com');
     });
 });
@@ -86,7 +86,7 @@ test('order status updates send shipped and completed emails', function () {
         ->put("/dashboard/admin/shop/orders/{$order->id}", ['status' => 'shipped'])
         ->assertRedirect();
 
-    Mail::assertSent(OrderShippedCustomer::class, function ($mail) {
+    Mail::assertQueued(OrderShippedCustomer::class, function ($mail) {
         return $mail->hasTo('customer@example.com');
     });
 
@@ -94,7 +94,7 @@ test('order status updates send shipped and completed emails', function () {
         ->put("/dashboard/admin/shop/orders/{$order->id}", ['status' => 'completed'])
         ->assertRedirect();
 
-    Mail::assertSent(OrderCompletedCustomer::class, function ($mail) {
+    Mail::assertQueued(OrderCompletedCustomer::class, function ($mail) {
         return $mail->hasTo('customer@example.com');
     });
 });

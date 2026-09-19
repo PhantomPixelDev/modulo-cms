@@ -3,11 +3,12 @@
 namespace Plugins\ContactForm\src\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Plugins\ContactForm\src\Models\ContactSubmission;
 
-class ContactFormSubmitted extends Mailable
+class ContactFormSubmitted extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

@@ -36,7 +36,7 @@ test('contact form submission stores data and sends email', function () {
         'subject' => $payload['subject'],
     ]);
 
-    Mail::assertSent(ContactFormSubmitted::class, function ($mail) {
+    Mail::assertQueued(ContactFormSubmitted::class, function ($mail) {
         return $mail->hasTo('admin@example.com');
     });
 
