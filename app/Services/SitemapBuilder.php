@@ -9,7 +9,6 @@ use App\Models\SitemapSetting;
 use App\Models\Taxonomy;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 
 class SitemapBuilder
 {
@@ -21,7 +20,7 @@ class SitemapBuilder
 
     public function __construct()
     {
-        $this->settingsTtl = (int) env('SITEMAP_SETTINGS_CACHE_TTL', 600);
+        $this->settingsTtl = (int) config('sitemap.settings_cache_ttl', 600);
     }
 
     public function getSettings(): SitemapSetting
@@ -84,7 +83,7 @@ class SitemapBuilder
 
     protected function buildXml(array $config, ?string $locale = null): string
     {
-        if (! Schema::hasTable('posts')) {
+        if (! schema_has_table('posts')) {
             return $this->wrapUrlset([
                 $this->urlNode($this->buildUrl('/', $locale), now()),
             ], false);
@@ -110,7 +109,7 @@ class SitemapBuilder
         $includeAll = empty($included) || ! is_array($included);
 
         // Post type archives (only public and selected)
-        if (Schema::hasTable('post_types')) {
+        if (schema_has_table('post_types')) {
             $query = PostType::where('is_public', true);
             if (! $includeAll) {
                 $query->whereIn('id', $included);
@@ -163,7 +162,7 @@ class SitemapBuilder
         }
 
         // Taxonomy archives if enabled
-        if (($config['include_taxonomies'] ?? true) && Schema::hasTable('taxonomies')) {
+        if (($config['include_taxonomies'] ?? true) && schema_has_table('taxonomies')) {
             $taxonomies = Taxonomy::where('is_public', true)
                 ->get();
             foreach ($taxonomies as $tax) {
@@ -252,7 +251,7 @@ XML;
 
     protected function normalizeLocale(?string $locale): ?string
     {
-        if (! $locale || ! Schema::hasTable('locales')) {
+        if (! $locale || ! schema_has_table('locales')) {
             return $locale;
         }
 
@@ -261,7 +260,7 @@ XML;
 
     protected function buildPostAlternates(Post $post, string $prefix): array
     {
-        if (! Schema::hasTable('locales')) {
+        if (! schema_has_table('locales')) {
             return [];
         }
 
@@ -281,7 +280,7 @@ XML;
 
     protected function alternateLocaleUrls(callable $builder): array
     {
-        if (! Schema::hasTable('locales')) {
+        if (! schema_has_table('locales')) {
             return [];
         }
 

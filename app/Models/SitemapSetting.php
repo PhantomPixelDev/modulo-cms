@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Schema;
 
 class SitemapSetting extends Model
 {
@@ -84,7 +83,7 @@ class SitemapSetting extends Model
 
     protected function resolveDefaultLocale(): ?string
     {
-        if (! Schema::hasTable('locales')) {
+        if (! schema_has_table('locales')) {
             return config('app.fallback_locale');
         }
 

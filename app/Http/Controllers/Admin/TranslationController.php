@@ -8,7 +8,6 @@ use App\Models\TranslationOverride;
 use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,7 +20,7 @@ class TranslationController extends Controller
         $this->authorizeManage();
 
         $domains = $this->translations->getAdminDomains();
-        $locales = Schema::hasTable('locales') ? Locale::getActive() : collect();
+        $locales = schema_has_table('locales') ? Locale::getActive() : collect();
         $selectedLocale = $request->query('locale') ?: ($locales->firstWhere('is_default', true)?->code ?? $locales->first()?->code ?? config('app.fallback_locale', 'en'));
         $selectedDomain = $request->query('domain') ?: ($domains[0] ?? 'common');
         $search = trim((string) $request->query('q', ''));

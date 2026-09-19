@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 
 class Locale extends Model
 {
@@ -87,7 +86,7 @@ class Locale extends Model
     protected static function localesTableAvailable(): bool
     {
         try {
-            return Schema::hasTable((new static)->getTable());
+            return schema_has_table((new static)->getTable());
         } catch (\Throwable $e) {
             return false;
         }

@@ -47,3 +47,31 @@ if (! function_exists('apply_filters')) {
         return $value;
     }
 }
+
+if (! function_exists('schema_has_table')) {
+    /**
+     * Memoized Schema::hasTable(); each call is an information_schema query on
+     * PostgreSQL and many run on every request. Only positive answers are
+     * remembered, so a table created later in the process is still detected.
+     */
+    function schema_has_table(string $table): bool
+    {
+        // Scoped to the application instance (one per request), never a PHP static:
+        // the database can change between app instances in one process (tests, workers).
+        $app = app();
+        $known = $app->bound('modulo.schema_tables') ? $app->make('modulo.schema_tables') : [];
+
+        $key = config('database.default').':'.$table;
+        if (isset($known[$key])) {
+            return true;
+        }
+
+        $exists = \Illuminate\Support\Facades\Schema::hasTable($table);
+        if ($exists) {
+            $known[$key] = true;
+            $app->instance('modulo.schema_tables', $known);
+        }
+
+        return $exists;
+    }
+}

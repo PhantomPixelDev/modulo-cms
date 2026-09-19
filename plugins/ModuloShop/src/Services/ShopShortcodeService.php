@@ -3,9 +3,9 @@
 namespace Plugins\ModuloShop\src\Services;
 
 use App\Models\Post;
-use Plugins\ModuloShop\src\Support\MetaSql;
 use App\Models\PostType;
 use App\Services\ShortcodeService;
+use Plugins\ModuloShop\src\Support\MetaSql;
 
 class ShopShortcodeService
 {

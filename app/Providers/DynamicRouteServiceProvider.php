@@ -7,7 +7,6 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class DynamicRouteServiceProvider extends ServiceProvider
@@ -35,13 +34,13 @@ class DynamicRouteServiceProvider extends ServiceProvider
     protected function registerDynamicPostTypeRoutes(): void
     {
         // Check if tables exist (for fresh installs)
-        if (! Schema::hasTable('post_types') || ! Schema::hasTable('site_settings')) {
+        if (! schema_has_table('post_types') || ! schema_has_table('site_settings')) {
             return;
         }
 
         try {
             // Only register dynamic routes if tables exist
-            if (! Schema::hasTable('site_settings') || ! Schema::hasTable('posts')) {
+            if (! schema_has_table('site_settings') || ! schema_has_table('posts')) {
                 return;
             }
 

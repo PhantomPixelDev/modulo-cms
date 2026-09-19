@@ -6,19 +6,18 @@ use App\Models\Locale;
 use App\Services\SitemapBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Schema;
 
 class SitemapController extends Controller
 {
     public function index(Request $request, SitemapBuilder $builder): Response
     {
         $locale = $request->query('locale');
-        if ($locale && (! Schema::hasTable('locales') || ! Locale::isValidCode($locale))) {
+        if ($locale && (! schema_has_table('locales') || ! Locale::isValidCode($locale))) {
             $locale = null;
         }
 
         // If DB is not migrated yet, return a minimal sitemap with just the home page
-        if (! Schema::hasTable('posts')) {
+        if (! schema_has_table('posts')) {
             $homeUrl = $locale ? url('/'.trim($locale, '/')) : url('/');
             $home = htmlspecialchars($homeUrl, ENT_XML1 | ENT_COMPAT, 'UTF-8');
             $xml = <<<XML

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\PostType;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 
 class PostTypeService
 {
@@ -17,7 +16,7 @@ class PostTypeService
 
     public function allPublic()
     {
-        if (! Schema::hasTable('post_types')) {
+        if (! schema_has_table('post_types')) {
             return collect();
         }
 
@@ -28,7 +27,7 @@ class PostTypeService
 
     public function byId(int $id): ?PostType
     {
-        if (! Schema::hasTable('post_types')) {
+        if (! schema_has_table('post_types')) {
             return null;
         }
 
@@ -39,7 +38,7 @@ class PostTypeService
 
     public function byRoutePrefix(?string $prefix): ?PostType
     {
-        if (! Schema::hasTable('post_types')) {
+        if (! schema_has_table('post_types')) {
             return null;
         }
         $key = 'post_types:route_prefix:'.($prefix ?: 'root');

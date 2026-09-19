@@ -8,7 +8,6 @@ use App\Models\PostType;
 use App\Services\SitemapBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,12 +19,12 @@ class SitemapController extends Controller
         $builder = new SitemapBuilder;
         $settings = $builder->getSettings();
         $postTypes = PostType::orderBy('menu_position')->get(['id', 'name', 'label', 'route_prefix', 'is_public']);
-        $locales = Schema::hasTable('locales') ? Locale::getActive() : collect();
+        $locales = schema_has_table('locales') ? Locale::getActive() : collect();
         $requestedLocale = $request->query('locale');
-        if ($requestedLocale && (! Schema::hasTable('locales') || ! Locale::isValidCode($requestedLocale))) {
+        if ($requestedLocale && (! schema_has_table('locales') || ! Locale::isValidCode($requestedLocale))) {
             $requestedLocale = null;
         }
-        $defaultLocale = Schema::hasTable('locales') ? Locale::getDefault()?->code : null;
+        $defaultLocale = schema_has_table('locales') ? Locale::getDefault()?->code : null;
         $currentLocale = $requestedLocale ?? $defaultLocale ?? config('app.fallback_locale', 'en');
 
         return Inertia::render('Dashboard', [
@@ -56,7 +55,7 @@ class SitemapController extends Controller
         ]);
 
         $locale = $data['locale'] ?? null;
-        if ($locale && (! Schema::hasTable('locales') || ! Locale::isValidCode($locale))) {
+        if ($locale && (! schema_has_table('locales') || ! Locale::isValidCode($locale))) {
             $locale = null;
         }
 
@@ -80,7 +79,7 @@ class SitemapController extends Controller
         // Invalidate cached settings/xml so UI uses fresh values
         Cache::forget('sitemap.settings');
         $builder->clearCachedXml($locale);
-        if (! $locale && Schema::hasTable('locales')) {
+        if (! $locale && schema_has_table('locales')) {
             foreach (Locale::getActive() as $activeLocale) {
                 $builder->clearCachedXml($activeLocale->code);
             }
@@ -93,7 +92,7 @@ class SitemapController extends Controller
     {
         $this->authorizeEdit();
         $locale = $request->input('locale');
-        if ($locale && (! Schema::hasTable('locales') || ! Locale::isValidCode($locale))) {
+        if ($locale && (! schema_has_table('locales') || ! Locale::isValidCode($locale))) {
             $locale = null;
         }
         $builder->regenerate($locale);

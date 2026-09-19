@@ -12,11 +12,15 @@ use Illuminate\Support\Collection;
 
 class PostPresenter
 {
-    public function presentPost(Post $post): array
+    /**
+     * @param  bool  $full  false for list views: skips rendering content, comments and
+     *                      localizations, which archive/search templates never use
+     */
+    public function presentPost(Post $post, bool $full = true): array
     {
-        $content = $this->renderContent($post);
+        $content = $full ? $this->renderContent($post) : '';
         $settings = app(\App\Services\SiteSettingsService::class);
-        $commentsEnabled = $this->commentsEnabled($post);
+        $commentsEnabled = $full && $this->commentsEnabled($post);
 
         return [
             'id' => $post->id ?? 0,
@@ -66,7 +70,7 @@ class PostPresenter
             })->toArray() : [],
             'comments' => $commentsEnabled ? $this->presentComments($post) : [],
             'allow_comments' => $commentsEnabled,
-            'localizations' => $this->buildLocalizationMap($post),
+            'localizations' => $full ? $this->buildLocalizationMap($post) : [],
         ];
     }
 
@@ -119,7 +123,7 @@ class PostPresenter
     public function presentPaginator(LengthAwarePaginator $posts): array
     {
         $data = $posts->getCollection()->map(function ($post) {
-            return $this->presentPost($post);
+            return $this->presentPost($post, full: false);
         })->toArray();
 
         return [

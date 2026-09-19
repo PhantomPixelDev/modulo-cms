@@ -39,7 +39,7 @@ class PostController extends BaseFrontendController
 
         $query = Post::with([
             'postType',
-            'author.roles',
+            'author',
             'taxonomyTerms.taxonomy',
         ])
             ->published()

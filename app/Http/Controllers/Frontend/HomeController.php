@@ -6,7 +6,6 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 class HomeController extends BaseFrontendController
@@ -17,7 +16,7 @@ class HomeController extends BaseFrontendController
             return $resp;
         }
 
-        if (! Schema::hasTable('posts')) {
+        if (! schema_has_table('posts')) {
             return Inertia::render('Setup/ThemeMissing', [
                 'message' => 'Database is not initialized (missing posts table). Run migrations and refresh.',
             ]);
@@ -38,7 +37,7 @@ class HomeController extends BaseFrontendController
 
         $query = Post::with([
             'postType',
-            'author.roles',
+            'author',
             'taxonomyTerms.taxonomy',
             'translations',
         ])

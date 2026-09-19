@@ -11,7 +11,6 @@ use App\Services\SiteSettingsService;
 use App\Services\TranslationService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -57,7 +56,7 @@ class HandleInertiaRequests extends Middleware
     protected function getSidebarData(): array
     {
         // Check if tables exist (for fresh installs)
-        if (! Schema::hasTable('taxonomy_terms')) {
+        if (! schema_has_table('taxonomy_terms')) {
             return ['categories' => [], 'tags' => []];
         }
 
@@ -113,6 +112,9 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        // Only admin-area users need admin routes and sidebar data
+        $canAccessAdmin = (bool) $request->user()?->can('access admin');
+
         // Ensure parent::share() returns an array before spreading
         $parentShared = parent::share($request);
         if (! is_array($parentShared)) {
@@ -155,33 +157,31 @@ class HandleInertiaRequests extends Middleware
                     }),
                 ] : null,
             ],
+            // Visitors don't get the admin route map (smaller payload, less exposed surface)
             'ziggy' => fn (): array => [
-                ...(new Ziggy)->toArray(),
+                ...($canAccessAdmin ? new Ziggy : (new Ziggy)->filter(['dashboard.admin.*'], false))->toArray(),
                 'location' => $request->url(),
             ],
             'adminStats' => fn () => $request->user()?->hasRole(['admin', 'super-admin'])
                 ? app(AdminStatsService::class)->get()
                 : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'activePlugins' => fn () => Schema::hasTable('plugins')
+            'activePlugins' => fn () => schema_has_table('plugins')
                 ? Plugin::query()->active()->pluck('slug')->values()->toArray()
                 : [],
-            'dynamicMenu' => [
-                'postTypes' => fn () => Schema::hasTable('post_types')
-                    ? PostType::query()
-                        ->when(Schema::hasColumn('post_types', 'show_in_menu'), fn ($q) => $q->where('show_in_menu', true))
-                        ->orderBy(Schema::hasColumn('post_types', 'menu_position') ? 'menu_position' : 'id')
-                        ->get(['id', 'name', 'label', 'menu_icon', 'slug'])
-                    : [],
-                'taxonomies' => fn () => Schema::hasTable('taxonomies')
-                    ? Taxonomy::query()
-                        ->when(Schema::hasColumn('taxonomies', 'show_in_menu'), fn ($q) => $q->where('show_in_menu', true))
-                        ->orderBy(Schema::hasColumn('taxonomies', 'menu_position') ? 'menu_position' : 'id')
-                        ->get(['id', 'name', 'label', 'menu_icon', 'slug'])
-                    : [],
-            ],
+            // Admin sidebar entries: skipped for visitors (was 2 queries + 4 schema lookups per request)
+            'dynamicMenu' => fn () => $canAccessAdmin ? [
+                'postTypes' => PostType::query()
+                    ->where('show_in_menu', true)
+                    ->orderBy('menu_position')
+                    ->get(['id', 'name', 'label', 'menu_icon', 'slug', 'menu_position']),
+                'taxonomies' => Taxonomy::query()
+                    ->where('show_in_menu', true)
+                    ->orderBy('menu_position')
+                    ->get(['id', 'name', 'label', 'menu_icon', 'slug', 'menu_position']),
+            ] : ['postTypes' => [], 'taxonomies' => []],
             // Localization - translations and locale info
-            'locale' => fn () => Schema::hasTable('locales')
+            'locale' => fn () => schema_has_table('locales')
                 ? $this->translations->getLocaleInfo()
                 : ['current' => app()->getLocale(), 'direction' => 'ltr', 'name' => 'English', 'native_name' => 'English', 'available' => []],
             'translations' => fn () => $this->translations->getAdminTranslations(),

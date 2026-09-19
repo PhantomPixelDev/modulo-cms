@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class SiteSettingsServiceProvider extends ServiceProvider
@@ -22,13 +21,13 @@ class SiteSettingsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (! Schema::hasTable('site_settings')) {
+        if (! schema_has_table('site_settings')) {
             return;
         }
 
         try {
             // Only try to load settings if table exists
-            if (Schema::hasTable('site_settings')) {
+            if (schema_has_table('site_settings')) {
                 // Override app name
                 $siteName = SiteSetting::get('site_name');
                 if ($siteName) {

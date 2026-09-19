@@ -6,7 +6,6 @@ use App\Models\Plugin;
 use App\Plugins\BasePluginServiceProvider;
 use App\Services\ShortcodeService;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schema;
 use Plugins\ContactForm\src\Services\ContactFormShortcodeService;
 
 class ContactFormServiceProvider extends BasePluginServiceProvider
@@ -36,7 +35,7 @@ class ContactFormServiceProvider extends BasePluginServiceProvider
 
     protected function ensureContactSubmissionsTable(): void
     {
-        if (Schema::hasTable('contact_submissions')) {
+        if (schema_has_table('contact_submissions')) {
             return;
         }
 

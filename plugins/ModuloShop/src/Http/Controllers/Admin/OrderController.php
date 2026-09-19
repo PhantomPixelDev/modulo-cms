@@ -2,9 +2,9 @@
 
 namespace Plugins\ModuloShop\src\Http\Controllers\Admin;
 
+use App\Services\PostService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use App\Services\PostService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;

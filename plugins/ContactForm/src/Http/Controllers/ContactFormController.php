@@ -8,7 +8,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Schema;
 use Plugins\ContactForm\src\Mail\ContactFormSubmitted;
 use Plugins\ContactForm\src\Models\ContactSubmission;
 
@@ -16,7 +15,7 @@ class ContactFormController
 {
     public function store(Request $request): JsonResponse|RedirectResponse
     {
-        if (! Schema::hasTable('contact_submissions')) {
+        if (! schema_has_table('contact_submissions')) {
             $message = 'Contact form storage is not available yet. Run migrations to create the table.';
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 503);

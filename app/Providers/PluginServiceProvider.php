@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Services\PluginManager;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
@@ -24,7 +23,7 @@ class PluginServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (! Schema::hasTable('plugins')) {
+        if (! schema_has_table('plugins')) {
             return;
         }
 

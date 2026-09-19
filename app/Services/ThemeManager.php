@@ -7,7 +7,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Schema;
 
 class ThemeManager
 {
@@ -33,7 +32,7 @@ class ThemeManager
     {
         if ($this->activeTheme === null) {
             // Avoid querying when migrations haven't run (e.g., in simple tests)
-            if (! Schema::hasTable('themes')) {
+            if (! schema_has_table('themes')) {
                 return null;
             }
 

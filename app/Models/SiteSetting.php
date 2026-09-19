@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 
 class SiteSetting extends Model
 {
@@ -101,7 +100,7 @@ class SiteSetting extends Model
 
         // Fallback to database for non-autoloaded settings
         // Check if table exists (for fresh installs)
-        if (! Schema::hasTable('site_settings')) {
+        if (! schema_has_table('site_settings')) {
             return $default;
         }
 
@@ -190,7 +189,7 @@ class SiteSetting extends Model
     public static function getAllCached(): array
     {
         // Check if table exists (for fresh installs)
-        if (! Schema::hasTable('site_settings')) {
+        if (! schema_has_table('site_settings')) {
             return [];
         }
 
