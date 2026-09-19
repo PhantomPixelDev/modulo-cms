@@ -41,6 +41,10 @@ jobs:
       - name: PHP code style (Pint)
         run: vendor/bin/pint --test
 
+      # New PHPStan findings fail the build; existing ones live in phpstan-baseline.neon
+      - name: Static analysis (Larastan)
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
       - name: Frontend formatting (Prettier)
         run: npm run format:check
 

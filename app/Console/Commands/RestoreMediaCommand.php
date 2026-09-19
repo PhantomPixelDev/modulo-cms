@@ -66,14 +66,15 @@ class RestoreMediaCommand extends Command
         $postsWithMeta = Post::whereNotNull('meta_data')->get();
 
         foreach ($postsWithMeta as $post) {
-            $metaData = json_decode($post->meta_data, true);
+            // meta_data is cast to an array on the model; json_decode() here threw a TypeError
+            $metaData = $post->meta_data;
             if (is_array($metaData)) {
                 $this->checkMetaDataForMedia($metaData, $missingFiles, $placeholderPath, $dryRun, $restoredCount);
             }
         }
 
         if ($dryRun) {
-            $this->info("Dry run completed. Found {$missingFiles->count()} missing files.");
+            $this->info("Dry run completed. Found ".count($missingFiles)." missing files.");
         } else {
             $this->info("Media restoration completed! Restored {$restoredCount} files.");
         }

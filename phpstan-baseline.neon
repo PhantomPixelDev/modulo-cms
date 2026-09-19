@@ -1,0 +1,1741 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/CommentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/CommentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/CommentController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\Comment\>\:\:through\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Admin/CommentController.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\{0\: int\<0, max\>, 1\: int\<0, max\>, 2\: int, 3\: string, mime\: string, channels\?\: int, bits\?\: int\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Admin/MediaController.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''App\\\\Models\\\\MediaBucket'' and ''addMediaFromRequest'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Admin/MediaController.php
+
+		-
+			message: '#^Call to function method_exists\(\) with App\\Models\\MediaBucket and ''getMedia'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Admin/MediaController.php
+
+		-
+			message: '#^Call to function method_exists\(\) with Spatie\\MediaLibrary\\MediaCollections\\Models\\Media and ''getFullUrl'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Admin/MediaController.php
+
+		-
+			message: '#^Call to function method_exists\(\) with Spatie\\MediaLibrary\\MediaCollections\\Models\\Media and ''hasGeneratedConvers…'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Admin/MediaController.php
+
+		-
+			message: '#^Offset 0 on array\{0\: int\<0, max\>, 1\: int\<0, max\>, 2\: int, 3\: string, mime\: string, channels\?\: int, bits\?\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Admin/MediaController.php
+
+		-
+			message: '#^Offset 1 on array\{0\: int\<0, max\>, 1\: int\<0, max\>, 2\: int, 3\: string, mime\: string, channels\?\: int, bits\?\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Admin/MediaController.php
+
+		-
+			message: '#^PHPDoc tag @var has invalid value \(class\-string\<\\\\Spatie\\\\MediaLibrary\\\\MediaCollections\\\\Models\\\\Media\> \$Media\)\: Unexpected token "\\\\\\\\Spatie\\\\\\\\MediaLibrary\\\\\\\\MediaCollections\\\\\\\\Models\\\\\\\\Media\>", expected type at offset 22 on line 1$#'
+			identifier: phpDoc.parseError
+			count: 2
+			path: app/Http/Controllers/Admin/MediaController.php
+
+		-
+			message: '#^Call to function method_exists\(\) with App\\Models\\MediaBucket and ''getMedia'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Admin/MediaFolderController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/SiteSettingsController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/SitemapController.php
+
+		-
+			message: '#^Call to function method_exists\(\) with App\\Models\\User and ''can'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: app/Http/Controllers/Admin/SitemapController.php
+
+		-
+			message: '#^Call to function method_exists\(\) with App\\Models\\User and ''can'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Admin/TranslationController.php
+
+		-
+			message: '#^Call to function method_exists\(\) with App\\Models\\User and ''hasRole'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Admin/TranslationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Admin/TranslationController.php
+
+		-
+			message: '#^Parameter \#1 \$item of method App\\Http\\Controllers\\Content\\MenuItemController\:\:deleteSubtree\(\) expects App\\Models\\MenuItem, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Content/MenuItemController.php
+
+		-
+			message: '#^Parameter \#1 \$menu of method App\\Http\\Controllers\\Content\\MenuItemController\:\:forgetMenuCacheFromMenu\(\) expects App\\Models\\Menu\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Http/Controllers/Content/MenuItemController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Content/MenuItemController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Post\:\:\$featured_image_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Content/PagesController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/PagesController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/PagesController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\Post\>\:\:through\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Content/PagesController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$content\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$excerpt\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 10
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$label\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$locale\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 9
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$seo_description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$seo_title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$taxonomy\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Post\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 4
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>content" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>excerpt" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>seo_description" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>seo_title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Content/PostController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Content/TaxonomyController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Content/TaxonomyTermController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Content/TaxonomyTermController.php
+
+		-
+			message: '#^Variable \$name on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/Http/Controllers/Content/TaxonomyTermController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Content/TemplateController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Content/TemplateController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\Template\>\:\:through\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Content/TemplateController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 5
+			path: app/Http/Controllers/Dashboard/Admin/PostController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/FeedController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Frontend/BaseFrontendController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$has_comments\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Frontend/CommentController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>has_comments" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Frontend/CommentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Frontend/TaxonomyController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Frontend/TaxonomyController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$locale\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Frontend/TaxonomyController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Frontend/TaxonomyController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Frontend/TaxonomyController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\:\:published\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Frontend/TaxonomyController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Frontend/TaxonomyController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Middleware/HandleInertiaRequests.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Middleware/HandleInertiaRequests.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Middleware/HandleInertiaRequests.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Middleware/HandleInertiaRequests.php
+
+		-
+			message: '#^Call to function method_exists\(\) with App\\Models\\User and ''hasAnyPermission'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Middleware/RoleOrPermission.php
+
+		-
+			message: '#^Call to function method_exists\(\) with App\\Models\\User and ''hasAnyRole'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Middleware/RoleOrPermission.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$post_type_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/StorePostRequest.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$post_type_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/UpdatePostRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostResource\:\:\$content\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostResource\:\:\$excerpt\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostResource\:\:\$post_type_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostTypeResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostTypeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostTypeResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostTypeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostTypeResource\:\:\$is_hierarchical\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostTypeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostTypeResource\:\:\$is_public\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostTypeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostTypeResource\:\:\$label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostTypeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostTypeResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostTypeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostTypeResource\:\:\$plural_label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostTypeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostTypeResource\:\:\$route_prefix\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostTypeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PostTypeResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PostTypeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\RoleResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/RoleResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\RoleResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/RoleResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\RoleResource\:\:\$permissions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/RoleResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\TaxonomyResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/TaxonomyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\TaxonomyResource\:\:\$is_hierarchical\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/TaxonomyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\TaxonomyResource\:\:\$is_public\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/TaxonomyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\TaxonomyResource\:\:\$label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/TaxonomyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\TaxonomyResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/TaxonomyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\TaxonomyResource\:\:\$plural_label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/TaxonomyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\TaxonomyResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/TaxonomyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ThemeResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ThemeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ThemeResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ThemeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ThemeResource\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ThemeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ThemeResource\:\:\$is_installed\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ThemeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ThemeResource\:\:\$template_engine\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ThemeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$roles\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Method App\\Models\\Locale\:\:findByCode\(\) should return App\\Models\\Locale\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Locale.php
+
+		-
+			message: '#^Method App\\Models\\Locale\:\:getDefault\(\) should return App\\Models\\Locale\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Locale.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: app/Models/Locale.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$path\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/MediaBucket.php
+
+		-
+			message: '#^Call to an undefined method Spatie\\Image\\Drivers\\ImageDriver\:\:nonQueued\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/MediaBucket.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$locale\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/MenuItem.php
+
+		-
+			message: '#^Method App\\Models\\MenuItem\:\:setTranslation\(\) should return App\\Models\\MenuItemTranslation but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/MenuItem.php
+
+		-
+			message: '#^Method App\\Models\\MenuItem\:\:translation\(\) should return App\\Models\\MenuItemTranslation\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/MenuItem.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Models/MenuItem.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>label" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/MenuItem.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>url" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/MenuItem.php
+
+		-
+			message: '#^PHPDoc tag @use has invalid type Database\\Factories\\PluginFactory\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Plugin.php
+
+		-
+			message: '#^Type Database\\Factories\\PluginFactory in generic type Illuminate\\Database\\Eloquent\\Factories\\HasFactory\<Database\\Factories\\PluginFactory\> in PHPDoc tag @use is not subtype of template type TFactory of Illuminate\\Database\\Eloquent\\Factories\\Factory of trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory\.$#'
+			identifier: generics.notSubtype
+			count: 1
+			path: app/Models/Plugin.php
+
+		-
+			message: '#^Method App\\Models\\Post\:\:setTranslation\(\) should return App\\Models\\PostTranslation but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Post.php
+
+		-
+			message: '#^Method App\\Models\\Post\:\:translation\(\) should return App\\Models\\PostTranslation\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Post.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/Post.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/SiteSetting.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$custom_urls\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/SitemapSetting.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$include_taxonomies\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/SitemapSetting.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$included_post_type_ids\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/SitemapSetting.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/SitemapSetting.php
+
+		-
+			message: '#^Method App\\Models\\Taxonomy\:\:setTranslation\(\) should return App\\Models\\TaxonomyTranslation but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Taxonomy.php
+
+		-
+			message: '#^Method App\\Models\\Taxonomy\:\:translation\(\) should return App\\Models\\TaxonomyTranslation\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Taxonomy.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/Taxonomy.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>description" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/Taxonomy.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>label" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/Taxonomy.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>plural_label" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/Taxonomy.php
+
+		-
+			message: '#^Method App\\Models\\TaxonomyTerm\:\:setTranslation\(\) should return App\\Models\\TaxonomyTermTranslation but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/TaxonomyTerm.php
+
+		-
+			message: '#^Method App\\Models\\TaxonomyTerm\:\:translation\(\) should return App\\Models\\TaxonomyTermTranslation\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/TaxonomyTerm.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/TaxonomyTerm.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>description" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/TaxonomyTerm.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>meta_description" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/TaxonomyTerm.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>meta_title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/TaxonomyTerm.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/TaxonomyTerm.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/TaxonomyTerm.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$has_comments\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$locale\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$taxonomy\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:getCollection\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 4
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Instanceof between Illuminate\\Support\\Collection\<\(int\|string\), mixed\> and Illuminate\\Support\\Collection will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>has_comments" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Presenters/PostPresenter.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Providers/DynamicRouteServiceProvider.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: app/Providers/SiteSettingsServiceProvider.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''guest'' and ''guest'' will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: app/Services/MenuService.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Services/MenuService.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Services/MenuService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SearchEnginePingingService.php
+
+		-
+			message: '#^Offset 2 on array\{0\: non\-falsy\-string, 1\: non\-empty\-string, 2\: string, 3\?\: non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/ShortcodeService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SiteSettingsService.php
+
+		-
+			message: '#^Parameter \#2 \$replace of function str_replace expects array\<string\>\|string, array\<int, int\<0, max\>\|string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/SiteSettingsService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/SitemapBuilder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$locale\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/SitemapBuilder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SitemapBuilder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/SitemapBuilder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/TranslationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$direction\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/TranslationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_default\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/TranslationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/TranslationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$native_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/TranslationService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/TranslationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>direction" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/TranslationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/TranslationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>native_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/TranslationService.php
+
+		-
+			message: '#^Static method Illuminate\\Support\\Facades\\Event\:\:listen\(\) invoked with 3 parameters, 1\-2 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: app/helpers.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ContactForm\\src\\Models\\ContactSubmission\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ContactForm/src/Mail/ContactFormSubmitted.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ContactForm\\src\\Models\\ContactSubmission\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ContactForm/src/Mail/ContactFormSubmitted.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ContactForm\\src\\Models\\ContactSubmission\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ContactForm/src/Mail/ContactFormSubmitted.php
+
+		-
+			message: '#^Parameter \#1 \$view of method Illuminate\\Mail\\Mailable\:\:markdown\(\) expects view\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: plugins/ContactForm/src/Mail/ContactFormSubmitted.php
+
+		-
+			message: '#^Parameter \#1 \$view of static method Illuminate\\View\\Factory\:\:make\(\) expects view\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: plugins/ContactForm/src/Services/ContactFormShortcodeService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_sku\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$admin_note\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_address_1\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_address_2\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_city\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_country\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_postcode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$coupon_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$customer_email\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$customer_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$customer_note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$customer_phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$discount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$order_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$paid_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$payment_method\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$payment_status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$ship_to_different\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipped_at\.$#'
+			identifier: property.notFound
+			count: 3
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping_method\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 8
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$tax\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$tracking_number\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$transaction_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/ProductController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/ProductController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$taxonomy\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/ProductController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>settings" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/Admin/ShopSettingsController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_sku\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_address_1\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_address_2\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_city\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_country\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_postcode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$customer_email\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$customer_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$customer_note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$discount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$order_number\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$payment_method\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$payment_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$tax\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: plugins/ModuloShop/src/Http/Controllers/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: plugins/ModuloShop/src/Http/Controllers/ShopController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: plugins/ModuloShop/src/Http/Controllers/ShopController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/ShopController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$taxonomy\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/ShopController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: plugins/ModuloShop/src/Http/Controllers/ShopController.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$order_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Mail/OrderCompletedCustomer.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$order_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Mail/OrderPlacedAdmin.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$order_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Mail/OrderPlacedCustomer.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$order_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Mail/OrderShippedCustomer.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$access_token\.$#'
+			identifier: property.notFound
+			count: 3
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_address_1\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_address_2\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_city\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_country\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_postcode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$billing_state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$order_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$payment_status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$ship_to_different\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping_address_1\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping_address_2\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping_city\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping_country\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping_postcode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping_state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: plugins/ModuloShop/src/Models/Order.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>settings" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: plugins/ModuloShop/src/Services/ModuloShopSettings.php
