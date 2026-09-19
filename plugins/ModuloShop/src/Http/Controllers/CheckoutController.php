@@ -3,18 +3,21 @@
 namespace Plugins\ModuloShop\src\Http\Controllers;
 
 use App\Models\SiteSetting;
+use App\Services\PostService;
 use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Plugins\ModuloShop\src\Mail\OrderPlacedAdmin;
 use Plugins\ModuloShop\src\Mail\OrderPlacedCustomer;
 use Plugins\ModuloShop\src\Models\Order;
 use Plugins\ModuloShop\src\Models\OrderItem;
 use Plugins\ModuloShop\src\Services\CartService;
+use Plugins\ModuloShop\src\Services\StockService;
 
 class CheckoutController
 {
@@ -22,8 +25,11 @@ class CheckoutController
 
     protected ReactTemplateRenderer $reactRenderer;
 
-    public function __construct(CartService $cartService, ReactTemplateRenderer $reactRenderer)
-    {
+    public function __construct(
+        CartService $cartService,
+        ReactTemplateRenderer $reactRenderer,
+        protected StockService $stock,
+    ) {
         $this->cartService = $cartService;
         $this->reactRenderer = $reactRenderer;
     }
@@ -95,13 +101,20 @@ class CheckoutController
             'shipping_postcode' => 'required_if:ship_to_different,true|nullable|string|max:20',
             'shipping_country' => 'required_if:ship_to_different,true|nullable|string|size:2',
             'customer_note' => 'nullable|string|max:1000',
-            'payment_method' => 'required|string|in:cod,bank_transfer,stripe',
+            'payment_method' => 'required|string|in:cod,bank_transfer',
         ]);
 
-        $totals = $this->cartService->getTotals();
+        $totals = $this->cartService->getTotals($cart);
+        $quantities = collect($cart['items'])
+            ->groupBy('product_id')
+            ->map(fn ($items) => (int) $items->sum('quantity'))
+            ->all();
 
         try {
-            $order = DB::transaction(function () use ($validated, $cart, $totals, $request) {
+            $order = DB::transaction(function () use ($validated, $cart, $totals, $request, $quantities) {
+                // Locks the product rows and re-checks stock; throws (and rolls back) when short
+                $this->stock->reserve($quantities);
+
                 $order = Order::create([
                     'order_number' => Order::generateOrderNumber(),
                     'user_id' => $request->user()?->id,
@@ -152,31 +165,11 @@ class CheckoutController
 
                 return $order;
             });
-
-            // Clear the cart after successful order
-            $this->cartService->clear();
-
-            $order->loadMissing('items');
-            $this->sendOrderPlacedEmails($order);
-
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'order' => [
-                        'id' => $order->id,
-                        'order_number' => $order->order_number,
-                        'total' => $order->total,
-                        'currency' => $order->currency,
-                    ],
-                    'redirect' => $order->confirmationUrl(),
-                ]);
-            }
-
-            return redirect()->to($order->confirmationUrl())
-                ->with('success', 'Order placed successfully!');
-
-        } catch (\Exception $e) {
-            logger()->error('Checkout error: '.$e->getMessage());
+        } catch (ValidationException $e) {
+            // Stock problems: show them like any other validation error
+            throw $e;
+        } catch (\Throwable $e) {
+            report($e);
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -187,6 +180,29 @@ class CheckoutController
 
             return back()->withErrors(['checkout' => 'Failed to process order. Please try again.']);
         }
+
+        // The order is committed from here on; nothing below may turn it into an error response.
+        $this->cartService->clear();
+        app(PostService::class)->flushCache(); // stock changed
+
+        $order->loadMissing('items');
+        $this->sendOrderPlacedEmails($order);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'order' => [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'total' => $order->total,
+                    'currency' => $order->currency,
+                ],
+                'redirect' => $order->confirmationUrl(),
+            ]);
+        }
+
+        return redirect()->to($order->confirmationUrl())
+            ->with('success', 'Order placed successfully!');
     }
 
     public function confirmation(Request $request, string $orderNumber): JsonResponse|Response

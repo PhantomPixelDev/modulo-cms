@@ -17,12 +17,16 @@ Route::prefix('shop')->group(function () {
     Route::get('/cart', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'index'])
         ->name('shop.cart');
     Route::post('/cart/add', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'add'])
+        ->middleware('throttle:60,1')
         ->name('shop.cart.add');
     Route::post('/cart/update', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'update'])
+        ->middleware('throttle:60,1')
         ->name('shop.cart.update');
     Route::post('/cart/remove', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'remove'])
+        ->middleware('throttle:60,1')
         ->name('shop.cart.remove');
     Route::post('/cart/clear', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'clear'])
+        ->middleware('throttle:60,1')
         ->name('shop.cart.clear');
     Route::get('/cart/count', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'count'])
         ->name('shop.cart.count');
@@ -33,8 +37,10 @@ Route::prefix('shop')->group(function () {
     Route::get('/checkout', [\Plugins\ModuloShop\src\Http\Controllers\CheckoutController::class, 'index'])
         ->name('shop.checkout');
     Route::post('/checkout', [\Plugins\ModuloShop\src\Http\Controllers\CheckoutController::class, 'store'])
+        ->middleware('throttle:10,1')
         ->name('shop.checkout.store');
     Route::get('/order/{orderNumber}', [\Plugins\ModuloShop\src\Http\Controllers\CheckoutController::class, 'confirmation'])
+        ->middleware('throttle:30,1')
         ->name('shop.order.confirmation');
 
     // Product single page (must be last due to catch-all slug)

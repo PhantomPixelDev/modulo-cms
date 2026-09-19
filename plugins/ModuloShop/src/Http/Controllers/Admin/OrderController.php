@@ -4,13 +4,16 @@ namespace Plugins\ModuloShop\src\Http\Controllers\Admin;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use App\Services\PostService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 use Plugins\ModuloShop\src\Mail\OrderCompletedCustomer;
 use Plugins\ModuloShop\src\Mail\OrderShippedCustomer;
 use Plugins\ModuloShop\src\Models\Order;
+use Plugins\ModuloShop\src\Services\StockService;
 
 class OrderController
 {
@@ -119,7 +122,21 @@ class OrderController
             $order->admin_note = $validated['admin_note'];
         }
 
-        $order->save();
+        $releasesStock = in_array($order->status, [Order::STATUS_CANCELLED, Order::STATUS_REFUNDED], true)
+            && ! in_array($previousStatus, [Order::STATUS_CANCELLED, Order::STATUS_REFUNDED], true);
+
+        DB::transaction(function () use ($order, $releasesStock) {
+            $order->save();
+
+            // Cancelled/refunded orders give their items back to stock (once)
+            if ($releasesStock) {
+                app(StockService::class)->release($order);
+            }
+        });
+
+        if ($releasesStock) {
+            app(PostService::class)->flushCache();
+        }
 
         if ($previousStatus !== $order->status) {
             $this->sendStatusEmails($order, $previousStatus);

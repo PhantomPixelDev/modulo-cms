@@ -10,6 +10,13 @@ class CartService
 {
     protected const SESSION_KEY = 'shop_cart';
 
+    /** @var array<int, Post|null> Products loaded during this request */
+    protected array $products = [];
+
+    protected PostType|false|null $productType = false;
+
+    public function __construct(protected ModuloShopSettings $settings) {}
+
     public function getCart(): array
     {
         return Session::get(self::SESSION_KEY, [
@@ -58,7 +65,6 @@ class CartService
         }
 
         $cart['items'] = $items;
-        $cart['currency'] = $meta['currency'] ?? 'USD';
 
         $this->saveCart($cart);
 
@@ -139,7 +145,10 @@ class CartService
         $cart = $this->getCart();
         $items = [];
         $subtotal = 0;
-        $currency = $cart['currency'] ?? 'USD';
+        $currency = $this->settings->currency();
+
+        // One query for all products instead of two per cart line
+        $this->loadProducts(array_column($cart['items'], 'product_id'));
 
         foreach ($cart['items'] as $item) {
             $product = $this->getProduct($item['product_id']);
@@ -153,7 +162,6 @@ class CartService
             $originalPrice = (float) ($meta['price'] ?? 0);
             $itemSubtotal = $price * $item['quantity'];
             $subtotal += $itemSubtotal;
-            $currency = $meta['currency'] ?? $currency;
 
             $items[] = [
                 'product_id' => $product->id,
@@ -180,9 +188,12 @@ class CartService
         ];
     }
 
-    public function getTotals(): array
+    /**
+     * Pass an already built cart to avoid loading it twice.
+     */
+    public function getTotals(?array $cart = null): array
     {
-        $cart = $this->getCartWithProducts();
+        $cart ??= $this->getCartWithProducts();
 
         return [
             'subtotal' => $cart['subtotal'],
@@ -214,15 +225,37 @@ class CartService
 
     protected function getProduct(int $productId): ?Post
     {
-        $productType = PostType::where('slug', 'product')->first();
-
-        if (! $productType) {
-            return null;
+        if (! array_key_exists($productId, $this->products)) {
+            $this->loadProducts([$productId]);
         }
 
-        return Post::where('id', $productId)
-            ->where('post_type_id', $productType->id)
-            ->published()
-            ->first();
+        return $this->products[$productId] ?? null;
+    }
+
+    /**
+     * @param  array<int, int>  $ids
+     */
+    protected function loadProducts(array $ids): void
+    {
+        $missing = array_values(array_diff(array_unique($ids), array_keys($this->products)));
+        if ($missing === []) {
+            return;
+        }
+
+        if ($this->productType === false) {
+            $this->productType = PostType::where('slug', 'product')->first();
+        }
+
+        $found = $this->productType
+            ? Post::whereIn('id', $missing)
+                ->where('post_type_id', $this->productType->id)
+                ->published()
+                ->get()
+                ->keyBy('id')
+            : collect();
+
+        foreach ($missing as $id) {
+            $this->products[$id] = $found->get($id);
+        }
     }
 }
