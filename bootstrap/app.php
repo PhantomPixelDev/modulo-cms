@@ -6,6 +6,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -39,42 +40,21 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Structured logging for all exceptions
-        $exceptions->report(function (\Throwable $e) {
-            try {
-                \Log::error('app.exception', [
-                    'type' => get_class($e),
-                    'message' => $e->getMessage(),
-                    'code' => $e->getCode(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'trace' => collect($e->getTrace())->take(10)->all(),
-                    'env' => app()->environment(),
-                    'url' => request()->fullUrl() ?? null,
-                    'method' => request()->method() ?? null,
-                    'ip' => request()->ip() ?? null,
-                    'user_id' => optional(auth()->user())->id,
-                ]);
+        // Request context on every logged exception (Laravel already logs the exception itself)
+        $exceptions->context(fn () => app()->runningInConsole() ? [] : [
+            'url' => request()->fullUrl(),
+            'method' => request()->method(),
+            'ip' => request()->ip(),
+        ]);
 
-                // Optional: Sentry capture when configured
-                if (env('SENTRY_LARAVEL_DSN') && function_exists('Sentry\\captureException')) {
-                    \Sentry\captureException($e);
-                }
-            } catch (\Throwable $inner) {
-                // Avoid cascading failures in the reporter
-            }
-        });
+        // JSON for API routes, keeping real status codes (404, 422, 429...);
+        // messages of 500s are hidden unless APP_DEBUG is on.
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson()
+        );
 
-        // Optionally render JSON for API routes
-        $exceptions->render(function (\Throwable $e) {
-            $request = request();
-            if ($request && $request->is('api/*')) {
-                return response()->json([
-                    'error' => [
-                        'message' => 'Server Error',
-                        'type' => class_basename($e),
-                    ],
-                ], 500);
-            }
-        });
+        // Sentry reports only when SENTRY_LARAVEL_DSN is configured
+        if (class_exists(\Sentry\Laravel\Integration::class)) {
+            \Sentry\Laravel\Integration::handles($exceptions);
+        }
     })->create();
