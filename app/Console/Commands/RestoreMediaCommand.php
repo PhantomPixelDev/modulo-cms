@@ -74,7 +74,7 @@ class RestoreMediaCommand extends Command
         }
 
         if ($dryRun) {
-            $this->info("Dry run completed. Found ".count($missingFiles)." missing files.");
+            $this->info('Dry run completed. Found '.count($missingFiles).' missing files.');
         } else {
             $this->info("Media restoration completed! Restored {$restoredCount} files.");
         }
