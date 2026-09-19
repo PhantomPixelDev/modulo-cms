@@ -68,8 +68,11 @@ class ShortcodeService
         // [button] shortcode
         $this->register('button', function ($attrs, $content) {
             $url = $attrs['url'] ?? '#';
+            if (!HtmlSanitizer::isSafeUrl($url)) {
+                $url = '#';
+            }
             $class = $attrs['class'] ?? 'btn btn-primary';
-            $target = isset($attrs['new_tab']) ? ' target="_blank"' : '';
+            $target = isset($attrs['new_tab']) ? ' target="_blank" rel="noopener noreferrer"' : '';
             return sprintf('<a href="%s" class="%s"%s>%s</a>', e($url), e($class), $target, e($content));
         });
 

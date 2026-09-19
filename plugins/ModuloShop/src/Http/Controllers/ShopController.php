@@ -5,6 +5,7 @@ namespace Plugins\ModuloShop\src\Http\Controllers;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
+use App\Services\HtmlSanitizer;
 use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -218,7 +219,7 @@ class ShopController
             'title' => $product->title,
             'slug' => $product->slug,
             'excerpt' => $product->excerpt,
-            'content' => $product->content,
+            'content' => app(HtmlSanitizer::class)->sanitize($product->content),
             'featured_image' => $product->featured_image,
             'url' => url('/shop/' . $product->slug),
             'price' => (float) ($meta['price'] ?? 0),

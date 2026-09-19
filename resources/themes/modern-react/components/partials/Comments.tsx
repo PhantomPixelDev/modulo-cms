@@ -7,7 +7,6 @@ interface Comment {
   id: number;
   user_id: number | null;
   author_name: string;
-  author_email: string | null;
   author_avatar: string | null;
   content: string;
   created_at: string;

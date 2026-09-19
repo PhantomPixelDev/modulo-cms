@@ -7,6 +7,8 @@ interface PostViewProps {
     slug: string;
     status: string;
     content: string;
+    /** Server-rendered, sanitized HTML */
+    content_html?: string;
     excerpt?: string;
     created_at?: string;
     updated_at?: string;
@@ -26,7 +28,7 @@ export function PostView({ post }: PostViewProps) {
         {post.published_at && <span className="text-sm text-muted-foreground">Published: {new Date(post.published_at).toLocaleString()}</span>}
       </div>
       {post.excerpt && <p className="text-muted-foreground">{post.excerpt}</p>}
-      <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
+      <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: post.content_html ?? '' }} />
     </div>
   );
 }

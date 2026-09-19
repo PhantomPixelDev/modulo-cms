@@ -10,6 +10,7 @@ use App\Models\PostType;
 use App\Models\TaxonomyTerm;
 use App\Models\User;
 use App\Models\Locale;
+use App\Presenters\PostPresenter;
 use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -265,6 +266,7 @@ class PostController extends Controller
             'slug' => $post->slug,
             'excerpt' => $post->excerpt,
             'content' => $post->content,
+            'content_html' => app(PostPresenter::class)->renderContent($post),
             'status' => $post->status,
             'featured_image' => $post->featured_image,
             'published_at' => $post->published_at?->format('Y-m-d H:i:s'),

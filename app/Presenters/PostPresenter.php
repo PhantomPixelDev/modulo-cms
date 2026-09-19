@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\Comment;
 use App\Models\SiteSetting;
 use App\Models\Locale;
+use App\Services\HtmlSanitizer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -13,34 +14,8 @@ class PostPresenter
 {
     public function presentPost(Post $post): array
     {
-        $content = $post->content ?? '';
+        $content = $this->renderContent($post);
         $settings = app(\App\Services\SiteSettingsService::class);
-
-        if (is_string($content) && str_starts_with(trim($content), '[')) {
-            try {
-                $slateContent = json_decode($content, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $content = $this->slateToHtml($slateContent);
-                }
-            } catch (\Exception $e) {
-                \Log::warning('Failed to parse Slate.js content', [
-                    'post_id' => $post->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        if (is_string($content)) {
-            try {
-                $content = app(\App\Services\ShortcodeService::class)->parse($content);
-            } catch (\Throwable $e) {
-                \Log::warning('Failed to parse shortcodes', [
-                    'post_id' => $post->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
         $commentsEnabled = $this->commentsEnabled($post);
 
         return [
@@ -54,14 +29,13 @@ class PostPresenter
             'updated_at' => $settings->formatDateTime($post->updated_at),
             'meta_title' => $post->meta_title,
             'meta_description' => $post->meta_description,
+            // Never expose emails on public pages
             'author' => $post->author ? [
                 'id' => $post->author->id,
                 'name' => $post->author->name ?? 'Unknown',
-                'email' => $post->author->email ?? '',
             ] : [
                 'id' => 0,
                 'name' => 'Unknown',
-                'email' => '',
             ],
             'post_type' => $post->postType ? [
                 'id' => $post->postType->id,
@@ -94,6 +68,49 @@ class PostPresenter
             'allow_comments' => $commentsEnabled,
             'localizations' => $this->buildLocalizationMap($post),
         ];
+    }
+
+    /**
+     * Render stored content (Slate JSON or HTML) to safe HTML with shortcodes expanded.
+     */
+    public function renderContent(Post $post): string
+    {
+        $content = $post->content ?? '';
+        $isSlate = false;
+
+        if (is_string($content) && str_starts_with(trim($content), '[')) {
+            try {
+                $slateContent = json_decode($content, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($slateContent)) {
+                    $content = $this->slateToHtml($slateContent);
+                    $isSlate = true;
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to parse Slate.js content', [
+                    'post_id' => $post->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Slate output is escaped while rendering; raw HTML must be sanitized
+        // before shortcodes inject their own trusted markup.
+        if (is_string($content) && !$isSlate) {
+            $content = app(HtmlSanitizer::class)->sanitize($content);
+        }
+
+        if (is_string($content)) {
+            try {
+                $content = app(\App\Services\ShortcodeService::class)->parse($content);
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to parse shortcodes', [
+                    'post_id' => $post->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return is_string($content) ? $content : '';
     }
 
     /**
@@ -259,7 +276,6 @@ class PostPresenter
             'id' => $comment->id,
             'user_id' => $comment->user_id,
             'author_name' => $comment->author_name,
-            'author_email' => $comment->author_email,
             'author_avatar' => $comment->author_avatar,
             'content' => $comment->content,
             'created_at' => optional($comment->created_at)->toIso8601String(),
