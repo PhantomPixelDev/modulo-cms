@@ -92,3 +92,8 @@ public/hot
 node_modules
 dist
 .vite/
+
+# Local artifacts
+cookies.txt
+storage/media-library/
+bootstrap/cache/*.php

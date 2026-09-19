@@ -144,7 +144,31 @@ Configure `MAIL_ADMIN_ADDRESS` in `.env.dev` to receive:
 ### Production
 
 ```bash
+cp .env.prod.example .env.prod
+# Set APP_URL, DB_PASSWORD, mail credentials and a key:
+#   docker run --rm php:8.4-cli php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
 ./modulo.sh up prod
+```
+
+`docker/docker-compose.yml` starts:
+
+| Service | Purpose |
+|---------|---------|
+| `web` | nginx on `WEB_PORT` (default 8080); serves `public/`, only `/index.php` runs PHP |
+| `app` | PHP-FPM with opcache; runs migrations when `RUN_MIGRATIONS=true`, caches config/views |
+| `queue` | `queue:work` (queued mail etc.) |
+| `scheduler` | `schedule:work` |
+| `db` / `redis` | PostgreSQL 16 and Redis 7 |
+
+The stack speaks plain HTTP: put a TLS-terminating proxy (Caddy, Traefik, a load balancer) in front of `web`.
+Routes are intentionally **not** cached (`route:cache`): post type and taxonomy routes come from the database.
+Seeders are for development: never seed the demo accounts in production.
+
+### Tests
+
+```bash
+./modulo.sh test dev                          # SQLite in-memory
+vendor/bin/pest -c phpunit.pgsql.xml          # PostgreSQL (uses DB_HOST/DB_USERNAME/DB_PASSWORD, database modulo_test)
 ```
 
 ---

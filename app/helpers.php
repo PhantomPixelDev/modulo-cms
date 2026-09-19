@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Schema;
 
 if (! function_exists('add_action')) {
     /**
@@ -66,7 +67,14 @@ if (! function_exists('schema_has_table')) {
             return true;
         }
 
-        $exists = \Illuminate\Support\Facades\Schema::hasTable($table);
+        try {
+            $exists = Schema::hasTable($table);
+        } catch (Throwable $e) {
+            // No reachable database (image builds, package:discover, fresh checkouts):
+            // behave as "not installed" instead of crashing every artisan command.
+            return false;
+        }
+
         if ($exists) {
             $known[$key] = true;
             $app->instance('modulo.schema_tables', $known);

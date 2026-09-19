@@ -9,10 +9,10 @@ RUN set -eux; \
       bash git unzip curl libpq-dev libzip-dev \
       # psql: Laravel loads database/schema/pgsql-schema.sql with it on fresh migrations
       postgresql-client \
-      libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev; \
+      libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libicu-dev; \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
     docker-php-ext-install -j"$(nproc)" \
-      gd pdo pdo_mysql pgsql pdo_pgsql opcache exif bcmath zip; \
+      gd pdo pdo_mysql pgsql pdo_pgsql opcache exif bcmath zip intl; \
     rm -rf /var/lib/apt/lists/*; \
     sed -ri \
       -e 's#^listen\s*=\s*.*#listen = 0.0.0.0:9000#' \

@@ -1,0 +1,111 @@
+# Production stack: ./modulo.sh up prod  (reads ../.env.prod)
+#
+# Put a TLS-terminating proxy (Caddy, Traefik, a load balancer...) in front of
+# the "web" service; it listens on HTTP only.
+
+x-app: &app
+  image: modulo-cms-app:latest
+  env_file:
+    - ${MODULO_ENV_FILE:-../.env.prod}
+  volumes:
+    - storage:/var/www/html/storage
+    - theme_assets:/var/www/html/public/themes
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+  networks:
+    - modulo
+
+services:
+  app:
+    <<: *app
+    container_name: modulo-php
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: app
+    environment:
+      CONTAINER_ROLE: app
+
+  queue:
+    <<: *app
+    container_name: modulo-queue
+    environment:
+      CONTAINER_ROLE: queue
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+    depends_on:
+      app:
+        condition: service_started
+
+  scheduler:
+    <<: *app
+    container_name: modulo-scheduler
+    environment:
+      CONTAINER_ROLE: scheduler
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      app:
+        condition: service_started
+
+  web:
+    container_name: modulo-web
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: web
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    volumes:
+      - storage:/var/www/html/storage:ro
+      - theme_assets:/var/www/html/public/themes:ro
+    depends_on:
+      app:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - modulo
+
+  db:
+    container_name: modulo-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-modulo_prod}
+      POSTGRES_USER: ${DB_USERNAME:-modulo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env.prod}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      - modulo
+
+  redis:
+    container_name: modulo-redis
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      - modulo
+
+volumes:
+  storage:
+  theme_assets:
+  pg_data:
+  redis_data:
+
+networks:
+  modulo:
