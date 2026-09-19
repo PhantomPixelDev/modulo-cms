@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Post;
 use App\Models\PostType;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 
@@ -16,45 +15,56 @@ class PostService
     protected const CACHE_TTL = 3600;
 
     /**
-     * Get a post by slug with all necessary relationships
+     * Bumping this version invalidates every cached post lookup at once, so
+     * renamed slugs, type-scoped keys and translations can never go stale.
      */
-    public function getPostBySlug(string $slug, string $postType = null): ?Post
-    {
-        $cacheKey = "post:{$slug}" . ($postType ? ":{$postType}" : '');
+    protected const VERSION_KEY = 'posts:cache_version';
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($slug, $postType) {
-            $query = Post::with([
-                'author',
-                'postType',
-                'taxonomyTerms.taxonomy',
-                'parent',
-                'children',
-                'allComments' => function ($query) {
-                    $query->with('user');
-                },
-                'translations',
-            ]);
+    /**
+     * Get a published post by slug, optionally limited to a post type name ("post", "page").
+     *
+     * Comments are intentionally not cached; load them per request.
+     */
+    public function getPostBySlug(string $slug, ?string $postType = null): ?Post
+    {
+        return $this->remember("name:" . ($postType ?? 'any') . ":{$slug}", function () use ($slug, $postType) {
+            $query = $this->baseQuery();
 
             if ($postType) {
-                $query->whereHas('postType', function($q) use ($postType) {
-                    $q->where('name', $postType);
-                });
+                $query->whereHas('postType', fn ($q) => $q->where('name', $postType));
             }
 
-            return $query->where('slug', $slug)
-                ->published()
+            return $query->where('slug', $slug)->first();
+        });
+    }
+
+    /**
+     * Get a published post by slug within one post type (slugs are only unique per type).
+     */
+    public function getPostBySlugForType(string $slug, PostType $postType): ?Post
+    {
+        return $this->remember("type:{$postType->id}:{$slug}", function () use ($slug, $postType) {
+            return $this->baseQuery()
+                ->where('post_type_id', $postType->id)
+                ->where('slug', $slug)
                 ->first();
         });
     }
 
     /**
-     * Clear cache for a specific post
+     * Invalidate all cached post lookups.
      */
-    public function clearPostCache(string $slug, string $postType = null): void
+    public function flushCache(): void
     {
-        $cacheKey = "post:{$slug}" . ($postType ? ":{$postType}" : '');
-        Cache::forget($cacheKey);
-        Cache::forget("post:{$slug}");
+        Cache::forever(self::VERSION_KEY, $this->cacheVersion() + 1);
+    }
+
+    /**
+     * @deprecated Use flushCache(); kept for callers that pass a slug.
+     */
+    public function clearPostCache(?string $slug = null, ?string $postType = null): void
+    {
+        $this->flushCache();
     }
 
     /**
@@ -90,5 +100,31 @@ class PostService
 
         return $query->orderBy($orderBy, $orderDirection)
             ->paginate($perPage);
+    }
+
+    protected function baseQuery()
+    {
+        return Post::with([
+            'author',
+            'postType',
+            'taxonomyTerms.taxonomy',
+            'parent',
+            'children',
+            'translations',
+        ])->published();
+    }
+
+    protected function remember(string $key, \Closure $callback): ?Post
+    {
+        return Cache::remember(
+            'post:v' . $this->cacheVersion() . ':' . $key,
+            self::CACHE_TTL,
+            $callback
+        );
+    }
+
+    protected function cacheVersion(): int
+    {
+        return (int) Cache::get(self::VERSION_KEY, 1);
     }
 }

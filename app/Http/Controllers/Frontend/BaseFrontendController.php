@@ -49,8 +49,13 @@ abstract class BaseFrontendController extends Controller
         }
 
         try {
-            $content->increment('view_count');
+            // Query-builder increment: doesn't touch updated_at or fire model events
+            \App\Models\Post::whereKey($content->id)->toBase()->increment('view_count');
         } catch (\Throwable $e) {}
+
+        // Comments are never cached with the post; always load fresh so new ones show immediately
+        // (load(), not loadMissing(): in-memory cache stores may hand back the same instance)
+        $content->load(['allComments.user']);
 
         $templateName = $template;
         try {

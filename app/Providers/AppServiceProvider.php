@@ -6,10 +6,12 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Inertia\Inertia;
 use App\Models\Post;
+use App\Models\PostTranslation;
 use App\Models\User;
 use App\Observers\PostObserver;
 use App\Services\AdminStatsService;
 use App\Services\MenuService;
+use App\Services\PostService;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -31,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register PostObserver
         Post::observe(PostObserver::class);
+
+        // Translations are cached together with their post
+        PostTranslation::saved(fn () => app(PostService::class)->flushCache());
+        PostTranslation::deleted(fn () => app(PostService::class)->flushCache());
 
         // Bust adminStats cache when user count changes
         User::created(fn () => app(AdminStatsService::class)->forget());

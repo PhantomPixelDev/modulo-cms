@@ -28,7 +28,7 @@ class PostObserver
      */
     public function saved(Post $post): void
     {
-        $this->postService->clearPostCache($post->slug);
+        $this->postService->flushCache();
         $this->adminStats->forget();
 
         if ($post->status === 'published') {
@@ -41,7 +41,7 @@ class PostObserver
      */
     public function deleted(Post $post): void
     {
-        $this->postService->clearPostCache($post->slug);
+        $this->postService->flushCache();
         $this->adminStats->forget();
     }
 }

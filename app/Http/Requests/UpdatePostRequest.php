@@ -30,8 +30,8 @@ class UpdatePostRequest extends FormRequest
                 'string',
                 'max:255',
                 'alpha_dash:ascii',
+                // posts.slug is unique across all post types at the database level
                 Rule::unique('posts', 'slug')
-                    ->where('post_type_id', $postTypeId)
                     ->ignore($post?->id),
             ],
             'content' => ['required', 'string'],

@@ -155,9 +155,10 @@ class PostController extends BaseFrontendController
         }
         
         $postType = PostType::where('route_prefix', $postTypeSlug)->firstOrFail();
-        $content = $this->postService->getPostBySlug($slug);
-        
-        if (!$content || $content->post_type_id !== $postType->id) {
+        // Slugs are unique per post type, so look up within this type only
+        $content = $this->postService->getPostBySlugForType($slug, $postType);
+
+        if (!$content) {
             abort(404);
         }
         
