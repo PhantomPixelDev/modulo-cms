@@ -145,6 +145,7 @@ class RolePermissionSeeder extends Seeder
                 'view themes', 'edit themes', 'delete themes', 'install themes', 'activate themes', 'publish theme assets', 'customize themes',
             ],
             'moderator' => [
+                'access admin',
                 'view users',
                 'view content', 'create content', 'edit content', 'approve content',
                 'view posts', 'create posts', 'edit posts',
@@ -154,6 +155,7 @@ class RolePermissionSeeder extends Seeder
                 'view analytics',
             ],
             'editor' => [
+                'access admin',
                 'view content', 'create content', 'edit content', 'publish content',
                 'view posts', 'create posts', 'edit posts', 'publish posts',
                 'view post types', 'view taxonomies', 'view taxonomy terms',
