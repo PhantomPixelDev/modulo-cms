@@ -9,10 +9,25 @@ import { useAcl } from '@/lib/acl';
 import { getIcon } from '@/lib/icons';
 import { FileText, FolderTree, Boxes } from 'lucide-react';
 
+interface SidebarEntry {
+    id: number;
+    name: string;
+    label?: string | null;
+    slug: string;
+    menu_icon?: string | null;
+    menu_position?: number | null;
+}
+
+interface SidebarSharedProps {
+    dynamicMenu?: { postTypes?: SidebarEntry[]; taxonomies?: SidebarEntry[] };
+    activePlugins?: string[];
+}
+
+const byMenuPosition = (a: SidebarEntry, b: SidebarEntry) => (a.menu_position || 999) - (b.menu_position || 999);
+
 export function AppSidebar() {
     const { url, props } = usePage();
-    const { dynamicMenu } = props as any;
-    const { activePlugins } = props as any;
+    const { dynamicMenu, activePlugins } = props as unknown as SidebarSharedProps;
     const { isAdmin, hasPermission, canAny } = useAcl();
 
     // Filter core adminNav to avoid duplicates if they are now dynamic
@@ -87,9 +102,9 @@ export function AppSidebar() {
                     <SidebarGroup className="px-2 py-0">
                         <SidebarGroupLabel>Content Types</SidebarGroupLabel>
                         <SidebarMenu>
-                            {dynamicMenu.postTypes
-                                .sort((a: any, b: any) => (a.menu_position || 999) - (b.menu_position || 999))
-                                .map((postType: any) => (
+                            {[...dynamicMenu.postTypes]
+                                .sort(byMenuPosition)
+                                .map((postType) => (
                                 <SidebarMenuItem key={postType.id}>
                                     <SidebarMenuButton
                                         asChild
@@ -112,9 +127,9 @@ export function AppSidebar() {
                     <SidebarGroup className="px-2 py-0">
                         <SidebarGroupLabel>Categories</SidebarGroupLabel>
                         <SidebarMenu>
-                            {dynamicMenu.taxonomies
-                                .sort((a: any, b: any) => (a.menu_position || 999) - (b.menu_position || 999))
-                                .map((taxonomy: any) => (
+                            {[...dynamicMenu.taxonomies]
+                                .sort(byMenuPosition)
+                                .map((taxonomy) => (
                                 <SidebarMenuItem key={taxonomy.id}>
                                     <SidebarMenuButton asChild isActive={url.startsWith(`/dashboard/admin/taxonomies/${taxonomy.slug}/terms`)} tooltip={{ children: taxonomy.label || taxonomy.name }}>
                                         <Link href={`/dashboard/admin/taxonomies/${taxonomy.slug}/terms`} prefetch>

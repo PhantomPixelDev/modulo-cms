@@ -137,7 +137,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
 
   return (
     <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Checkout">
-      <SEOHead title="Checkout" description="Complete your order" site={safeSite} />
+      <SEOHead title="Checkout" description="Complete your order" />
 
       <div className="bg-gray-50 min-h-screen py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -130,7 +130,7 @@ export function SitemapSettingsForm({
       custom_urls: sanitizeCustomUrls(),
     };
     try {
-      await router.put(ROUTE.sitemap.update(), payload, {
+      await router.put(ROUTE.sitemap.update(), payload as unknown as Parameters<typeof router.put>[1], {
         preserveScroll: true,
         onSuccess: () => showSuccess(t('dashboard.sitemap.messages.saved')),
         onError: () => showError(t('dashboard.sitemap.messages.save_failed')),

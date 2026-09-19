@@ -41,7 +41,7 @@ interface PostsProps {
     showFilters: boolean;
 }
 
-const Posts: React.FC<PostsProps> = ({ posts, pagination, basePath, pageTitle, showFilters }) => {
+const Posts: React.FC<PostsProps> = ({ posts, pageTitle }) => {
     return (
         <>
             <Head title={pageTitle} />

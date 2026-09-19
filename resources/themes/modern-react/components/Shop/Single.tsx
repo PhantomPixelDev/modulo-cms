@@ -49,6 +49,13 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
   const safeTheme = theme && typeof theme === 'object' ? theme : {};
   const safeMenus = menus && typeof menus === 'object' ? menus : {};
 
+  // Hooks must run on every render, before any early return
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(product?.featured_image || '');
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   if (!product) {
     return (
       <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Product Not Found">
@@ -63,12 +70,6 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
       </Layout>
     );
   }
-
-  const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(product.featured_image || '');
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [addingToCart, setAddingToCart] = useState(false);
-  const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const addToCart = async () => {
     setAddingToCart(true);

@@ -24,20 +24,20 @@ interface TranslationData {
 interface PageProps {
     locale?: LocaleInfo;
     translations?: TranslationData;
-    themeTranslations?: Record<string, any>;
+    themeTranslations?: Record<string, unknown>;
     [key: string]: unknown;
 }
 
 /**
  * Get a nested value from an object using dot notation
  */
-function getNestedValue(obj: any, path: string): string | undefined {
+function getNestedValue(obj: unknown, path: string): string | undefined {
     const keys = path.split('.');
     let result = obj;
 
     for (const key of keys) {
         if (result && typeof result === 'object' && key in result) {
-            result = result[key];
+            result = (result as Record<string, unknown>)[key];
         } else {
             return undefined;
         }
@@ -145,7 +145,7 @@ export function useTranslation() {
      * Get all translations for a domain
      */
     const domain = useCallback(
-        (domainName: string): Record<string, any> => {
+        (domainName: string): Record<string, unknown> => {
             if (!combinedTranslations || !combinedTranslations[domainName]) {
                 return {};
             }

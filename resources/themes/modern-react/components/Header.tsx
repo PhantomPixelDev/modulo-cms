@@ -19,6 +19,13 @@ interface HeaderProps {
     colors?: {
       primary?: string;
       secondary?: string;
+      gradient_from?: string;
+      gradient_to?: string;
+      text_primary?: string;
+      text_muted?: string;
+      border?: string;
+      card?: string;
+      button_text?: string;
     };
   };
 }

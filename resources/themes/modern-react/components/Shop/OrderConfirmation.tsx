@@ -109,7 +109,7 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
 
   return (
     <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title={`Order ${order.order_number}`}>
-      <SEOHead title={`Order Confirmed - ${order.order_number}`} description="Thank you for your order" site={safeSite} />
+      <SEOHead title={`Order Confirmed - ${order.order_number}`} description="Thank you for your order" />
 
       <div className="bg-gray-50 min-h-screen py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

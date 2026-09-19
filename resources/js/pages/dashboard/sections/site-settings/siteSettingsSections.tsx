@@ -30,30 +30,13 @@ export function getSiteSettingsSections({
   t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
   const renderSiteSettings = () => {
-    const { success: showSuccess } = useAdminToast();
-    
-    const handleClearCache = () => {
-      if (!can('edit settings')) return;
-      router.post('/dashboard/admin/settings/clear-cache', {}, {
-        onSuccess: () => showSuccess(t('dashboard.settings.cache_cleared')),
-      });
-    };
-
     return (
       <SectionWrapper
         title={t('dashboard.settings.title')}
         description={t('dashboard.settings.description')}
         actions={
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleClearCache}
-              disabled={!can('edit settings')}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {t('dashboard.settings.actions.clear_cache')}
-            </Button>
+            <ClearSettingsCacheButton canEdit={can('edit settings')} t={t} />
           </div>
         }
       >
@@ -74,4 +57,29 @@ export function getSiteSettingsSections({
   return {
     'site-settings': renderSiteSettings,
   };
+}
+
+// A real component, so the toast hook is called under the rules of hooks
+function ClearSettingsCacheButton({
+  canEdit,
+  t,
+}: {
+  canEdit: boolean;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
+}) {
+  const { success: showSuccess } = useAdminToast();
+
+  const handleClearCache = () => {
+    if (!canEdit) return;
+    router.post('/dashboard/admin/settings/clear-cache', {}, {
+      onSuccess: () => showSuccess(t('dashboard.settings.cache_cleared')),
+    });
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleClearCache} disabled={!canEdit}>
+      <Trash2 className="h-4 w-4 mr-2" />
+      {t('dashboard.settings.actions.clear_cache')}
+    </Button>
+  );
 }

@@ -72,7 +72,12 @@ interface ProductsSingleProps {
 export default function ProductsSingle({ post, product, relatedProducts, site, theme, menus }: ProductsSingleProps) {
   // Support both post and product props
   const item = product || post;
-  
+
+  // Hooks must run on every render, before any early return
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(item?.featured_image || '');
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
   if (!item) {
     return (
       <Layout site={site} theme={theme} menus={menus} title="Product Not Found">
@@ -88,10 +93,6 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
 
   const prefix = item.post_type?.route_prefix || 'shop';
   const backUrl = `/${prefix}`;
-
-  const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(item.featured_image || '');
-  const [isWishlisted, setIsWishlisted] = useState(false);
 
   const formatPrice = (price?: number, currency = 'USD') => {
     if (price === undefined || price === null) return '';

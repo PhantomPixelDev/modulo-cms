@@ -113,7 +113,6 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
       <SEOHead
         title="Shopping Cart"
         description="Review your shopping cart"
-        site={safeSite}
       />
 
       <div className="bg-gray-50 min-h-screen py-12">
@@ -204,7 +203,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                         <span className="w-12 text-center font-medium">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                          disabled={loading === item.product_id || (item.stock !== null && item.quantity >= item.stock)}
+                          disabled={loading === item.product_id || (item.stock != null && item.quantity >= item.stock)}
                           className="p-2 hover:bg-gray-50 disabled:opacity-50"
                         >
                           <Plus className="w-4 h-4" />
