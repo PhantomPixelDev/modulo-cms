@@ -10,7 +10,7 @@ Modern, modular CMS built with Laravel 12 & React 19.
 # 1. Clone & Setup env
 git clone https://github.com/PhantomPixelDev/modulo-cms.git
 cd modulo-cms
-cp .env.example .env.prod
+cp .env.prod.example .env.prod   # then set APP_KEY, DB_PASSWORD and mail credentials
 
 # 2. Start with Docker (production)
 ./modulo.sh up prod
@@ -22,20 +22,18 @@ cp .env.example .env.prod
 # 1. Clone & Setup env
 git clone https://github.com/PhantomPixelDev/modulo-cms.git
 cd modulo-cms
-cp .env.example .env.dev
+cp .env.dev.example .env.dev
 
 # 2. Start with Docker (development)
 ./modulo.sh up dev
 ```
 
-```
-
 **Access:**
-- Dashboard: [http://localhost:8080/dashboard](http://localhost:8080/dashboard)
-- Frontend: [http://localhost:8080](http://localhost:8080)
+- Dashboard: [http://localhost:8000/dashboard](http://localhost:8000/dashboard)
+- Frontend: [http://localhost:8000](http://localhost:8000)
 - Mailpit (email testing): [http://localhost:8025](http://localhost:8025)
 
-**Admin Credentials:**
+**Dev admin credentials** (created by the dev seeder; never use them in production):
 - **Email:** `admin@example.com`
 - **Password:** `admin123`
 

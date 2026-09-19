@@ -29,3 +29,14 @@ ULTIMATE_CONTENT_SUMMARY.md
 .fuse_hidden*
 build/
 public/build
+
+# Environment files (commit only *.example templates)
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.testing
+
+# Local artifacts
+cookies.txt
+/storage/media-library/
