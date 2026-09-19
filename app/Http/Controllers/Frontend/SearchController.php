@@ -28,18 +28,23 @@ class SearchController extends BaseFrontendController
             ]);
         }
 
-        $searchTerm = trim($query);
+        $searchTerm = mb_substr(trim($query), 0, 100);
+
+        // Case-insensitive on every driver (plain LIKE is case-sensitive on PostgreSQL),
+        // with user-supplied % and _ treated literally.
+        $pattern = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $searchTerm) . '%';
 
         $posts = Post::with([
-                'postType', 
-                'author.roles', 
+                'postType',
+                'author',
                 'taxonomyTerms.taxonomy'
             ])
             ->published()
-            ->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('excerpt', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('content', 'LIKE', "%{$searchTerm}%");
+            ->whereHas('postType', fn ($q) => $q->where('is_public', true))
+            ->where(function ($q) use ($pattern) {
+                foreach (['title', 'excerpt', 'content'] as $column) {
+                    $q->orWhereRaw("LOWER({$column}) LIKE LOWER(?) ESCAPE '!'", [$pattern]);
+                }
             })
             ->orderBy('published_at', 'desc')
             ->paginate($this->getPerPage());
