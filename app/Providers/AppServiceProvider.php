@@ -7,6 +7,7 @@ use App\Models\PostTranslation;
 use App\Models\User;
 use App\Observers\PostObserver;
 use App\Services\AdminStatsService;
+use App\Services\HookRegistry;
 use App\Services\MenuService;
 use App\Services\PostService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -23,7 +24,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Plugin action/filter hooks (add_action, apply_filters, ...)
+        $this->app->singleton(HookRegistry::class);
     }
 
     /**

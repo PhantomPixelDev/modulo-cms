@@ -1,15 +1,22 @@
 <?php
 
-use Illuminate\Support\Facades\Event;
+use App\Services\HookRegistry;
 use Illuminate\Support\Facades\Schema;
+
+if (! function_exists('modulo_hooks')) {
+    function modulo_hooks(): HookRegistry
+    {
+        return app(HookRegistry::class);
+    }
+}
 
 if (! function_exists('add_action')) {
     /**
-     * Register an action hook.
+     * Register an action hook. Lower priorities run first.
      */
-    function add_action(string $hook, $callback, int $priority = 0)
+    function add_action(string $hook, callable $callback, int $priority = 10): void
     {
-        Event::listen("action:{$hook}", $callback, $priority);
+        modulo_hooks()->addAction($hook, $callback, $priority);
     }
 }
 
@@ -17,35 +24,29 @@ if (! function_exists('do_action')) {
     /**
      * Execute an action hook.
      */
-    function do_action(string $hook, ...$args)
+    function do_action(string $hook, mixed ...$args): void
     {
-        Event::dispatch("action:{$hook}", $args);
+        modulo_hooks()->doAction($hook, ...$args);
     }
 }
 
 if (! function_exists('add_filter')) {
     /**
-     * Register a filter hook.
+     * Register a filter hook. Lower priorities run first.
      */
-    function add_filter(string $hook, $callback, int $priority = 0)
+    function add_filter(string $hook, callable $callback, int $priority = 10): void
     {
-        Event::listen("filter:{$hook}", $callback, $priority);
+        modulo_hooks()->addFilter($hook, $callback, $priority);
     }
 }
 
 if (! function_exists('apply_filters')) {
     /**
-     * Execute a filter hook.
+     * Pass a value through every registered filter for the hook.
      */
-    function apply_filters(string $hook, $value, ...$args)
+    function apply_filters(string $hook, mixed $value, mixed ...$args): mixed
     {
-        $listeners = Event::getListeners("filter:{$hook}");
-
-        foreach ($listeners as $listener) {
-            $value = $listener($value, ...$args);
-        }
-
-        return $value;
+        return modulo_hooks()->applyFilters($hook, $value, ...$args);
     }
 }
 

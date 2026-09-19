@@ -63,6 +63,24 @@ class PluginManager
     }
 
     /**
+     * Explicit "sync from filesystem": also clears uninstall markers, so a
+     * previously uninstalled plugin can be installed again from the admin.
+     */
+    public function rediscover(): array
+    {
+        foreach (File::directories($this->pluginPath) as $directory) {
+            $marker = rtrim($directory, '/').'/'.$this->uninstallMarker;
+            if (File::exists($marker)) {
+                File::delete($marker);
+            }
+        }
+
+        Cache::forget('plugins.discovery.fingerprint');
+
+        return $this->discover();
+    }
+
+    /**
      * Sync filesystem plugins into DB only when plugin manifests changed.
      */
     public function syncDiscoveredPluginsCached(): void

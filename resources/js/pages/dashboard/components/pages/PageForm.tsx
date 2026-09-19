@@ -68,7 +68,6 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const initialFeaturedImage = normalizeFeaturedImage(page?.featured_image);
-    const initialFeaturedImageId = page?.featured_image_id ?? initialFeaturedImage?.id ?? null;
 
     const [form, setForm] = useState(() => {
         // Initialize with empty content by default
@@ -106,7 +105,6 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
             status: page?.status ?? defaultStatus,
             content: initialContent, // This is a string (JSON or HTML)
             excerpt: page?.excerpt ?? '',
-            featured_image_id: initialFeaturedImageId,
             featured_image: initialFeaturedImage,
             meta_title: page?.meta_title ?? '',
             meta_description: page?.meta_description ?? '',
@@ -144,7 +142,6 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
 
             const formData = {
                 ...form,
-                featured_image_id: form.featured_image_id ?? (typeof form.featured_image === 'object' ? (form.featured_image?.id ?? null) : null),
                 featured_image: featuredImageUrl,
                 content: contentToSubmit,
                 author_id: form.author_id ? parseInt(form.author_id, 10) : null,
@@ -169,7 +166,6 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
         const normalized = normalizeFeaturedImage(media);
         setForm((f) => ({
             ...f,
-            featured_image_id: media?.id ?? normalized?.id ?? null,
             featured_image: normalized,
         }));
         setShowMediaPicker(false);
@@ -178,7 +174,6 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
     const handleFeaturedImageRemove = () => {
         setForm((f) => ({
             ...f,
-            featured_image_id: null,
             featured_image: null,
         }));
     };
@@ -301,13 +296,7 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                                     </Button>
                                     <Badge variant="outline" className="px-2">
                                         {form.featured_image
-                                            ? form.featured_image.name ||
-                                              form.featured_image.file_name ||
-                                              (form.featured_image_id
-                                                  ? t('dashboard.pages.form.selected_image_id', {
-                                                        id: form.featured_image_id,
-                                                    })
-                                                  : t('dashboard.pages.form.selected_image'))
+                                            ? form.featured_image.name || form.featured_image.file_name || t('dashboard.pages.form.selected_image')
                                             : t('dashboard.pages.form.no_image_selected')}
                                     </Badge>
                                 </div>

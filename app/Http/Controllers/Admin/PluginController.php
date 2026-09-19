@@ -37,7 +37,8 @@ class PluginController extends Controller
     {
         $this->authorizePermission('install plugins');
 
-        $this->pluginManager->discover();
+        // Also brings back plugins that were uninstalled earlier
+        $this->pluginManager->rediscover();
 
         return back()->with('success', 'Plugins synced from filesystem.');
     }

@@ -34,17 +34,6 @@ export function usePostForm({ post, onSubmit, onCancel, isEditing }: PostFormPro
             };
         }
 
-        if (post?.featured_image_id && post?.featured_image_url) {
-            return {
-                id: post.featured_image_id,
-                url: post.featured_image_url,
-                thumb: post.featured_image_thumb,
-                name: post.featured_image_name,
-                mime_type: post.featured_image_mime_type,
-                file_name: post.featured_image_file_name,
-            };
-        }
-
         return null;
     })();
 
@@ -68,7 +57,6 @@ export function usePostForm({ post, onSubmit, onCancel, isEditing }: PostFormPro
                 post_type_id: parseInt(postType, 10),
                 parent_id: parentId && parentId !== 'none' ? parseInt(parentId, 10) : null,
                 author_id: parseInt(authorId, 10),
-                featured_image_id: featuredImage?.id ?? null,
                 featured_image: featuredImage?.url ?? null,
                 meta_data: metaData,
                 taxonomy_terms: selectedTerms,

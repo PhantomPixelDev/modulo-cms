@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Content;
 
-use App\Http\Controllers\Admin\AdminBaseController;
+use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Services\SiteSettingsService;
@@ -10,16 +10,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
-class PagesController extends AdminBaseController
+class PagesController extends Controller
 {
-    protected string $resourceName = 'posts';
-
     protected ?PostType $pageType = null;
 
     public function __construct(
         protected SiteSettingsService $settings
     ) {
-        parent::__construct();
+        // Pages are posts of the "page" type and share their permissions
+        $this->middleware('permission:view posts')->only(['index', 'show']);
+        $this->middleware('permission:create posts')->only(['create', 'store']);
+        $this->middleware('permission:edit posts')->only(['edit', 'update']);
+        $this->middleware('permission:delete posts')->only(['destroy']);
     }
 
     private function resolvePageType(): PostType
@@ -83,7 +85,6 @@ class PagesController extends AdminBaseController
                         'name' => $page->author->name,
                     ] : null,
                     'featured_image' => $page->featured_image,
-                    'featured_image_id' => $page->featured_image_id,
                 ];
             });
 
@@ -113,7 +114,6 @@ class PagesController extends AdminBaseController
             'content' => 'required', // Content can be string or array
             'excerpt' => 'nullable|string',
             'featured_image' => 'nullable|string',
-            'featured_image_id' => 'nullable|integer|exists:media,id',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'author_id' => 'nullable|exists:users,id',
@@ -148,7 +148,6 @@ class PagesController extends AdminBaseController
             'author_id' => $data['author_id'] ?? auth()->id(),
             'published_at' => $publishedAt,
             'featured_image' => $data['featured_image'] ?? null,
-            'featured_image_id' => $data['featured_image_id'] ?? null,
             'meta_title' => $data['meta_title'] ?? null,
             'meta_description' => $data['meta_description'] ?? null,
         ]);
@@ -181,7 +180,6 @@ class PagesController extends AdminBaseController
             'content' => 'required', // Content can be string or array
             'excerpt' => 'nullable|string',
             'featured_image' => 'nullable|string',
-            'featured_image_id' => 'nullable|integer|exists:media,id',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'author_id' => 'nullable|exists:users,id',
@@ -221,7 +219,6 @@ class PagesController extends AdminBaseController
             'status' => $data['status'],
             'published_at' => $data['published_at'] ?? $page->published_at,
             'featured_image' => $data['featured_image'] ?? $page->featured_image,
-            'featured_image_id' => $data['featured_image_id'] ?? $page->featured_image_id,
             'meta_title' => $data['meta_title'] ?? $page->meta_title,
             'meta_description' => $data['meta_description'] ?? $page->meta_description,
             'author_id' => $data['author_id'] ?? $page->author_id,
