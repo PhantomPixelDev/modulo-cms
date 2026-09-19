@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
 use App\Http\Controllers\Admin\PluginController;
@@ -74,6 +75,12 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
                 Route::delete('/{folder}', [AdminMediaFolderController::class, 'destroy'])->name('media.folders.destroy');
             });
         });
+
+        // Comment moderation
+        Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
+        Route::put('/comments/settings', [CommentController::class, 'updateSettings'])->name('comments.settings');
+        Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+        Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
         // User & Role Management
         Route::resource('users', UserController::class);

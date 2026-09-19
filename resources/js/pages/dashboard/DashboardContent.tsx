@@ -17,6 +17,7 @@ import { getPluginsSections } from './sections/plugins/pluginsSections';
 import { getSiteSettingsSections } from './sections/site-settings/siteSettingsSections';
 import { getShopSections } from './sections/shop/shopSections';
 import { getTranslationSections } from './sections/translations/translationSections';
+import { getCommentsSections } from './sections/comments/commentsSections';
 import { DashboardProps, asArray, type User as DashboardUser } from './types';
 import { ROUTE } from './routes';
 import { useAcl } from '@/lib/acl';
@@ -78,6 +79,10 @@ export default function DashboardContent({
   currentLocale,
   translation,
   translationManager,
+  comments,
+  commentCounts,
+  commentFilter,
+  commentModeration,
 }: DashboardProps & { globalCommentsEnabled: boolean }) {
   const { t } = useTranslation();
   const {
@@ -197,6 +202,13 @@ export default function DashboardContent({
       ...getTranslationSections({
         translationManager,
         can,
+        t,
+      }),
+      ...getCommentsSections({
+        comments,
+        commentCounts,
+        commentFilter,
+        commentModeration,
         t,
       }),
       ...getSiteSettingsSections({

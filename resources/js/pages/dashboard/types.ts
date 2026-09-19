@@ -344,6 +344,32 @@ export interface DashboardProps {
   }>;
   globalCommentsEnabled: boolean;
   translationManager?: TranslationManagerPayload;
+  comments?: Paginated<AdminComment>;
+  commentCounts?: CommentCounts;
+  commentFilter?: CommentStatus | null;
+  commentModeration?: boolean;
+}
+
+export type CommentStatus = 'pending' | 'approved' | 'spam';
+
+export interface CommentCounts {
+  all: number;
+  pending: number;
+  approved: number;
+  spam: number;
+}
+
+export interface AdminComment {
+  id: number;
+  author_name: string;
+  author_email: string | null;
+  content: string;
+  excerpt: string;
+  status: CommentStatus;
+  is_reply: boolean;
+  ip_address: string | null;
+  created_at: string | null;
+  post: { id: number; title: string; slug: string } | null;
 }
 
 // Post Type List Item

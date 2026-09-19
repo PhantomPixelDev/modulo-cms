@@ -42,6 +42,7 @@ class RolePermissionSeeder extends Seeder
             'delete content',
             'publish content',
             'approve content',
+            'moderate comments',
 
             // Post management (specific permissions for routes)
             'view posts',
@@ -127,7 +128,7 @@ class RolePermissionSeeder extends Seeder
                 'access admin',
                 'view users', 'create users', 'edit users', 'assign roles',
                 'view roles', 'create roles', 'edit roles', 'assign permissions',
-                'view content', 'create content', 'edit content', 'delete content', 'publish content', 'approve content',
+                'view content', 'create content', 'edit content', 'delete content', 'publish content', 'approve content', 'moderate comments',
                 'view posts', 'create posts', 'edit posts', 'delete posts', 'publish posts',
                 'view pages', 'create pages', 'edit pages', 'delete pages',
                 'view post types', 'create post types', 'edit post types', 'delete post types',
@@ -147,7 +148,7 @@ class RolePermissionSeeder extends Seeder
             'moderator' => [
                 'access admin',
                 'view users',
-                'view content', 'create content', 'edit content', 'approve content',
+                'view content', 'create content', 'edit content', 'approve content', 'moderate comments',
                 'view posts', 'create posts', 'edit posts',
                 'view post types', 'view taxonomies', 'view taxonomy terms',
                 'view plugins',

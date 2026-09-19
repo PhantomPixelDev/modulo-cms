@@ -50,8 +50,10 @@ class CommentController extends Controller
         $comment->post_id = $post->id;
         $comment->parent_id = $data['parent_id'] ?? null;
         $comment->content = $data['content'];
-        $comment->status = 'approved';
-        $comment->approved_at = now();
+        // With moderation on, comments wait in the admin Comments section until approved
+        $held = (bool) SiteSetting::get('comment_moderation', false);
+        $comment->status = $held ? 'pending' : 'approved';
+        $comment->approved_at = $held ? null : now();
         $comment->ip_address = $request->ip();
         $comment->user_agent = $request->userAgent();
 
@@ -67,7 +69,7 @@ class CommentController extends Controller
 
         $comment->save();
 
-        return back()->with('success', 'Thanks! Your comment has been posted.');
+        return back()->with('success', $held ? 'Thanks! Your comment will appear once it has been approved.' : 'Thanks! Your comment has been posted.');
     }
 
     protected function commentsEnabled(Post $post): bool

@@ -970,4 +970,32 @@ return [
         'follow' => 'Follow',
         'nofollow' => 'No Follow',
     ],
+
+    'comments' => [
+        'title' => 'Comments',
+        'description' => 'Approve, hide or delete visitor comments.',
+        'hold_for_approval' => 'Hold new comments for approval',
+        'empty' => 'No comments here.',
+        'reply' => 'Reply',
+        'confirm_delete' => 'Delete this comment and its replies?',
+        'filters' => [
+            'all' => 'All',
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'spam' => 'Spam',
+        ],
+        'columns' => [
+            'author' => 'Author',
+            'comment' => 'Comment',
+            'post' => 'In response to',
+            'status' => 'Status',
+            'actions' => 'Actions',
+        ],
+        'actions' => [
+            'approve' => 'Approve',
+            'unapprove' => 'Unapprove',
+            'spam' => 'Mark as spam',
+            'delete' => 'Delete',
+        ],
+    ],
 ];

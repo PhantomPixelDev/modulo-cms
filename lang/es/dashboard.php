@@ -957,4 +957,32 @@ return [
         'follow' => 'Follow',
         'nofollow' => 'No Follow',
     ],
+
+    'comments' => [
+        'title' => 'Comentarios',
+        'description' => 'Aprueba, oculta o elimina los comentarios de los visitantes.',
+        'hold_for_approval' => 'Retener nuevos comentarios hasta su aprobación',
+        'empty' => 'No hay comentarios aquí.',
+        'reply' => 'Respuesta',
+        'confirm_delete' => '¿Eliminar este comentario y sus respuestas?',
+        'filters' => [
+            'all' => 'Todos',
+            'pending' => 'Pendientes',
+            'approved' => 'Aprobados',
+            'spam' => 'Spam',
+        ],
+        'columns' => [
+            'author' => 'Autor',
+            'comment' => 'Comentario',
+            'post' => 'En respuesta a',
+            'status' => 'Estado',
+            'actions' => 'Acciones',
+        ],
+        'actions' => [
+            'approve' => 'Aprobar',
+            'unapprove' => 'Desaprobar',
+            'spam' => 'Marcar como spam',
+            'delete' => 'Eliminar',
+        ],
+    ],
 ];

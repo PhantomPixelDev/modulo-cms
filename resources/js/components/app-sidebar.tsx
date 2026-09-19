@@ -7,7 +7,7 @@ import AppLogo from './app-logo';
 import { adminNav, mainNav } from '@/config/nav';
 import { useAcl } from '@/lib/acl';
 import { getIcon } from '@/lib/icons';
-import { FileText, FolderTree, Boxes } from 'lucide-react';
+import { FileText, FolderTree, Boxes, MessageSquare } from 'lucide-react';
 
 interface SidebarEntry {
     id: number;
@@ -76,6 +76,16 @@ export function AppSidebar() {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
+                            {(isAdmin() || hasPermission('moderate comments')) && (
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild isActive={url.startsWith('/dashboard/admin/comments')} tooltip={{ children: 'Comments' }}>
+                                        <Link href="/dashboard/admin/comments" prefetch>
+                                            <MessageSquare className="h-4 w-4" />
+                                            <span>Comments</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            )}
                         </SidebarMenu>
                     </SidebarGroup>
                 )}
