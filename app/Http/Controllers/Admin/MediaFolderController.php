@@ -12,24 +12,36 @@ class MediaFolderController extends Controller
     protected function authorizeCreate(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('upload media') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('upload media') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
     protected function authorizeEdit(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('edit media') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('edit media') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
     protected function authorizeDelete(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('delete media') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('delete media') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
@@ -85,6 +97,7 @@ class MediaFolderController extends Controller
         }
 
         $bucket->delete();
+
         return back()->with('success', 'Folder deleted');
     }
 }

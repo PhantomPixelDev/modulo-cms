@@ -32,13 +32,13 @@ class SearchController extends BaseFrontendController
 
         // Case-insensitive on every driver (plain LIKE is case-sensitive on PostgreSQL),
         // with user-supplied % and _ treated literally.
-        $pattern = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $searchTerm) . '%';
+        $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $searchTerm).'%';
 
         $posts = Post::with([
-                'postType',
-                'author',
-                'taxonomyTerms.taxonomy'
-            ])
+            'postType',
+            'author',
+            'taxonomyTerms.taxonomy',
+        ])
             ->published()
             ->whereHas('postType', fn ($q) => $q->where('is_public', true))
             ->where(function ($q) use ($pattern) {

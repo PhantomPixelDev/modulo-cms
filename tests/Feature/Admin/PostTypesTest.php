@@ -1,21 +1,25 @@
 <?php
 
-use App\Models\User;
 use App\Models\PostType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
-function ptUser(array $perms = []): User {
+function ptUser(array $perms = []): User
+{
     $user = User::factory()->create();
     foreach ($perms as $perm) {
         Permission::findOrCreate($perm, 'web');
     }
-    if ($perms) $user->givePermissionTo($perms);
+    if ($perms) {
+        $user->givePermissionTo($perms);
+    }
     // Also give access admin permission which is required for admin routes
     Permission::findOrCreate('access admin', 'web');
     $user->givePermissionTo('access admin');
+
     return $user;
 }
 
@@ -42,7 +46,7 @@ it('validates route_prefix cannot be root on store', function () {
             'plural_label' => 'News',
             'description' => null,
             'route_prefix' => '/', // invalid
-            'supports' => ['title','editor'],
+            'supports' => ['title', 'editor'],
             'taxonomies' => [],
         ]);
 
@@ -51,7 +55,7 @@ it('validates route_prefix cannot be root on store', function () {
 });
 
 it('creates, updates and deletes a post type with permissions', function () {
-    $u = ptUser(['create post types','edit post types','delete post types','view post types']);
+    $u = ptUser(['create post types', 'edit post types', 'delete post types', 'view post types']);
     $this->actingAs($u);
 
     // Create valid post type
@@ -61,12 +65,12 @@ it('creates, updates and deletes a post type with permissions', function () {
         'plural_label' => 'Articles',
         'description' => 'desc',
         'route_prefix' => 'articles',
-        'supports' => ['title','editor'],
+        'supports' => ['title', 'editor'],
         'taxonomies' => [],
         'menu_position' => 7,
     ]);
     $resp->assertRedirect(route('dashboard.admin.post-types.index'));
-    $pt = PostType::where('name','Articles')->first();
+    $pt = PostType::where('name', 'Articles')->first();
     expect($pt)->not->toBeNull();
 
     // Update with invalid route_prefix should fail
@@ -77,7 +81,7 @@ it('creates, updates and deletes a post type with permissions', function () {
             'plural_label' => 'Articles',
             'description' => 'desc2',
             'route_prefix' => '/', // invalid
-            'supports' => ['title','editor'],
+            'supports' => ['title', 'editor'],
             'taxonomies' => [],
             'menu_position' => 8,
         ]);
@@ -91,7 +95,7 @@ it('creates, updates and deletes a post type with permissions', function () {
         'plural_label' => 'Articles',
         'description' => 'desc3',
         'route_prefix' => 'articles',
-        'supports' => ['title','editor'],
+        'supports' => ['title', 'editor'],
         'taxonomies' => [],
         'menu_position' => 9,
     ]);
@@ -107,7 +111,7 @@ it('creates, updates and deletes a post type with permissions', function () {
 
 it('denies create/edit/update/destroy without respective permissions', function () {
     // Ensure permissions exist but are not granted (except view)
-    foreach (['create post types','edit post types','delete post types'] as $p) {
+    foreach (['create post types', 'edit post types', 'delete post types'] as $p) {
         Permission::findOrCreate($p, 'web');
     }
     $u = ptUser(['view post types']);

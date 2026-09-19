@@ -25,13 +25,13 @@ class SetLocale
     public function handle(Request $request, Closure $next): Response
     {
         $locale = $this->resolveLocale($request);
-        
+
         // Set the application locale
         App::setLocale($locale);
-        
+
         // Store in session for subsequent requests
         Session::put('locale', $locale);
-        
+
         return $next($request);
     }
 
@@ -83,8 +83,8 @@ class SetLocale
     protected function parseAcceptLanguage(Request $request): ?string
     {
         $acceptLanguage = $request->header('Accept-Language');
-        
-        if (!$acceptLanguage) {
+
+        if (! $acceptLanguage) {
             return null;
         }
 
@@ -93,16 +93,16 @@ class SetLocale
         foreach (explode(',', $acceptLanguage) as $part) {
             $part = trim($part);
             $quality = 1.0;
-            
+
             if (str_contains($part, ';q=')) {
                 [$part, $q] = explode(';q=', $part);
                 $quality = (float) $q;
             }
-            
+
             // Extract base language code (e.g., "en" from "en-US")
             $code = strtolower(explode('-', trim($part))[0]);
-            
-            if (!isset($languages[$code]) || $languages[$code] < $quality) {
+
+            if (! isset($languages[$code]) || $languages[$code] < $quality) {
                 $languages[$code] = $quality;
             }
         }

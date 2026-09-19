@@ -33,6 +33,7 @@ class RolePolicy
         if ($role->name === 'super-admin') {
             return false;
         }
+
         return $user->can('edit roles');
     }
 
@@ -41,6 +42,7 @@ class RolePolicy
         if (in_array($role->name, self::SYSTEM_ROLES, true)) {
             return false;
         }
+
         return $user->can('delete roles');
     }
 }

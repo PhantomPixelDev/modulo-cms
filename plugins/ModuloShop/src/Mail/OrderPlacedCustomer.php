@@ -11,13 +11,11 @@ class OrderPlacedCustomer extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Order $order)
-    {
-    }
+    public function __construct(public Order $order) {}
 
     public function build(): self
     {
-        return $this->subject('Order received: ' . $this->order->order_number)
+        return $this->subject('Order received: '.$this->order->order_number)
             ->markdown('emails.shop.order-placed-customer', [
                 'order' => $this->order,
             ]);

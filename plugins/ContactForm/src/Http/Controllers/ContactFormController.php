@@ -16,11 +16,12 @@ class ContactFormController
 {
     public function store(Request $request): JsonResponse|RedirectResponse
     {
-        if (!Schema::hasTable('contact_submissions')) {
+        if (! Schema::hasTable('contact_submissions')) {
             $message = 'Contact form storage is not available yet. Run migrations to create the table.';
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 503);
             }
+
             return back()->withErrors(['contact_form' => $message]);
         }
 
@@ -51,7 +52,7 @@ class ContactFormController
             try {
                 Mail::to($recipient)->send(new ContactFormSubmitted($submission));
             } catch (\Throwable $e) {
-                logger()->error('Failed to send contact form email: ' . $e->getMessage());
+                logger()->error('Failed to send contact form email: '.$e->getMessage());
             }
         }
 

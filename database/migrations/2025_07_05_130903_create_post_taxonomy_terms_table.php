@@ -16,10 +16,10 @@ return new class extends Migration
             $table->foreignId('post_id')->constrained()->onDelete('cascade');
             $table->foreignId('taxonomy_term_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            
+
             // Ensure unique relationships
             $table->unique(['post_id', 'taxonomy_term_id']);
-            
+
             // Indexes for better performance
             $table->index('post_id');
             $table->index('taxonomy_term_id');

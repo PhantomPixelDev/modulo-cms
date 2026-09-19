@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePostRequest extends FormRequest
 {
@@ -27,7 +27,7 @@ class StorePostRequest extends FormRequest
     {
         $postTypeId = $this->input('post_type_id');
         $postType = PostType::find($postTypeId);
-        
+
         $rules = [
             'title' => ['required', 'string', 'max:255'],
             'slug' => [
@@ -37,7 +37,7 @@ class StorePostRequest extends FormRequest
                 'alpha_dash:ascii',
                 // posts.slug is unique across all post types at the database level
                 Rule::unique('posts', 'slug')
-                    ->ignore($this->route('post'))
+                    ->ignore($this->route('post')),
             ],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
@@ -58,7 +58,7 @@ class StorePostRequest extends FormRequest
             // they stay optional (nullable rules above).
 
             // Validate taxonomy terms if post type has taxonomies
-            if ($postType->has_taxonomies && !empty($this->input('taxonomy_terms'))) {
+            if ($postType->has_taxonomies && ! empty($this->input('taxonomy_terms'))) {
                 $rules['taxonomy_terms.*'] = [
                     'exists:taxonomy_terms,id',
                     function ($attribute, $value, $fail) use ($postType) {
@@ -80,9 +80,9 @@ class StorePostRequest extends FormRequest
     protected function prepareForValidation()
     {
         // Generate slug from title if not provided
-        if (!$this->filled('slug') && $this->filled('title')) {
+        if (! $this->filled('slug') && $this->filled('title')) {
             $this->merge([
-                'slug' => \Illuminate\Support\Str::slug($this->title)
+                'slug' => \Illuminate\Support\Str::slug($this->title),
             ]);
         }
     }

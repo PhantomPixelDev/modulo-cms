@@ -26,7 +26,7 @@ class CacheResponseHeaders
         $response = $next($request);
 
         // Skip caching for authenticated users or non-GET requests
-        if ($request->user() || !$request->isMethod('GET')) {
+        if ($request->user() || ! $request->isMethod('GET')) {
             return $this->setNoCacheHeaders($response);
         }
 
@@ -53,14 +53,14 @@ class CacheResponseHeaders
     {
         $response->headers->set('Cache-Control', "public, max-age={$duration}, s-maxage={$duration}");
         $response->headers->set('Vary', 'Accept-Encoding, Cookie');
-        
+
         // Generate ETag based on content
         $etag = md5($response->getContent());
         $response->headers->set('ETag', "\"{$etag}\"");
-        
+
         // Set Last-Modified to current time if not already set
-        if (!$response->headers->has('Last-Modified')) {
-            $response->headers->set('Last-Modified', gmdate('D, d M Y H:i:s') . ' GMT');
+        if (! $response->headers->has('Last-Modified')) {
+            $response->headers->set('Last-Modified', gmdate('D, d M Y H:i:s').' GMT');
         }
     }
 
@@ -72,7 +72,7 @@ class CacheResponseHeaders
         $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, private');
         $response->headers->set('Pragma', 'no-cache');
         $response->headers->set('Expires', '0');
-        
+
         return $response;
     }
 }

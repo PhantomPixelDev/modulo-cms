@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\SiteSetting;
 use Illuminate\Foundation\Http\FormRequest;
 use Symfony\Component\Mime\MimeTypes;
-
-use App\Models\SiteSetting;
 
 class MediaUploadRequest extends FormRequest
 {
@@ -25,11 +24,11 @@ class MediaUploadRequest extends FormRequest
             'file' => [
                 'required',
                 'file',
-                'max:' . ($maxMb * 1024),
-                'mimetypes:' . implode(',', $mimes),
+                'max:'.($maxMb * 1024),
+                'mimetypes:'.implode(',', $mimes),
                 // The stored name keeps an extension, so it must match the allowlist too:
                 // content sniffing alone lets polyglots like "shell.php" through.
-                'extensions:' . implode(',', $this->allowedExtensions($mimes)),
+                'extensions:'.implode(',', $this->allowedExtensions($mimes)),
             ],
             'folder_id' => 'nullable|integer|exists:media_buckets,id',
         ];

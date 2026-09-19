@@ -1,21 +1,25 @@
 <?php
 
-use App\Models\User;
 use App\Models\Menu;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
-function menuUser(array $perms = []): User {
+function menuUser(array $perms = []): User
+{
     $user = User::factory()->create();
     foreach ($perms as $perm) {
         Permission::findOrCreate($perm, 'web');
     }
-    if ($perms) $user->givePermissionTo($perms);
+    if ($perms) {
+        $user->givePermissionTo($perms);
+    }
     // Also give access admin permission which is required for admin routes
     Permission::findOrCreate('access admin', 'web');
     $user->givePermissionTo('access admin');
+
     return $user;
 }
 
@@ -32,7 +36,7 @@ it('allows menus index with permission', function () {
 });
 
 it('creates, shows, updates and deletes a menu with permissions', function () {
-    $u = menuUser(['create menus','view menus','edit menus','delete menus']);
+    $u = menuUser(['create menus', 'view menus', 'edit menus', 'delete menus']);
     $this->actingAs($u);
 
     // Create
@@ -43,7 +47,7 @@ it('creates, shows, updates and deletes a menu with permissions', function () {
         'description' => 'Primary navigation',
     ]);
     $resp->assertRedirect(route('dashboard.admin.menus.index'));
-    $menu = Menu::where('slug','main')->first();
+    $menu = Menu::where('slug', 'main')->first();
     expect($menu)->not->toBeNull();
 
     // Show
@@ -68,13 +72,15 @@ it('creates, shows, updates and deletes a menu with permissions', function () {
 
 it('denies create/show/edit/update/destroy without respective permissions', function () {
     // Ensure permissions exist but are not granted (except view)
-    foreach (['create menus','edit menus','delete menus'] as $p) { Permission::findOrCreate($p, 'web'); }
+    foreach (['create menus', 'edit menus', 'delete menus'] as $p) {
+        Permission::findOrCreate($p, 'web');
+    }
     $u = menuUser(['view menus']);
     $this->actingAs($u);
 
     // create/store denied
     $this->post(route('dashboard.admin.menus.store'), [
-        'name' => 'No', 'slug' => 'no'
+        'name' => 'No', 'slug' => 'no',
     ])->assertForbidden();
 
     // Prepare a menu to try show/edit/update/destroy

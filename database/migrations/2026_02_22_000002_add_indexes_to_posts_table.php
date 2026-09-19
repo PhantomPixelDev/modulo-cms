@@ -13,10 +13,10 @@ return new class extends Migration
         $hasAuthorIndex = Schema::hasIndex('posts', 'posts_author_status_idx');
 
         Schema::table('posts', function (Blueprint $table) use ($hasTypeIndex, $hasAuthorIndex) {
-            if (!$hasTypeIndex) {
+            if (! $hasTypeIndex) {
                 $table->index(['post_type_id', 'status', 'published_at'], 'posts_type_status_published_idx');
             }
-            if (!$hasAuthorIndex) {
+            if (! $hasAuthorIndex) {
                 $table->index(['author_id', 'status'], 'posts_author_status_idx');
             }
         });

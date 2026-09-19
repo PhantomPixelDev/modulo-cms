@@ -1,8 +1,8 @@
 <?php
 
-use Spatie\Permission\PermissionRegistrar;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 /*
 |--------------------------------------------------------------------------

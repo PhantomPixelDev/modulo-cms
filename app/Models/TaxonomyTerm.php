@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property-read string $name
  */
-
 class TaxonomyTerm extends Model
 {
     use HasFactory;
@@ -50,7 +49,7 @@ class TaxonomyTerm extends Model
     public function posts(): BelongsToMany
     {
         return $this->belongsToMany(Post::class, 'post_taxonomy_terms')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     public function translations(): HasMany
@@ -68,7 +67,7 @@ class TaxonomyTerm extends Model
         $locale = $locale ?? app()->getLocale();
         $translation = $this->translation($locale);
 
-        if (!$translation) {
+        if (! $translation) {
             $defaultLocale = Locale::getDefault()?->code ?? config('app.fallback_locale', 'en');
             if ($locale !== $defaultLocale) {
                 $translation = $this->translation($defaultLocale);

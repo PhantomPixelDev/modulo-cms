@@ -1,14 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MenuApiController;
+use App\Http\Controllers\Frontend\CommentController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\PostController;
-use App\Http\Controllers\Frontend\TaxonomyController;
 use App\Http\Controllers\Frontend\SearchController;
-use App\Http\Controllers\Frontend\CommentController;
-use Inertia\Inertia;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Frontend\TaxonomyController;
+use Illuminate\Support\Facades\Route;
 
 // Health check endpoint for container orchestration (no closure to support route:cache)
 Route::get('/health', \App\Http\Controllers\HealthController::class);
@@ -25,6 +23,7 @@ Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'ind
 Route::get('/feed', [\App\Http\Controllers\FeedController::class, 'index'])->name('feed');
 Route::get('/robots.txt', function () {
     $content = \App\Models\SiteSetting::get('robots_txt', "User-agent: *\nAllow: /");
+
     return response($content)->header('Content-Type', 'text/plain');
 })->name('robots.txt');
 
@@ -38,7 +37,7 @@ Route::middleware('throttle:30,1')->group(function () {
         ->name('tag.show')
         ->defaults('taxonomySlug', 'tags')
         ->where('slug', '[a-zA-Z0-9\-_]+');
-    
+
     // Plural alias for tags if it's different from base
     if ($tagBase !== 'tags') {
         Route::get('/tags/{slug}', [TaxonomyController::class, 'show'])
@@ -51,7 +50,7 @@ Route::middleware('throttle:30,1')->group(function () {
         ->name('category.show')
         ->defaults('taxonomySlug', 'categories')
         ->where('slug', '[a-zA-Z0-9\-_]+');
-    
+
     // Plural alias for categories if it's different from base
     if ($categoryBase !== 'categories') {
         Route::get('/categories/{slug}', [TaxonomyController::class, 'show'])

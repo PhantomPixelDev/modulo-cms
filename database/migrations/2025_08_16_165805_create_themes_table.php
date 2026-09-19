@@ -34,7 +34,7 @@ return new class extends Migration
             $table->timestamp('installed_at')->nullable();
             $table->foreignId('installed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
-            
+
             $table->index(['slug', 'is_active']);
             $table->index('is_installed');
         });

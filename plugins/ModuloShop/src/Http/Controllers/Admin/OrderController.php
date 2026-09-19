@@ -25,8 +25,8 @@ class OrderController
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('customer_email', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%");
+                    ->orWhere('customer_email', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%");
             });
         }
 
@@ -42,7 +42,7 @@ class OrderController
 
         $orders = $query->paginate(20);
 
-        $orders->through(fn($order) => $this->transformForAdmin($order));
+        $orders->through(fn ($order) => $this->transformForAdmin($order));
 
         if ($request->wantsJson()) {
             return response()->json($orders);
@@ -90,12 +90,12 @@ class OrderController
         // Update status if provided
         if (isset($validated['status'])) {
             $order->status = $validated['status'];
-            
-            if ($validated['status'] === 'shipped' && !$order->shipped_at) {
+
+            if ($validated['status'] === 'shipped' && ! $order->shipped_at) {
                 $order->shipped_at = now();
             }
 
-            if ($validated['status'] === 'completed' && !$order->shipped_at) {
+            if ($validated['status'] === 'completed' && ! $order->shipped_at) {
                 $order->shipped_at = now();
             }
         }
@@ -103,8 +103,8 @@ class OrderController
         // Update payment status if provided
         if (isset($validated['payment_status'])) {
             $order->payment_status = $validated['payment_status'];
-            
-            if ($validated['payment_status'] === 'paid' && !$order->paid_at) {
+
+            if ($validated['payment_status'] === 'paid' && ! $order->paid_at) {
                 $order->paid_at = now();
             }
         }
@@ -140,13 +140,14 @@ class OrderController
         $this->authorizeManage();
 
         // Only allow deletion of cancelled orders
-        if (!in_array($order->status, ['cancelled', 'refunded'])) {
+        if (! in_array($order->status, ['cancelled', 'refunded'])) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'error' => 'Only cancelled or refunded orders can be deleted',
                 ], 400);
             }
+
             return back()->withErrors(['error' => 'Only cancelled or refunded orders can be deleted']);
         }
 
@@ -209,7 +210,7 @@ class OrderController
                     'name' => $order->user->name,
                     'email' => $order->user->email,
                 ] : null,
-                'items' => $order->items->map(fn($item) => [
+                'items' => $order->items->map(fn ($item) => [
                     'id' => $item->id,
                     'product_id' => $item->product_id,
                     'product_name' => $item->product_name,
@@ -250,21 +251,21 @@ class OrderController
 
     protected function authorizeView(): void
     {
-        if (!auth()->user()?->can('view shop orders')) {
+        if (! auth()->user()?->can('view shop orders')) {
             abort(403, 'Unauthorized');
         }
     }
 
     protected function authorizeManage(): void
     {
-        if (!auth()->user()?->can('manage shop orders')) {
+        if (! auth()->user()?->can('manage shop orders')) {
             abort(403, 'Unauthorized');
         }
     }
 
     protected function sendStatusEmails(Order $order, string $previousStatus): void
     {
-        if (!$order->customer_email) {
+        if (! $order->customer_email) {
             return;
         }
 
@@ -272,7 +273,7 @@ class OrderController
             try {
                 Mail::to($order->customer_email)->send(new OrderShippedCustomer($order));
             } catch (\Throwable $e) {
-                logger()->error('Failed to send order shipped email: ' . $e->getMessage());
+                logger()->error('Failed to send order shipped email: '.$e->getMessage());
             }
         }
 
@@ -280,7 +281,7 @@ class OrderController
             try {
                 Mail::to($order->customer_email)->send(new OrderCompletedCustomer($order));
             } catch (\Throwable $e) {
-                logger()->error('Failed to send order completed email: ' . $e->getMessage());
+                logger()->error('Failed to send order completed email: '.$e->getMessage());
             }
         }
     }

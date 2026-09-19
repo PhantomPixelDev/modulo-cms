@@ -14,17 +14,18 @@ Artisan::command('mail:test {email?}', function () {
         ?? SiteSetting::get('admin_email', config('mail.admin_address'))
         ?: config('mail.admin_address');
 
-    if (!$recipient) {
+    if (! $recipient) {
         $this->error('No recipient email provided or configured.');
+
         return 1;
     }
 
-    Mail::raw('Mail configuration test from ' . config('app.name'), function ($message) use ($recipient) {
+    Mail::raw('Mail configuration test from '.config('app.name'), function ($message) use ($recipient) {
         $message->to($recipient)
-            ->subject('Mail test - ' . config('app.name'));
+            ->subject('Mail test - '.config('app.name'));
     });
 
-    $this->info('Mail test sent to ' . $recipient);
+    $this->info('Mail test sent to '.$recipient);
 
     return 0;
 })->purpose('Send a test email using the configured mailer');

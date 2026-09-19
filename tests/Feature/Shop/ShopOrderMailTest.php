@@ -2,9 +2,6 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
-use App\Models\Post;
-use App\Models\PostType;
-use Plugins\ModuloShop\ModuloShopServiceProvider;
 use Plugins\ModuloShop\src\Mail\OrderCompletedCustomer;
 use Plugins\ModuloShop\src\Mail\OrderPlacedAdmin;
 use Plugins\ModuloShop\src\Mail\OrderPlacedCustomer;

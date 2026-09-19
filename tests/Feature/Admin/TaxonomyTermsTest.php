@@ -1,16 +1,17 @@
 <?php
 
-use App\Models\User;
 use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
-function ensureTaxonomy(): Taxonomy {
+function ensureTaxonomy(): Taxonomy
+{
     return Taxonomy::firstOrCreate([
-        'name' => 'category'
+        'name' => 'category',
     ], [
         'label' => 'Category',
         'plural_label' => 'Categories',
@@ -38,7 +39,7 @@ it('allows taxonomy terms index with permission', function () {
 });
 
 it('creates, updates and deletes a taxonomy term with permissions', function () {
-    $u = makeAdminUserWithPermissions(['create taxonomy terms','edit taxonomy terms','delete taxonomy terms','view taxonomy terms']);
+    $u = makeAdminUserWithPermissions(['create taxonomy terms', 'edit taxonomy terms', 'delete taxonomy terms', 'view taxonomy terms']);
     $this->actingAs($u);
 
     $tax = ensureTaxonomy();
@@ -51,7 +52,7 @@ it('creates, updates and deletes a taxonomy term with permissions', function () 
         'term_order' => 1,
     ]);
     $resp->assertRedirect(route('dashboard.admin.taxonomy-terms.index'));
-    $term = TaxonomyTerm::where('taxonomy_id',$tax->id)->where('name','News')->first();
+    $term = TaxonomyTerm::where('taxonomy_id', $tax->id)->where('name', 'News')->first();
     expect($term)->not->toBeNull();
 
     // Update
@@ -87,13 +88,13 @@ it('enforces unique slug per taxonomy by auto-incrementing', function () {
         'description' => null,
     ])->assertRedirect();
 
-    $terms = TaxonomyTerm::where('taxonomy_id',$tax->id)->where('name','Duplicate')->orderBy('id')->get();
+    $terms = TaxonomyTerm::where('taxonomy_id', $tax->id)->where('name', 'Duplicate')->orderBy('id')->get();
     expect($terms->count())->toBe(2);
     expect($terms[0]->slug)->not->toBe($terms[1]->slug);
 });
 
 it('prevents deleting a term that has children', function () {
-    $u = makeAdminUserWithPermissions(['create taxonomy terms','delete taxonomy terms']);
+    $u = makeAdminUserWithPermissions(['create taxonomy terms', 'delete taxonomy terms']);
     $this->actingAs($u);
     $tax = ensureTaxonomy();
 
@@ -119,7 +120,7 @@ it('prevents deleting a term that has children', function () {
 
 it('denies create/edit/update/destroy without respective permissions', function () {
     // Ensure permissions exist but are not granted (except view)
-    foreach (['create taxonomy terms','edit taxonomy terms','delete taxonomy terms'] as $p) {
+    foreach (['create taxonomy terms', 'edit taxonomy terms', 'delete taxonomy terms'] as $p) {
         Permission::findOrCreate($p, 'web');
     }
     $u = makeAdminUserWithPermissions(['view taxonomy terms']);

@@ -12,6 +12,7 @@ use Plugins\ContactForm\src\Services\ContactFormShortcodeService;
 class ContactFormServiceProvider extends BasePluginServiceProvider
 {
     protected string $pluginBasePath = __DIR__;
+
     protected string $pluginSlug = 'contact-form';
 
     public function register()

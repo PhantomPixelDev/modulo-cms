@@ -32,7 +32,7 @@ class CheckMaintenanceMode
             }
 
             $message = $this->settings->getMaintenanceMessage();
-            
+
             if ($request->expectsJson()) {
                 return response()->json(['message' => $message], 503);
             }

@@ -14,9 +14,7 @@ use Inertia\Response;
 
 class TranslationController extends Controller
 {
-    public function __construct(protected TranslationService $translations)
-    {
-    }
+    public function __construct(protected TranslationService $translations) {}
 
     public function index(Request $request): Response
     {
@@ -41,6 +39,7 @@ class TranslationController extends Controller
         $entries = collect($flat)
             ->map(function ($value, $key) use ($overrides) {
                 $override = $overrides->get($key);
+
                 return [
                     'key' => $key,
                     'value' => $value,
@@ -52,7 +51,8 @@ class TranslationController extends Controller
                 if ($search === '') {
                     return true;
                 }
-                $haystack = strtolower($entry['key'] . ' ' . ($entry['value'] ?? '') . ' ' . ($entry['override'] ?? ''));
+                $haystack = strtolower($entry['key'].' '.($entry['value'] ?? '').' '.($entry['override'] ?? ''));
+
                 return str_contains($haystack, strtolower($search));
             })
             ->values();
@@ -119,7 +119,7 @@ class TranslationController extends Controller
     protected function authorizeManage(): void
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
 

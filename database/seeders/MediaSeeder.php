@@ -17,7 +17,7 @@ class MediaSeeder extends Seeder
 
         // Ensure storage directories exist
         $publicStoragePath = storage_path('app/public');
-        if (!File::exists($publicStoragePath)) {
+        if (! File::exists($publicStoragePath)) {
             File::makeDirectory($publicStoragePath, 0755, true);
         }
 
@@ -28,49 +28,49 @@ class MediaSeeder extends Seeder
                 'abstract-art.jpg',
                 'city-skyline.jpg',
                 'nature-landscape.jpg',
-                'product-mockup.png'
+                'product-mockup.png',
             ],
             '14' => [
                 'hackers_2-wallpaper-1280x1024.jpg',
                 'technology-bg.jpg',
                 'circuit-board.jpg',
                 'data-center.jpg',
-                'network-diagram.png'
+                'network-diagram.png',
             ],
             '15' => [
                 'team-meeting.jpg',
                 'office-workspace.jpg',
                 'business-presentation.jpg',
                 'handshake-deal.jpg',
-                'corporate-building.jpg'
+                'corporate-building.jpg',
             ],
             '16' => [
                 'food-photography.jpg',
                 'restaurant-interior.jpg',
                 'chef-cooking.jpg',
                 'dining-table.jpg',
-                'fresh-ingredients.jpg'
+                'fresh-ingredients.jpg',
             ],
             '17' => [
                 'travel-mountains.jpg',
                 'beach-sunset.jpg',
                 'city-tour.jpg',
                 'cultural-landmark.jpg',
-                'adventure-gear.jpg'
+                'adventure-gear.jpg',
             ],
             '18' => [
                 'fitness-workout.jpg',
                 'yoga-practice.jpg',
                 'healthy-meal.jpg',
                 'medical-consultation.jpg',
-                'wellness-spa.jpg'
+                'wellness-spa.jpg',
             ],
             '19' => [
                 'lifestyle-coffee.jpg',
                 'home-interior.jpg',
                 'fashion-accessories.jpg',
                 'entertainment-setup.jpg',
-                'hobby-collection.jpg'
+                'hobby-collection.jpg',
             ],
         ];
 
@@ -78,17 +78,17 @@ class MediaSeeder extends Seeder
 
         if (File::exists($placeholderPath)) {
             foreach ($sampleDirectories as $dir => $files) {
-                $dirPath = $publicStoragePath . '/' . $dir;
+                $dirPath = $publicStoragePath.'/'.$dir;
 
-                if (!File::exists($dirPath)) {
+                if (! File::exists($dirPath)) {
                     File::makeDirectory($dirPath, 0755, true);
                     $this->command->info("Created directory: storage/app/public/{$dir}");
                 }
 
                 foreach ($files as $filename) {
-                    $filePath = $dirPath . '/' . $filename;
+                    $filePath = $dirPath.'/'.$filename;
 
-                    if (!File::exists($filePath)) {
+                    if (! File::exists($filePath)) {
                         File::copy($placeholderPath, $filePath);
                         File::chmod($filePath, 0644);
                         $this->command->info("Created media file: {$dir}/{$filename}");
@@ -106,33 +106,33 @@ class MediaSeeder extends Seeder
                 'meeting-notes.docx',
                 'presentation.pptx',
                 'spreadsheet.xlsx',
-                'technical-specs.pdf'
+                'technical-specs.pdf',
             ],
             'audio' => [
                 'podcast-episode.mp3',
                 'background-music.wav',
                 'interview-recording.mp3',
-                'sound-effects.zip'
+                'sound-effects.zip',
             ],
             'video' => [
                 'product-demo.mp4',
                 'tutorial-video.webm',
                 'company-presentation.mp4',
-                'webinar-recording.mov'
-            ]
+                'webinar-recording.mov',
+            ],
         ];
 
         foreach ($additionalFiles as $type => $files) {
-            $typeDir = $publicStoragePath . '/' . $type;
-            if (!File::exists($typeDir)) {
+            $typeDir = $publicStoragePath.'/'.$type;
+            if (! File::exists($typeDir)) {
                 File::makeDirectory($typeDir, 0755, true);
             }
 
             foreach ($files as $filename) {
-                $filePath = $typeDir . '/' . $filename;
-                if (!File::exists($filePath)) {
+                $filePath = $typeDir.'/'.$filename;
+                if (! File::exists($filePath)) {
                     // Create empty files for different types
-                    File::put($filePath, 'Sample ' . $type . ' file content');
+                    File::put($filePath, 'Sample '.$type.' file content');
                     File::chmod($filePath, 0644);
                     $this->command->info("Created {$type} file: {$type}/{$filename}");
                 }

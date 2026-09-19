@@ -64,21 +64,21 @@ class HtmlSanitizer
         }
 
         // Plain text cannot contain markup.
-        if (!str_contains($html, '<')) {
+        if (! str_contains($html, '<')) {
             return $html;
         }
 
         $doc = new DOMDocument('1.0', 'UTF-8');
         $previous = libxml_use_internal_errors(true);
         $doc->loadHTML(
-            '<?xml encoding="UTF-8"><div id="' . self::ROOT_ID . '">' . $html . '</div>',
+            '<?xml encoding="UTF-8"><div id="'.self::ROOT_ID.'">'.$html.'</div>',
             LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NONET
         );
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
 
-        $root = (new DOMXPath($doc))->query('//div[@id="' . self::ROOT_ID . '"]')->item(0);
-        if (!$root instanceof DOMElement) {
+        $root = (new DOMXPath($doc))->query('//div[@id="'.self::ROOT_ID.'"]')->item(0);
+        if (! $root instanceof DOMElement) {
             return e($html);
         }
 
@@ -125,18 +125,20 @@ class HtmlSanitizer
         $tag = strtolower($element->localName ?? $element->nodeName);
         $parent = $element->parentNode;
 
-        if (in_array($tag, self::DROP, true) || ($tag === 'iframe' && !$this->isAllowedEmbed($element))) {
+        if (in_array($tag, self::DROP, true) || ($tag === 'iframe' && ! $this->isAllowedEmbed($element))) {
             $parent->removeChild($element);
+
             return;
         }
 
-        if (!array_key_exists($tag, self::ALLOWED)) {
+        if (! array_key_exists($tag, self::ALLOWED)) {
             // Unknown element: keep its (cleaned) children, drop the wrapper.
             $this->cleanChildren($element);
             while ($element->firstChild) {
                 $parent->insertBefore($element->firstChild, $element);
             }
             $parent->removeChild($element);
+
             return;
         }
 
@@ -151,8 +153,8 @@ class HtmlSanitizer
         foreach (iterator_to_array($element->attributes, false) as $attribute) {
             $name = strtolower($attribute->nodeName);
 
-            if (!in_array($name, $allowed, true)
-                || (in_array($name, self::URL_ATTRIBUTES, true) && !self::isSafeUrl($attribute->value))) {
+            if (! in_array($name, $allowed, true)
+                || (in_array($name, self::URL_ATTRIBUTES, true) && ! self::isSafeUrl($attribute->value))) {
                 $element->removeAttribute($attribute->nodeName);
             }
         }

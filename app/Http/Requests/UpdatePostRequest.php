@@ -2,17 +2,18 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePostRequest extends FormRequest
 {
     public function authorize(): bool
     {
         $post = $this->route('post');
+
         return auth()->check() && auth()->user()->can('update', $post);
     }
 
@@ -53,7 +54,7 @@ class UpdatePostRequest extends FormRequest
             // has_excerpt / has_featured_image mean the type *supports* the field;
             // they stay optional (nullable rules above).
 
-            if ($postType->has_taxonomies && !empty($this->input('taxonomy_terms'))) {
+            if ($postType->has_taxonomies && ! empty($this->input('taxonomy_terms'))) {
                 $rules['taxonomy_terms.*'] = [
                     'exists:taxonomy_terms,id',
                     function ($attribute, $value, $fail) use ($postType) {
@@ -71,7 +72,7 @@ class UpdatePostRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if (!$this->has('slug') && $this->has('title')) {
+        if (! $this->has('slug') && $this->has('title')) {
             $this->merge([
                 'slug' => \Illuminate\Support\Str::slug($this->title),
             ]);

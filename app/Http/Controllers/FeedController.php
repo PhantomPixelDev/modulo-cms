@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
-use App\Models\SiteSetting;
 use Illuminate\Http\Response;
 
 class FeedController extends Controller
@@ -21,7 +20,7 @@ class FeedController extends Controller
 
         $posts = Post::with(['author', 'postType'])
             ->published()
-            ->whereHas('postType', function($q) {
+            ->whereHas('postType', function ($q) {
                 $q->where('is_public', true);
             })
             ->orderBy('published_at', 'desc')
@@ -42,7 +41,7 @@ class FeedController extends Controller
             $url = $settings->formatPostUrl($post);
             $pubDate = $post->published_at ? $post->published_at->toRfc2822String() : $post->created_at->toRfc2822String();
             $author = $post->author?->name ?? 'Admin';
-            
+
             $itemsXml .= "
         <item>
             <title><![CDATA[{$post->title}]]></title>
@@ -61,7 +60,7 @@ class FeedController extends Controller
         <link>{$siteUrl}</link>
         <description><![CDATA[{$siteTagline}]]></description>
         <lastBuildDate>{$now}</lastBuildDate>
-        <language>" . app()->getLocale() . "</language>
+        <language>".app()->getLocale()."</language>
         {$itemsXml}
     </channel>
 </rss>";

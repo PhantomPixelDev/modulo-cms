@@ -11,7 +11,7 @@ class Menu extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'location', 'description'
+        'name', 'slug', 'location', 'description',
     ];
 
     public function items(): HasMany

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\ReactTemplateRenderer;
 
 class EmailVerificationPromptController extends Controller
 {
@@ -35,6 +35,7 @@ class EmailVerificationPromptController extends Controller
         } catch (\Throwable $e) {
             // Fallback to default page rendering below
         }
+
         return Inertia::render('auth/verify-email', ['status' => $request->session()->get('status')]);
     }
 }

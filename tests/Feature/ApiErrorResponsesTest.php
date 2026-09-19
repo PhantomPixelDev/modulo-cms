@@ -7,7 +7,7 @@ it('returns 404 json for unknown api routes', function () {
 });
 
 it('returns 422 json for invalid api input', function () {
-    $this->getJson('/api/menus/slug/' . rawurlencode('bad slug!'))
+    $this->getJson('/api/menus/slug/'.rawurlencode('bad slug!'))
         ->assertUnprocessable()
         ->assertJsonValidationErrors('slug');
 });

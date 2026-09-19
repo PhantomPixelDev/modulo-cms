@@ -7,6 +7,7 @@ use App\Models\SiteSetting;
 class SiteSettingsService
 {
     protected array $settings = [];
+
     protected bool $loaded = false;
 
     /**
@@ -42,7 +43,7 @@ class SiteSettingsService
         $grouped = [];
 
         foreach ($settings as $setting) {
-            if (!isset($grouped[$setting->group])) {
+            if (! isset($grouped[$setting->group])) {
                 $grouped[$setting->group] = [];
             }
             $grouped[$setting->group][$setting->key] = SiteSetting::get($setting->key, null, $locale);
@@ -141,8 +142,11 @@ class SiteSettingsService
      */
     public function formatDate(mixed $date): string
     {
-        if (!$date) return '';
+        if (! $date) {
+            return '';
+        }
         $date = \Carbon\Carbon::parse($date);
+
         return $date->format($this->get('date_format', 'F j, Y'));
     }
 
@@ -151,8 +155,11 @@ class SiteSettingsService
      */
     public function formatTime(mixed $date): string
     {
-        if (!$date) return '';
+        if (! $date) {
+            return '';
+        }
         $date = \Carbon\Carbon::parse($date);
+
         return $date->format($this->get('time_format', 'g:i a'));
     }
 
@@ -161,9 +168,12 @@ class SiteSettingsService
      */
     public function formatDateTime(mixed $date): string
     {
-        if (!$date) return '';
+        if (! $date) {
+            return '';
+        }
         $date = \Carbon\Carbon::parse($date);
-        $format = $this->get('date_format', 'F j, Y') . ' ' . $this->get('time_format', 'g:i a');
+        $format = $this->get('date_format', 'F j, Y').' '.$this->get('time_format', 'g:i a');
+
         return $date->format($format);
     }
 
@@ -185,13 +195,13 @@ class SiteSettingsService
         ];
 
         $path = str_replace(array_keys($replacements), array_values($replacements), $structure);
-        
+
         // Ensure path starts with a slash and is clean
-        $path = '/' . ltrim($path, '/');
-        
+        $path = '/'.ltrim($path, '/');
+
         $prefix = $post->postType?->route_prefix;
         if ($prefix && $prefix !== '/') {
-            return url(rtrim($prefix, '/') . $path);
+            return url(rtrim($prefix, '/').$path);
         }
 
         return url($path);
@@ -212,5 +222,4 @@ class SiteSettingsService
     {
         SiteSetting::clearCache();
     }
-
 }

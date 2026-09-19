@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 class ThemeValidator
 {
     protected array $requiredFields = ['name', 'slug', 'version'];
+
     protected array $errors = [];
 
     /**
@@ -46,20 +47,19 @@ class ThemeValidator
     protected function validateRequiredFields(array $config): void
     {
         foreach ($this->requiredFields as $field) {
-            if (!isset($config[$field]) || empty($config[$field])) {
+            if (! isset($config[$field]) || empty($config[$field])) {
                 $this->errors[] = "Missing required field: {$field}";
             }
         }
     }
-
 
     /**
      * Validate slug format
      */
     protected function validateSlug(array $config): void
     {
-        if (isset($config['slug']) && !preg_match('/^[a-z0-9\-]+$/', $config['slug'])) {
-            $this->errors[] = "Invalid slug format. Use lowercase letters, numbers, and hyphens only.";
+        if (isset($config['slug']) && ! preg_match('/^[a-z0-9\-]+$/', $config['slug'])) {
+            $this->errors[] = 'Invalid slug format. Use lowercase letters, numbers, and hyphens only.';
         }
     }
 
@@ -68,8 +68,8 @@ class ThemeValidator
      */
     protected function validateVersion(array $config): void
     {
-        if (isset($config['version']) && !preg_match('/^\d+\.\d+\.\d+$/', $config['version'])) {
-            $this->errors[] = "Invalid version format. Use semantic versioning (e.g., 1.0.0).";
+        if (isset($config['version']) && ! preg_match('/^\d+\.\d+\.\d+$/', $config['version'])) {
+            $this->errors[] = 'Invalid version format. Use semantic versioning (e.g., 1.0.0).';
         }
     }
 
@@ -78,8 +78,9 @@ class ThemeValidator
      */
     protected function validateReactTemplates(array $config, string $themePath): void
     {
-        if (!isset($config['templates']) || !is_array($config['templates'])) {
-            $this->errors[] = "Templates configuration is missing or invalid.";
+        if (! isset($config['templates']) || ! is_array($config['templates'])) {
+            $this->errors[] = 'Templates configuration is missing or invalid.';
+
             return;
         }
 
@@ -94,8 +95,9 @@ class ThemeValidator
     protected function validateReactTemplate(string $name, $templateConfig, string $themePath): void
     {
         if (is_array($templateConfig)) {
-            if (!isset($templateConfig['component'])) {
+            if (! isset($templateConfig['component'])) {
                 $this->errors[] = "React template '{$name}' missing component path.";
+
                 return;
             }
             $componentPath = $templateConfig['component'];
@@ -103,16 +105,16 @@ class ThemeValidator
             $componentPath = $templateConfig;
         } else {
             $this->errors[] = "Invalid template configuration for '{$name}'.";
+
             return;
         }
 
         // Check if component file exists
-        $fullPath = $themePath . '/' . $componentPath;
-        if (!File::exists($fullPath)) {
+        $fullPath = $themePath.'/'.$componentPath;
+        if (! File::exists($fullPath)) {
             $this->errors[] = "React component not found: {$componentPath}";
         }
     }
-
 
     /**
      * Validate theme structure
@@ -121,25 +123,29 @@ class ThemeValidator
     {
         $this->errors = [];
 
-        if (!File::exists($themePath)) {
+        if (! File::exists($themePath)) {
             $this->errors[] = "Theme directory does not exist: {$themePath}";
+
             return false;
         }
 
-        if (!File::exists($themePath . '/theme.json')) {
-            $this->errors[] = "theme.json not found in theme directory.";
+        if (! File::exists($themePath.'/theme.json')) {
+            $this->errors[] = 'theme.json not found in theme directory.';
+
             return false;
         }
 
         // Validate theme.json is valid JSON
         try {
-            $config = json_decode(File::get($themePath . '/theme.json'), true);
+            $config = json_decode(File::get($themePath.'/theme.json'), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->errors[] = "theme.json contains invalid JSON: " . json_last_error_msg();
+                $this->errors[] = 'theme.json contains invalid JSON: '.json_last_error_msg();
+
                 return false;
             }
         } catch (\Exception $e) {
-            $this->errors[] = "Failed to read theme.json: " . $e->getMessage();
+            $this->errors[] = 'Failed to read theme.json: '.$e->getMessage();
+
             return false;
         }
 
@@ -159,7 +165,7 @@ class ThemeValidator
             $allFiles = File::allFiles($themePath);
             foreach ($allFiles as $file) {
                 if (in_array(strtolower($file->getExtension()), $suspiciousExtensions, true)) {
-                    $this->errors[] = 'Security warning: Suspicious file found: ' . $file->getRelativePathname();
+                    $this->errors[] = 'Security warning: Suspicious file found: '.$file->getRelativePathname();
                 }
             }
         } catch (\Throwable $e) {

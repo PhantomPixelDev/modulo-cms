@@ -17,9 +17,10 @@ class PostTypeService
 
     public function allPublic()
     {
-        if (!Schema::hasTable('post_types')) {
+        if (! Schema::hasTable('post_types')) {
             return collect();
         }
+
         return Cache::remember('post_types:public', $this->ttl, function () {
             return PostType::where('is_public', true)->orderBy('label')->get();
         });
@@ -27,22 +28,24 @@ class PostTypeService
 
     public function byId(int $id): ?PostType
     {
-        if (!Schema::hasTable('post_types')) {
+        if (! Schema::hasTable('post_types')) {
             return null;
         }
-        return Cache::remember('post_types:id:' . $id, $this->ttl, function () use ($id) {
+
+        return Cache::remember('post_types:id:'.$id, $this->ttl, function () use ($id) {
             return PostType::find($id);
         });
     }
 
     public function byRoutePrefix(?string $prefix): ?PostType
     {
-        if (!Schema::hasTable('post_types')) {
+        if (! Schema::hasTable('post_types')) {
             return null;
         }
-        $key = 'post_types:route_prefix:' . ($prefix ?: 'root');
+        $key = 'post_types:route_prefix:'.($prefix ?: 'root');
+
         return Cache::remember($key, $this->ttl, function () use ($prefix) {
-            return PostType::where(function($q) use ($prefix) {
+            return PostType::where(function ($q) use ($prefix) {
                 if ($prefix === null || $prefix === '' || $prefix === '/') {
                     $q->whereNull('route_prefix')->orWhere('route_prefix', '')->orWhere('route_prefix', '/');
                 } else {

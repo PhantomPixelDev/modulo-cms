@@ -90,7 +90,7 @@ class Theme extends Model
      */
     public function getFullPathAttribute(): string
     {
-        return resource_path('themes/' . $this->directory_path);
+        return resource_path('themes/'.$this->directory_path);
     }
 
     /**
@@ -98,12 +98,12 @@ class Theme extends Model
      */
     public function getConfigAttribute(): ?array
     {
-        $configPath = $this->full_path . '/theme.json';
-        
+        $configPath = $this->full_path.'/theme.json';
+
         if (File::exists($configPath)) {
             return json_decode(File::get($configPath), true);
         }
-        
+
         return null;
     }
 
@@ -117,25 +117,25 @@ class Theme extends Model
         // Prefer explicit mapping from theme.json stored in DB
         if (isset($templates[$template])) {
             $templateConfig = $templates[$template];
-            
+
             // Handle React template configuration (array format)
             if (is_array($templateConfig)) {
                 if ($this->template_engine === 'react' && isset($templateConfig['component'])) {
                     return $templateConfig['component']; // Return component name for React
                 }
                 if (isset($templateConfig['path'])) {
-                    return $this->full_path . '/' . $templateConfig['path'];
+                    return $this->full_path.'/'.$templateConfig['path'];
                 }
             }
-            
+
             // Handle Blade template configuration (string format)
             if (is_string($templateConfig)) {
-                return $this->full_path . '/' . $templateConfig;
+                return $this->full_path.'/'.$templateConfig;
             }
         }
 
         // Fallback: conventional location inside templates directory
-        $conventional = $this->full_path . '/templates/' . $template . '.blade.php';
+        $conventional = $this->full_path.'/templates/'.$template.'.blade.php';
         if (\Illuminate\Support\Facades\File::exists($conventional)) {
             return $conventional;
         }
@@ -152,11 +152,11 @@ class Theme extends Model
 
         // Prefer explicit mapping from theme.json stored in DB
         if (isset($partials[$partial])) {
-            return $this->full_path . '/' . $partials[$partial];
+            return $this->full_path.'/'.$partials[$partial];
         }
 
         // Fallback: conventional location inside partials directory
-        $conventional = $this->full_path . '/partials/' . $partial . '.blade.php';
+        $conventional = $this->full_path.'/partials/'.$partial.'.blade.php';
         if (\Illuminate\Support\Facades\File::exists($conventional)) {
             return $conventional;
         }
@@ -170,25 +170,28 @@ class Theme extends Model
     public function getAssetUrl(string $type, ?string $asset = null): string|array|null
     {
         $assets = $this->assets ?? [];
-        
+
         if ($asset && isset($assets[$type]) && is_array($assets[$type])) {
             if (in_array($asset, $assets[$type])) {
                 // Prevent directory traversal
                 $sanitizedAsset = $this->sanitizeAssetPath($asset);
-                return asset('themes/' . $this->directory_path . '/' . $sanitizedAsset) . '?v=' . urlencode($this->version);
+
+                return asset('themes/'.$this->directory_path.'/'.$sanitizedAsset).'?v='.urlencode($this->version);
             }
         } elseif (isset($assets[$type])) {
             if (is_string($assets[$type])) {
                 $sanitizedPath = $this->sanitizeAssetPath($assets[$type]);
-                return asset('themes/' . $this->directory_path . '/' . $sanitizedPath) . '?v=' . urlencode($this->version);
+
+                return asset('themes/'.$this->directory_path.'/'.$sanitizedPath).'?v='.urlencode($this->version);
             } elseif (is_array($assets[$type])) {
                 return collect($assets[$type])->map(function ($assetPath) {
                     $sanitizedPath = $this->sanitizeAssetPath($assetPath);
-                    return asset('themes/' . $this->directory_path . '/' . $sanitizedPath) . '?v=' . urlencode($this->version);
+
+                    return asset('themes/'.$this->directory_path.'/'.$sanitizedPath).'?v='.urlencode($this->version);
                 })->toArray();
             }
         }
-        
+
         return null;
     }
 
@@ -199,18 +202,18 @@ class Theme extends Model
     {
         // Remove directory traversal attempts
         $path = str_replace(['../', '..\\', '../', '..\\'], '', $path);
-        
+
         // Remove leading slashes
         $path = ltrim($path, '/\\');
-        
+
         // Ensure path doesn't start with forbidden patterns
         $forbidden = ['/', '\\', 'http://', 'https://', 'file://', 'data:'];
         foreach ($forbidden as $pattern) {
             if (stripos($path, $pattern) === 0) {
-                throw new \InvalidArgumentException('Invalid asset path: ' . $path);
+                throw new \InvalidArgumentException('Invalid asset path: '.$path);
             }
         }
-        
+
         return $path;
     }
 
@@ -220,15 +223,15 @@ class Theme extends Model
     public function supports(string $feature): bool
     {
         $supports = $this->supports ?? [];
+
         return isset($supports[$feature]) && $supports[$feature];
     }
-
 
     /**
      * Check if theme files exist
      */
     public function filesExist(): bool
     {
-        return File::exists($this->full_path . '/theme.json');
+        return File::exists($this->full_path.'/theme.json');
     }
 }

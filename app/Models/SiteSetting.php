@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Locale;
-use App\Models\SiteSettingTranslation;
 
 class SiteSetting extends Model
 {
@@ -24,7 +22,9 @@ class SiteSetting extends Model
     ];
 
     protected static string $cacheKey = 'site_settings.all';
+
     protected static int $cacheTtl = 3600;
+
     protected static array $translatableKeys = [
         'site_name',
         'site_tagline',
@@ -101,7 +101,7 @@ class SiteSetting extends Model
 
         // Fallback to database for non-autoloaded settings
         // Check if table exists (for fresh installs)
-        if (!Schema::hasTable('site_settings')) {
+        if (! Schema::hasTable('site_settings')) {
             return $default;
         }
 
@@ -162,7 +162,7 @@ class SiteSetting extends Model
         foreach ($settings as $key => $data) {
             $value = is_array($data) && isset($data['value']) ? $data['value'] : $data;
             $type = is_array($data) && isset($data['type']) ? $data['type'] : 'string';
-            
+
             static::set($key, $value, $group, $type);
         }
     }
@@ -190,7 +190,7 @@ class SiteSetting extends Model
     public static function getAllCached(): array
     {
         // Check if table exists (for fresh installs)
-        if (!Schema::hasTable('site_settings')) {
+        if (! Schema::hasTable('site_settings')) {
             return [];
         }
 
@@ -321,7 +321,7 @@ class SiteSetting extends Model
 
         foreach ($defaults as $group => $settings) {
             foreach ($settings as $key => $data) {
-                if (!static::where('key', $key)->exists()) {
+                if (! static::where('key', $key)->exists()) {
                     static::create([
                         'group' => $group,
                         'key' => $key,

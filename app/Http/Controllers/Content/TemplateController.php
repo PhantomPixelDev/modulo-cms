@@ -84,7 +84,7 @@ class TemplateController extends Controller
         $allowedTypes = ['post', 'page', 'partial'];
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:' . implode(',', $allowedTypes),
+            'type' => 'required|string|in:'.implode(',', $allowedTypes),
             'description' => 'nullable|string',
             'content' => 'required|string',
             'variables' => 'nullable|array',
@@ -119,7 +119,7 @@ class TemplateController extends Controller
     {
         $this->authorize('view', $template);
         $template->load('creator');
-        
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'templates.show',
             'template' => [
@@ -183,12 +183,12 @@ class TemplateController extends Controller
 
         $allowedTypes = ['post', 'page', 'partial'];
         // Allow legacy templates to keep their existing type, but don't allow switching into legacy types.
-        if (!in_array($template->type, $allowedTypes, true)) {
+        if (! in_array($template->type, $allowedTypes, true)) {
             $allowedTypes[] = $template->type;
         }
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:' . implode(',', $allowedTypes),
+            'type' => 'required|string|in:'.implode(',', $allowedTypes),
             'description' => 'nullable|string',
             'content' => 'required|string',
             'variables' => 'nullable|array',
@@ -197,7 +197,7 @@ class TemplateController extends Controller
         ]);
 
         // If setting as default, remove default from other templates of same type
-        if ($request->is_default && !$template->is_default) {
+        if ($request->is_default && ! $template->is_default) {
             Template::where('type', $request->type)
                 ->where('id', '!=', $template->id)
                 ->update(['is_default' => false]);
@@ -229,7 +229,7 @@ class TemplateController extends Controller
         }
 
         $template->delete();
-        
+
         return back()->with('success', 'Template deleted successfully.');
     }
 }

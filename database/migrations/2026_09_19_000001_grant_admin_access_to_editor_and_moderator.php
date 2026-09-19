@@ -15,7 +15,7 @@ return new class extends Migration
     public function up(): void
     {
         $permission = Permission::where('name', 'access admin')->where('guard_name', 'web')->first();
-        if (!$permission) {
+        if (! $permission) {
             return;
         }
 

@@ -31,6 +31,7 @@ class Locale extends Model
      * Cache key for active locales
      */
     protected const CACHE_KEY = 'locales:active';
+
     protected const CACHE_TTL = 3600; // 1 hour
 
     /**
@@ -38,8 +39,8 @@ class Locale extends Model
      */
     public static function getActive(): \Illuminate\Database\Eloquent\Collection
     {
-        if (!self::localesTableAvailable()) {
-            return new \Illuminate\Database\Eloquent\Collection();
+        if (! self::localesTableAvailable()) {
+            return new \Illuminate\Database\Eloquent\Collection;
         }
 
         return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
@@ -86,7 +87,7 @@ class Locale extends Model
     protected static function localesTableAvailable(): bool
     {
         try {
-            return Schema::hasTable((new static())->getTable());
+            return Schema::hasTable((new static)->getTable());
         } catch (\Throwable $e) {
             return false;
         }
@@ -110,9 +111,10 @@ class Locale extends Model
         return \DB::transaction(function () {
             // Unset current default
             static::where('is_default', true)->update(['is_default' => false]);
-            
+
             // Set this as default
             $this->is_default = true;
+
             return $this->save();
         });
     }

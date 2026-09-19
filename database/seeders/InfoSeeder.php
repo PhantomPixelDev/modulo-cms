@@ -15,8 +15,9 @@ class InfoSeeder extends Seeder
     {
         // Get the first user as author
         $authorId = User::value('id');
-        if (!$authorId) {
+        if (! $authorId) {
             $this->command?->warn('No users found. Run the UserSeeder first.');
+
             return;
         }
 
@@ -44,7 +45,7 @@ class InfoSeeder extends Seeder
 
         // Get the technology category term
         $techTerm = TaxonomyTerm::where('slug', 'technology')->first();
-        
+
         // Example info items
         $infoItems = [
             [
@@ -57,7 +58,7 @@ class InfoSeeder extends Seeder
             [
                 'title' => 'Upcoming Webinar: Getting Started with Modulo',
                 'excerpt' => 'Join us for a free webinar to learn how to get started with Modulo CMS.',
-                'content' => '<p>We are hosting a free webinar next week to help new users get started with Modulo CMS. Our team will walk you through the key features and answer any questions you might have.</p><p><strong>Date:</strong> ' . now()->addWeek()->format('F j, Y') . '</p><p><strong>Time:</strong> 2:00 PM - 3:00 PM (EST)</p><p>Space is limited, so please register early to secure your spot!</p>',
+                'content' => '<p>We are hosting a free webinar next week to help new users get started with Modulo CMS. Our team will walk you through the key features and answer any questions you might have.</p><p><strong>Date:</strong> '.now()->addWeek()->format('F j, Y').'</p><p><strong>Time:</strong> 2:00 PM - 3:00 PM (EST)</p><p>Space is limited, so please register early to secure your spot!</p>',
                 'terms' => $techTerm ? [$techTerm->id] : [],
                 'published_at' => now()->subDay(),
             ],
@@ -77,7 +78,7 @@ class InfoSeeder extends Seeder
                 ]
             );
 
-            if (!empty($info['terms'])) {
+            if (! empty($info['terms'])) {
                 $post->taxonomyTerms()->syncWithoutDetaching($info['terms']);
             }
         }

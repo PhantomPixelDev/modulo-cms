@@ -2,24 +2,24 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
-use App\Models\User;
-use App\Models\Post;
-use App\Models\Theme;
-use App\Models\Template;
-use App\Models\Page;
-use App\Models\PostType;
-use App\Models\Taxonomy;
-use App\Models\TaxonomyTerm;
 use App\Models\Menu;
 use App\Models\MenuItem;
+use App\Models\Page;
+use App\Models\Post;
+use App\Models\PostType;
 use App\Models\SiteSetting;
-use Spatie\Permission\Models\Role;
+use App\Models\Taxonomy;
+use App\Models\TaxonomyTerm;
+use App\Models\Template;
+use App\Models\Theme;
+use App\Models\User;
 use App\Policies\RolePolicy;
-use App\Policies\ThemePolicy;
-use App\Policies\TemplatePolicy;
 use App\Policies\SiteSettingPolicy;
+use App\Policies\TemplatePolicy;
+use App\Policies\ThemePolicy;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\Models\Role;
 
 class AuthServiceProvider extends ServiceProvider
 {

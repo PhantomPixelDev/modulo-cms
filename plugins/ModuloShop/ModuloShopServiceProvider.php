@@ -2,7 +2,6 @@
 
 namespace Plugins\ModuloShop;
 
-use App\Models\Plugin;
 use App\Plugins\BasePluginServiceProvider;
 use App\Services\ShortcodeService;
 use Plugins\ModuloShop\src\Services\CartService;
@@ -12,12 +11,13 @@ use Plugins\ModuloShop\src\Services\ShopShortcodeService;
 class ModuloShopServiceProvider extends BasePluginServiceProvider
 {
     protected string $pluginBasePath = __DIR__;
+
     protected string $pluginSlug = 'modulo-shop';
 
     public function register()
     {
         $this->app->singleton(ModuloShopSettings::class, function () {
-            return new ModuloShopSettings();
+            return new ModuloShopSettings;
         });
 
         // Register cart service as singleton (session-based)
@@ -33,20 +33,21 @@ class ModuloShopServiceProvider extends BasePluginServiceProvider
         $this->app->singleton(ShopShortcodeService::class, function ($app) {
             return new ShopShortcodeService($app->make(ShortcodeService::class));
         });
-        
+
         // Initialize shortcodes on boot
         $this->app->make(ShopShortcodeService::class);
 
         // Add shop features via hooks
-        add_action('cms_booted', function() {
+        add_action('cms_booted', function () {
             // Ensure product post type exists
             $this->ensureProductPostType();
         });
 
         // Example filter for currency formatting
-        add_filter('format_price', function($price) {
+        add_filter('format_price', function ($price) {
             $currency = app(ModuloShopSettings::class)->currency();
-            return $currency . ' ' . number_format($price, 2);
+
+            return $currency.' '.number_format($price, 2);
         });
     }
 
@@ -56,13 +57,13 @@ class ModuloShopServiceProvider extends BasePluginServiceProvider
     protected function ensureProductPostType(): void
     {
         // Run seeder if product post type doesn't exist
-        if (!\App\Models\PostType::where('name', 'product')->exists()) {
+        if (! \App\Models\PostType::where('name', 'product')->exists()) {
             try {
-                $seeder = new \Plugins\ModuloShop\database\seeders\ShopSeeder();
+                $seeder = new \Plugins\ModuloShop\database\seeders\ShopSeeder;
                 $seeder->setContainer($this->app);
                 $seeder->run();
             } catch (\Exception $e) {
-                logger()->warning('Failed to seed shop data: ' . $e->getMessage());
+                logger()->warning('Failed to seed shop data: '.$e->getMessage());
             }
         }
     }

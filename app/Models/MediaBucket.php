@@ -32,7 +32,7 @@ class MediaBucket extends Model implements HasMedia
     {
         static::saving(function (self $bucket) {
             // Ensure slug and path are set based on name and parent
-            if (!$bucket->slug) {
+            if (! $bucket->slug) {
                 $bucket->slug = Str::slug((string) $bucket->name);
             }
             $parentPath = '';
@@ -40,14 +40,14 @@ class MediaBucket extends Model implements HasMedia
                 $parent = $bucket->parent()->first();
                 $parentPath = $parent?->path ? rtrim($parent->path, '/') : '';
             }
-            $bucket->path = ltrim(trim($parentPath . '/' . $bucket->slug, '/'), '/');
+            $bucket->path = ltrim(trim($parentPath.'/'.$bucket->slug, '/'), '/');
         });
     }
 
     /**
      * Register media conversions for thumbnails
      */
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $quality = SiteSetting::get('image_quality', 85);
 

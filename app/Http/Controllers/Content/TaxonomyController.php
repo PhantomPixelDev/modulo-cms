@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
-use App\Models\Taxonomy;
-use App\Models\PostType;
 use App\Models\Locale;
+use App\Models\PostType;
+use App\Models\Taxonomy;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class TaxonomyController extends Controller
 {
@@ -24,13 +24,15 @@ class TaxonomyController extends Controller
         $original = $slug;
         $i = 2;
         while (Taxonomy::where('slug', $slug)
-            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->exists()) {
-            $slug = $original . '-' . $i;
+            $slug = $original.'-'.$i;
             $i++;
         }
+
         return $slug;
     }
+
     /**
      * Display a listing of the resource.
      */
@@ -79,7 +81,7 @@ class TaxonomyController extends Controller
             'menu_icon' => 'nullable|string',
             'menu_position' => 'integer|min:0|max:100',
             'translations' => 'sometimes|array',
-            'translations.*.locale' => ['required','string','max:8', Rule::exists('locales', 'code')],
+            'translations.*.locale' => ['required', 'string', 'max:8', Rule::exists('locales', 'code')],
             'translations.*.label' => 'nullable|string|max:255',
             'translations.*.plural_label' => 'nullable|string|max:255',
             'translations.*.description' => 'nullable|string',
@@ -116,7 +118,7 @@ class TaxonomyController extends Controller
                 $q->with(['author:id,name', 'postType:id,label,name']);
             },
         ]);
-        
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomies.show',
             'taxonomy' => $taxonomy,
@@ -147,7 +149,7 @@ class TaxonomyController extends Controller
     {
         $this->authorize('update', $taxonomy);
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:taxonomies,name,' . $taxonomy->id,
+            'name' => 'required|string|max:255|unique:taxonomies,name,'.$taxonomy->id,
             'label' => 'required|string|max:255',
             'plural_label' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -158,7 +160,7 @@ class TaxonomyController extends Controller
             'menu_icon' => 'nullable|string',
             'menu_position' => 'integer|min:0|max:100',
             'translations' => 'sometimes|array',
-            'translations.*.locale' => ['required','string','max:8', Rule::exists('locales', 'code')],
+            'translations.*.locale' => ['required', 'string', 'max:8', Rule::exists('locales', 'code')],
             'translations.*.label' => 'nullable|string|max:255',
             'translations.*.plural_label' => 'nullable|string|max:255',
             'translations.*.description' => 'nullable|string',
@@ -190,7 +192,7 @@ class TaxonomyController extends Controller
 
         foreach ($translations as $translation) {
             $locale = $translation['locale'] ?? null;
-            if (!$locale) {
+            if (! $locale) {
                 continue;
             }
 
@@ -204,7 +206,7 @@ class TaxonomyController extends Controller
             $handledLocales[] = $locale;
         }
 
-        if (!in_array($defaultLocale, $handledLocales, true)) {
+        if (! in_array($defaultLocale, $handledLocales, true)) {
             $taxonomy->setTranslation($defaultLocale, [
                 'label' => $taxonomy->label,
                 'plural_label' => $taxonomy->plural_label,
@@ -225,6 +227,7 @@ class TaxonomyController extends Controller
         }
 
         $taxonomy->delete();
+
         return back()->with('success', 'Taxonomy deleted successfully.');
     }
 }

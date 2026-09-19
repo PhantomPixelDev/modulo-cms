@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 class ThemeMakeCommand extends Command
 {
     protected $signature = 'theme:make {name : The theme name}';
+
     protected $description = 'Create a new React theme scaffold';
 
     public function handle(): int
@@ -20,6 +21,7 @@ class ThemeMakeCommand extends Command
 
         if (File::exists($themePath)) {
             $this->error("Theme directory already exists: {$themePath}");
+
             return self::FAILURE;
         }
 
@@ -34,20 +36,21 @@ class ThemeMakeCommand extends Command
             File::makeDirectory("{$themePath}/assets/images", 0755, true);
             File::makeDirectory("{$themePath}/components", 0755, true);
             File::makeDirectory("{$themePath}/components/partials", 0755, true);
-            
+
             $this->createReactScaffold($themePath, $name, $slug);
 
-            $this->info("✓ Theme scaffold created successfully!");
+            $this->info('✓ Theme scaffold created successfully!');
             $this->newLine();
             $this->line("Theme location: {$themePath}");
-            $this->line("Next steps:");
+            $this->line('Next steps:');
             $this->line("  1. Edit {$themePath}/theme.json to configure your theme");
-            $this->line("  2. Add your templates and assets");
+            $this->line('  2. Add your templates and assets');
             $this->line("  3. Run: php artisan theme:install {$slug}");
 
             return self::SUCCESS;
         } catch (\Exception $e) {
-            $this->error("Failed to create theme: " . $e->getMessage());
+            $this->error('Failed to create theme: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }
@@ -59,7 +62,7 @@ class ThemeMakeCommand extends Command
             'name' => $name,
             'slug' => $slug,
             'version' => '1.0.0',
-            'description' => "A modern React theme for Modulo CMS",
+            'description' => 'A modern React theme for Modulo CMS',
             'author' => config('app.name'),
             'author_url' => '',
             'tags' => ['react', 'modern'],
@@ -101,11 +104,10 @@ class ThemeMakeCommand extends Command
 
         // Create basic CSS
         File::put("{$path}/assets/css/theme.css", "/* Theme styles */\n");
-        
+
         // Create README
         File::put("{$path}/README.md", "# {$name}\n\nA React-based theme for Modulo CMS.\n");
     }
-
 
     protected function createReactComponent(string $path, string $name): void
     {
@@ -128,5 +130,4 @@ TSX;
 
         File::put($path, $component);
     }
-
 }

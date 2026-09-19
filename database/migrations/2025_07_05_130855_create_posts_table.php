@@ -29,7 +29,7 @@ return new class extends Migration
             $table->json('meta_data')->nullable(); // for custom meta fields
             $table->integer('view_count')->default(0);
             $table->timestamps();
-            
+
             // Indexes for better performance
             $table->index(['post_type_id', 'status']);
             $table->index(['author_id', 'status']);

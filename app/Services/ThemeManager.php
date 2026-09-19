@@ -3,18 +3,20 @@
 namespace App\Services;
 
 use App\Models\Theme;
-use App\Services\ThemeValidator;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 
 class ThemeManager
 {
     protected string $themesPath;
+
     protected ?Theme $activeTheme = null;
+
     protected int $ttl;
+
     protected ThemeValidator $validator;
 
     public function __construct(ThemeValidator $validator)
@@ -49,26 +51,27 @@ class ThemeManager
     public function discoverThemes(): Collection
     {
         $discovered = collect();
-        
-        if (!File::exists($this->themesPath)) {
+
+        if (! File::exists($this->themesPath)) {
             File::makeDirectory($this->themesPath, 0755, true);
+
             return $discovered;
         }
 
         $directories = File::directories($this->themesPath);
 
         foreach ($directories as $directory) {
-            $themeJsonPath = $directory . '/theme.json';
-            
+            $themeJsonPath = $directory.'/theme.json';
+
             if (File::exists($themeJsonPath)) {
                 try {
                     $config = json_decode(File::get($themeJsonPath), true);
-                    
+
                     if ($config && isset($config['slug'])) {
                         $discovered->push([
                             'directory' => basename($directory),
                             'config' => $config,
-                            'path' => $directory
+                            'path' => $directory,
                         ]);
                     }
                 } catch (\Exception $e) {
@@ -92,22 +95,22 @@ class ThemeManager
         if (! in_array($templateEngine, ['react', 'blade'], true)) {
             $templateEngine = 'react';
         }
-        
+
         // Validate theme configuration
-        if (!$this->validator->validate($config, $themeData['path'])) {
+        if (! $this->validator->validate($config, $themeData['path'])) {
             throw new \InvalidArgumentException(
-                'Theme validation failed: ' . $this->validator->getErrorsAsString()
+                'Theme validation failed: '.$this->validator->getErrorsAsString()
             );
         }
-        
+
         // Security check
-        if (!$this->validator->validateSecurity($themeData['path'])) {
+        if (! $this->validator->validateSecurity($themeData['path'])) {
             \Log::warning('Theme security validation issues', [
                 'slug' => $config['slug'],
-                'errors' => $this->validator->getErrors()
+                'errors' => $this->validator->getErrors(),
             ]);
         }
-        
+
         $theme = Theme::updateOrCreate(
             ['slug' => $config['slug']],
             [
@@ -153,7 +156,7 @@ class ThemeManager
                 $installed->push($theme);
             } catch (\Exception $e) {
                 // Log error but continue with other themes
-                \Log::error("Failed to install theme {$themeData['config']['slug']}: " . $e->getMessage());
+                \Log::error("Failed to install theme {$themeData['config']['slug']}: ".$e->getMessage());
             }
         }
 
@@ -167,7 +170,7 @@ class ThemeManager
     {
         $theme = Theme::where('slug', $slug)->where('is_installed', true)->first();
 
-        if (!$theme || !$theme->filesExist()) {
+        if (! $theme || ! $theme->filesExist()) {
             return false;
         }
 
@@ -195,6 +198,7 @@ class ThemeManager
                 'slug' => $slug,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -205,13 +209,13 @@ class ThemeManager
     public function getTemplate(string $template): ?string
     {
         $activeTheme = $this->getActiveTheme();
-        
-        if (!$activeTheme) {
+
+        if (! $activeTheme) {
             return null;
         }
 
         $templatePath = $activeTheme->getTemplatePath($template);
-        
+
         if ($templatePath && File::exists($templatePath)) {
             return File::get($templatePath);
         }
@@ -225,13 +229,13 @@ class ThemeManager
     public function getPartial(string $partial): ?string
     {
         $activeTheme = $this->getActiveTheme();
-        
-        if (!$activeTheme) {
+
+        if (! $activeTheme) {
             return null;
         }
 
         $partialPath = $activeTheme->getPartialPath($partial);
-        
+
         if ($partialPath && File::exists($partialPath)) {
             return File::get($partialPath);
         }
@@ -245,17 +249,17 @@ class ThemeManager
     public function getAssets(): array
     {
         $activeTheme = $this->getActiveTheme();
-        
-        if (!$activeTheme) {
+
+        if (! $activeTheme) {
             return ['css' => [], 'js' => []];
         }
 
         $assets = $activeTheme->assets ?? [];
-        
+
         return [
             'css' => $activeTheme->getAssetUrl('css') ?? [],
             'js' => $activeTheme->getAssetUrl('js') ?? [],
-            'images' => $assets['images'] ?? []
+            'images' => $assets['images'] ?? [],
         ];
     }
 
@@ -270,8 +274,8 @@ class ThemeManager
         if ($activeTheme) {
             // 1) Try namespaced views: prefer slug, then directory_path
             $candidates = [
-                'themes::' . $activeTheme->slug . '.templates.' . $template,
-                'themes::' . $activeTheme->directory_path . '.templates.' . $template,
+                'themes::'.$activeTheme->slug.'.templates.'.$template,
+                'themes::'.$activeTheme->directory_path.'.templates.'.$template,
             ];
             foreach ($candidates as $viewName) {
                 try {
@@ -279,10 +283,11 @@ class ThemeManager
                         if (config('theme.debug')) {
                             \Log::debug('ThemeManager:renderTemplate:viewName', ['template' => $template, 'view' => $viewName]);
                         }
+
                         return \View::make($viewName, $data)->render();
                     }
                 } catch (\Throwable $e) {
-                    \Log::error("ThemeManager renderTemplate(view) error for '{$template}' using '{$viewName}': " . $e->getMessage());
+                    \Log::error("ThemeManager renderTemplate(view) error for '{$template}' using '{$viewName}': ".$e->getMessage());
                 }
             }
 
@@ -293,9 +298,10 @@ class ThemeManager
                     if (config('theme.debug')) {
                         \Log::debug('ThemeManager:renderTemplate:activePath', ['template' => $template, 'path' => $templatePath]);
                     }
+
                     return \View::file($templatePath, $data)->render();
                 } catch (\Throwable $e) {
-                    \Log::error("ThemeManager renderTemplate(file) error for '{$template}': " . $e->getMessage());
+                    \Log::error("ThemeManager renderTemplate(file) error for '{$template}': ".$e->getMessage());
                 }
             }
         }
@@ -311,13 +317,14 @@ class ThemeManager
     public function getTemplatePath(string $template): string
     {
         $activeTheme = $this->getActiveTheme();
-        
-        if (!$activeTheme) {
+
+        if (! $activeTheme) {
             return '';
         }
-        
-        $templateFile = $template . '.blade.php';
-        return $activeTheme->directory_path . '/templates/' . $templateFile;
+
+        $templateFile = $template.'.blade.php';
+
+        return $activeTheme->directory_path.'/templates/'.$templateFile;
     }
 
     /**
@@ -326,15 +333,15 @@ class ThemeManager
     public function getAssetUrl(string $asset): string
     {
         $activeTheme = $this->getActiveTheme();
-        
-        if (!$activeTheme) {
+
+        if (! $activeTheme) {
             return '';
         }
-        
-        $url = '/themes/' . $activeTheme->slug . '/assets/' . $asset;
-        
+
+        $url = '/themes/'.$activeTheme->slug.'/assets/'.$asset;
+
         // Add version query string for cache busting
-        return $url . '?v=' . urlencode($activeTheme->version);
+        return $url.'?v='.urlencode($activeTheme->version);
     }
 
     /**
@@ -344,7 +351,7 @@ class ThemeManager
     {
         $activeTheme = $this->getActiveTheme();
 
-        if (!$activeTheme) {
+        if (! $activeTheme) {
             return [];
         }
 
@@ -357,8 +364,8 @@ class ThemeManager
     public function getWidgetAreas(): array
     {
         $activeTheme = $this->getActiveTheme();
-        
-        if (!$activeTheme) {
+
+        if (! $activeTheme) {
             return [];
         }
 
@@ -372,7 +379,7 @@ class ThemeManager
     {
         $activeTheme = $this->getActiveTheme();
 
-        if (!$activeTheme) {
+        if (! $activeTheme) {
             return false;
         }
 
@@ -386,15 +393,15 @@ class ThemeManager
     {
         $locale = $locale ?? app()->getLocale();
         $directory = $theme->directory_path ?? $theme->slug;
-        $basePath = resource_path('themes/' . $directory . '/lang');
+        $basePath = resource_path('themes/'.$directory.'/lang');
 
         $paths = [
-            $basePath . '/' . $locale . '.json',
+            $basePath.'/'.$locale.'.json',
         ];
 
         $fallback = config('app.fallback_locale', 'en');
         if ($fallback !== $locale) {
-            $paths[] = $basePath . '/' . $fallback . '.json';
+            $paths[] = $basePath.'/'.$fallback.'.json';
         }
 
         foreach ($paths as $path) {
@@ -415,27 +422,28 @@ class ThemeManager
     public function publishAssets(Theme $theme): bool
     {
         // Source is inside resources/themes/<directory>/assets
-        $sourcePath = resource_path('themes/' . $theme->directory_path . '/assets');
+        $sourcePath = resource_path('themes/'.$theme->directory_path.'/assets');
         // Target must match URLs generated by Theme model (uses directory_path)
-        $targetPath = public_path('themes/' . $theme->directory_path . '/assets');
+        $targetPath = public_path('themes/'.$theme->directory_path.'/assets');
 
-        if (!File::exists($sourcePath)) {
+        if (! File::exists($sourcePath)) {
             return true; // No assets to publish
         }
 
         try {
             // Ensure target directory exists
             $targetDir = dirname($targetPath);
-            if (!File::exists($targetDir)) {
+            if (! File::exists($targetDir)) {
                 File::makeDirectory($targetDir, 0755, true);
             }
 
             // Check if already published with same hash
-            $hashFile = $targetPath . '/.asset-hash';
+            $hashFile = $targetPath.'/.asset-hash';
             $sourceHash = $this->getDirectoryHash($sourcePath);
-            
+
             if (File::exists($hashFile) && File::get($hashFile) === $sourceHash) {
                 \Log::info("Theme assets already up to date for {$theme->slug}");
+
                 return true; // Already up to date
             }
 
@@ -444,17 +452,18 @@ class ThemeManager
             }
 
             File::copyDirectory($sourcePath, $targetPath);
-            
+
             // Save hash for future comparisons
             File::put($hashFile, $sourceHash);
-            
+
             return true;
         } catch (\Exception $e) {
-            \Log::error("Failed to publish assets for theme {$theme->slug}: " . $e->getMessage());
+            \Log::error("Failed to publish assets for theme {$theme->slug}: ".$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Calculate directory hash for asset change detection
      */
@@ -462,12 +471,13 @@ class ThemeManager
     {
         $files = File::allFiles($directory);
         $hashes = [];
-        
+
         foreach ($files as $file) {
-            $hashes[] = md5_file($file->getRealPath()) . ':' . $file->getRelativePathname();
+            $hashes[] = md5_file($file->getRealPath()).':'.$file->getRelativePathname();
         }
-        
+
         sort($hashes);
+
         return md5(implode('|', $hashes));
     }
 
@@ -480,7 +490,7 @@ class ThemeManager
         $success = true;
 
         foreach ($themes as $theme) {
-            if (!$this->publishAssets($theme)) {
+            if (! $this->publishAssets($theme)) {
                 $success = false;
             }
         }
@@ -514,40 +524,42 @@ class ThemeManager
     public function updateTheme(string $slug): bool
     {
         $theme = Theme::where('slug', $slug)->first();
-        
-        if (!$theme) {
+
+        if (! $theme) {
             return false;
         }
 
         $discovered = $this->discoverThemes()->firstWhere('config.slug', $slug);
-        
-        if (!$discovered) {
+
+        if (! $discovered) {
             return false;
         }
 
         $newVersion = $discovered['config']['version'] ?? '1.0.0';
-        
+
         // Check if update is needed
         if (version_compare($newVersion, $theme->version, '<=')) {
             \Log::info("Theme {$slug} is already up to date");
+
             return true;
         }
 
         try {
             \Log::info("Updating theme {$slug} from {$theme->version} to {$newVersion}");
-            
+
             // Re-install theme (updates DB record)
             $this->installTheme($discovered, $theme->installed_by);
-            
+
             // Re-publish assets
             $this->publishAssets($theme->fresh());
-            
+
             // Clear cache
             $this->clearCache();
-            
+
             return true;
         } catch (\Exception $e) {
-            \Log::error("Failed to update theme {$slug}: " . $e->getMessage());
+            \Log::error("Failed to update theme {$slug}: ".$e->getMessage());
+
             return false;
         }
     }
@@ -558,19 +570,19 @@ class ThemeManager
     public function hasUpdates(string $slug): bool
     {
         $theme = Theme::where('slug', $slug)->first();
-        
-        if (!$theme) {
+
+        if (! $theme) {
             return false;
         }
 
         $discovered = $this->discoverThemes()->firstWhere('config.slug', $slug);
-        
-        if (!$discovered) {
+
+        if (! $discovered) {
             return false;
         }
 
         $newVersion = $discovered['config']['version'] ?? '1.0.0';
-        
+
         return version_compare($newVersion, $theme->version, '>');
     }
 
@@ -581,13 +593,14 @@ class ThemeManager
     {
         $installed = Theme::installed()->get();
         $discovered = $this->discoverThemes()->keyBy('config.slug');
-        
+
         return $installed->filter(function ($theme) use ($discovered) {
-            if (!isset($discovered[$theme->slug])) {
+            if (! isset($discovered[$theme->slug])) {
                 return false;
             }
-            
+
             $newVersion = $discovered[$theme->slug]['config']['version'] ?? '1.0.0';
+
             return version_compare($newVersion, $theme->version, '>');
         });
     }
@@ -598,8 +611,8 @@ class ThemeManager
     public function uninstallTheme(string $slug): bool
     {
         $theme = Theme::where('slug', $slug)->first();
-        
-        if (!$theme) {
+
+        if (! $theme) {
             return false;
         }
 
@@ -609,7 +622,7 @@ class ThemeManager
         }
 
         // Remove published assets
-        $assetsPath = public_path('themes/' . $theme->directory_path);
+        $assetsPath = public_path('themes/'.$theme->directory_path);
         if (File::exists($assetsPath)) {
             File::deleteDirectory($assetsPath);
         }

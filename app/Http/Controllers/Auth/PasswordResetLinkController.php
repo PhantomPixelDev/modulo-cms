@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\PasswordResetLinkRequest;
+use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\ReactTemplateRenderer;
 
 class PasswordResetLinkController extends Controller
 {
@@ -30,6 +30,7 @@ class PasswordResetLinkController extends Controller
         } catch (\Throwable $e) {
             // Fallback to default page rendering below
         }
+
         return Inertia::render('auth/forgot-password', [
             'status' => $request->session()->get('status'),
         ]);

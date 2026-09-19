@@ -1,24 +1,23 @@
 <?php
 
+use App\Http\Controllers\Admin\MediaController as AdminMediaController;
+use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
+use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SitemapController;
+use App\Http\Controllers\Admin\SiteSettingsController;
+use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Content\MenuController;
+use App\Http\Controllers\Content\MenuItemController;
+use App\Http\Controllers\Content\PagesController;
+use App\Http\Controllers\Content\PostController;
+use App\Http\Controllers\Content\PostTypeController;
 use App\Http\Controllers\Content\TaxonomyController;
 use App\Http\Controllers\Content\TaxonomyTermController;
 use App\Http\Controllers\Content\TemplateController;
 use App\Http\Controllers\Content\ThemeController;
-use App\Http\Controllers\Content\PostController;
-use App\Http\Controllers\Content\PostTypeController;
-use App\Http\Controllers\Content\PagesController;
-use App\Http\Controllers\Content\MenuController;
-use App\Http\Controllers\Content\MenuItemController;
-use App\Http\Controllers\Admin\SitemapController;
-use App\Http\Controllers\Admin\PluginController;
-use App\Http\Controllers\Admin\SiteSettingsController;
-use App\Http\Controllers\Admin\MediaController as AdminMediaController;
-use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
-use App\Http\Controllers\Admin\TranslationController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // All admin routes are protected by auth, verified, and admin role check
 Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|access admin'])
@@ -55,7 +54,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::post('/themes/clear-cache', [ThemeController::class, 'clearCache'])->name('themes.clear-cache');
         Route::post('/themes/{slug}/activate', [ThemeController::class, 'activate'])->name('themes.activate');
         Route::post('/themes/{theme}/publish-assets', [ThemeController::class, 'publishAssets'])->name('themes.publish-assets');
-        
+
         // Media routes
         Route::prefix('media')->group(function () {
             Route::get('/', [AdminMediaController::class, 'index'])->name('media.index');
@@ -79,13 +78,13 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // User & Role Management
         Route::resource('users', UserController::class);
         Route::resource('roles', RoleController::class);
-        
+
         // Sitemap
         Route::get('/sitemap', [SitemapController::class, 'index'])->name('sitemap.index');
         Route::put('/sitemap', [SitemapController::class, 'update'])->name('sitemap.update');
         Route::post('/sitemap/regenerate', [SitemapController::class, 'regenerate'])->name('sitemap.regenerate');
         Route::post('/sitemap/generate', [SitemapController::class, 'regenerate'])->name('sitemap.generate');
-        
+
         // Site Settings
         Route::get('/settings', [SiteSettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings/{group}', [SiteSettingsController::class, 'update'])->name('settings.update');

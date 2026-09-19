@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\PostType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -19,12 +18,12 @@ class PostTypeFactory extends Factory
     public function definition(): array
     {
         $name = fake()->unique()->word();
-        
+
         return [
             'name' => $name,
             'slug' => Str::slug($name),
             'label' => ucfirst($name),
-            'plural_label' => ucfirst($name) . 's',
+            'plural_label' => ucfirst($name).'s',
             'description' => fake()->sentence(),
             'route_prefix' => Str::slug($name),
             'single_template_id' => null,

@@ -7,14 +7,16 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SitemapSetting;
 use App\Models\Taxonomy;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Carbon;
 
 class SitemapBuilder
 {
     protected string $settingsCacheKey = 'sitemap.settings';
+
     protected string $xmlCacheKeyPrefix = 'sitemap.xml';
+
     protected int $settingsTtl;
 
     public function __construct()
@@ -26,7 +28,7 @@ class SitemapBuilder
     {
         return Cache::remember($this->settingsCacheKey, $this->settingsTtl, function () {
             $settings = SitemapSetting::query()->first();
-            if (!$settings) {
+            if (! $settings) {
                 $settings = SitemapSetting::create([
                     'included_post_type_ids' => null, // null = include all public by default
                     'include_taxonomies' => true,
@@ -35,6 +37,7 @@ class SitemapBuilder
                     'last_generated_at' => null,
                 ]);
             }
+
             return $settings;
         });
     }
@@ -45,7 +48,7 @@ class SitemapBuilder
         $locale = $this->normalizeLocale($locale);
         $config = $settings->getLocalizedConfig($locale);
 
-        if ($settings->enable_cache && !$forceRefresh) {
+        if ($settings->enable_cache && ! $forceRefresh) {
             return Cache::remember($this->xmlCacheKey($locale), $settings->cache_ttl, function () use ($config, $locale) {
                 return $this->buildXml($config, $locale);
             });
@@ -55,6 +58,7 @@ class SitemapBuilder
         if ($settings->enable_cache) {
             Cache::put($this->xmlCacheKey($locale), $xml, $settings->cache_ttl);
         }
+
         return $xml;
     }
 
@@ -69,6 +73,7 @@ class SitemapBuilder
         }
         $settings->last_generated_at = now();
         $settings->save();
+
         return $xml;
     }
 
@@ -79,9 +84,9 @@ class SitemapBuilder
 
     protected function buildXml(array $config, ?string $locale = null): string
     {
-        if (!Schema::hasTable('posts')) {
+        if (! Schema::hasTable('posts')) {
             return $this->wrapUrlset([
-                $this->urlNode($this->buildUrl('/', $locale), now())
+                $this->urlNode($this->buildUrl('/', $locale), now()),
             ], false);
         }
 
@@ -102,19 +107,19 @@ class SitemapBuilder
         );
 
         $included = $config['included_post_type_ids'] ?? null;
-        $includeAll = empty($included) || !is_array($included);
+        $includeAll = empty($included) || ! is_array($included);
 
         // Post type archives (only public and selected)
         if (Schema::hasTable('post_types')) {
             $query = PostType::where('is_public', true);
-            if (!$includeAll) {
+            if (! $includeAll) {
                 $query->whereIn('id', $included);
             }
             $postTypes = $query->get();
             foreach ($postTypes as $pt) {
                 $prefix = $pt->route_prefix;
                 if ($prefix && $prefix !== '/') {
-                    $loc = $this->buildUrl('/' . ltrim($prefix, '/'), $locale);
+                    $loc = $this->buildUrl('/'.ltrim($prefix, '/'), $locale);
                     $lastmod = Post::where('post_type_id', $pt->id)
                         ->published()
                         ->orderByDesc('updated_at')
@@ -128,7 +133,7 @@ class SitemapBuilder
         $postsQuery = Post::with(['postType', 'translations'])
             ->whereHas('postType', function ($q) use ($includeAll, $included) {
                 $q->where('is_public', true);
-                if (!$includeAll) {
+                if (! $includeAll) {
                     $q->whereIn('id', $included);
                 }
             })
@@ -145,13 +150,13 @@ class SitemapBuilder
         $posts = $postsQuery->get();
         foreach ($posts as $post) {
             $prefix = $post->postType?->route_prefix;
-            $prefix = ($prefix === null || $prefix === '' || $prefix === '/') ? '' : '/' . ltrim($prefix, '/');
+            $prefix = ($prefix === null || $prefix === '' || $prefix === '/') ? '' : '/'.ltrim($prefix, '/');
             $translation = $locale ? $post->translations->firstWhere('locale', $locale) : null;
             $slug = $translation?->slug ?: $post->slug;
-            $loc = $this->buildUrl($prefix . '/' . ltrim((string) $slug, '/'), $locale);
+            $loc = $this->buildUrl($prefix.'/'.ltrim((string) $slug, '/'), $locale);
             $lastmod = $post->updated_at ?? $post->published_at ?? now();
             $alternates = $this->buildPostAlternates($post, $prefix);
-            if (!$hasAlternates && !empty($alternates)) {
+            if (! $hasAlternates && ! empty($alternates)) {
                 $hasAlternates = true;
             }
             $urls[] = $this->urlNode($loc, $lastmod, 'weekly', '0.7', $alternates);
@@ -165,7 +170,7 @@ class SitemapBuilder
                 $base = $tax->slug;
                 $terms = $tax->terms()->orderBy('updated_at', 'desc')->limit(5000)->get();
                 foreach ($terms as $term) {
-                    $loc = $this->buildUrl('/' . trim($base, '/') . '/' . $term->slug, $locale);
+                    $loc = $this->buildUrl('/'.trim($base, '/').'/'.$term->slug, $locale);
                     $lastmod = $term->updated_at ?? now();
                     $urls[] = $this->urlNode($loc, $lastmod, 'weekly', '0.5');
                 }
@@ -173,10 +178,10 @@ class SitemapBuilder
         }
 
         // Custom URLs provided per locale
-        if (!empty($config['custom_urls']) && is_array($config['custom_urls'])) {
+        if (! empty($config['custom_urls']) && is_array($config['custom_urls'])) {
             foreach ($config['custom_urls'] as $custom) {
                 $entry = $this->normalizeCustomUrlEntry($custom, $locale);
-                if (!$entry) {
+                if (! $entry) {
                     continue;
                 }
                 $urls[] = $this->urlNode(
@@ -191,21 +196,28 @@ class SitemapBuilder
         return $this->wrapUrlset($urls, $hasAlternates);
     }
 
-    private function urlNode(string $loc, $lastmod = null, string $changefreq = null, string $priority = null, array $alternates = []): string
+    private function urlNode(string $loc, $lastmod = null, ?string $changefreq = null, ?string $priority = null, array $alternates = []): string
     {
         $locEsc = htmlspecialchars($loc, ENT_XML1 | ENT_COMPAT, 'UTF-8');
         $lastmodStr = $lastmod ? Carbon::parse($lastmod)->toAtomString() : null;
         $node = "  <url>\n";
         $node .= "    <loc>{$locEsc}</loc>\n";
-        if ($lastmodStr) { $node .= "    <lastmod>{$lastmodStr}</lastmod>\n"; }
-        if ($changefreq) { $node .= "    <changefreq>{$changefreq}</changefreq>\n"; }
-        if ($priority) { $node .= "    <priority>{$priority}</priority>\n"; }
+        if ($lastmodStr) {
+            $node .= "    <lastmod>{$lastmodStr}</lastmod>\n";
+        }
+        if ($changefreq) {
+            $node .= "    <changefreq>{$changefreq}</changefreq>\n";
+        }
+        if ($priority) {
+            $node .= "    <priority>{$priority}</priority>\n";
+        }
         foreach ($alternates as $code => $alternateUrl) {
             $altEsc = htmlspecialchars($alternateUrl, ENT_XML1 | ENT_COMPAT, 'UTF-8');
             $rel = htmlspecialchars($code, ENT_XML1 | ENT_COMPAT, 'UTF-8');
             $node .= "    <xhtml:link rel=\"alternate\" hreflang=\"{$rel}\" href=\"{$altEsc}\" />\n";
         }
         $node .= "  </url>\n";
+
         return $node;
     }
 
@@ -215,6 +227,7 @@ class SitemapBuilder
         $namespace = $includeAlternateNamespace
             ? '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'
             : '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
         return <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 {$namespace}
@@ -224,9 +237,9 @@ XML;
 
     protected function buildUrl(string $path, ?string $locale = null): string
     {
-        $path = '/' . ltrim($path, '/');
+        $path = '/'.ltrim($path, '/');
         if ($locale) {
-            return url('/' . trim($locale, '/') . $path);
+            return url('/'.trim($locale, '/').$path);
         }
 
         return url($path);
@@ -234,12 +247,12 @@ XML;
 
     protected function xmlCacheKey(?string $locale = null): string
     {
-        return $this->xmlCacheKeyPrefix . '.' . ($locale ?: 'default');
+        return $this->xmlCacheKeyPrefix.'.'.($locale ?: 'default');
     }
 
     protected function normalizeLocale(?string $locale): ?string
     {
-        if (!$locale || !Schema::hasTable('locales')) {
+        if (! $locale || ! Schema::hasTable('locales')) {
             return $locale;
         }
 
@@ -248,17 +261,17 @@ XML;
 
     protected function buildPostAlternates(Post $post, string $prefix): array
     {
-        if (!Schema::hasTable('locales')) {
+        if (! Schema::hasTable('locales')) {
             return [];
         }
 
         $alternates = [];
         foreach ($post->translations as $translation) {
-            if (!$translation->slug) {
+            if (! $translation->slug) {
                 continue;
             }
             $alternates[$translation->locale] = $this->buildUrl(
-                $prefix . '/' . ltrim($translation->slug, '/'),
+                $prefix.'/'.ltrim($translation->slug, '/'),
                 $translation->locale
             );
         }
@@ -268,7 +281,7 @@ XML;
 
     protected function alternateLocaleUrls(callable $builder): array
     {
-        if (!Schema::hasTable('locales')) {
+        if (! Schema::hasTable('locales')) {
             return [];
         }
 
@@ -283,12 +296,12 @@ XML;
             $entry = ['loc' => $entry];
         }
 
-        if (!is_array($entry) || empty($entry['loc'])) {
+        if (! is_array($entry) || empty($entry['loc'])) {
             return null;
         }
 
         $loc = $entry['loc'];
-        if (!str_starts_with($loc, 'http://') && !str_starts_with($loc, 'https://')) {
+        if (! str_starts_with($loc, 'http://') && ! str_starts_with($loc, 'https://')) {
             $loc = $this->buildUrl($loc, $locale);
         }
 

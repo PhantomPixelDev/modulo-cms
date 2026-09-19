@@ -27,51 +27,52 @@ class CheckUserRoles extends Command
     public function handle()
     {
         $email = $this->argument('email');
-        
+
         if ($email) {
             $user = User::where('email', $email)->first();
-            
-            if (!$user) {
+
+            if (! $user) {
                 $this->error("User with email {$email} not found!");
+
                 return 1;
             }
-            
+
             $this->displayUserInfo($user);
         } else {
             $users = User::with('roles', 'permissions')->get();
-            
-            $this->info("All Users and Their Roles:");
-            $this->info("========================");
-            
+
+            $this->info('All Users and Their Roles:');
+            $this->info('========================');
+
             foreach ($users as $user) {
                 $this->displayUserInfo($user);
-                $this->info("---");
+                $this->info('---');
             }
         }
-        
+
         return 0;
     }
-    
+
     private function displayUserInfo($user)
     {
         $this->info("User: {$user->name} ({$user->email})");
-        
+
         if ($user->roles->count() > 0) {
-            $this->info("Roles:");
+            $this->info('Roles:');
             foreach ($user->roles as $role) {
                 $this->line("  - {$role->name}");
             }
         } else {
-            $this->warn("  No roles assigned");
+            $this->warn('  No roles assigned');
         }
-        
+
         if ($user->permissions->count() > 0) {
-            $this->info("Permissions:");
+            $this->info('Permissions:');
             foreach ($user->permissions as $permission) {
                 $this->line("  - {$permission->name}");
             }
         } else {
-            $this->warn("  No direct permissions assigned");
+            $this->warn('  No direct permissions assigned');
         }
     }
-} 
+}

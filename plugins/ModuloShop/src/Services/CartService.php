@@ -26,14 +26,14 @@ class CartService
     public function addItem(int $productId, int $quantity = 1): array
     {
         $product = $this->getProduct($productId);
-        
-        if (!$product) {
+
+        if (! $product) {
             throw new \InvalidArgumentException('Product not found');
         }
 
         $meta = $product->meta_data ?? [];
         $stock = $meta['stock'] ?? null;
-        
+
         // Check stock
         if ($stock !== null) {
             $currentQty = $this->getItemQuantity($productId);
@@ -44,9 +44,9 @@ class CartService
 
         $cart = $this->getCart();
         $items = $cart['items'];
-        
+
         $itemKey = $this->findItemKey($productId);
-        
+
         if ($itemKey !== null) {
             $items[$itemKey]['quantity'] += $quantity;
         } else {
@@ -59,9 +59,9 @@ class CartService
 
         $cart['items'] = $items;
         $cart['currency'] = $meta['currency'] ?? 'USD';
-        
+
         $this->saveCart($cart);
-        
+
         return $this->getCartWithProducts();
     }
 
@@ -72,21 +72,21 @@ class CartService
         }
 
         $product = $this->getProduct($productId);
-        
-        if (!$product) {
+
+        if (! $product) {
             throw new \InvalidArgumentException('Product not found');
         }
 
         $meta = $product->meta_data ?? [];
         $stock = $meta['stock'] ?? null;
-        
+
         if ($stock !== null && $quantity > $stock) {
             throw new \InvalidArgumentException('Not enough stock available');
         }
 
         $cart = $this->getCart();
         $itemKey = $this->findItemKey($productId);
-        
+
         if ($itemKey !== null) {
             $cart['items'][$itemKey]['quantity'] = $quantity;
             $this->saveCart($cart);
@@ -99,7 +99,7 @@ class CartService
     {
         $cart = $this->getCart();
         $itemKey = $this->findItemKey($productId);
-        
+
         if ($itemKey !== null) {
             unset($cart['items'][$itemKey]);
             $cart['items'] = array_values($cart['items']);
@@ -117,15 +117,17 @@ class CartService
     public function getItemCount(): int
     {
         $items = $this->getItems();
+
         return array_sum(array_column($items, 'quantity'));
     }
 
     public function getItemQuantity(int $productId): int
     {
         $itemKey = $this->findItemKey($productId);
-        
+
         if ($itemKey !== null) {
             $items = $this->getItems();
+
             return $items[$itemKey]['quantity'] ?? 0;
         }
 
@@ -141,8 +143,8 @@ class CartService
 
         foreach ($cart['items'] as $item) {
             $product = $this->getProduct($item['product_id']);
-            
-            if (!$product) {
+
+            if (! $product) {
                 continue;
             }
 
@@ -158,14 +160,14 @@ class CartService
                 'product_name' => $product->title,
                 'product_slug' => $product->slug,
                 'product_image' => $product->featured_image,
-                'product_url' => url('/shop/' . $product->slug),
+                'product_url' => url('/shop/'.$product->slug),
                 'sku' => $meta['sku'] ?? null,
                 'price' => $price,
                 'original_price' => $originalPrice,
                 'quantity' => $item['quantity'],
                 'subtotal' => $itemSubtotal,
                 'stock' => $meta['stock'] ?? null,
-                'in_stock' => !isset($meta['stock']) || $meta['stock'] > 0,
+                'in_stock' => ! isset($meta['stock']) || $meta['stock'] > 0,
             ];
         }
 
@@ -181,7 +183,7 @@ class CartService
     public function getTotals(): array
     {
         $cart = $this->getCartWithProducts();
-        
+
         return [
             'subtotal' => $cart['subtotal'],
             'discount' => 0,
@@ -200,7 +202,7 @@ class CartService
     protected function findItemKey(int $productId): ?int
     {
         $items = $this->getItems();
-        
+
         foreach ($items as $key => $item) {
             if ($item['product_id'] === $productId) {
                 return $key;
@@ -213,8 +215,8 @@ class CartService
     protected function getProduct(int $productId): ?Post
     {
         $productType = PostType::where('slug', 'product')->first();
-        
-        if (!$productType) {
+
+        if (! $productType) {
             return null;
         }
 

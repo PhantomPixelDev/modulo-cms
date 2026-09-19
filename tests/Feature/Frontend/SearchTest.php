@@ -26,7 +26,7 @@ it('treats percent signs literally', function () {
     searchablePost(['title' => 'Plain title', 'excerpt' => 'nothing', 'content' => 'nothing']);
     searchablePost(['title' => 'Save 50% today', 'content' => 'Body']);
 
-    $response = $this->get('/search?q=' . urlencode('%'))->assertOk();
+    $response = $this->get('/search?q='.urlencode('%'))->assertOk();
 
     $response->assertSee('Save 50% today')->assertDontSee('Plain title');
 });

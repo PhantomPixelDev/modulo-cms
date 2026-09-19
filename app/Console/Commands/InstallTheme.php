@@ -21,8 +21,9 @@ class InstallTheme extends Command
             $discovered = $themeManager->discoverThemes();
             $themeToInstall = $discovered->firstWhere('config.slug', $slug);
 
-            if (!$themeToInstall) {
+            if (! $themeToInstall) {
                 $this->error("Theme '{$slug}' not found in discovered themes.");
+
                 return self::FAILURE;
             }
 
@@ -42,7 +43,8 @@ class InstallTheme extends Command
 
             return self::SUCCESS;
         } catch (\Throwable $e) {
-            $this->error('Failed to install theme: ' . $e->getMessage());
+            $this->error('Failed to install theme: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }

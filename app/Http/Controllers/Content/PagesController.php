@@ -12,7 +12,7 @@ use Inertia\Inertia;
 class PagesController extends AdminBaseController
 {
     protected string $resourceName = 'posts';
-    
+
     protected ?PostType $pageType = null;
 
     public function __construct(
@@ -28,10 +28,10 @@ class PagesController extends AdminBaseController
         }
         $pageType = PostType::where('name', 'page')->first()
             ?? PostType::where('slug', 'pages')->first()
-            ?? PostType::where(function($q){
+            ?? PostType::where(function ($q) {
                 $q->whereNull('route_prefix')
-                  ->orWhere('route_prefix','')
-                  ->orWhere('route_prefix','/');
+                    ->orWhere('route_prefix', '')
+                    ->orWhere('route_prefix', '/');
             })->first();
 
         if (! $pageType) {
@@ -96,7 +96,7 @@ class PagesController extends AdminBaseController
     public function create()
     {
         $defaultStatus = $this->settings->get('default_post_status', 'draft');
-        
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'pages.create',
             'defaultStatus' => $defaultStatus,
@@ -124,18 +124,18 @@ class PagesController extends AdminBaseController
         }
 
         $pageType = $this->resolvePageType();
-        
+
         // Set published_at if status is published and not set
         $publishedAt = null;
         if (($data['status'] ?? null) === 'published' && empty($data['published_at'])) {
             $publishedAt = now();
         }
-        
+
         // Generate slug if not provided
         if (empty($data['slug'])) {
             $data['slug'] = \Illuminate\Support\Str::slug($data['title']);
         }
-        
+
         // Create the page/post
         $page = Post::create([
             'title' => $data['title'],
@@ -175,7 +175,7 @@ class PagesController extends AdminBaseController
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:posts,slug,' . $page->id,
+            'slug' => 'nullable|string|max:255|unique:posts,slug,'.$page->id,
             'status' => 'required|in:draft,published,private,archived',
             'content' => 'required', // Content can be string or array
             'excerpt' => 'nullable|string',
@@ -208,7 +208,7 @@ class PagesController extends AdminBaseController
             'page_id' => $page->id,
             'content_type' => gettype($data['content']),
             'content_length' => is_string($data['content']) ? strlen($data['content']) : null,
-            'content_sample' => is_string($data['content']) ? substr($data['content'], 0, 100) . '...' : null,
+            'content_sample' => is_string($data['content']) ? substr($data['content'], 0, 100).'...' : null,
         ]);
 
         // Update the page

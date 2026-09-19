@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\PostType;
-use App\Services\ReactTemplateRenderer;
 
 class FrontendTemplateResolver
 {
@@ -41,7 +40,7 @@ class FrontendTemplateResolver
 
     public function postsIndexTemplate(?PostType $postType): string
     {
-        if ($postType && !empty($postType->route_prefix)) {
+        if ($postType && ! empty($postType->route_prefix)) {
             $candidate = ltrim((string) $postType->route_prefix, '/');
             if ($candidate !== '' && $this->reactRenderer->canRender($candidate)) {
                 return $candidate;

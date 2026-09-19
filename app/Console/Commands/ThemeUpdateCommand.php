@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class ThemeUpdateCommand extends Command
 {
     protected $signature = 'theme:update {slug? : The theme slug to update (updates all if not specified)}';
+
     protected $description = 'Update theme(s) to the latest version';
 
     public function handle(ThemeManager $themeManager): int
@@ -25,8 +26,9 @@ class ThemeUpdateCommand extends Command
     {
         $this->info("Checking for updates for theme '{$slug}'...");
 
-        if (!$themeManager->hasUpdates($slug)) {
+        if (! $themeManager->hasUpdates($slug)) {
             $this->info("✓ Theme '{$slug}' is already up to date.");
+
             return self::SUCCESS;
         }
 
@@ -36,38 +38,43 @@ class ThemeUpdateCommand extends Command
 
             if ($success) {
                 $this->info("✓ Theme '{$slug}' updated successfully!");
+
                 return self::SUCCESS;
             } else {
                 $this->error("Failed to update theme '{$slug}'.");
+
                 return self::FAILURE;
             }
         } catch (\Exception $e) {
-            $this->error("Error updating theme: " . $e->getMessage());
+            $this->error('Error updating theme: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }
 
     protected function updateAllThemes(ThemeManager $themeManager): int
     {
-        $this->info("Checking for theme updates...");
+        $this->info('Checking for theme updates...');
         $themesWithUpdates = $themeManager->getThemesWithUpdates();
 
         if ($themesWithUpdates->isEmpty()) {
-            $this->info("✓ All themes are up to date.");
+            $this->info('✓ All themes are up to date.');
+
             return self::SUCCESS;
         }
 
         $this->newLine();
         $this->info("Found {$themesWithUpdates->count()} theme(s) with updates:");
-        
+
         foreach ($themesWithUpdates as $theme) {
             $this->line("  - {$theme->name} ({$theme->slug})");
         }
 
         $this->newLine();
 
-        if (!$this->confirm('Would you like to update all themes?', true)) {
+        if (! $this->confirm('Would you like to update all themes?', true)) {
             $this->info('Update cancelled.');
+
             return self::SUCCESS;
         }
 
@@ -76,7 +83,7 @@ class ThemeUpdateCommand extends Command
 
         foreach ($themesWithUpdates as $theme) {
             $this->info("Updating {$theme->name}...");
-            
+
             try {
                 if ($themeManager->updateTheme($theme->slug)) {
                     $this->info("  ✓ {$theme->name} updated");
@@ -86,7 +93,7 @@ class ThemeUpdateCommand extends Command
                     $failed++;
                 }
             } catch (\Exception $e) {
-                $this->error("  ✗ Error: " . $e->getMessage());
+                $this->error('  ✗ Error: '.$e->getMessage());
                 $failed++;
             }
         }

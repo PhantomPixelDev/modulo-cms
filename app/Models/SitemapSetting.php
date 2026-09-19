@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Locale;
-use App\Models\SitemapSettingTranslation;
 
 class SitemapSetting extends Model
 {
@@ -39,18 +37,18 @@ class SitemapSetting extends Model
     public function getLocalizedConfig(?string $locale = null): array
     {
         $config = $this->attributesToArray();
-        if (!array_key_exists('custom_urls', $config)) {
+        if (! array_key_exists('custom_urls', $config)) {
             $config['custom_urls'] = [];
         }
         $locale = $locale ?: app()->getLocale();
 
-        if (!$locale) {
+        if (! $locale) {
             return $config;
         }
 
         $translation = $this->translations()->where('locale', $locale)->first();
 
-        if (!$translation) {
+        if (! $translation) {
             $default = $this->resolveDefaultLocale();
             if ($default && $default !== $locale) {
                 $translation = $this->translations()->where('locale', $default)->first();
@@ -86,7 +84,7 @@ class SitemapSetting extends Model
 
     protected function resolveDefaultLocale(): ?string
     {
-        if (!Schema::hasTable('locales')) {
+        if (! Schema::hasTable('locales')) {
             return config('app.fallback_locale');
         }
 

@@ -4,14 +4,13 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\RedirectResponse;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\ReactTemplateRenderer;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -33,6 +32,7 @@ class AuthenticatedSessionController extends Controller
         } catch (\Throwable $e) {
             // Fallback to default page rendering below
         }
+
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
@@ -50,6 +50,7 @@ class AuthenticatedSessionController extends Controller
         // Force a full page reload so the Inertia root view switches from
         // themed (auth pages) to the standard app root for the dashboard.
         $intended = $request->session()->pull('url.intended', route('dashboard', absolute: false));
+
         return Inertia::location($intended);
     }
 
@@ -62,6 +63,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         // Force a full reload so we switch back to the themed root cleanly
         return Inertia::location(route('login'));
     }

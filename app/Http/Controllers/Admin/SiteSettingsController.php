@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Models\PostType;
 use App\Models\SiteSetting;
 use App\Services\SiteSettingsService;
-use App\Models\PostType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,8 +28,8 @@ class SiteSettingsController extends Controller
         $currentLocale = $request->query('locale', \App\Models\Locale::getDefault()?->code ?? config('app.fallback_locale', 'en'));
         $locales = \App\Models\Locale::getActive();
         $validGroups = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced'];
-        
-        if (!in_array($group, $validGroups)) {
+
+        if (! in_array($group, $validGroups)) {
             $group = 'general';
         }
 
@@ -39,11 +39,11 @@ class SiteSettingsController extends Controller
 
         // Merge with defaults to ensure all keys exist
         foreach ($defaults as $groupName => $groupSettings) {
-            if (!isset($allSettings[$groupName])) {
+            if (! isset($allSettings[$groupName])) {
                 $allSettings[$groupName] = [];
             }
             foreach ($groupSettings as $key => $data) {
-                if (!isset($allSettings[$groupName][$key])) {
+                if (! isset($allSettings[$groupName][$key])) {
                     $allSettings[$groupName][$key] = $data['value'];
                 }
             }
@@ -51,7 +51,7 @@ class SiteSettingsController extends Controller
 
         // Get pages for front page selection
         $pages = Post::where('status', 'published')
-            ->whereHas('postType', fn($q) => $q->where('name', 'page'))
+            ->whereHas('postType', fn ($q) => $q->where('name', 'page'))
             ->orderBy('title')
             ->get(['id', 'title']);
 
@@ -78,8 +78,8 @@ class SiteSettingsController extends Controller
         $this->authorize('update', SiteSetting::class);
 
         $validGroups = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced'];
-        
-        if (!in_array($group, $validGroups)) {
+
+        if (! in_array($group, $validGroups)) {
             return back()->withErrors(['group' => 'Invalid settings group']);
         }
 
@@ -89,7 +89,7 @@ class SiteSettingsController extends Controller
 
         $this->settings->updateGroup($group, $data, $currentLocale);
 
-        return back()->with('success', ucfirst($group) . ' settings updated successfully');
+        return back()->with('success', ucfirst($group).' settings updated successfully');
     }
 
     /**
@@ -98,7 +98,7 @@ class SiteSettingsController extends Controller
     public function clearCache()
     {
         $this->authorize('update', SiteSetting::class);
-        
+
         $this->settings->clearCache();
 
         return back()->with('success', 'Settings cache cleared');

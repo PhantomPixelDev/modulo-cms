@@ -9,8 +9,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -95,7 +95,7 @@ class RoleController extends Controller
     {
         $this->authorize('update', $role);
         $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
             'permissions' => 'array',
         ]);
 
@@ -146,7 +146,7 @@ class RoleController extends Controller
         }
 
         $ids = array_map('intval', array_filter($input, 'is_numeric'));
-        $names = array_values(array_filter($input, fn ($v) => !is_numeric($v)));
+        $names = array_values(array_filter($input, fn ($v) => ! is_numeric($v)));
 
         $permissions = Permission::query()
             ->where(fn ($q) => $q->whereIn('id', $ids)->orWhereIn('name', $names))
@@ -179,7 +179,7 @@ class RoleController extends Controller
 
         if ($escalating->isNotEmpty()) {
             throw ValidationException::withMessages([
-                'permissions' => 'You cannot grant permissions you do not have: ' . $escalating->implode(', '),
+                'permissions' => 'You cannot grant permissions you do not have: '.$escalating->implode(', '),
             ]);
         }
 

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('meta_description')->nullable();
             $table->json('meta_data')->nullable();
             $table->timestamps();
-            
+
             // Indexes
             $table->index(['taxonomy_id', 'parent_id']);
             $table->index('slug');

@@ -2,10 +2,9 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-
 use App\Services\PluginManager;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
 class PluginServiceProvider extends ServiceProvider
@@ -16,7 +15,7 @@ class PluginServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(PluginManager::class, function ($app) {
-            return new PluginManager();
+            return new PluginManager;
         });
     }
 
@@ -25,7 +24,7 @@ class PluginServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (!Schema::hasTable('plugins')) {
+        if (! Schema::hasTable('plugins')) {
             return;
         }
 
@@ -36,19 +35,19 @@ class PluginServiceProvider extends ServiceProvider
 
         foreach ($activePlugins as $plugin) {
             $provider = $plugin->service_provider;
-            if (!$provider || !is_string($provider)) {
+            if (! $provider || ! is_string($provider)) {
                 continue;
             }
 
-            if (!Str::startsWith($provider, 'Plugins\\')) {
+            if (! Str::startsWith($provider, 'Plugins\\')) {
                 continue;
             }
 
-            if (!class_exists($provider)) {
+            if (! class_exists($provider)) {
                 continue;
             }
 
-            if (!is_subclass_of($provider, ServiceProvider::class)) {
+            if (! is_subclass_of($provider, ServiceProvider::class)) {
                 continue;
             }
 

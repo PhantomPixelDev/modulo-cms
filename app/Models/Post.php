@@ -7,9 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Comment;
-use App\Models\PostTranslation;
-use App\Models\Locale;
 
 class Post extends Model
 {
@@ -76,14 +73,14 @@ class Post extends Model
     public function taxonomyTerms(): BelongsToMany
     {
         return $this->belongsToMany(TaxonomyTerm::class, 'post_taxonomy_terms')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     // Scopes for filtering
     public function scopePublished($query)
     {
         return $query->where('status', 'published')
-                    ->where('published_at', '<=', now());
+            ->where('published_at', '<=', now());
     }
 
     public function scopeByPostType($query, $postTypeId)
@@ -118,14 +115,14 @@ class Post extends Model
     public function translationOrFallback(?string $locale = null): ?PostTranslation
     {
         $locale = $locale ?? app()->getLocale();
-        
+
         $translation = $this->translation($locale);
-        
-        if (!$translation) {
+
+        if (! $translation) {
             $defaultLocale = Locale::getDefault()?->code ?? 'en';
             $translation = $this->translation($defaultLocale);
         }
-        
+
         return $translation;
     }
 

@@ -6,16 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisteredUserRequest;
 use App\Mail\AdminNewUser;
 use App\Mail\UserWelcome;
-use App\Models\User;
 use App\Models\SiteSetting;
+use App\Models\User;
+use App\Services\ReactTemplateRenderer;
 use Illuminate\Auth\Events\Registered;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\ReactTemplateRenderer;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class RegisteredUserController extends Controller
 {
@@ -24,7 +24,7 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        if (!SiteSetting::get('registration_enabled', false)) {
+        if (! SiteSetting::get('registration_enabled', false)) {
             abort(403, 'Registration is currently disabled.');
         }
 
@@ -38,6 +38,7 @@ class RegisteredUserController extends Controller
         } catch (\Throwable $e) {
             // Fallback to default page rendering below
         }
+
         return Inertia::render('auth/register');
     }
 
@@ -62,6 +63,7 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         // Force a full reload so we switch from themed auth root to standard app root
         $intended = $request->session()->pull('url.intended', route('dashboard', absolute: false));
+
         return \Inertia\Inertia::location($intended);
     }
 
@@ -70,7 +72,7 @@ class RegisteredUserController extends Controller
         try {
             Mail::to($user->email)->send(new UserWelcome($user));
         } catch (\Throwable $e) {
-            logger()->error('Failed to send user welcome email: ' . $e->getMessage());
+            logger()->error('Failed to send user welcome email: '.$e->getMessage());
         }
 
         $adminEmail = SiteSetting::get('admin_email', config('mail.admin_address'))
@@ -80,7 +82,7 @@ class RegisteredUserController extends Controller
             try {
                 Mail::to($adminEmail)->send(new AdminNewUser($user));
             } catch (\Throwable $e) {
-                logger()->error('Failed to send admin new user email: ' . $e->getMessage());
+                logger()->error('Failed to send admin new user email: '.$e->getMessage());
             }
         }
     }

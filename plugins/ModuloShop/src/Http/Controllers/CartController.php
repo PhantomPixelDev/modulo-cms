@@ -5,13 +5,13 @@ namespace Plugins\ModuloShop\src\Http\Controllers;
 use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Inertia\Response;
 use Plugins\ModuloShop\src\Services\CartService;
 
 class CartController
 {
     protected CartService $cartService;
+
     protected ReactTemplateRenderer $reactRenderer;
 
     public function __construct(CartService $cartService, ReactTemplateRenderer $reactRenderer)
@@ -126,7 +126,7 @@ class CartController
     public function mini(): JsonResponse
     {
         $cart = $this->cartService->getCartWithProducts();
-        
+
         return response()->json([
             'items' => array_slice($cart['items'], 0, 5),
             'item_count' => $cart['item_count'],

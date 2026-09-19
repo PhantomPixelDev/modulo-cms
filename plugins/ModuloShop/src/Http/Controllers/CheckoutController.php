@@ -7,18 +7,19 @@ use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Response;
-use Plugins\ModuloShop\src\Models\Order;
-use Plugins\ModuloShop\src\Models\OrderItem;
 use Plugins\ModuloShop\src\Mail\OrderPlacedAdmin;
 use Plugins\ModuloShop\src\Mail\OrderPlacedCustomer;
+use Plugins\ModuloShop\src\Models\Order;
+use Plugins\ModuloShop\src\Models\OrderItem;
 use Plugins\ModuloShop\src\Services\CartService;
 
 class CheckoutController
 {
     protected CartService $cartService;
+
     protected ReactTemplateRenderer $reactRenderer;
 
     public function __construct(CartService $cartService, ReactTemplateRenderer $reactRenderer)
@@ -36,6 +37,7 @@ class CheckoutController
             if ($request->wantsJson()) {
                 return response()->json(['error' => 'Cart is empty'], 400);
             }
+
             return redirect('/shop/cart')->with('error', 'Your cart is empty');
         }
 
@@ -66,11 +68,12 @@ class CheckoutController
     public function store(Request $request): JsonResponse|RedirectResponse
     {
         $cart = $this->cartService->getCartWithProducts();
-        
+
         if ($cart['is_empty']) {
             if ($request->wantsJson()) {
                 return response()->json(['error' => 'Cart is empty'], 400);
             }
+
             return back()->withErrors(['cart' => 'Your cart is empty']);
         }
 
@@ -173,8 +176,8 @@ class CheckoutController
                 ->with('success', 'Order placed successfully!');
 
         } catch (\Exception $e) {
-            logger()->error('Checkout error: ' . $e->getMessage());
-            
+            logger()->error('Checkout error: '.$e->getMessage());
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -234,7 +237,7 @@ class CheckoutController
             'shipping_address' => $order->getShippingAddress(),
             'payment_method' => $order->payment_method,
             'customer_note' => $order->customer_note,
-            'items' => $order->items->map(fn($item) => [
+            'items' => $order->items->map(fn ($item) => [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
                 'product_name' => $item->product_name,
@@ -290,7 +293,7 @@ class CheckoutController
             try {
                 Mail::to($order->customer_email)->send(new OrderPlacedCustomer($order));
             } catch (\Throwable $e) {
-                logger()->error('Failed to send order placed customer email: ' . $e->getMessage());
+                logger()->error('Failed to send order placed customer email: '.$e->getMessage());
             }
         }
 
@@ -301,7 +304,7 @@ class CheckoutController
             try {
                 Mail::to($adminEmail)->send(new OrderPlacedAdmin($order));
             } catch (\Throwable $e) {
-                logger()->error('Failed to send order placed admin email: ' . $e->getMessage());
+                logger()->error('Failed to send order placed admin email: '.$e->getMessage());
             }
         }
     }

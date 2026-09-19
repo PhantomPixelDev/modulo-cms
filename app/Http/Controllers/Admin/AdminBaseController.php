@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class AdminBaseController extends Controller
 {
@@ -16,9 +15,9 @@ class AdminBaseController extends Controller
     {
         $this->middleware('auth');
         $this->middleware('verified');
-        
+
         // Only apply admin middleware if not already applied at route level
-        if (!request()->routeIs('dashboard.admin.*')) {
+        if (! request()->routeIs('dashboard.admin.*')) {
             $this->middleware('role_or_permission:super-admin|admin|access admin');
         }
 

@@ -13,7 +13,7 @@ class SiteSettingsSeeder extends Seeder
     public function run(): void
     {
         SiteSetting::seedDefaults();
-        
+
         $this->command->info('Site settings seeded successfully.');
     }
 }

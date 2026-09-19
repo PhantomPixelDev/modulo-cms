@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TaxonomyTermRequest;
+use App\Models\Locale;
+use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
 use App\Models\TaxonomyTermTranslation;
-use App\Models\Taxonomy;
-use App\Models\Locale;
 use Illuminate\Http\Request;
-use App\Http\Requests\TaxonomyTermRequest;
-use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class TaxonomyTermController extends Controller
 {
@@ -24,13 +24,15 @@ class TaxonomyTermController extends Controller
         $i = 2;
         while (\App\Models\TaxonomyTerm::where('taxonomy_id', $taxonomyId)
             ->where('slug', $slug)
-            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->exists()) {
-            $slug = $original . '-' . $i;
+            $slug = $original.'-'.$i;
             $i++;
         }
+
         return $slug;
     }
+
     /**
      * Display a listing of the resource.
      */
@@ -60,7 +62,7 @@ class TaxonomyTermController extends Controller
     {
         // Find the taxonomy by slug
         $taxonomy = Taxonomy::where('slug', $taxonomySlug)->firstOrFail();
-        
+
         $this->authorize('viewAny', \App\Models\TaxonomyTerm::class);
         $query = TaxonomyTerm::with('taxonomy')
             ->where('taxonomy_id', $taxonomy->id)
@@ -127,7 +129,7 @@ class TaxonomyTermController extends Controller
                 $q->with(['author:id,name', 'postType:id,label,name']);
             },
         ]);
-        
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'taxonomy-terms.show',
             'taxonomyTerm' => $taxonomyTerm,
@@ -183,7 +185,7 @@ class TaxonomyTermController extends Controller
 
         foreach ($translations as $translation) {
             $locale = $translation['locale'] ?? null;
-            if (!$locale) {
+            if (! $locale) {
                 continue;
             }
 
@@ -206,7 +208,7 @@ class TaxonomyTermController extends Controller
             $handledLocales[] = $locale;
         }
 
-        if (!in_array($defaultLocale, $handledLocales, true)) {
+        if (! in_array($defaultLocale, $handledLocales, true)) {
             $term->setTranslation($defaultLocale, [
                 'name' => $term->name,
                 'slug' => $term->slug,
@@ -220,9 +222,9 @@ class TaxonomyTermController extends Controller
 
     protected function makeUniqueTranslationSlug(string $base, string $locale, ?int $ignoreId = null): string
     {
-        $slug = Str::slug($base) ?: Str::slug($base . '-' . uniqid());
-        if (!$slug) {
-            $slug = 'term-' . uniqid();
+        $slug = Str::slug($base) ?: Str::slug($base.'-'.uniqid());
+        if (! $slug) {
+            $slug = 'term-'.uniqid();
         }
 
         $original = $slug;
@@ -234,7 +236,7 @@ class TaxonomyTermController extends Controller
                 ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
                 ->exists()
         ) {
-            $slug = $original . '-' . $counter;
+            $slug = $original.'-'.$counter;
             $counter++;
         }
 
@@ -258,6 +260,7 @@ class TaxonomyTermController extends Controller
         }
 
         $taxonomyTerm->delete();
+
         return back()->with('success', 'Taxonomy term deleted successfully.');
     }
 }

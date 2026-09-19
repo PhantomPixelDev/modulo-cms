@@ -2,15 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\Theme;
-use Illuminate\Support\Facades\View;
 use App\Http\Resources\ThemeResource;
+use App\Models\Theme;
 use Inertia\Inertia;
-use App\Services\MenuService;
 
 class ReactTemplateRenderer
 {
     protected ThemeManager $themeManager;
+
     protected MenuService $menuService;
 
     public function __construct(ThemeManager $themeManager, MenuService $menuService)
@@ -25,20 +24,20 @@ class ReactTemplateRenderer
     public function render(string $templateName, array $data = []): \Inertia\Response
     {
         $theme = $this->themeManager->getActiveTheme();
-        
-        if (!$theme || $theme->template_engine !== 'react') {
-            throw new \Exception("Active theme is not a React theme");
+
+        if (! $theme || $theme->template_engine !== 'react') {
+            throw new \Exception('Active theme is not a React theme');
         }
-        
+
         $componentPath = $this->resolveComponentPath($theme, $templateName);
-        
-        if (!$componentPath) {
+
+        if (! $componentPath) {
             throw new \Exception("React component not found for template: {$templateName}");
         }
 
         // Prepare theme data using the standardized resource
         $themeData = (new ThemeResource($theme))->toArray(request());
-        
+
         // Merge with template data - ensure all data is properly structured
         $siteData = $this->getSiteData();
         $menuData = $this->getMenuData();
@@ -51,20 +50,20 @@ class ReactTemplateRenderer
                 'menuData' => $menuData,
             ]);
         }
-        
+
         $renderData = array_merge($data, [
             'theme' => $themeData,
             'site' => $siteData,
             'menus' => $menuData,
         ]);
-        
+
         // Ensure posts data structure is correct for React components
-        if (isset($renderData['posts']) && !isset($renderData['posts']['data'])) {
+        if (isset($renderData['posts']) && ! isset($renderData['posts']['data'])) {
             $renderData['posts'] = ['data' => $renderData['posts']];
         }
-        
+
         // Ensure pagination exists
-        if (!isset($renderData['pagination'])) {
+        if (! isset($renderData['pagination'])) {
             $renderData['pagination'] = [
                 'current_page' => 1,
                 'last_page' => 1,
@@ -84,20 +83,22 @@ class ReactTemplateRenderer
     protected function resolveComponentPath(Theme $theme, string $templateName): ?string
     {
         $templates = $theme->templates ?? [];
-        
-        if (!isset($templates[$templateName])) {
+
+        if (! isset($templates[$templateName])) {
             // Fallback: try to find a component based on template name
             $componentName = ucfirst($templateName);
+
             return $this->convertToInertiaPath($theme->slug, "components/{$componentName}");
         }
 
         $templateConfig = $templates[$templateName];
-        
+
         // Handle both old string format and new object format
         if (is_string($templateConfig)) {
             // For React themes, convert string template names to component paths automatically
             // e.g., "posts" -> "components/Posts", "home" -> "components/Home"
             $componentName = ucfirst($templateName);
+
             return $this->convertToInertiaPath($theme->slug, "components/{$componentName}");
         }
 
@@ -118,14 +119,14 @@ class ReactTemplateRenderer
     {
         // Remove components/ prefix and .tsx extension
         $componentPath = str_replace(['components/', '.tsx'], '', $componentPath);
-        
+
         // Convert theme slug to PascalCase
         $themeName = str_replace(['-', '_'], ' ', $themeSlug);
         $themeName = str_replace(' ', '', ucwords($themeName));
-        
+
         // Handle partials directory
         $componentPath = str_replace('partials/', 'partials/', $componentPath);
-        
+
         // Build Inertia path: Themes/ModernReact/Layout
         return "Themes/{$themeName}/{$componentPath}";
     }
@@ -194,13 +195,13 @@ class ReactTemplateRenderer
     public function canRender(string $templateName): bool
     {
         $theme = $this->themeManager->getActiveTheme();
-        
-        if (!$theme || $theme->template_engine !== 'react') {
+
+        if (! $theme || $theme->template_engine !== 'react') {
             return false;
         }
 
         $templates = $theme->templates ?? [];
-        
+
         // Only return true if the template is explicitly defined in theme.json
         return isset($templates[$templateName]);
     }
@@ -211,6 +212,7 @@ class ReactTemplateRenderer
     public function isReactTheme(): bool
     {
         $theme = $this->themeManager->getActiveTheme();
+
         return $theme && $theme->template_engine === 'react';
     }
 
@@ -220,8 +222,8 @@ class ReactTemplateRenderer
     public function getAvailableTemplates(): array
     {
         $theme = $this->themeManager->getActiveTheme();
-        
-        if (!$theme || $theme->template_engine !== 'react') {
+
+        if (! $theme || $theme->template_engine !== 'react') {
             return [];
         }
 

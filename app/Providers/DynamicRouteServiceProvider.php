@@ -2,13 +2,13 @@
 
 namespace App\Providers;
 
+use App\Http\Controllers\Frontend\PostController;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
-use App\Http\Controllers\Frontend\PostController;
+use Illuminate\Support\ServiceProvider;
 
 class DynamicRouteServiceProvider extends ServiceProvider
 {
@@ -35,13 +35,13 @@ class DynamicRouteServiceProvider extends ServiceProvider
     protected function registerDynamicPostTypeRoutes(): void
     {
         // Check if tables exist (for fresh installs)
-        if (!Schema::hasTable('post_types') || !Schema::hasTable('site_settings')) {
+        if (! Schema::hasTable('post_types') || ! Schema::hasTable('site_settings')) {
             return;
         }
 
         try {
             // Only register dynamic routes if tables exist
-            if (!Schema::hasTable('site_settings') || !Schema::hasTable('posts')) {
+            if (! Schema::hasTable('site_settings') || ! Schema::hasTable('posts')) {
                 return;
             }
 
@@ -72,11 +72,11 @@ class DynamicRouteServiceProvider extends ServiceProvider
 
             // Handle pages index
             $pageType = cache()->remember('page_post_type_route', 3600, function () {
-                return PostType::where(function($q) {
-                        $q->whereNull('route_prefix')
-                          ->orWhere('route_prefix', '')
-                          ->orWhere('route_prefix', '/');
-                    })
+                return PostType::where(function ($q) {
+                    $q->whereNull('route_prefix')
+                        ->orWhere('route_prefix', '')
+                        ->orWhere('route_prefix', '/');
+                })
                     ->where('is_public', true)
                     ->first(['id']);
             });
@@ -88,7 +88,7 @@ class DynamicRouteServiceProvider extends ServiceProvider
             }
         } catch (\Throwable $e) {
             // Skip during early app boot or if database connection fails
-            \Log::warning('Failed to register dynamic routes: ' . $e->getMessage());
+            \Log::warning('Failed to register dynamic routes: '.$e->getMessage());
         }
     }
 

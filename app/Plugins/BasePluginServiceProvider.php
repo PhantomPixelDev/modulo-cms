@@ -33,26 +33,26 @@ abstract class BasePluginServiceProvider extends ServiceProvider
 
     protected function bootPluginResources(): void
     {
-        if (!isset($this->pluginBasePath) || !is_dir($this->pluginBasePath)) {
+        if (! isset($this->pluginBasePath) || ! is_dir($this->pluginBasePath)) {
             return;
         }
 
-        $routes = $this->pluginBasePath . '/routes/web.php';
+        $routes = $this->pluginBasePath.'/routes/web.php';
         if (is_file($routes)) {
             Route::middleware('web')->group($routes);
         }
 
-        $migrations = $this->pluginBasePath . '/database/migrations';
+        $migrations = $this->pluginBasePath.'/database/migrations';
         if (is_dir($migrations)) {
             $this->loadMigrationsFrom($migrations);
         }
 
-        $translations = $this->pluginBasePath . '/lang';
+        $translations = $this->pluginBasePath.'/lang';
         if (is_dir($translations) && isset($this->pluginSlug)) {
             $this->loadTranslationsFrom($translations, $this->pluginSlug);
         }
 
-        $views = $this->pluginBasePath . '/resources/views';
+        $views = $this->pluginBasePath.'/resources/views';
         if (is_dir($views) && isset($this->pluginSlug)) {
             $this->loadViewsFrom($views, $this->pluginSlug);
         }

@@ -3,9 +3,9 @@
 namespace Plugins\ModuloShop\src\Http\Controllers\Admin;
 
 use App\Models\Plugin;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -69,7 +69,7 @@ class ShopSettingsController
         ]);
 
         $plugin = Plugin::where('slug', 'modulo-shop')->first();
-        
+
         if ($plugin) {
             $plugin->settings = $data;
             $plugin->save();
@@ -85,8 +85,12 @@ class ShopSettingsController
     protected function authorize(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('manage shop settings') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('manage shop settings') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 }

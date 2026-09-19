@@ -14,6 +14,7 @@ use Spatie\Permission\Models\Role;
 class AdminStatsService
 {
     protected const CACHE_TTL = 60;
+
     protected const CACHE_KEY = 'admin_stats';
 
     public function get(): array

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('post_types', function (Blueprint $table) {
-            if (!Schema::hasColumn('post_types', 'show_in_menu')) {
+            if (! Schema::hasColumn('post_types', 'show_in_menu')) {
                 $table->boolean('show_in_menu')->default(true)->after('is_hierarchical');
             }
         });

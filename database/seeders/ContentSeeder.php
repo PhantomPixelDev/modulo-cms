@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\PostType;
 use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
+use Illuminate\Database\Seeder;
 
 class ContentSeeder extends Seeder
 {
@@ -200,7 +199,7 @@ class ContentSeeder extends Seeder
 
     private function translateTerm(?TaxonomyTerm $term, array $translations): void
     {
-        if (!$term) {
+        if (! $term) {
             return;
         }
 

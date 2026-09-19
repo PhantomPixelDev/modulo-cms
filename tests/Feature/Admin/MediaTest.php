@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\User;
 use App\Models\MediaBucket;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 
@@ -19,6 +19,7 @@ function mediaUser($perms = ['view media', 'upload media', 'edit media', 'delete
     // Also give access admin permission which is required for admin routes
     Spatie\Permission\Models\Permission::findOrCreate('access admin', 'web');
     $user->givePermissionTo('access admin');
+
     return $user;
 }
 
@@ -61,7 +62,7 @@ it('rejects php files disguised as images', function () {
 
     // Valid 1x1 PNG header followed by a PHP payload (polyglot)
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
-    $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('shell.php', $png . '<?php echo "pwned"; ?>');
+    $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('shell.php', $png.'<?php echo "pwned"; ?>');
 
     $this->actingAs($user)
         ->post(route('dashboard.admin.media.store'), ['file' => $file])

@@ -13,22 +13,22 @@ class LocaleFromUrl
 {
     /**
      * Handle an incoming request with locale prefix in URL.
-     * 
+     *
      * Routes using this middleware should have a {locale} parameter.
      * Example: Route::get('/{locale}/posts', ...)->middleware('locale.url')
      */
     public function handle(Request $request, Closure $next): Response
     {
         $localeCode = $request->route('locale');
-        
+
         if ($localeCode && Locale::isValidCode($localeCode)) {
             App::setLocale($localeCode);
             Session::put('locale', $localeCode);
-            
+
             // Share current locale with views
             view()->share('currentLocale', $localeCode);
         }
-        
+
         return $next($request);
     }
 }

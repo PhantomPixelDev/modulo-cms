@@ -17,7 +17,7 @@ class CommentController extends Controller
         // Drafts and scheduled posts are not public, so they take no comments
         abort_unless(Post::whereKey($post->id)->published()->exists(), 404);
 
-        if (!$this->commentsEnabled($post)) {
+        if (! $this->commentsEnabled($post)) {
             abort(403, 'Comments are disabled for this content.');
         }
 
@@ -46,7 +46,7 @@ class CommentController extends Controller
 
         $data = $request->validate($rules);
 
-        $comment = new Comment();
+        $comment = new Comment;
         $comment->post_id = $post->id;
         $comment->parent_id = $data['parent_id'] ?? null;
         $comment->content = $data['content'];
@@ -73,7 +73,7 @@ class CommentController extends Controller
     protected function commentsEnabled(Post $post): bool
     {
         $global = SiteSetting::get('enable_comments', true);
-        if (!$global) {
+        if (! $global) {
             return false;
         }
 

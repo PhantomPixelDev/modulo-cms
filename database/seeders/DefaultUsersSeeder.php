@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DefaultUsersSeeder extends Seeder
@@ -149,6 +149,6 @@ class DefaultUsersSeeder extends Seeder
             );
         }
 
-        $this->command->info('Created ' . (count($additionalUsers) + 3) . ' users for testing');
+        $this->command->info('Created '.(count($additionalUsers) + 3).' users for testing');
     }
 }

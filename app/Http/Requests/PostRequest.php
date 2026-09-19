@@ -19,34 +19,34 @@ class PostRequest extends FormRequest
         $postId = optional($this->route('post'))->id;
 
         return [
-            'post_type_id' => ['required','integer','exists:post_types,id'],
-            'author_id' => ['required','integer','exists:users,id'],
+            'post_type_id' => ['required', 'integer', 'exists:post_types,id'],
+            'author_id' => ['required', 'integer', 'exists:users,id'],
 
-            'title' => ['required','string','max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'slug' => [
-                'required','string','max:255',
+                'required', 'string', 'max:255',
                 'regex:/^[a-z0-9-]+$/',
-                Rule::unique('posts','slug')->ignore($postId),
+                Rule::unique('posts', 'slug')->ignore($postId),
             ],
 
-            'excerpt' => ['nullable','string'],
-            'content' => ['required','string'],
-            'featured_image' => ['nullable','string','max:2048'],
+            'excerpt' => ['nullable', 'string'],
+            'content' => ['required', 'string'],
+            'featured_image' => ['nullable', 'string', 'max:2048'],
 
-            'status' => ['required', Rule::in(['draft','published','private','archived'])],
-            'published_at' => ['nullable','date'],
+            'status' => ['required', Rule::in(['draft', 'published', 'private', 'archived'])],
+            'published_at' => ['nullable', 'date'],
 
-            'parent_id' => ['nullable','integer','exists:posts,id'],
-            'menu_order' => ['nullable','integer','between:-2147483648,2147483647'],
+            'parent_id' => ['nullable', 'integer', 'exists:posts,id'],
+            'menu_order' => ['nullable', 'integer', 'between:-2147483648,2147483647'],
 
-            'meta_title' => ['nullable','string','max:255'],
-            'meta_description' => ['nullable','string'],
-            'meta_data' => ['nullable','array'],
-            'view_count' => ['nullable','integer','min:0'],
+            'meta_title' => ['nullable', 'string', 'max:255'],
+            'meta_description' => ['nullable', 'string'],
+            'meta_data' => ['nullable', 'array'],
+            'view_count' => ['nullable', 'integer', 'min:0'],
 
             // Selected taxonomy terms (if provided)
-            'selected_terms' => ['nullable','array'],
-            'selected_terms.*' => ['integer','exists:taxonomy_terms,id'],
+            'selected_terms' => ['nullable', 'array'],
+            'selected_terms.*' => ['integer', 'exists:taxonomy_terms,id'],
         ];
     }
 

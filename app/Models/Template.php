@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 class Template extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'name',
         'slug',
@@ -62,14 +63,14 @@ class Template extends Model
     public function renderWithData(array $data = [])
     {
         $content = $this->content;
-        
+
         // Simple template variable replacement
         foreach ($data as $key => $value) {
             if (is_string($value) || is_numeric($value)) {
-                $content = str_replace('{{' . $key . '}}', $value, $content);
+                $content = str_replace('{{'.$key.'}}', $value, $content);
             }
         }
-        
+
         return $content;
     }
 

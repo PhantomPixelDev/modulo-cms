@@ -10,7 +10,6 @@ use App\Models\MenuItem;
 use App\Services\MenuService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Inertia\Inertia;
 
 class MenuItemController extends Controller
 {
@@ -27,6 +26,7 @@ class MenuItemController extends Controller
         }
         $item->delete();
     }
+
     public function index(Request $request)
     {
         $this->authorize('viewAny', \App\Models\MenuItem::class);
@@ -43,6 +43,7 @@ class MenuItemController extends Controller
         if ($menuId) {
             return redirect()->route('dashboard.admin.menus.show', ['menu' => $menuId]);
         }
+
         return redirect()->route('dashboard.admin.menus.index');
     }
 
@@ -60,6 +61,7 @@ class MenuItemController extends Controller
         if ($request->wantsJson()) {
             return response()->json($item, Response::HTTP_CREATED);
         }
+
         return redirect()->route('dashboard.admin.menus.show', ['menu' => $item->menu_id]);
     }
 
@@ -77,6 +79,7 @@ class MenuItemController extends Controller
         if ($request->wantsJson()) {
             return response()->json($menuItem);
         }
+
         return redirect()->route('dashboard.admin.menus.show', ['menu' => $menuItem->menu_id]);
     }
 
@@ -90,6 +93,7 @@ class MenuItemController extends Controller
         if ($request->wantsJson()) {
             return response()->noContent();
         }
+
         return redirect()->route('dashboard.admin.menus.show', ['menu' => $menuItem->menu_id]);
     }
 
@@ -101,7 +105,7 @@ class MenuItemController extends Controller
 
         foreach ($translations as $translation) {
             $locale = $translation['locale'] ?? null;
-            if (!$locale) {
+            if (! $locale) {
                 continue;
             }
 
@@ -114,7 +118,7 @@ class MenuItemController extends Controller
             $handled[] = $locale;
         }
 
-        if (!in_array($defaultLocale, $handled, true)) {
+        if (! in_array($defaultLocale, $handled, true)) {
             $menuItem->setTranslation($defaultLocale, [
                 'label' => $menuItem->label,
                 'url' => $menuItem->url,
@@ -124,7 +128,7 @@ class MenuItemController extends Controller
 
     protected function forgetMenuCacheFromMenu(?Menu $menu): void
     {
-        if (!$menu) {
+        if (! $menu) {
             return;
         }
 

@@ -1,22 +1,26 @@
 <?php
 
-use App\Models\User;
 use App\Models\Page;
 use App\Models\PostType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
-function pageUser(array $perms = []): User {
+function pageUser(array $perms = []): User
+{
     $user = User::factory()->create();
     foreach ($perms as $perm) {
         Permission::findOrCreate($perm, 'web');
     }
-    if ($perms) $user->givePermissionTo($perms);
+    if ($perms) {
+        $user->givePermissionTo($perms);
+    }
     // Also give access admin permission which is required for admin routes
     Permission::findOrCreate('access admin', 'web');
     $user->givePermissionTo('access admin');
+
     return $user;
 }
 
@@ -79,7 +83,7 @@ it('denies create and store without permission', function () {
 it('denies edit/update/destroy without respective permissions', function () {
     // Ensure a page-type exists
     $pageType = PostType::firstOrCreate([
-        'name' => 'page'
+        'name' => 'page',
     ], [
         'label' => 'Page',
         'plural_label' => 'Pages',
@@ -89,7 +93,7 @@ it('denies edit/update/destroy without respective permissions', function () {
         'has_featured_image' => true,
         'has_excerpt' => false,
         'has_comments' => false,
-        'supports' => ['title','editor'],
+        'supports' => ['title', 'editor'],
         'taxonomies' => [],
         'slug' => 'pages',
         'is_public' => true,
@@ -99,7 +103,9 @@ it('denies edit/update/destroy without respective permissions', function () {
     ]);
 
     // Ensure permissions exist but are not granted (except view)
-    foreach (['edit posts','delete posts'] as $p) { Permission::findOrCreate($p, 'web'); }
+    foreach (['edit posts', 'delete posts'] as $p) {
+        Permission::findOrCreate($p, 'web');
+    }
     $u = pageUser(['view posts']);
     $this->actingAs($u);
 
@@ -124,7 +130,7 @@ it('denies edit/update/destroy without respective permissions', function () {
 
 it('allows show/edit with proper permissions', function () {
     $pageType = PostType::firstOrCreate([
-        'name' => 'page'
+        'name' => 'page',
     ], [
         'label' => 'Page',
         'plural_label' => 'Pages',
@@ -134,7 +140,7 @@ it('allows show/edit with proper permissions', function () {
         'has_featured_image' => true,
         'has_excerpt' => false,
         'has_comments' => false,
-        'supports' => ['title','editor'],
+        'supports' => ['title', 'editor'],
         'taxonomies' => [],
         'slug' => 'pages',
         'is_public' => true,
@@ -143,7 +149,7 @@ it('allows show/edit with proper permissions', function () {
         'menu_position' => 6,
     ]);
 
-    $u = pageUser(['view posts','edit posts']);
+    $u = pageUser(['view posts', 'edit posts']);
     $this->actingAs($u);
 
     $page = Page::create([

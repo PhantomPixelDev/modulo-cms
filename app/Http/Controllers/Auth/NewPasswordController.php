@@ -5,17 +5,16 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\NewPasswordRequest;
 use App\Models\User;
+use App\Services\ReactTemplateRenderer;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\ReactTemplateRenderer;
 
 class NewPasswordController extends Controller
 {
@@ -37,6 +36,7 @@ class NewPasswordController extends Controller
         } catch (\Throwable $e) {
             // Fallback to default page rendering below
         }
+
         return Inertia::render('auth/reset-password', [
             'email' => $request->email,
             'token' => $request->route('token'),

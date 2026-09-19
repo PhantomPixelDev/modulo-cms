@@ -5,14 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\PostTypeResource;
 use App\Http\Resources\RoleResource;
-use App\Http\Resources\TaxonomyResource;
-use App\Http\Resources\ThemeResource;
 use App\Http\Resources\UserResource;
 use App\Models\Post;
 use App\Models\PostType;
-use App\Models\Taxonomy;
-use App\Models\TaxonomyTerm;
-use App\Models\Theme;
 use App\Models\User;
 use App\Services\AdminStatsService;
 use App\Services\SiteSettingsService;
@@ -100,7 +95,7 @@ class DashboardController extends Controller
                 'type' => 'user_registered',
                 'icon' => '👤',
                 'title' => 'New user registered',
-                'description' => $user->name . ' joined',
+                'description' => $user->name.' joined',
                 'user' => $user->name,
                 'timestamp' => $user->created_at->diffForHumans(),
                 'formatted_date' => $this->settings->formatDateTime($user->created_at),
@@ -188,13 +183,13 @@ class DashboardController extends Controller
             'storage' => [
                 'status' => $storage['used_percentage'] > 85 ? 'warning' : 'healthy',
                 'label' => 'Storage',
-                'value' => $storage['used_percentage'] . '% Used',
+                'value' => $storage['used_percentage'].'% Used',
                 'color' => $storage['used_percentage'] > 85 ? 'yellow' : 'green',
                 'indicator' => 'solid',
                 'detail' => 'Monitors disk usage for the Laravel storage path.',
                 'last_checked_at' => $lastCheckedAt,
                 'meta' => [
-                    'Free' => $storage['free_percentage'] . '%',
+                    'Free' => $storage['free_percentage'].'%',
                     'Path' => $storage['path'],
                 ],
             ],
@@ -219,6 +214,7 @@ class DashboardController extends Controller
     {
         try {
             \DB::connection()->getPdo();
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -228,7 +224,7 @@ class DashboardController extends Controller
     private function getStorageUsage(): array
     {
         $storagePath = storage_path();
-        if (!is_dir($storagePath)) {
+        if (! is_dir($storagePath)) {
             return [
                 'used_percentage' => 0,
                 'free_percentage' => 100,
@@ -239,7 +235,7 @@ class DashboardController extends Controller
         $totalSpace = @disk_total_space($storagePath);
         $freeSpace = @disk_free_space($storagePath);
 
-        if (!$totalSpace || !$freeSpace) {
+        if (! $totalSpace || ! $freeSpace) {
             return [
                 'used_percentage' => 85,
                 'free_percentage' => 15,
@@ -259,7 +255,7 @@ class DashboardController extends Controller
 
     private function getServerLoadAverage(): ?array
     {
-        if (!function_exists('sys_getloadavg')) {
+        if (! function_exists('sys_getloadavg')) {
             return null;
         }
 
@@ -268,7 +264,7 @@ class DashboardController extends Controller
 
     private function formatLoadAverage(?array $loadAverage): ?string
     {
-        if (!$loadAverage || count($loadAverage) < 3) {
+        if (! $loadAverage || count($loadAverage) < 3) {
             return null;
         }
 

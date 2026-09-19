@@ -24,9 +24,10 @@ class UserPolicy
     public function update(User $user, User $model): bool
     {
         // Only super-admins can edit super-admin accounts
-        if ($model->hasRole('super-admin') && !$user->hasRole('super-admin')) {
+        if ($model->hasRole('super-admin') && ! $user->hasRole('super-admin')) {
             return false;
         }
+
         return $user->can('edit users');
     }
 
@@ -38,6 +39,7 @@ class UserPolicy
         if ($model->hasRole('super-admin')) {
             return false; // cannot delete super-admin
         }
+
         return $user->can('delete users');
     }
 }

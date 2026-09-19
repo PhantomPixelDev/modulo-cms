@@ -1,28 +1,33 @@
 <?php
 
-use App\Models\User;
 use App\Models\Menu;
 use App\Models\MenuItem;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
-function menuItemsUser(array $perms = []): User {
+function menuItemsUser(array $perms = []): User
+{
     $user = User::factory()->create();
     foreach ($perms as $perm) {
         Permission::findOrCreate($perm, 'web');
     }
-    if ($perms) $user->givePermissionTo($perms);
+    if ($perms) {
+        $user->givePermissionTo($perms);
+    }
     // Also give access admin permission which is required for admin routes
     Permission::findOrCreate('access admin', 'web');
     $user->givePermissionTo('access admin');
+
     return $user;
 }
 
-function ensureMenu(): Menu {
+function ensureMenu(): Menu
+{
     return Menu::firstOrCreate([
-        'slug' => 'main'
+        'slug' => 'main',
     ], [
         'name' => 'Main',
         'location' => 'primary',
@@ -32,7 +37,9 @@ function ensureMenu(): Menu {
 
 it('denies creating/updating/deleting menu items without permissions', function () {
     // Ensure permissions exist but are not granted (except view menus)
-    foreach (['create menu items','edit menu items','delete menu items'] as $p) { Permission::findOrCreate($p, 'web'); }
+    foreach (['create menu items', 'edit menu items', 'delete menu items'] as $p) {
+        Permission::findOrCreate($p, 'web');
+    }
     $u = menuItemsUser(['view menus']);
     $this->actingAs($u);
     $menu = ensureMenu();
@@ -62,7 +69,7 @@ it('denies creating/updating/deleting menu items without permissions', function 
 });
 
 it('creates, updates, and deletes menu items with proper permissions', function () {
-    $u = menuItemsUser(['edit menus','view menus']);
+    $u = menuItemsUser(['edit menus', 'view menus']);
     $this->actingAs($u);
     $menu = ensureMenu();
 
@@ -76,7 +83,7 @@ it('creates, updates, and deletes menu items with proper permissions', function 
         'target' => '_self',
     ]);
     $resp->assertRedirect(route('dashboard.admin.menus.show', ['menu' => $menu->id]));
-    $item = MenuItem::where('menu_id',$menu->id)->where('label','Home')->first();
+    $item = MenuItem::where('menu_id', $menu->id)->where('label', 'Home')->first();
     expect($item)->not->toBeNull();
 
     // Create child item
@@ -88,7 +95,7 @@ it('creates, updates, and deletes menu items with proper permissions', function 
         'order' => 2,
     ]);
     $resp2->assertRedirect(route('dashboard.admin.menus.show', ['menu' => $menu->id]));
-    $child = MenuItem::where('menu_id',$menu->id)->where('label','Child')->first();
+    $child = MenuItem::where('menu_id', $menu->id)->where('label', 'Child')->first();
     expect($child)->not->toBeNull();
     expect($child->parent_id)->toBe($item->id);
 

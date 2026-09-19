@@ -27,7 +27,7 @@ class PostService
      */
     public function getPostBySlug(string $slug, ?string $postType = null): ?Post
     {
-        return $this->remember("name:" . ($postType ?? 'any') . ":{$slug}", function () use ($slug, $postType) {
+        return $this->remember('name:'.($postType ?? 'any').":{$slug}", function () use ($slug, $postType) {
             $query = $this->baseQuery();
 
             if ($postType) {
@@ -79,7 +79,7 @@ class PostService
         $query = Post::with([
             'author',
             'postType',
-            'taxonomyTerms.taxonomy'
+            'taxonomyTerms.taxonomy',
         ]);
 
         // Apply filters
@@ -88,13 +88,13 @@ class PostService
         }
 
         if (isset($filters['taxonomy_term_id'])) {
-            $query->whereHas('taxonomyTerms', function($q) use ($filters) {
+            $query->whereHas('taxonomyTerms', function ($q) use ($filters) {
                 $q->where('taxonomy_terms.id', $filters['taxonomy_term_id']);
             });
         }
 
         // Only published posts for non-authenticated users
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             $query->published();
         }
 
@@ -117,7 +117,7 @@ class PostService
     protected function remember(string $key, \Closure $callback): ?Post
     {
         return Cache::remember(
-            'post:v' . $this->cacheVersion() . ':' . $key,
+            'post:v'.$this->cacheVersion().':'.$key,
             self::CACHE_TTL,
             $callback
         );

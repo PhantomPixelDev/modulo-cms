@@ -28,25 +28,27 @@ class AssignSuperAdminRole extends Command
     public function handle()
     {
         $email = $this->argument('email');
-        
+
         $user = User::where('email', $email)->first();
-        
-        if (!$user) {
+
+        if (! $user) {
             $this->error("User with email {$email} not found!");
+
             return 1;
         }
-        
+
         $superAdminRole = Role::where('name', 'super-admin')->first();
-        
-        if (!$superAdminRole) {
-            $this->error("Super admin role not found! Please run php artisan db:seed first.");
+
+        if (! $superAdminRole) {
+            $this->error('Super admin role not found! Please run php artisan db:seed first.');
+
             return 1;
         }
-        
+
         $user->assignRole($superAdminRole);
-        
+
         $this->info("Successfully assigned super admin role to {$user->name} ({$user->email})");
-        
+
         return 0;
     }
-} 
+}

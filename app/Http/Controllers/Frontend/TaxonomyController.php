@@ -24,11 +24,11 @@ class TaxonomyController extends BaseFrontendController
                 'routeParams' => $request->route()->parameters(),
             ]);
         }
-        
+
         $taxonomy = Taxonomy::where('slug', $taxonomySlug)
             ->where('is_public', true)
             ->firstOrFail();
-            
+
         $term = TaxonomyTerm::with(['taxonomy', 'translations'])
             ->where('slug', $slug)
             ->where('taxonomy_id', $taxonomy->id)
@@ -62,6 +62,7 @@ class TaxonomyController extends BaseFrontendController
         ];
 
         $template = $this->templateResolver->taxonomyTemplate();
+
         return $this->reactRenderer->render($template, $data);
     }
 
@@ -81,7 +82,7 @@ class TaxonomyController extends BaseFrontendController
             : $term->translations()->get();
 
         foreach ($translations as $translation) {
-            if (!$translation->slug) {
+            if (! $translation->slug) {
                 continue;
             }
 
@@ -91,7 +92,7 @@ class TaxonomyController extends BaseFrontendController
             ];
         }
 
-        return array_filter($map, fn ($entry) => !empty($entry['path']));
+        return array_filter($map, fn ($entry) => ! empty($entry['path']));
     }
 
     protected function determineBaseSegment(string $taxonomySlug): string
@@ -112,6 +113,6 @@ class TaxonomyController extends BaseFrontendController
         $base = trim($baseSegment, '/');
         $termSlug = trim($slug, '/');
 
-        return '/' . ltrim($base . '/' . $termSlug, '/');
+        return '/'.ltrim($base.'/'.$termSlug, '/');
     }
 }

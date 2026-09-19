@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MediaUploadRequest;
 use App\Models\MediaBucket;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -27,7 +27,7 @@ class MediaController extends Controller
         if ($folderId) {
             $bucket = MediaBucket::find($folderId);
         }
-        if (!$bucket) {
+        if (! $bucket) {
             $bucket = MediaBucket::firstOrCreate(['name' => 'default', 'parent_id' => null]);
         }
 
@@ -37,7 +37,11 @@ class MediaController extends Controller
         $sort = in_array($request->query('sort'), ['name', 'date', 'size', 'type']) ? $request->query('sort') : 'date';
         $dir = strtolower((string) $request->query('dir', 'desc')) === 'asc' ? 'asc' : 'desc';
         $perPage = (int) $request->integer('perPage', 24);
-        if ($perPage < 6) $perPage = 6; if ($perPage > 96) $perPage = 96;
+        if ($perPage < 6) {
+            $perPage = 6;
+        } if ($perPage > 96) {
+            $perPage = 96;
+        }
 
         $mediaPaginator = null;
         if (class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
@@ -58,11 +62,11 @@ class MediaController extends Controller
                 $type = strtolower($type);
                 $query->where(function ($sub) use ($type) {
                     if (in_array($type, ['image', 'video', 'audio'])) {
-                        $sub->where('mime_type', 'like', $type . '/%');
+                        $sub->where('mime_type', 'like', $type.'/%');
                     } elseif ($type === 'doc') {
                         $sub->where(function ($s2) {
                             $s2->where('mime_type', 'like', 'application/%')
-                               ->orWhere('mime_type', 'like', 'text/%');
+                                ->orWhere('mime_type', 'like', 'text/%');
                         });
                     } elseif ($type === 'other') {
                         $s3 = ['image/%', 'video/%', 'audio/%', 'application/%', 'text/%'];
@@ -92,6 +96,7 @@ class MediaController extends Controller
                     if (method_exists($m, 'hasGeneratedConversion') && $m->hasGeneratedConversion('thumb')) {
                         $thumbUrl = $m->getFullUrl('thumb');
                     }
+
                     return [
                         'id' => (int) $m->id,
                         'name' => (string) $m->name,
@@ -184,7 +189,7 @@ class MediaController extends Controller
     {
         $this->authorizeUpload();
 
-        if (!class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media') || !method_exists(MediaBucket::class, 'addMediaFromRequest')) {
+        if (! class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media') || ! method_exists(MediaBucket::class, 'addMediaFromRequest')) {
             return back()->with('error', 'Media library package not installed yet.');
         }
 
@@ -219,16 +224,16 @@ class MediaController extends Controller
         }
 
         $bucket = null;
-        if (!empty($data['folder_id'])) {
+        if (! empty($data['folder_id'])) {
             $bucket = MediaBucket::find((int) $data['folder_id']);
         }
-        if (!$bucket) {
+        if (! $bucket) {
             $bucket = MediaBucket::firstOrCreate(['name' => 'default', 'parent_id' => null]);
         }
         // Never trust the client file name: derive the extension from the content.
         $originalName = pathinfo((string) $uploaded->getClientOriginalName(), PATHINFO_FILENAME);
         $extension = $uploaded->guessExtension() ?: strtolower((string) $uploaded->getClientOriginalExtension());
-        $fileName = (Str::slug($originalName) ?: 'file') . '.' . $extension;
+        $fileName = (Str::slug($originalName) ?: 'file').'.'.$extension;
 
         $bucket->addMediaFromRequest('file')
             ->usingName($originalName)
@@ -242,7 +247,7 @@ class MediaController extends Controller
     {
         $this->authorizeEdit();
 
-        if (!class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
+        if (! class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
             return back()->with('error', 'Media library package not installed yet.');
         }
 
@@ -280,7 +285,7 @@ class MediaController extends Controller
     {
         $this->authorizeDelete();
 
-        if (!class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
+        if (! class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
             return back()->with('error', 'Media library package not installed yet.');
         }
 
@@ -295,7 +300,7 @@ class MediaController extends Controller
     {
         $this->authorizeEdit();
 
-        if (!class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
+        if (! class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
             return back()->with('error', 'Media library package not installed yet.');
         }
 
@@ -324,11 +329,11 @@ class MediaController extends Controller
     {
         $action = (string) $request->input('action');
         $ids = $request->input('ids');
-        if (!is_array($ids) || empty($ids)) {
+        if (! is_array($ids) || empty($ids)) {
             return back()->with('error', 'No items selected');
         }
 
-        if (!class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
+        if (! class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
             return back()->with('error', 'Media library package not installed yet.');
         }
 
@@ -339,6 +344,7 @@ class MediaController extends Controller
             $this->authorizeDelete();
             // Delete through the model so Spatie also removes the files from disk
             $Media::query()->whereIn('id', $ids)->get()->each->delete();
+
             return back()->with('success', 'Selected media deleted');
         }
 
@@ -350,13 +356,14 @@ class MediaController extends Controller
                     app('Spatie\\MediaLibrary\\MediaCollections\\FileManipulator')->createDerivedFiles($m);
                 }
             }
+
             return back()->with('success', 'Regenerated conversions for selected media');
         }
 
         if ($action === 'move') {
             $this->authorizeEdit();
             $targetId = (int) $request->integer('target_folder_id');
-            if (!$targetId) {
+            if (! $targetId) {
                 return back()->with('error', 'Target folder is required');
             }
             $target = MediaBucket::findOrFail($targetId);
@@ -364,6 +371,7 @@ class MediaController extends Controller
                 'model_type' => MediaBucket::class,
                 'model_id' => $target->id,
             ]);
+
             return back()->with('success', 'Moved selected media');
         }
 
@@ -373,32 +381,48 @@ class MediaController extends Controller
     protected function authorizeView(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('view media') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('view media') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
     protected function authorizeUpload(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('upload media') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('upload media') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
     protected function authorizeEdit(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('edit media') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('edit media') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
     protected function authorizeDelete(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('delete media') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('delete media') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 

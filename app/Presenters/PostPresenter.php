@@ -2,10 +2,10 @@
 
 namespace App\Presenters;
 
-use App\Models\Post;
 use App\Models\Comment;
-use App\Models\SiteSetting;
 use App\Models\Locale;
+use App\Models\Post;
+use App\Models\SiteSetting;
 use App\Services\HtmlSanitizer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -95,7 +95,7 @@ class PostPresenter
 
         // Slate output is escaped while rendering; raw HTML must be sanitized
         // before shortcodes inject their own trusted markup.
-        if (is_string($content) && !$isSlate) {
+        if (is_string($content) && ! $isSlate) {
             $content = app(HtmlSanitizer::class)->sanitize($content);
         }
 
@@ -146,7 +146,7 @@ class PostPresenter
             }
         }
 
-        if (!empty($url) && !preg_match('/^(https?:\/\/|mailto:|tel:|\/|#)/', $url)) {
+        if (! empty($url) && ! preg_match('/^(https?:\/\/|mailto:|tel:|\/|#)/', $url)) {
             return '#';
         }
 
@@ -166,16 +166,16 @@ class PostPresenter
             if (isset($node['text'])) {
                 $text = htmlspecialchars($node['text'], ENT_QUOTES, 'UTF-8');
 
-                if (!empty($node['bold'])) {
+                if (! empty($node['bold'])) {
                     $text = "<strong>$text</strong>";
                 }
-                if (!empty($node['italic'])) {
+                if (! empty($node['italic'])) {
                     $text = "<em>$text</em>";
                 }
-                if (!empty($node['underline'])) {
+                if (! empty($node['underline'])) {
                     $text = "<u>$text</u>";
                 }
-                if (!empty($node['code'])) {
+                if (! empty($node['code'])) {
                     $text = "<code>$text</code>";
                 }
 
@@ -216,14 +216,14 @@ class PostPresenter
                         break;
                     case 'link':
                         $url = $this->sanitizeUrl($node['url'] ?? '#');
-                        $title = isset($node['title']) ? ' title="' . $this->sanitizeAttribute($node['title']) . '"' : '';
-                        $target = !empty($node['target']) && $node['target'] === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
+                        $title = isset($node['title']) ? ' title="'.$this->sanitizeAttribute($node['title']).'"' : '';
+                        $target = ! empty($node['target']) && $node['target'] === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
                         $html .= "<a href=\"$url\"$title$target>$children</a>";
                         break;
                     case 'image':
                         $url = $this->sanitizeUrl($node['url'] ?? '');
                         $alt = $this->sanitizeAttribute($node['alt'] ?? '');
-                        $title = isset($node['title']) ? ' title="' . $this->sanitizeAttribute($node['title']) . '"' : '';
+                        $title = isset($node['title']) ? ' title="'.$this->sanitizeAttribute($node['title']).'"' : '';
                         $html .= "<img src=\"$url\" alt=\"$alt\"$title loading=\"lazy\" />";
                         break;
                     case 'code-block':
@@ -245,7 +245,7 @@ class PostPresenter
     {
         $comments = $post->allComments ?? collect();
 
-        if (!$comments instanceof Collection) {
+        if (! $comments instanceof Collection) {
             $comments = collect($comments);
         }
 
@@ -286,7 +286,7 @@ class PostPresenter
     protected function commentsEnabled(Post $post): bool
     {
         $global = SiteSetting::get('enable_comments', true);
-        if (!$global) {
+        if (! $global) {
             return false;
         }
 
@@ -308,7 +308,7 @@ class PostPresenter
             : $post->translations()->get();
 
         foreach ($translations as $translation) {
-            if (!$translation->slug) {
+            if (! $translation->slug) {
                 continue;
             }
 
@@ -318,7 +318,7 @@ class PostPresenter
             ];
         }
 
-        return array_filter($localizations, fn ($entry) => !empty($entry['path']));
+        return array_filter($localizations, fn ($entry) => ! empty($entry['path']));
     }
 
     protected function buildContentPath(Post $post, ?string $slug): string
@@ -338,6 +338,6 @@ class PostPresenter
             return '/';
         }
 
-        return '/' . implode('/', $segments);
+        return '/'.implode('/', $segments);
     }
 }

@@ -4,10 +4,10 @@ namespace App\Services;
 
 use App\Models\Locale;
 use App\Models\TranslationOverride;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Arr;
 
 class TranslationService
 {
@@ -31,6 +31,7 @@ class TranslationService
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($locale) {
             $translations = $this->loadTranslations($locale);
+
             return $this->applyOverrides($locale, $translations);
         });
     }
@@ -48,7 +49,7 @@ class TranslationService
 
             foreach ($this->adminDomains as $domain) {
                 $domainTranslations = $this->loadDomain($locale, $domain);
-                if (!empty($domainTranslations)) {
+                if (! empty($domainTranslations)) {
                     $translations[$domain] = $domainTranslations;
                 }
             }
@@ -73,12 +74,12 @@ class TranslationService
         $translations = [];
         $langPath = lang_path($locale);
 
-        if (!File::isDirectory($langPath)) {
+        if (! File::isDirectory($langPath)) {
             // Fall back to default locale
             $langPath = lang_path(config('app.fallback_locale', 'en'));
         }
 
-        if (!File::isDirectory($langPath)) {
+        if (! File::isDirectory($langPath)) {
             return $translations;
         }
 
@@ -109,9 +110,9 @@ class TranslationService
     {
         $path = lang_path("{$locale}/{$domain}.php");
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             // Fall back to default locale
-            $path = lang_path(config('app.fallback_locale', 'en') . "/{$domain}.php");
+            $path = lang_path(config('app.fallback_locale', 'en')."/{$domain}.php");
         }
 
         if (File::exists($path)) {
@@ -128,6 +129,7 @@ class TranslationService
     public function getFlattenedTranslations(?string $locale = null): array
     {
         $translations = $this->getAdminTranslations($locale);
+
         return Arr::dot($translations);
     }
 
@@ -195,7 +197,7 @@ class TranslationService
 
         foreach ($overrides as $override) {
             $domain = $override->domain;
-            if (!array_key_exists($domain, $translations)) {
+            if (! array_key_exists($domain, $translations)) {
                 $translations[$domain] = [];
             }
 

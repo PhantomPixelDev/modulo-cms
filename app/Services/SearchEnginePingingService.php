@@ -25,9 +25,10 @@ class SearchEnginePingingService
     protected function getPostUrl(Post $post): string
     {
         $prefix = $post->postType?->route_prefix;
-        $prefix = ($prefix === null || $prefix === '' || $prefix === '/') ? '' : '/' . ltrim($prefix, '/');
+        $prefix = ($prefix === null || $prefix === '' || $prefix === '/') ? '' : '/'.ltrim($prefix, '/');
         $siteUrl = SiteSetting::get('site_url', config('app.url'));
-        return rtrim($siteUrl, '/') . $prefix . '/' . ltrim((string)$post->slug, '/');
+
+        return rtrim($siteUrl, '/').$prefix.'/'.ltrim((string) $post->slug, '/');
     }
 
     protected function pingIndexNow(string $url): void
@@ -35,9 +36,10 @@ class SearchEnginePingingService
         $siteUrl = SiteSetting::get('site_url', config('app.url'));
         $host = parse_url($siteUrl, PHP_URL_HOST);
         $key = SiteSetting::get('indexnow_key');
-        
-        if (!$key) {
-            Log::info('SearchEnginePingingService: IndexNow key not set. Skipping ping for URL: ' . $url);
+
+        if (! $key) {
+            Log::info('SearchEnginePingingService: IndexNow key not set. Skipping ping for URL: '.$url);
+
             return;
         }
 
@@ -45,21 +47,21 @@ class SearchEnginePingingService
             $response = Http::timeout(5)
                 ->retry(2, 250)
                 ->post('https://api.indexnow.org/indexnow', [
-                'host' => $host,
-                'key' => $key,
-                'keyLocation' => rtrim($siteUrl, '/') . '/' . $key . '.txt',
-                'urlList' => [$url],
-            ]);
+                    'host' => $host,
+                    'key' => $key,
+                    'keyLocation' => rtrim($siteUrl, '/').'/'.$key.'.txt',
+                    'urlList' => [$url],
+                ]);
 
             if ($response->successful()) {
-                Log::info('SearchEnginePingingService: Successfully pinged IndexNow for URL: ' . $url);
+                Log::info('SearchEnginePingingService: Successfully pinged IndexNow for URL: '.$url);
             } else {
-                Log::warning('SearchEnginePingingService: Failed to ping IndexNow for URL: ' . $url, [
+                Log::warning('SearchEnginePingingService: Failed to ping IndexNow for URL: '.$url, [
                     'status' => $response->status(),
                 ]);
             }
         } catch (\Throwable $e) {
-            Log::error('SearchEnginePingingService: Exception while pinging IndexNow: ' . $e->getMessage());
+            Log::error('SearchEnginePingingService: Exception while pinging IndexNow: '.$e->getMessage());
         }
     }
 }

@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         $connection = Schema::getConnection();
@@ -89,7 +90,7 @@ return new class extends Migration {
         $connection = Schema::getConnection();
         $driver = $connection->getDriverName();
 
-        if (!Schema::hasTable('media_buckets')) {
+        if (! Schema::hasTable('media_buckets')) {
             return;
         }
 
@@ -117,16 +118,40 @@ return new class extends Migration {
             // Drop new columns and restore unique(name)
             Schema::table('media_buckets', function (Blueprint $table) {
                 // Drop FKs & indexes if exist
-                try { $table->dropForeign(['parent_id']); } catch (\Throwable $e) {}
-                try { $table->dropUnique(['parent_id', 'slug']); } catch (\Throwable $e) {}
-                try { $table->dropUnique('media_buckets_path_unique'); } catch (\Throwable $e) {}
-                try { $table->dropIndex(['parent_id']); } catch (\Throwable $e) {}
+                try {
+                    $table->dropForeign(['parent_id']);
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $table->dropUnique(['parent_id', 'slug']);
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $table->dropUnique('media_buckets_path_unique');
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $table->dropIndex(['parent_id']);
+                } catch (\Throwable $e) {
+                }
 
                 // Drop columns
-                try { $table->dropColumn('parent_id'); } catch (\Throwable $e) {}
-                try { $table->dropColumn('slug'); } catch (\Throwable $e) {}
-                try { $table->dropColumn('path'); } catch (\Throwable $e) {}
-                try { $table->dropSoftDeletes(); } catch (\Throwable $e) {}
+                try {
+                    $table->dropColumn('parent_id');
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $table->dropColumn('slug');
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $table->dropColumn('path');
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $table->dropSoftDeletes();
+                } catch (\Throwable $e) {
+                }
 
                 // Restore unique on name
                 $table->unique('name');

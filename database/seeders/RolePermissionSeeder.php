@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -27,14 +27,14 @@ class RolePermissionSeeder extends Seeder
             'edit users',
             'delete users',
             'assign roles',
-            
+
             // Role management
             'view roles',
             'create roles',
             'edit roles',
             'delete roles',
             'assign permissions',
-            
+
             // Content management
             'view content',
             'create content',
@@ -42,7 +42,7 @@ class RolePermissionSeeder extends Seeder
             'delete content',
             'publish content',
             'approve content',
-            
+
             // Post management (specific permissions for routes)
             'view posts',
             'create posts',
@@ -55,25 +55,25 @@ class RolePermissionSeeder extends Seeder
             'create pages',
             'edit pages',
             'delete pages',
-            
+
             // Post type management
             'view post types',
             'create post types',
             'edit post types',
             'delete post types',
-            
+
             // Taxonomy management
             'view taxonomies',
             'create taxonomies',
             'edit taxonomies',
             'delete taxonomies',
-            
+
             // Taxonomy term management
             'view taxonomy terms',
             'create taxonomy terms',
             'edit taxonomy terms',
             'delete taxonomy terms',
-            
+
             // Plugin management
             'view plugins',
             'install plugins',
@@ -89,7 +89,7 @@ class RolePermissionSeeder extends Seeder
             'view shop orders',
             'manage shop orders',
             'manage shop settings',
-            
+
             // Settings management
             'view settings',
             'edit settings',
@@ -108,7 +108,7 @@ class RolePermissionSeeder extends Seeder
             // Analytics
             'view analytics',
             'export data',
-            
+
             // Backup & maintenance
             'create backups',
             'restore backups',
@@ -191,4 +191,4 @@ class RolePermissionSeeder extends Seeder
             $user->assignRole('user');
         }
     }
-} 
+}

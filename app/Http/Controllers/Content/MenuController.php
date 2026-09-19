@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
 use App\Models\Locale;
-use App\Services\MenuService;
 use App\Models\Menu;
 use App\Models\MenuItem;
+use App\Services\MenuService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
@@ -25,6 +25,7 @@ class MenuController extends Controller
         if ($request->wantsJson()) {
             return response()->json($menus);
         }
+
         return Inertia::render('admin/menus/index', [
             'menus' => $menus,
         ]);
@@ -45,6 +46,7 @@ class MenuController extends Controller
         if ($request->wantsJson()) {
             return response()->json($menu, Response::HTTP_CREATED);
         }
+
         return redirect()->route('dashboard.admin.menus.index');
     }
 
@@ -57,6 +59,7 @@ class MenuController extends Controller
         if ($request->wantsJson()) {
             return response()->json($menu);
         }
+
         return Inertia::render('admin/menus/show', [
             'menu' => $menu,
             'locales' => Locale::getActive(),
@@ -68,7 +71,7 @@ class MenuController extends Controller
         $this->authorize('update', $menu);
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:menus,slug,' . $menu->id,
+            'slug' => 'required|string|max:255|unique:menus,slug,'.$menu->id,
             'location' => 'nullable|string|max:50',
             'description' => 'nullable|string',
         ]);
@@ -81,6 +84,7 @@ class MenuController extends Controller
         if ($request->wantsJson()) {
             return response()->json($menu);
         }
+
         return redirect()->route('dashboard.admin.menus.index');
     }
 
@@ -95,6 +99,7 @@ class MenuController extends Controller
         if ($request->wantsJson()) {
             return response()->noContent();
         }
+
         return redirect()->route('dashboard.admin.menus.index');
     }
 }

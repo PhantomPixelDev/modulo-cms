@@ -10,7 +10,9 @@ use App\Services\SearchEnginePingingService;
 class PostObserver
 {
     protected $pingingService;
+
     protected PostService $postService;
+
     protected AdminStatsService $adminStats;
 
     public function __construct(

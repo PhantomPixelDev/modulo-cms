@@ -5,11 +5,11 @@ namespace Plugins\ModuloShop\src\Services;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Services\ShortcodeService;
-use Illuminate\Support\Facades\View;
 
 class ShopShortcodeService
 {
     protected ShortcodeService $shortcodeService;
+
     protected ?PostType $productType = null;
 
     public function __construct(ShortcodeService $shortcodeService)
@@ -23,6 +23,7 @@ class ShopShortcodeService
         if ($this->productType === null) {
             $this->productType = PostType::where('name', 'product')->first();
         }
+
         return $this->productType;
     }
 
@@ -62,7 +63,7 @@ class ShopShortcodeService
     public function renderProducts(array $attrs): string
     {
         $productType = $this->getProductType();
-        if (!$productType) {
+        if (! $productType) {
             return '<!-- Product post type not found -->';
         }
 
@@ -110,25 +111,25 @@ class ShopShortcodeService
     {
         $id = $attrs['id'] ?? null;
         $slug = $attrs['slug'] ?? null;
-        
-        if (!$id && !$slug) {
+
+        if (! $id && ! $slug) {
             return '<!-- Product ID or slug required -->';
         }
 
         $productType = $this->getProductType();
-        if (!$productType) {
+        if (! $productType) {
             return '<!-- Product post type not found -->';
         }
 
         $query = Post::where('post_type_id', $productType->id)->published();
-        
+
         if ($id) {
             $product = $query->where('id', $id)->first();
         } else {
             $product = $query->where('slug', $slug)->first();
         }
 
-        if (!$product) {
+        if (! $product) {
             return '<!-- Product not found -->';
         }
 
@@ -144,6 +145,7 @@ class ShopShortcodeService
     public function renderProductGrid(array $attrs): string
     {
         $attrs['columns'] = $attrs['columns'] ?? 4;
+
         return $this->renderProducts($attrs);
     }
 
@@ -153,7 +155,7 @@ class ShopShortcodeService
     public function renderProductSlider(array $attrs): string
     {
         $productType = $this->getProductType();
-        if (!$productType) {
+        if (! $productType) {
             return '<!-- Product post type not found -->';
         }
 
@@ -168,9 +170,9 @@ class ShopShortcodeService
 
         $autoplayAttr = $autoplay ? 'data-autoplay="true"' : '';
 
-        $html = '<div class="product-slider swiper" ' . $autoplayAttr . '><div class="swiper-wrapper">';
+        $html = '<div class="product-slider swiper" '.$autoplayAttr.'><div class="swiper-wrapper">';
         foreach ($products as $product) {
-            $html .= '<div class="swiper-slide">' . $this->renderProductCard($product) . '</div>';
+            $html .= '<div class="swiper-slide">'.$this->renderProductCard($product).'</div>';
         }
         $html .= '</div><div class="swiper-pagination"></div><div class="swiper-button-prev"></div><div class="swiper-button-next"></div></div>';
 
@@ -183,15 +185,15 @@ class ShopShortcodeService
     public function renderProductCategories(array $attrs): string
     {
         $hideEmpty = ($attrs['hide_empty'] ?? 'yes') === 'yes';
-        
+
         // Get product category taxonomy
         $taxonomy = \App\Models\Taxonomy::where('slug', 'product-category')->first();
-        if (!$taxonomy) {
+        if (! $taxonomy) {
             return '<!-- Product category taxonomy not found -->';
         }
 
         $query = \App\Models\TaxonomyTerm::where('taxonomy_id', $taxonomy->id);
-        
+
         if ($hideEmpty) {
             $query->has('posts');
         }
@@ -200,7 +202,7 @@ class ShopShortcodeService
 
         $html = '<ul class="product-categories list-none p-0">';
         foreach ($categories as $cat) {
-            $url = url('/product-category/' . $cat->slug);
+            $url = url('/product-category/'.$cat->slug);
             $count = $hideEmpty ? $cat->posts()->count() : '';
             $html .= sprintf(
                 '<li class="mb-2"><a href="%s" class="text-gray-700 hover:text-primary-600">%s</a>%s</li>',
@@ -220,7 +222,7 @@ class ShopShortcodeService
     public function renderFeaturedProducts(array $attrs): string
     {
         $productType = $this->getProductType();
-        if (!$productType) {
+        if (! $productType) {
             return '<!-- Product post type not found -->';
         }
 
@@ -243,7 +245,7 @@ class ShopShortcodeService
     public function renderSaleProducts(array $attrs): string
     {
         $productType = $this->getProductType();
-        if (!$productType) {
+        if (! $productType) {
             return '<!-- Product post type not found -->';
         }
 
@@ -267,7 +269,7 @@ class ShopShortcodeService
     public function renderAddToCart(array $attrs): string
     {
         $id = $attrs['id'] ?? null;
-        if (!$id) {
+        if (! $id) {
             return '<!-- Product ID required -->';
         }
 
@@ -290,12 +292,12 @@ class ShopShortcodeService
     public function renderProductPrice(array $attrs): string
     {
         $id = $attrs['id'] ?? null;
-        if (!$id) {
+        if (! $id) {
             return '<!-- Product ID required -->';
         }
 
         $product = Post::find($id);
-        if (!$product) {
+        if (! $product) {
             return '<!-- Product not found -->';
         }
 
@@ -345,7 +347,7 @@ class ShopShortcodeService
         if ($title) {
             $html .= "<h3 class=\"text-xl font-bold mb-4\">{$title}</h3>";
         }
-        
+
         $html .= "<div class=\"product-grid grid {$gridClass} gap-6\">";
         foreach ($products as $product) {
             $html .= $this->renderProductCard($product);
@@ -367,9 +369,9 @@ class ShopShortcodeService
         $currencySymbol = $this->getCurrencySymbol($currency);
         $sku = $meta['sku'] ?? '';
         $stock = $meta['stock'] ?? null;
-        
+
         $image = $product->featured_image ?: '/images/placeholder-product.jpg';
-        $url = url('/shop/' . $product->slug);
+        $url = url('/shop/'.$product->slug);
 
         $priceHtml = '';
         if ($salePrice && $salePrice < $price) {
@@ -424,7 +426,7 @@ HTML;
         $currencySymbol = $this->getCurrencySymbol($currency);
         $sku = $meta['sku'] ?? '';
         $stock = $meta['stock'] ?? null;
-        
+
         $image = $product->featured_image ?: '/images/placeholder-product.jpg';
 
         $priceHtml = '';

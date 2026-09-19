@@ -12,8 +12,6 @@ class ThrottleRequestsPerMinute
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @param  int  $maxAttempts  (1-60)
      * @param  int  $decayMinutes  (in minutes)
      * @return mixed
@@ -21,7 +19,7 @@ class ThrottleRequestsPerMinute
     public function handle(Request $request, Closure $next, $maxAttempts = 60, $decayMinutes = 1)
     {
         $key = $this->resolveRequestSignature($request);
-        
+
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             return $this->buildResponse($key, $maxAttempts);
         }
@@ -43,10 +41,10 @@ class ThrottleRequestsPerMinute
     protected function resolveRequestSignature($request): string
     {
         return sha1(
-            $request->method() .
-            '|' . $request->server('SERVER_NAME') .
-            '|' . $request->path() .
-            '|' . $request->ip()
+            $request->method().
+            '|'.$request->server('SERVER_NAME').
+            '|'.$request->path().
+            '|'.$request->ip()
         );
     }
 

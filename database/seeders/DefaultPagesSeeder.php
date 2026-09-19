@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class DefaultPagesSeeder extends Seeder
 {
@@ -35,7 +35,7 @@ class DefaultPagesSeeder extends Seeder
 
         // Get first admin user or create system user
         $author = User::where('is_admin', true)->first() ?? User::first();
-        if (!$author) {
+        if (! $author) {
             $author = User::create([
                 'name' => 'System',
                 'email' => 'system@example.com',

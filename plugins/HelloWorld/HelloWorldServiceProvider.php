@@ -2,12 +2,13 @@
 
 namespace Plugins\HelloWorld;
 
-use Illuminate\Support\Facades\Log;
 use App\Plugins\BasePluginServiceProvider;
+use Illuminate\Support\Facades\Log;
 
 class HelloWorldServiceProvider extends BasePluginServiceProvider
 {
     protected string $pluginBasePath = __DIR__;
+
     protected string $pluginSlug = 'hello-world';
 
     public function register()
@@ -18,12 +19,12 @@ class HelloWorldServiceProvider extends BasePluginServiceProvider
     protected function bootPlugin(): void
     {
         // Example of using the hook system
-        add_action('cms_booted', function() {
+        add_action('cms_booted', function () {
             Log::info('Hello World plugin is active and CMS has booted!');
         });
 
-        add_filter('site_name', function($name) {
-            return $name . ' (Hello World)';
+        add_filter('site_name', function ($name) {
+            return $name.' (Hello World)';
         });
     }
 }

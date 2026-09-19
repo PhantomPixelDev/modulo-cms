@@ -13,7 +13,7 @@ class MenuItem extends Model
 
     protected $fillable = [
         'menu_id', 'parent_id', 'label', 'url', 'page_slug', 'route_name',
-        'order', 'visible_to', 'target'
+        'order', 'visible_to', 'target',
     ];
 
     protected $casts = [
@@ -52,7 +52,7 @@ class MenuItem extends Model
         $locale = $locale ?? app()->getLocale();
         $translation = $this->translation($locale);
 
-        if (!$translation) {
+        if (! $translation) {
             $defaultLocale = Locale::getDefault()?->code ?? config('app.fallback_locale', 'en');
             if ($locale !== $defaultLocale) {
                 $translation = $this->translation($defaultLocale);
@@ -87,15 +87,15 @@ class MenuItem extends Model
     public function resolveUrl(?string $locale = null): string
     {
         $localizedUrl = $this->getLocalizedUrl($locale);
-        if (!empty($localizedUrl)) {
+        if (! empty($localizedUrl)) {
             return $localizedUrl;
         }
 
-        if (!empty($this->page_slug)) {
-            return url('/' . ltrim($this->page_slug, '/'));
+        if (! empty($this->page_slug)) {
+            return url('/'.ltrim($this->page_slug, '/'));
         }
 
-        if (!empty($this->route_name)) {
+        if (! empty($this->route_name)) {
             try {
                 return route($this->route_name);
             } catch (\Throwable $e) {
@@ -121,7 +121,7 @@ class MenuItem extends Model
             : $this->translations()->get();
 
         foreach ($translations as $translation) {
-            if (!$translation->locale) {
+            if (! $translation->locale) {
                 continue;
             }
 
@@ -131,6 +131,6 @@ class MenuItem extends Model
             ];
         }
 
-        return array_filter($map, fn ($entry) => !empty($entry['label']) || !empty($entry['url']));
+        return array_filter($map, fn ($entry) => ! empty($entry['label']) || ! empty($entry['url']));
     }
 }

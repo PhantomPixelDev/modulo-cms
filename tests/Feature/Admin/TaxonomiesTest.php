@@ -1,21 +1,25 @@
 <?php
 
-use App\Models\User;
 use App\Models\Taxonomy;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
-function taxUser(array $perms = []): User {
+function taxUser(array $perms = []): User
+{
     $user = User::factory()->create();
     foreach ($perms as $perm) {
         Permission::findOrCreate($perm, 'web');
     }
-    if ($perms) $user->givePermissionTo($perms);
+    if ($perms) {
+        $user->givePermissionTo($perms);
+    }
     // Also give access admin permission which is required for admin routes
     Permission::findOrCreate('access admin', 'web');
     $user->givePermissionTo('access admin');
+
     return $user;
 }
 
@@ -32,7 +36,7 @@ it('allows taxonomies index with permission', function () {
 });
 
 it('creates, updates and deletes a taxonomy with permissions', function () {
-    $u = taxUser(['create taxonomies','edit taxonomies','delete taxonomies','view taxonomies']);
+    $u = taxUser(['create taxonomies', 'edit taxonomies', 'delete taxonomies', 'view taxonomies']);
     $this->actingAs($u);
 
     // Create
@@ -48,7 +52,7 @@ it('creates, updates and deletes a taxonomy with permissions', function () {
         'menu_position' => 5,
     ]);
     $resp->assertRedirect(route('dashboard.admin.taxonomies.index'));
-    $tax = Taxonomy::where('name','Category')->first();
+    $tax = Taxonomy::where('name', 'Category')->first();
     expect($tax)->not->toBeNull();
 
     // Update
@@ -75,7 +79,7 @@ it('creates, updates and deletes a taxonomy with permissions', function () {
 
 it('denies create/edit/update/destroy without respective permissions', function () {
     // Ensure permissions exist but are not granted (except view)
-    foreach (['create taxonomies','edit taxonomies','delete taxonomies'] as $p) {
+    foreach (['create taxonomies', 'edit taxonomies', 'delete taxonomies'] as $p) {
         Permission::findOrCreate($p, 'web');
     }
     $u = taxUser(['view taxonomies']);

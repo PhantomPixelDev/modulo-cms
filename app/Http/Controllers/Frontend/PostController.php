@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Frontend;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SiteSetting;
+use App\Presenters\PostPresenter;
+use App\Services\FrontendTemplateResolver;
 use App\Services\PostService;
 use App\Services\ReactTemplateRenderer;
-use App\Services\FrontendTemplateResolver;
-use App\Presenters\PostPresenter;
 use Illuminate\Http\Request;
 
 class PostController extends BaseFrontendController
@@ -38,10 +38,10 @@ class PostController extends BaseFrontendController
         }
 
         $query = Post::with([
-                'postType', 
-                'author.roles', 
-                'taxonomyTerms.taxonomy'
-            ])
+            'postType',
+            'author.roles',
+            'taxonomyTerms.taxonomy',
+        ])
             ->published()
             ->orderBy('published_at', 'desc');
 
@@ -61,7 +61,7 @@ class PostController extends BaseFrontendController
                     \Log::debug('listPosts:filterBySlug', ['route_prefix' => $postTypeSlug, 'postTypeId' => $pt->id]);
                 }
             }
-        } elseif ($routeName === 'posts.index' && !$request->has('type')) {
+        } elseif ($routeName === 'posts.index' && ! $request->has('type')) {
             $pt = PostType::where('slug', 'post')->first();
             if ($pt) {
                 $query->where('post_type_id', $pt->id);
@@ -71,7 +71,7 @@ class PostController extends BaseFrontendController
                 $request->attributes->set('default_post_type_id', $pt->id);
             } else {
                 \Log::warning('listPosts:classicPostTypeNotFound - filtering by slug=post in query');
-                $query->whereHas('postType', function($q) {
+                $query->whereHas('postType', function ($q) {
                     $q->where('slug', 'post');
                 });
             }
@@ -118,11 +118,11 @@ class PostController extends BaseFrontendController
         }
 
         $content = $this->postService->getPostBySlug($slug, 'post');
-        
-        if (!$content) {
+
+        if (! $content) {
             abort(404, 'Post not found');
         }
-        
+
         return $this->renderContent($content, 'post', 'post');
     }
 
@@ -135,14 +135,14 @@ class PostController extends BaseFrontendController
         $slug = $request->route('slug');
         $postTypeSlug = $request->route('postTypeSlug');
 
-        if (!$slug || !is_string($slug)) {
+        if (! $slug || ! is_string($slug)) {
             abort(404);
         }
-        
-        if (!$postTypeSlug) {
+
+        if (! $postTypeSlug) {
             $content = $this->postService->getPostBySlug($slug, 'page');
-            
-            if (!$content) {
+
+            if (! $content) {
                 abort(404, 'Page not found');
             }
 
@@ -150,18 +150,18 @@ class PostController extends BaseFrontendController
             if ($postsPageId && $content->id == $postsPageId) {
                 return $this->index($request);
             }
-            
+
             return $this->renderContent($content, 'page', 'page');
         }
-        
+
         $postType = PostType::where('route_prefix', $postTypeSlug)->firstOrFail();
         // Slugs are unique per post type, so look up within this type only
         $content = $this->postService->getPostBySlugForType($slug, $postType);
 
-        if (!$content) {
+        if (! $content) {
             abort(404);
         }
-        
+
         return $this->renderContent($content, 'post', 'post');
     }
 }

@@ -2,9 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Str;
-
 class ShortcodeService
 {
     protected array $shortcodes = [];
@@ -35,11 +32,12 @@ class ShortcodeService
             $attrString = $matches[2] ?? '';
             $innerContent = $matches[3] ?? '';
 
-            if (!isset($this->shortcodes[$tag])) {
+            if (! isset($this->shortcodes[$tag])) {
                 return $matches[0]; // Return unchanged if shortcode not registered
             }
 
             $attrs = $this->parseAttributes($attrString);
+
             return call_user_func($this->shortcodes[$tag], $attrs, $innerContent);
         }, $content);
     }
@@ -52,7 +50,7 @@ class ShortcodeService
         $attrs = [];
         // Match key="value" or key='value' or key=value
         preg_match_all('/(\w+)\s*=\s*["\']?([^"\'>\s]+)["\']?/', $attrString, $matches, PREG_SET_ORDER);
-        
+
         foreach ($matches as $match) {
             $attrs[$match[1]] = $match[2];
         }
@@ -68,18 +66,20 @@ class ShortcodeService
         // [button] shortcode
         $this->register('button', function ($attrs, $content) {
             $url = $attrs['url'] ?? '#';
-            if (!HtmlSanitizer::isSafeUrl($url)) {
+            if (! HtmlSanitizer::isSafeUrl($url)) {
                 $url = '#';
             }
             $class = $attrs['class'] ?? 'btn btn-primary';
             $target = isset($attrs['new_tab']) ? ' target="_blank" rel="noopener noreferrer"' : '';
+
             return sprintf('<a href="%s" class="%s"%s>%s</a>', e($url), e($class), $target, e($content));
         });
 
         // [columns] shortcode
         $this->register('columns', function ($attrs, $content) {
             $cols = $attrs['count'] ?? 2;
-            return sprintf('<div class="grid grid-cols-%s gap-4">%s</div>', (int)$cols, $content);
+
+            return sprintf('<div class="grid grid-cols-%s gap-4">%s</div>', (int) $cols, $content);
         });
 
         // [column] shortcode
@@ -90,7 +90,10 @@ class ShortcodeService
         // [youtube] shortcode
         $this->register('youtube', function ($attrs) {
             $id = $attrs['id'] ?? '';
-            if (!$id) return '';
+            if (! $id) {
+                return '';
+            }
+
             return sprintf(
                 '<div class="aspect-video"><iframe src="https://www.youtube.com/embed/%s" frameborder="0" allowfullscreen class="w-full h-full"></iframe></div>',
                 e($id)
@@ -107,6 +110,7 @@ class ShortcodeService
                 'error' => 'bg-red-100 text-red-800 border-red-200',
             ];
             $class = $classes[$type] ?? $classes['info'];
+
             return sprintf('<div class="p-4 border rounded %s">%s</div>', $class, $content);
         });
     }

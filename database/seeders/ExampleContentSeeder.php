@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class ExampleContentSeeder extends Seeder
@@ -25,8 +25,9 @@ class ExampleContentSeeder extends Seeder
         $eventType = PostType::where('name', 'event')->first();
         $faqType = PostType::where('name', 'faq')->first();
         $caseStudyType = PostType::where('name', 'case-study')->first();
-        if (!$postType || !$pageType || !$infoType) {
+        if (! $postType || ! $pageType || ! $infoType) {
             $this->command?->warn('Post types not found. Run ContentSeeder first.');
+
             return;
         }
 
@@ -352,7 +353,7 @@ class ExampleContentSeeder extends Seeder
                 ]
             );
 
-            if (!empty($p['terms'])) {
+            if (! empty($p['terms'])) {
                 $post->taxonomyTerms()->syncWithoutDetaching(array_filter($p['terms']));
             }
         }
@@ -427,7 +428,7 @@ class ExampleContentSeeder extends Seeder
             [
                 'title' => 'Upcoming Webinar: Getting Started with Modulo',
                 'excerpt' => 'Join us for a free webinar to learn how to get started with Modulo CMS.',
-                'content' => '<p>We are hosting a free webinar next week to help new users get started with Modulo CMS. Our team will walk you through the key features and answer any questions you might have.</p><p><strong>Date:</strong> ' . now()->addWeek()->format('F j, Y') . '</p><p><strong>Time:</strong> 2:00 PM - 3:00 PM (EST)</p><p>Space is limited, so please register early to secure your spot!</p>',
+                'content' => '<p>We are hosting a free webinar next week to help new users get started with Modulo CMS. Our team will walk you through the key features and answer any questions you might have.</p><p><strong>Date:</strong> '.now()->addWeek()->format('F j, Y').'</p><p><strong>Time:</strong> 2:00 PM - 3:00 PM (EST)</p><p>Space is limited, so please register early to secure your spot!</p>',
                 'terms' => [$tech?->id],
             ],
             [
@@ -463,7 +464,7 @@ class ExampleContentSeeder extends Seeder
             [
                 'title' => 'Content Strategy Workshop',
                 'excerpt' => 'Join our free workshop on developing effective content strategies for your business.',
-                'content' => '<p>Are you struggling to create engaging content that drives results? Join our comprehensive workshop on content strategy development.</p><p><strong>Workshop Topics:</strong></p><ul><li>Understanding your audience</li><li>Creating content that converts</li><li>SEO optimization strategies</li><li>Social media content planning</li><li>Measuring content success</li></ul><p><strong>Date:</strong> ' . now()->addDays(14)->format('F j, Y') . '<br><strong>Time:</strong> 10:00 AM - 4:00 PM<br><strong>Location:</strong> Online (Zoom)</p>',
+                'content' => '<p>Are you struggling to create engaging content that drives results? Join our comprehensive workshop on content strategy development.</p><p><strong>Workshop Topics:</strong></p><ul><li>Understanding your audience</li><li>Creating content that converts</li><li>SEO optimization strategies</li><li>Social media content planning</li><li>Measuring content success</li></ul><p><strong>Date:</strong> '.now()->addDays(14)->format('F j, Y').'<br><strong>Time:</strong> 10:00 AM - 4:00 PM<br><strong>Location:</strong> Online (Zoom)</p>',
                 'terms' => [$business?->id, $tutorial?->id],
             ],
             [
@@ -494,7 +495,7 @@ class ExampleContentSeeder extends Seeder
                 ]
             );
 
-            if (!empty($info['terms'])) {
+            if (! empty($info['terms'])) {
                 $post->taxonomyTerms()->syncWithoutDetaching(array_filter($info['terms']));
             }
         }
@@ -568,7 +569,7 @@ class ExampleContentSeeder extends Seeder
                     ]
                 );
 
-                if (!empty($item['terms'])) {
+                if (! empty($item['terms'])) {
                     $post->taxonomyTerms()->syncWithoutDetaching(array_filter($item['terms']));
                 }
             }
@@ -639,7 +640,7 @@ class ExampleContentSeeder extends Seeder
                     ]
                 );
 
-                if (!empty($event['terms'])) {
+                if (! empty($event['terms'])) {
                     $post->taxonomyTerms()->syncWithoutDetaching(array_filter($event['terms']));
                 }
             }
@@ -715,7 +716,7 @@ class ExampleContentSeeder extends Seeder
                     ]
                 );
 
-                if (!empty($case['terms'])) {
+                if (! empty($case['terms'])) {
                     $post->taxonomyTerms()->syncWithoutDetaching(array_filter($case['terms']));
                 }
             }

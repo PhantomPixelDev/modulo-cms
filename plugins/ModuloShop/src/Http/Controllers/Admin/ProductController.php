@@ -5,12 +5,12 @@ namespace Plugins\ModuloShop\src\Http\Controllers\Admin;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Str;
 
 class ProductController
 {
@@ -21,15 +21,16 @@ class ProductController
         if ($this->productType === null) {
             $this->productType = PostType::where('name', 'product')->first();
         }
+
         return $this->productType;
     }
 
     public function index(Request $request): JsonResponse|Response
     {
         $this->authorizeView();
-        
+
         $productType = $this->getProductType();
-        if (!$productType) {
+        if (! $productType) {
             return Inertia::render('Dashboard', [
                 'adminSection' => 'shop-products',
                 'shopProducts' => ['data' => [], 'total' => 0],
@@ -45,7 +46,7 @@ class ProductController
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('slug', 'like', "%{$search}%");
+                    ->orWhere('slug', 'like', "%{$search}%");
             });
         }
 
@@ -57,14 +58,14 @@ class ProductController
         $products = $query->paginate(50);
 
         // Transform products to include meta fields
-        $products->through(fn($p) => $this->transformForAdmin($p));
+        $products->through(fn ($p) => $this->transformForAdmin($p));
 
         if ($request->wantsJson()) {
             return response()->json($products);
         }
 
         // Get categories for filter
-        $categories = TaxonomyTerm::whereHas('taxonomy', fn($q) => $q->where('slug', 'product-category'))
+        $categories = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-category'))
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
 
@@ -78,12 +79,12 @@ class ProductController
     public function create(Request $request): Response
     {
         $this->authorizeCreate();
-        
-        $categories = TaxonomyTerm::whereHas('taxonomy', fn($q) => $q->where('slug', 'product-category'))
+
+        $categories = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-category'))
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
 
-        $tags = TaxonomyTerm::whereHas('taxonomy', fn($q) => $q->where('slug', 'product-tag'))
+        $tags = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-tag'))
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
 
@@ -97,9 +98,9 @@ class ProductController
     public function store(Request $request): JsonResponse|RedirectResponse
     {
         $this->authorizeCreate();
-        
+
         $productType = $this->getProductType();
-        if (!$productType) {
+        if (! $productType) {
             return back()->withErrors(['error' => 'Product post type not configured']);
         }
 
@@ -130,13 +131,13 @@ class ProductController
             return back()->withErrors(['name' => 'Product name is required']);
         }
 
-        $slug = !empty($data['slug']) ? Str::slug($data['slug']) : Str::slug($title);
-        
+        $slug = ! empty($data['slug']) ? Str::slug($data['slug']) : Str::slug($title);
+
         // Ensure unique slug
         $baseSlug = $slug;
         $counter = 1;
         while (Post::where('slug', $slug)->where('post_type_id', $productType->id)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
+            $slug = $baseSlug.'-'.$counter++;
         }
 
         $product = Post::create([
@@ -163,7 +164,7 @@ class ProductController
 
         // Sync categories and tags
         $termIds = array_merge($data['categories'] ?? [], $data['tags'] ?? []);
-        if (!empty($termIds)) {
+        if (! empty($termIds)) {
             $product->taxonomyTerms()->sync($termIds);
         }
 
@@ -178,14 +179,14 @@ class ProductController
     public function edit(Request $request, Post $post): Response
     {
         $this->authorizeEdit();
-        
+
         $post->load('taxonomyTerms');
 
-        $categories = TaxonomyTerm::whereHas('taxonomy', fn($q) => $q->where('slug', 'product-category'))
+        $categories = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-category'))
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
 
-        $tags = TaxonomyTerm::whereHas('taxonomy', fn($q) => $q->where('slug', 'product-tag'))
+        $tags = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-tag'))
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
 
@@ -200,7 +201,7 @@ class ProductController
     public function update(Request $request, Post $post): JsonResponse|RedirectResponse
     {
         $this->authorizeEdit();
-        
+
         $productType = $this->getProductType();
 
         $data = $request->validate([
@@ -226,13 +227,13 @@ class ProductController
         ]);
 
         $title = $data['title'] ?? $data['name'] ?? $post->title;
-        $slug = !empty($data['slug']) ? Str::slug($data['slug']) : Str::slug($title);
-        
+        $slug = ! empty($data['slug']) ? Str::slug($data['slug']) : Str::slug($title);
+
         // Ensure unique slug (excluding current post)
         $baseSlug = $slug;
         $counter = 1;
         while (Post::where('slug', $slug)->where('post_type_id', $productType->id)->where('id', '!=', $post->id)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
+            $slug = $baseSlug.'-'.$counter++;
         }
 
         // Determine status from is_active or status field
@@ -245,7 +246,7 @@ class ProductController
 
         // Determine published_at
         $publishedAt = $post->published_at;
-        if ($status === 'published' && !$publishedAt) {
+        if ($status === 'published' && ! $publishedAt) {
             $publishedAt = now();
         }
 
@@ -287,7 +288,7 @@ class ProductController
     public function destroy(Request $request, Post $post): JsonResponse|RedirectResponse
     {
         $this->authorizeDelete();
-        
+
         $post->taxonomyTerms()->detach();
         $post->delete();
 
@@ -305,7 +306,7 @@ class ProductController
     protected function transformForAdmin(Post $product): array
     {
         $meta = $product->meta_data ?? [];
-        
+
         return [
             'id' => $product->id,
             'title' => $product->title,
@@ -327,12 +328,12 @@ class ProductController
             'gallery' => $meta['gallery'] ?? [],
             'attributes' => $meta['attributes'] ?? [],
             'categories' => $product->taxonomyTerms
-                ->filter(fn($t) => $t->taxonomy?->slug === 'product-category')
+                ->filter(fn ($t) => $t->taxonomy?->slug === 'product-category')
                 ->pluck('id')
                 ->values()
                 ->toArray(),
             'tags' => $product->taxonomyTerms
-                ->filter(fn($t) => $t->taxonomy?->slug === 'product-tag')
+                ->filter(fn ($t) => $t->taxonomy?->slug === 'product-tag')
                 ->pluck('id')
                 ->values()
                 ->toArray(),
@@ -348,32 +349,48 @@ class ProductController
     protected function authorizeView(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('view shop products') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('view shop products') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
     protected function authorizeCreate(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('create shop products') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('create shop products') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
     protected function authorizeEdit(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('edit shop products') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('edit shop products') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
     protected function authorizeDelete(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if ($user->can('delete shop products') || $user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('delete shop products') || $user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 }

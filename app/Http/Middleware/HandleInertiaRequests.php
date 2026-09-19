@@ -2,18 +2,18 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Http\Request;
-use Inertia\Middleware;
-use Tighten\Ziggy\Ziggy;
+use App\Models\Plugin;
 use App\Models\PostType;
 use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
-use App\Models\Plugin;
 use App\Services\AdminStatsService;
 use App\Services\SiteSettingsService;
 use App\Services\TranslationService;
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Middleware;
+use Tighten\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -43,7 +43,6 @@ class HandleInertiaRequests extends Middleware
         return parent::version($request);
     }
 
-
     /**
      * Memoized wrapper so categories and tags share a single DB call per request.
      */
@@ -58,40 +57,40 @@ class HandleInertiaRequests extends Middleware
     protected function getSidebarData(): array
     {
         // Check if tables exist (for fresh installs)
-        if (!Schema::hasTable('taxonomy_terms')) {
+        if (! Schema::hasTable('taxonomy_terms')) {
             return ['categories' => [], 'tags' => []];
         }
 
         try {
             // Get categories with post counts
-            $categories = TaxonomyTerm::whereHas('taxonomy', function($q) {
+            $categories = TaxonomyTerm::whereHas('taxonomy', function ($q) {
                 $q->where('slug', 'categories');
             })
-            ->withCount(['posts' => function($q) {
-                $q->where('status', 'published');
-            }])
-            ->get()
-            ->map(function($term) {
-                return [
-                    'id' => $term->id,
-                    'name' => $term->name,
-                    'slug' => $term->slug,
-                    'posts_count' => $term->posts_count,
-                ];
-            });
+                ->withCount(['posts' => function ($q) {
+                    $q->where('status', 'published');
+                }])
+                ->get()
+                ->map(function ($term) {
+                    return [
+                        'id' => $term->id,
+                        'name' => $term->name,
+                        'slug' => $term->slug,
+                        'posts_count' => $term->posts_count,
+                    ];
+                });
 
             // Get tags
-            $tags = TaxonomyTerm::whereHas('taxonomy', function($q) {
+            $tags = TaxonomyTerm::whereHas('taxonomy', function ($q) {
                 $q->where('slug', 'tags');
             })
-            ->get()
-            ->map(function($term) {
-                return [
-                    'id' => $term->id,
-                    'name' => $term->name,
-                    'slug' => $term->slug,
-                ];
-            });
+                ->get()
+                ->map(function ($term) {
+                    return [
+                        'id' => $term->id,
+                        'name' => $term->name,
+                        'slug' => $term->slug,
+                    ];
+                });
 
             return [
                 'categories' => $categories->toArray(),
@@ -116,7 +115,7 @@ class HandleInertiaRequests extends Middleware
 
         // Ensure parent::share() returns an array before spreading
         $parentShared = parent::share($request);
-        if (!is_array($parentShared)) {
+        if (! is_array($parentShared)) {
             $parentShared = [];
         }
 
@@ -168,22 +167,22 @@ class HandleInertiaRequests extends Middleware
                 ? Plugin::query()->active()->pluck('slug')->values()->toArray()
                 : [],
             'dynamicMenu' => [
-                'postTypes' => fn () => Schema::hasTable('post_types') 
+                'postTypes' => fn () => Schema::hasTable('post_types')
                     ? PostType::query()
-                        ->when(Schema::hasColumn('post_types', 'show_in_menu'), fn($q) => $q->where('show_in_menu', true))
+                        ->when(Schema::hasColumn('post_types', 'show_in_menu'), fn ($q) => $q->where('show_in_menu', true))
                         ->orderBy(Schema::hasColumn('post_types', 'menu_position') ? 'menu_position' : 'id')
                         ->get(['id', 'name', 'label', 'menu_icon', 'slug'])
                     : [],
                 'taxonomies' => fn () => Schema::hasTable('taxonomies')
                     ? Taxonomy::query()
-                        ->when(Schema::hasColumn('taxonomies', 'show_in_menu'), fn($q) => $q->where('show_in_menu', true))
+                        ->when(Schema::hasColumn('taxonomies', 'show_in_menu'), fn ($q) => $q->where('show_in_menu', true))
                         ->orderBy(Schema::hasColumn('taxonomies', 'menu_position') ? 'menu_position' : 'id')
                         ->get(['id', 'name', 'label', 'menu_icon', 'slug'])
                     : [],
             ],
             // Localization - translations and locale info
-            'locale' => fn () => Schema::hasTable('locales') 
-                ? $this->translations->getLocaleInfo() 
+            'locale' => fn () => Schema::hasTable('locales')
+                ? $this->translations->getLocaleInfo()
                 : ['current' => app()->getLocale(), 'direction' => 'ltr', 'name' => 'English', 'native_name' => 'English', 'available' => []],
             'translations' => fn () => $this->translations->getAdminTranslations(),
         ];

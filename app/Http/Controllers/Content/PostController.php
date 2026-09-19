@@ -5,16 +5,16 @@ namespace App\Http\Controllers\Content;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use App\Models\Locale;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
 use App\Models\User;
-use App\Models\Locale;
 use App\Presenters\PostPresenter;
 use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class PostController extends Controller
 {
@@ -61,7 +61,7 @@ class PostController extends Controller
             'posts' => $posts->through(fn ($post) => $this->formatPostForList($post)),
             // Exclude 'page' from selectable post types in the Posts area
             'postTypes' => PostType::where('name', '!=', 'page')->get(),
-            'authors' => User::orderBy('name')->get(['id','name']),
+            'authors' => User::orderBy('name')->get(['id', 'name']),
             'locales' => Locale::getActive(),
         ]);
     }
@@ -73,7 +73,7 @@ class PostController extends Controller
     {
         // Find the post type by slug
         $postType = PostType::where('slug', $postTypeSlug)->firstOrFail();
-        
+
         // Check permission for this post type
         $this->authorize('view', Post::class);
 
@@ -99,7 +99,7 @@ class PostController extends Controller
             'posts' => $posts->through(fn ($post) => $this->formatPostForList($post)),
             'postTypes' => PostType::where('name', '!=', 'page')->get(),
             'currentPostType' => $postType,
-            'authors' => User::orderBy('name')->get(['id','name']),
+            'authors' => User::orderBy('name')->get(['id', 'name']),
             'locales' => Locale::getActive(),
         ]);
     }
@@ -148,16 +148,16 @@ class PostController extends Controller
         // Exclude 'page' from Posts create form options
         $postTypes = PostType::where('name', '!=', 'page')->get();
         $taxonomyTerms = TaxonomyTerm::with('taxonomy')->get();
-        $authors = User::orderBy('name')->get(['id','name']);
+        $authors = User::orderBy('name')->get(['id', 'name']);
 
         // Build parentsByType map for hierarchical selection
-        $allPosts = Post::orderBy('title')->get(['id','title','post_type_id']);
+        $allPosts = Post::orderBy('title')->get(['id', 'title', 'post_type_id']);
         $parentsByType = $allPosts->groupBy('post_type_id')->map(function ($items) {
             return $items->map(function ($p) {
                 return ['id' => $p->id, 'title' => $p->title];
             })->values();
         });
-        
+
         // Group taxonomy terms by taxonomy
         $groupedTerms = $taxonomyTerms->groupBy('taxonomy.name');
 
@@ -180,7 +180,7 @@ class PostController extends Controller
             'meta_description' => '',
             'parent_id' => null,
             'menu_order' => 0,
-            'meta_data' => new \stdClass(),
+            'meta_data' => new \stdClass,
             'post_type' => $defaultType ? [
                 'id' => $defaultType->id,
                 'name' => $defaultType->name,
@@ -259,7 +259,7 @@ class PostController extends Controller
     {
         $this->authorize('view', $post);
         $post->load(['postType', 'author', 'taxonomyTerms.taxonomy']);
-        
+
         $postData = [
             'id' => $post->id,
             'title' => $post->title,
@@ -293,7 +293,7 @@ class PostController extends Controller
                     'taxonomy' => [
                         'id' => $term->taxonomy->id,
                         'name' => $term->taxonomy->name,
-                    ]
+                    ],
                 ];
             }),
         ];
@@ -316,15 +316,15 @@ class PostController extends Controller
         // Exclude 'page' from Posts edit form options
         $postTypes = PostType::where('name', '!=', 'page')->get();
         $taxonomyTerms = TaxonomyTerm::with('taxonomy')->get();
-        $authors = User::orderBy('name')->get(['id','name']);
+        $authors = User::orderBy('name')->get(['id', 'name']);
         // Build parentsByType map
-        $allPosts = Post::orderBy('title')->get(['id','title','post_type_id']);
+        $allPosts = Post::orderBy('title')->get(['id', 'title', 'post_type_id']);
         $parentsByType = $allPosts->groupBy('post_type_id')->map(function ($items) use ($post) {
             return $items->filter(fn ($p) => $p->id !== $post->id)->map(function ($p) {
                 return ['id' => $p->id, 'title' => $p->title];
             })->values();
         });
-        
+
         // Group taxonomy terms by taxonomy
         $groupedTerms = $taxonomyTerms->groupBy('taxonomy.name');
 
@@ -358,7 +358,7 @@ class PostController extends Controller
                     'taxonomy' => [
                         'id' => $term->taxonomy->id,
                         'name' => $term->taxonomy->name,
-                    ]
+                    ],
                 ];
             }),
             'selected_terms' => $post->taxonomyTerms->pluck('id')->toArray(),
@@ -450,6 +450,7 @@ class PostController extends Controller
     {
         $this->authorize('delete', $post);
         $post->delete();
+
         return back()->with('success', 'Post deleted successfully.');
     }
 }

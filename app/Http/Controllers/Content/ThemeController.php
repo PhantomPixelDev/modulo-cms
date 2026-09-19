@@ -7,8 +7,8 @@ use App\Http\Requests\InstallThemeRequest;
 use App\Http\Requests\UpdateThemeRequest;
 use App\Models\Theme;
 use App\Services\ThemeManager;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ThemeController extends Controller
 {
@@ -48,7 +48,7 @@ class ThemeController extends Controller
         $discoveredThemes = $this->themeManager->discoverThemes();
         $themeToInstall = $discoveredThemes->firstWhere('config.slug', $request->validated('slug'));
 
-        if (!$themeToInstall) {
+        if (! $themeToInstall) {
             return back()->withErrors(['theme' => 'Theme not found']);
         }
 
@@ -58,7 +58,7 @@ class ThemeController extends Controller
 
             return back()->with('success', "Theme '{$theme->name}' installed successfully");
         } catch (\Exception $e) {
-            return back()->withErrors(['theme' => 'Failed to install theme: ' . $e->getMessage()]);
+            return back()->withErrors(['theme' => 'Failed to install theme: '.$e->getMessage()]);
         }
     }
 
@@ -85,7 +85,7 @@ class ThemeController extends Controller
                 return redirect()->route('dashboard.admin.themes.index')->withErrors(['theme' => 'Failed to activate theme']);
             }
         } catch (\Exception $e) {
-            return redirect()->route('dashboard.admin.themes.index')->withErrors(['theme' => 'Failed to activate theme: ' . $e->getMessage()]);
+            return redirect()->route('dashboard.admin.themes.index')->withErrors(['theme' => 'Failed to activate theme: '.$e->getMessage()]);
         }
     }
 
@@ -118,7 +118,7 @@ class ThemeController extends Controller
 
             return back()->with('success', 'Theme settings updated successfully');
         } catch (\Exception $e) {
-            return back()->withErrors(['theme' => 'Failed to update theme: ' . $e->getMessage()]);
+            return back()->withErrors(['theme' => 'Failed to update theme: '.$e->getMessage()]);
         }
     }
 
@@ -143,7 +143,7 @@ class ThemeController extends Controller
                 return back()->withErrors(['theme' => 'Failed to uninstall theme']);
             }
         } catch (\Exception $e) {
-            return back()->withErrors(['theme' => 'Failed to uninstall theme: ' . $e->getMessage()]);
+            return back()->withErrors(['theme' => 'Failed to uninstall theme: '.$e->getMessage()]);
         }
     }
 
@@ -158,9 +158,10 @@ class ThemeController extends Controller
             $this->themeManager->publishAllAssets();
 
             $count = $installedThemes->count();
+
             return back()->with('success', "Discovered and installed {$count} themes");
         } catch (\Exception $e) {
-            return back()->withErrors(['theme' => 'Failed to discover themes: ' . $e->getMessage()]);
+            return back()->withErrors(['theme' => 'Failed to discover themes: '.$e->getMessage()]);
         }
     }
 
@@ -181,7 +182,7 @@ class ThemeController extends Controller
                 return back()->withErrors(['theme' => 'Failed to publish theme assets']);
             }
         } catch (\Exception $e) {
-            return back()->withErrors(['theme' => 'Failed to publish assets: ' . $e->getMessage()]);
+            return back()->withErrors(['theme' => 'Failed to publish assets: '.$e->getMessage()]);
         }
     }
 
@@ -195,5 +196,4 @@ class ThemeController extends Controller
 
         return back()->with('success', 'Theme cache cleared');
     }
-
 }

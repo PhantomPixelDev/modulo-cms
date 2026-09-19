@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\User;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -49,8 +49,9 @@ class CreateSuperAdmin extends Command
         if ($validator->fails()) {
             $this->error('Validation failed:');
             foreach ($validator->errors()->all() as $error) {
-                $this->error('- ' . $error);
+                $this->error('- '.$error);
             }
+
             return 1;
         }
 
@@ -65,7 +66,7 @@ class CreateSuperAdmin extends Command
             // Assign super-admin role
             $user->assignRole('super-admin');
 
-            $this->info("Super Admin user created successfully!");
+            $this->info('Super Admin user created successfully!');
             $this->table(['Field', 'Value'], [
                 ['Name', $user->name],
                 ['Email', $user->email],
@@ -76,7 +77,8 @@ class CreateSuperAdmin extends Command
             return 0;
 
         } catch (\Exception $e) {
-            $this->error('Failed to create super admin user: ' . $e->getMessage());
+            $this->error('Failed to create super admin user: '.$e->getMessage());
+
             return 1;
         }
     }

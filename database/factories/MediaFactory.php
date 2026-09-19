@@ -12,10 +12,10 @@ class MediaFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->word . '.' . $this->faker->fileExtension,
+            'name' => $this->faker->word.'.'.$this->faker->fileExtension,
             'file_name' => $this->faker->word,
             'mime_type' => 'image/jpeg',
-            'path' => 'media/' . $this->faker->word,
+            'path' => 'media/'.$this->faker->word,
             'disk' => 'public',
             'file_hash' => $this->faker->sha256,
             'collection' => 'default',

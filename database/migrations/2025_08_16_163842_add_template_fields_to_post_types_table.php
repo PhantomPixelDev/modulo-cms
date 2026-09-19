@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('post_types', function (Blueprint $table) {
             $table->unsignedBigInteger('single_template_id')->nullable()->after('route_prefix');
             $table->unsignedBigInteger('archive_template_id')->nullable()->after('single_template_id');
-            
+
             $table->foreign('single_template_id')->references('id')->on('templates')->onDelete('set null');
             $table->foreign('archive_template_id')->references('id')->on('templates')->onDelete('set null');
         });

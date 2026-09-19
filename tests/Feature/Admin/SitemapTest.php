@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\User;
 use App\Models\Post;
 use App\Models\PostType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -18,6 +18,7 @@ function sitemapUser($perms = ['view sitemap'])
     // Also give access admin permission which is required for admin routes
     \Spatie\Permission\Models\Permission::findOrCreate('access admin', 'web');
     $user->givePermissionTo('access admin');
+
     return $user;
 }
 

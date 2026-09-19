@@ -4,7 +4,7 @@ use App\Services\HtmlSanitizer;
 
 function sanitizeHtml(string $html): string
 {
-    return (new HtmlSanitizer())->sanitize($html);
+    return (new HtmlSanitizer)->sanitize($html);
 }
 
 it('keeps safe formatting markup', function () {
@@ -33,7 +33,7 @@ it('strips event handler attributes', function () {
 });
 
 it('drops javascript and data urls, including obfuscated ones', function (string $href) {
-    $out = sanitizeHtml('<a href="' . $href . '">x</a>');
+    $out = sanitizeHtml('<a href="'.$href.'">x</a>');
 
     expect($out)->toBe('<a>x</a>');
 })->with([
@@ -46,7 +46,7 @@ it('drops javascript and data urls, including obfuscated ones', function (string
 ]);
 
 it('keeps relative, mailto and tel urls', function (string $href) {
-    expect(sanitizeHtml('<a href="' . $href . '">x</a>'))->toContain('href=');
+    expect(sanitizeHtml('<a href="'.$href.'">x</a>'))->toContain('href=');
 })->with(['/about', '#top', 'page.html', 'mailto:a@b.c', 'tel:+123', '//cdn.example.com/x']);
 
 it('forces rel noopener on target blank links', function () {

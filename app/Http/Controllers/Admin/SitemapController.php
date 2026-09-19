@@ -17,12 +17,12 @@ class SitemapController extends Controller
     public function index(Request $request): Response
     {
         $this->authorizeView();
-        $builder = new SitemapBuilder();
+        $builder = new SitemapBuilder;
         $settings = $builder->getSettings();
         $postTypes = PostType::orderBy('menu_position')->get(['id', 'name', 'label', 'route_prefix', 'is_public']);
         $locales = Schema::hasTable('locales') ? Locale::getActive() : collect();
         $requestedLocale = $request->query('locale');
-        if ($requestedLocale && (!Schema::hasTable('locales') || !Locale::isValidCode($requestedLocale))) {
+        if ($requestedLocale && (! Schema::hasTable('locales') || ! Locale::isValidCode($requestedLocale))) {
             $requestedLocale = null;
         }
         $defaultLocale = Schema::hasTable('locales') ? Locale::getDefault()?->code : null;
@@ -56,11 +56,11 @@ class SitemapController extends Controller
         ]);
 
         $locale = $data['locale'] ?? null;
-        if ($locale && (!Schema::hasTable('locales') || !Locale::isValidCode($locale))) {
+        if ($locale && (! Schema::hasTable('locales') || ! Locale::isValidCode($locale))) {
             $locale = null;
         }
 
-        $builder = new SitemapBuilder();
+        $builder = new SitemapBuilder;
         $settings = $builder->getSettings();
 
         $globalAttributes = collect($data)->only(['enable_cache', 'cache_ttl']);
@@ -80,7 +80,7 @@ class SitemapController extends Controller
         // Invalidate cached settings/xml so UI uses fresh values
         Cache::forget('sitemap.settings');
         $builder->clearCachedXml($locale);
-        if (!$locale && Schema::hasTable('locales')) {
+        if (! $locale && Schema::hasTable('locales')) {
             foreach (Locale::getActive() as $activeLocale) {
                 $builder->clearCachedXml($activeLocale->code);
             }
@@ -93,10 +93,11 @@ class SitemapController extends Controller
     {
         $this->authorizeEdit();
         $locale = $request->input('locale');
-        if ($locale && (!Schema::hasTable('locales') || !Locale::isValidCode($locale))) {
+        if ($locale && (! Schema::hasTable('locales') || ! Locale::isValidCode($locale))) {
             $locale = null;
         }
         $builder->regenerate($locale);
+
         return back()->with('success', 'Sitemap regenerated');
     }
 
@@ -104,18 +105,30 @@ class SitemapController extends Controller
     {
         // Gate by permission if available; otherwise allow admins by role
         $user = auth()->user();
-        if (!$user) abort(403);
-        if (method_exists($user, 'can') && $user->can('view sitemap')) return;
-        if ($user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if (method_exists($user, 'can') && $user->can('view sitemap')) {
+            return;
+        }
+        if ($user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 
     protected function authorizeEdit(): void
     {
         $user = auth()->user();
-        if (!$user) abort(403);
-        if (method_exists($user, 'can') && $user->can('edit sitemap')) return;
-        if ($user->hasRole(['admin', 'super-admin'])) return;
+        if (! $user) {
+            abort(403);
+        }
+        if (method_exists($user, 'can') && $user->can('edit sitemap')) {
+            return;
+        }
+        if ($user->hasRole(['admin', 'super-admin'])) {
+            return;
+        }
         abort(403);
     }
 }

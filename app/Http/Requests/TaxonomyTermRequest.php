@@ -19,21 +19,21 @@ class TaxonomyTermRequest extends FormRequest
         $id = is_object($term) ? ($term->id ?? null) : null;
 
         return [
-            'taxonomy_id' => ['required','integer','exists:taxonomies,id'],
-            'name' => ['required','string','max:255'],
-            'description' => ['nullable','string'],
-            'parent_id' => ['nullable','integer','exists:taxonomy_terms,id'],
-            'term_order' => ['nullable','integer','min:0','max:10000'],
-            'meta_title' => ['nullable','string','max:255'],
-            'meta_description' => ['nullable','string'],
-            'translations' => ['sometimes','array'],
-            'translations.*.locale' => ['required','string','max:8', Rule::exists('locales', 'code')],
-            'translations.*.name' => ['nullable','string','max:255'],
-            'translations.*.slug' => ['nullable','string','max:255'],
-            'translations.*.description' => ['nullable','string'],
-            'translations.*.meta_title' => ['nullable','string','max:255'],
-            'translations.*.meta_description' => ['nullable','string'],
-            'translations.*.meta_data' => ['nullable','array'],
+            'taxonomy_id' => ['required', 'integer', 'exists:taxonomies,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'parent_id' => ['nullable', 'integer', 'exists:taxonomy_terms,id'],
+            'term_order' => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'meta_title' => ['nullable', 'string', 'max:255'],
+            'meta_description' => ['nullable', 'string'],
+            'translations' => ['sometimes', 'array'],
+            'translations.*.locale' => ['required', 'string', 'max:8', Rule::exists('locales', 'code')],
+            'translations.*.name' => ['nullable', 'string', 'max:255'],
+            'translations.*.slug' => ['nullable', 'string', 'max:255'],
+            'translations.*.description' => ['nullable', 'string'],
+            'translations.*.meta_title' => ['nullable', 'string', 'max:255'],
+            'translations.*.meta_description' => ['nullable', 'string'],
+            'translations.*.meta_data' => ['nullable', 'array'],
         ];
     }
 
@@ -46,11 +46,11 @@ class TaxonomyTermRequest extends FormRequest
 
             // parent must belong to same taxonomy
             if ($parentId) {
-                $parent = DB::table('taxonomy_terms')->where('id', (int)$parentId)->first();
-                if ($parent && (int)$parent->taxonomy_id !== $taxonomyId) {
+                $parent = DB::table('taxonomy_terms')->where('id', (int) $parentId)->first();
+                if ($parent && (int) $parent->taxonomy_id !== $taxonomyId) {
                     $validator->errors()->add('parent_id', 'Parent term must belong to the same taxonomy.');
                 }
-                if ($term && (int)$term->id === (int)$parentId) {
+                if ($term && (int) $term->id === (int) $parentId) {
                     $validator->errors()->add('parent_id', 'A term cannot be its own parent.');
                 }
             }

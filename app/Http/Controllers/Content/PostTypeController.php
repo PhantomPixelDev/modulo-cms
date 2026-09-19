@@ -7,8 +7,8 @@ use App\Models\PostType;
 use App\Models\SiteSetting;
 use App\Providers\DynamicRouteServiceProvider;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class PostTypeController extends Controller
 {
@@ -23,9 +23,10 @@ class PostTypeController extends Controller
     protected function shouldEnableComments(Request $request): bool
     {
         $globalEnabled = SiteSetting::get('enable_comments', true);
-        if (!$globalEnabled) {
+        if (! $globalEnabled) {
             return false;
         }
+
         return (bool) ($request->has_comments ?? true);
     }
 
@@ -58,6 +59,7 @@ class PostTypeController extends Controller
     public function create()
     {
         $this->authorize('create', PostType::class);
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.create',
             'globalCommentsEnabled' => SiteSetting::get('enable_comments', true),
@@ -125,7 +127,7 @@ class PostTypeController extends Controller
     {
         $this->authorize('view', $postType);
         $postType->load('posts');
-        
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.show',
             'postType' => $postType,
@@ -138,6 +140,7 @@ class PostTypeController extends Controller
     public function edit(PostType $postType)
     {
         $this->authorize('update', $postType);
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'post-types.edit',
             'editPostType' => $postType,
@@ -152,7 +155,7 @@ class PostTypeController extends Controller
     {
         $this->authorize('update', $postType);
         $request->validate([
-            'name' => 'required|string|max:255|unique:post_types,name,' . $postType->id,
+            'name' => 'required|string|max:255|unique:post_types,name,'.$postType->id,
             'label' => 'required|string|max:255',
             'plural_label' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -213,10 +216,10 @@ class PostTypeController extends Controller
         }
 
         $postType->delete();
-        
+
         // Clear route cache when post types change
         DynamicRouteServiceProvider::clearRouteCache();
-        
+
         // Redirect back to the index to refresh list after deletion
         return redirect()->route('dashboard.admin.post-types.index')
             ->with('success', 'Post type deleted successfully.');

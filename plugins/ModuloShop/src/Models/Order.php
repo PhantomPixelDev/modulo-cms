@@ -64,15 +64,23 @@ class Order extends Model
     ];
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_PROCESSING = 'processing';
+
     public const STATUS_SHIPPED = 'shipped';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_REFUNDED = 'refunded';
 
     public const PAYMENT_PENDING = 'pending';
+
     public const PAYMENT_PAID = 'paid';
+
     public const PAYMENT_FAILED = 'failed';
+
     public const PAYMENT_REFUNDED = 'refunded';
 
     protected $hidden = ['access_token'];
@@ -159,7 +167,7 @@ class Order extends Model
 
     public function getStatusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'Pending',
             self::STATUS_PROCESSING => 'Processing',
             self::STATUS_SHIPPED => 'Shipped',
@@ -172,7 +180,7 @@ class Order extends Model
 
     public function getPaymentStatusLabel(): string
     {
-        return match($this->payment_status) {
+        return match ($this->payment_status) {
             self::PAYMENT_PENDING => 'Pending',
             self::PAYMENT_PAID => 'Paid',
             self::PAYMENT_FAILED => 'Failed',

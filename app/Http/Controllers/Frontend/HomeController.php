@@ -17,14 +17,14 @@ class HomeController extends BaseFrontendController
             return $resp;
         }
 
-        if (!Schema::hasTable('posts')) {
+        if (! Schema::hasTable('posts')) {
             return Inertia::render('Setup/ThemeMissing', [
                 'message' => 'Database is not initialized (missing posts table). Run migrations and refresh.',
             ]);
         }
 
         $showOnFront = SiteSetting::get('show_on_front', 'posts');
-        
+
         if ($showOnFront === 'page') {
             $frontPageId = SiteSetting::get('front_page_id');
             if ($frontPageId) {
@@ -37,11 +37,11 @@ class HomeController extends BaseFrontendController
         }
 
         $query = Post::with([
-                'postType', 
-                'author.roles', 
-                'taxonomyTerms.taxonomy',
-                'translations'
-            ])
+            'postType',
+            'author.roles',
+            'taxonomyTerms.taxonomy',
+            'translations',
+        ])
             ->published()
             ->orderBy('published_at', 'desc');
 
@@ -49,7 +49,7 @@ class HomeController extends BaseFrontendController
         if ($postType) {
             $query->where('post_type_id', $postType->id);
         } else {
-            $query->whereHas('postType', function($q) {
+            $query->whereHas('postType', function ($q) {
                 $q->where('slug', '!=', 'page');
             });
         }

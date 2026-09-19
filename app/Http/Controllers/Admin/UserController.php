@@ -119,7 +119,7 @@ class UserController extends Controller
         $this->authorize('update', $user);
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'roles' => 'array',
             'roles.*' => 'integer|exists:roles,id',
         ]);
@@ -158,7 +158,7 @@ class UserController extends Controller
         }
 
         // Prevent deleting super-admin unless current user is also super-admin
-        if ($user->hasRole('super-admin') && !auth()->user()->hasRole('super-admin')) {
+        if ($user->hasRole('super-admin') && ! auth()->user()->hasRole('super-admin')) {
             return back()->with('error', 'You cannot delete a super-admin unless you are a super-admin.');
         }
 
@@ -189,6 +189,7 @@ class UserController extends Controller
             if ($current !== $requested) {
                 return 'You cannot change your own roles.';
             }
+
             return null;
         }
 

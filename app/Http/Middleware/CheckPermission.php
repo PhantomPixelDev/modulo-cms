@@ -15,7 +15,7 @@ class CheckPermission
      */
     public function handle(Request $request, Closure $next, string $permission, ...$permissions): Response
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -38,11 +38,11 @@ class CheckPermission
                 }
             }
 
-            if (!$hasAny) {
+            if (! $hasAny) {
                 abort(403, 'Unauthorized action.');
             }
         }
 
         return $next($request);
     }
-} 
+}

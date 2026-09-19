@@ -14,15 +14,15 @@ class ShopSeeder extends Seeder
     {
         // Check if product post type already exists with different route_prefix
         $existingProductType = PostType::where('name', 'product')->orWhere('slug', 'product')->first();
-        
+
         if ($existingProductType && $existingProductType->route_prefix !== 'shop') {
-            $this->command?->warn('⚠️  A "product" post type already exists with route_prefix: "' . $existingProductType->route_prefix . '"');
+            $this->command?->warn('⚠️  A "product" post type already exists with route_prefix: "'.$existingProductType->route_prefix.'"');
             $this->command?->warn('   The ModuloShop plugin requires route_prefix to be "shop" for proper functionality.');
             $this->command?->warn('   To fix this, either:');
             $this->command?->warn('   1. Delete the existing product post type and its posts, then re-run this seeder');
             $this->command?->warn('   2. Manually update the route_prefix to "shop" in the database');
             $this->command?->newLine();
-            
+
             // Update the existing product type to use shop route_prefix
             $existingProductType->update([
                 'route_prefix' => 'shop',

@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property-read string $label
  */
-
 class Taxonomy extends Model
 {
     use HasFactory;
@@ -55,7 +54,7 @@ class Taxonomy extends Model
         $locale = $locale ?? app()->getLocale();
         $translation = $this->translation($locale);
 
-        if (!$translation) {
+        if (! $translation) {
             $defaultLocale = Locale::getDefault()?->code ?? config('app.fallback_locale', 'en');
             if ($locale !== $defaultLocale) {
                 $translation = $this->translation($defaultLocale);

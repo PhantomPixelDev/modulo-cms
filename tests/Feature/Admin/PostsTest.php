@@ -1,22 +1,26 @@
 <?php
 
-use App\Models\User;
 use App\Models\Post;
 use App\Models\PostType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
-function postUser(array $perms = []): User {
+function postUser(array $perms = []): User
+{
     $user = User::factory()->create();
     foreach ($perms as $perm) {
         Permission::findOrCreate($perm, 'web');
     }
-    if ($perms) $user->givePermissionTo($perms);
+    if ($perms) {
+        $user->givePermissionTo($perms);
+    }
     // Also give access admin permission which is required for admin routes
     Permission::findOrCreate('access admin', 'web');
     $user->givePermissionTo('access admin');
+
     return $user;
 }
 
@@ -40,7 +44,7 @@ it('creates, updates and deletes a post with permissions', function () {
         'name' => 'news', 'label' => 'News', 'plural_label' => 'News',
         'description' => null, 'route_prefix' => 'news',
         'has_taxonomies' => false, 'has_featured_image' => false, 'has_excerpt' => true, 'has_comments' => false,
-        'supports' => ['title','editor'], 'taxonomies' => [], 'slug' => 'news',
+        'supports' => ['title', 'editor'], 'taxonomies' => [], 'slug' => 'news',
         'is_public' => true, 'is_hierarchical' => false, 'menu_icon' => null, 'menu_position' => 5,
     ]);
 
@@ -95,7 +99,7 @@ it('denies show without view permission', function () {
         'name' => 'article', 'label' => 'Article', 'plural_label' => 'Articles',
         'description' => null, 'route_prefix' => 'articles',
         'has_taxonomies' => false, 'has_featured_image' => false, 'has_excerpt' => false, 'has_comments' => false,
-        'supports' => ['title','editor'], 'taxonomies' => [], 'slug' => 'article',
+        'supports' => ['title', 'editor'], 'taxonomies' => [], 'slug' => 'article',
         'is_public' => true, 'is_hierarchical' => false, 'menu_icon' => null, 'menu_position' => 5,
     ]);
 
@@ -112,14 +116,14 @@ it('denies show without view permission', function () {
 });
 
 it('allows show/edit with proper permissions', function () {
-    $u = postUser(['view posts','edit posts']);
+    $u = postUser(['view posts', 'edit posts']);
     $this->actingAs($u);
 
     $type = PostType::create([
         'name' => 'note', 'label' => 'Note', 'plural_label' => 'Notes',
         'description' => null, 'route_prefix' => 'notes',
         'has_taxonomies' => false, 'has_featured_image' => false, 'has_excerpt' => false, 'has_comments' => false,
-        'supports' => ['title','editor'], 'taxonomies' => [], 'slug' => 'note',
+        'supports' => ['title', 'editor'], 'taxonomies' => [], 'slug' => 'note',
         'is_public' => true, 'is_hierarchical' => false, 'menu_icon' => null, 'menu_position' => 5,
     ]);
 
@@ -138,7 +142,9 @@ it('allows show/edit with proper permissions', function () {
 
 it('denies edit/update/destroy without respective permissions', function () {
     // Ensure permissions exist but are not granted (except view)
-    foreach (['edit posts','delete posts'] as $p) { Permission::findOrCreate($p, 'web'); }
+    foreach (['edit posts', 'delete posts'] as $p) {
+        Permission::findOrCreate($p, 'web');
+    }
     $u = postUser(['view posts']);
     $this->actingAs($u);
 
@@ -146,7 +152,7 @@ it('denies edit/update/destroy without respective permissions', function () {
         'name' => 'story', 'label' => 'Story', 'plural_label' => 'Stories',
         'description' => null, 'route_prefix' => 'stories',
         'has_taxonomies' => false, 'has_featured_image' => false, 'has_excerpt' => false, 'has_comments' => false,
-        'supports' => ['title','editor'], 'taxonomies' => [], 'slug' => 'story',
+        'supports' => ['title', 'editor'], 'taxonomies' => [], 'slug' => 'story',
         'is_public' => true, 'is_hierarchical' => false, 'menu_icon' => null, 'menu_position' => 5,
     ]);
 
@@ -178,7 +184,7 @@ it('persists featured_image on create and update', function () {
         'name' => 'gallery', 'label' => 'Gallery', 'plural_label' => 'Galleries',
         'description' => null, 'route_prefix' => 'galleries',
         'has_taxonomies' => false, 'has_featured_image' => true, 'has_excerpt' => true, 'has_comments' => false,
-        'supports' => ['title','editor'], 'taxonomies' => [], 'slug' => 'gallery',
+        'supports' => ['title', 'editor'], 'taxonomies' => [], 'slug' => 'gallery',
         'is_public' => true, 'is_hierarchical' => false, 'menu_icon' => null, 'menu_position' => 6,
     ]);
 
