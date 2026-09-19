@@ -54,3 +54,55 @@ it('denies media folder creation without permission', function () {
 
 // Note: Media upload and deletion tests would require Spatie Media Library setup
 // which is complex to test in isolation. These tests verify the authorization logic.
+
+it('rejects php files disguised as images', function () {
+    Storage::fake('public');
+    $user = mediaUser(['upload media']);
+
+    // Valid 1x1 PNG header followed by a PHP payload (polyglot)
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
+    $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('shell.php', $png . '<?php echo "pwned"; ?>');
+
+    $this->actingAs($user)
+        ->post(route('dashboard.admin.media.store'), ['file' => $file])
+        ->assertSessionHasErrors('file');
+
+    expect(\Spatie\MediaLibrary\MediaCollections\Models\Media::count())->toBe(0);
+});
+
+it('stores uploads under a sanitized file name', function () {
+    Storage::fake('public');
+    $user = mediaUser(['upload media']);
+
+    $file = \Illuminate\Http\UploadedFile::fake()->image('My Holiday Photo.png', 20, 20);
+
+    $this->actingAs($user)
+        ->post(route('dashboard.admin.media.store'), ['file' => $file])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::first();
+    expect($media)->not->toBeNull()
+        ->and($media->file_name)->toBe('my-holiday-photo.png')
+        ->and($media->name)->toBe('My Holiday Photo');
+});
+
+it('updates and deletes media records', function () {
+    Storage::fake('public');
+    $user = mediaUser();
+
+    $this->actingAs($user)->post(route('dashboard.admin.media.store'), [
+        'file' => \Illuminate\Http\UploadedFile::fake()->image('photo.png', 20, 20),
+    ]);
+    $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::firstOrFail();
+
+    $this->actingAs($user)
+        ->put(route('dashboard.admin.media.update', $media->id), ['name' => 'Renamed'])
+        ->assertRedirect();
+    expect($media->fresh()->name)->toBe('Renamed');
+
+    $this->actingAs($user)
+        ->delete(route('dashboard.admin.media.destroy', $media->id))
+        ->assertRedirect();
+    expect(\Spatie\MediaLibrary\MediaCollections\Models\Media::count())->toBe(0);
+});

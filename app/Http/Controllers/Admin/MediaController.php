@@ -7,8 +7,10 @@ use App\Http\Requests\MediaUploadRequest;
 use App\Models\MediaBucket;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 // Defer importing Spatie classes to runtime to avoid errors before package install
 
@@ -198,9 +200,9 @@ class MediaController extends Controller
                     $w = (int) ($info[0] ?? 0);
                     $h = (int) ($info[1] ?? 0);
                     // Hard caps
-                    $maxW = (int) env('MAX_IMAGE_WIDTH', 10000); // 10k px
-                    $maxH = (int) env('MAX_IMAGE_HEIGHT', 10000);
-                    $maxMP = (int) env('MAX_IMAGE_MEGAPIXELS', 60); // 60 MP
+                    $maxW = (int) config('uploads.max_image_width', 10000);
+                    $maxH = (int) config('uploads.max_image_height', 10000);
+                    $maxMP = (int) config('uploads.max_image_megapixels', 60);
                     if ($w <= 0 || $h <= 0 || $w > $maxW || $h > $maxH || (($w * $h) > ($maxMP * 1000000))) {
                         return back()->with('error', 'Image dimensions exceed allowed limits.');
                     }
@@ -208,10 +210,10 @@ class MediaController extends Controller
             }
         }
 
-        // Basic SVG safety: reject if contains script tags
+        // SVG is active content: reject anything that can run script
         if ($uploaded && $uploaded->getMimeType() === 'image/svg+xml') {
             $contents = @file_get_contents($uploaded->getRealPath());
-            if ($contents !== false && preg_match('/<\s*script/i', $contents)) {
+            if ($contents === false || $this->svgLooksUnsafe($contents)) {
                 return back()->with('error', 'Unsafe SVG content detected.');
             }
         }
@@ -223,7 +225,15 @@ class MediaController extends Controller
         if (!$bucket) {
             $bucket = MediaBucket::firstOrCreate(['name' => 'default', 'parent_id' => null]);
         }
-        $bucket->addMediaFromRequest('file')->toMediaCollection($this->collection);
+        // Never trust the client file name: derive the extension from the content.
+        $originalName = pathinfo((string) $uploaded->getClientOriginalName(), PATHINFO_FILENAME);
+        $extension = $uploaded->guessExtension() ?: strtolower((string) $uploaded->getClientOriginalExtension());
+        $fileName = (Str::slug($originalName) ?: 'file') . '.' . $extension;
+
+        $bucket->addMediaFromRequest('file')
+            ->usingName($originalName)
+            ->usingFileName($fileName)
+            ->toMediaCollection($this->collection);
 
         return back()->with('success', 'File uploaded');
     }
@@ -244,7 +254,7 @@ class MediaController extends Controller
         ]);
 
         /** @var \Spatie\MediaLibrary\MediaCollections\Models\Media $media */
-        $media = (\Spatie\MediaLibrary\MediaCollections\Models\Media)::findOrFail($id);
+        $media = Media::findOrFail($id);
         if (array_key_exists('name', $data)) {
             $media->name = (string) $data['name'];
         }
@@ -275,7 +285,7 @@ class MediaController extends Controller
         }
 
         /** @var \Spatie\MediaLibrary\MediaCollections\Models\Media $media */
-        $media = (\Spatie\MediaLibrary\MediaCollections\Models\Media)::findOrFail($id);
+        $media = Media::findOrFail($id);
         $media->delete();
 
         return back()->with('success', 'Media deleted');
@@ -291,7 +301,7 @@ class MediaController extends Controller
 
         if ($id) {
             /** @var \Spatie\MediaLibrary\MediaCollections\Models\Media $media */
-            $media = (\Spatie\MediaLibrary\MediaCollections\Models\Media)::findOrFail($id);
+            $media = Media::findOrFail($id);
             if (class_exists('Spatie\\MediaLibrary\\MediaCollections\\FileManipulator')) {
                 app('Spatie\\MediaLibrary\\MediaCollections\\FileManipulator')->createDerivedFiles($media);
             }
@@ -327,7 +337,8 @@ class MediaController extends Controller
 
         if ($action === 'delete') {
             $this->authorizeDelete();
-            $Media::query()->whereIn('id', $ids)->delete();
+            // Delete through the model so Spatie also removes the files from disk
+            $Media::query()->whereIn('id', $ids)->get()->each->delete();
             return back()->with('success', 'Selected media deleted');
         }
 
@@ -389,5 +400,13 @@ class MediaController extends Controller
         if (!$user) abort(403);
         if ($user->can('delete media') || $user->hasRole(['admin', 'super-admin'])) return;
         abort(403);
+    }
+
+    protected function svgLooksUnsafe(string $svg): bool
+    {
+        return (bool) preg_match(
+            '/<\s*(script|foreignObject|iframe|embed|object)\b|\bon[a-z]+\s*=|(?:href|src)\s*=\s*["\']?\s*(?:javascript|data|vbscript):|<!ENTITY/i',
+            $svg
+        );
     }
 }
