@@ -25,7 +25,7 @@ export default defineConfig(({ command }) => ({
         hmr: hmrEnabled ? {
             host: process.env.VITE_HMR_HOST || (isDocker ? viteHost : 'localhost'),
             port: parseInt(process.env.VITE_HMR_PORT || (isDocker ? '80' : vitePort.toString()), 10),
-            clientPort: parseInt(process.env.VITE_HMR_CLIENT_PORT || (isDocker ? '8443' : vitePort.toString()), 10),
+            clientPort: parseInt(process.env.VITE_HMR_CLIENT_PORT || (isDocker ? '8000' : vitePort.toString()), 10),
             protocol: process.env.VITE_HMR_PROTOCOL || 'ws',
             path: '/vite-hmr',
         } : false,
@@ -39,7 +39,8 @@ export default defineConfig(({ command }) => ({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             ssr: process.env.VITE_LARAVEL_SSR === 'true' ? 'resources/js/ssr.tsx' : undefined,
             refresh: process.env.VITE_LARAVEL_REFRESH === 'true',
-            buildDirectory: process.env.VITE_BUILD_OUTDIR || 'build',
+            // Relative to public/; must match what Laravel's @vite expects (public/build)
+            buildDirectory: 'build',
             valetTls: null,
             detectTls: null,
         }),
@@ -51,7 +52,6 @@ export default defineConfig(({ command }) => ({
         port: 5173,
     },
     build: {
-        outDir: process.env.VITE_BUILD_OUTDIR || 'build',
         target: process.env.VITE_BUILD_TARGET || 'es2020',
         minify: process.env.VITE_BUILD_MINIFY !== 'false' ? 'esbuild' : false,
         sourcemap: process.env.VITE_BUILD_SOURCEMAP === 'true',
