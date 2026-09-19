@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
 
@@ -53,14 +54,9 @@ class StorePostRequest extends FormRequest
 
         // Add validation for required fields based on post type
         if ($postType) {
-            if ($postType->has_featured_image) {
-                $rules['featured_image'] = ['required', 'string', 'max:255'];
-            }
-            
-            if ($postType->has_excerpt) {
-                $rules['excerpt'] = ['required', 'string', 'max:500'];
-            }
-            
+            // has_excerpt / has_featured_image mean the type *supports* the field;
+            // they stay optional (nullable rules above).
+
             // Validate taxonomy terms if post type has taxonomies
             if ($postType->has_taxonomies && !empty($this->input('taxonomy_terms'))) {
                 $rules['taxonomy_terms.*'] = [
@@ -84,7 +80,7 @@ class StorePostRequest extends FormRequest
     protected function prepareForValidation()
     {
         // Generate slug from title if not provided
-        if (!$this->has('slug') && $this->has('title')) {
+        if (!$this->filled('slug') && $this->filled('title')) {
             $this->merge([
                 'slug' => \Illuminate\Support\Str::slug($this->title)
             ]);

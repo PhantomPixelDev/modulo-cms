@@ -50,13 +50,8 @@ class UpdatePostRequest extends FormRequest
         ];
 
         if ($postType) {
-            if ($postType->has_featured_image) {
-                $rules['featured_image'] = ['required', 'string', 'max:255'];
-            }
-
-            if ($postType->has_excerpt) {
-                $rules['excerpt'] = ['required', 'string', 'max:500'];
-            }
+            // has_excerpt / has_featured_image mean the type *supports* the field;
+            // they stay optional (nullable rules above).
 
             if ($postType->has_taxonomies && !empty($this->input('taxonomy_terms'))) {
                 $rules['taxonomy_terms.*'] = [
