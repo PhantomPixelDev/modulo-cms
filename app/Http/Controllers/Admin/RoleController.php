@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Policies\RolePolicy;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -57,13 +60,13 @@ class RoleController extends Controller
             'permissions' => 'array',
         ]);
 
+        $permissions = $this->permissionsToSync($this->resolvePermissions($request->input('permissions', [])));
+
         $role = Role::create([
             'name' => $request->name,
         ]);
 
-        if ($request->has('permissions')) {
-            $role->givePermissionTo($request->permissions);
-        }
+        $role->syncPermissions($permissions);
 
         return redirect()->route('dashboard.admin.roles.index')
             ->with('success', 'Role created successfully.');
@@ -74,6 +77,7 @@ class RoleController extends Controller
      */
     public function edit(Role $role): Response
     {
+        $this->authorize('update', $role);
         $permissions = Permission::orderBy('name')->get();
         $role->load('permissions');
 
@@ -95,12 +99,20 @@ class RoleController extends Controller
             'permissions' => 'array',
         ]);
 
+        if (in_array($role->name, RolePolicy::SYSTEM_ROLES, true) && $request->name !== $role->name) {
+            throw ValidationException::withMessages(['name' => 'System roles cannot be renamed.']);
+        }
+
+        $permissions = $request->has('permissions')
+            ? $this->permissionsToSync($this->resolvePermissions($request->input('permissions', [])), $role)
+            : null;
+
         $role->update([
             'name' => $request->name,
         ]);
 
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
+        if ($permissions !== null) {
+            $role->syncPermissions($permissions);
         }
 
         return redirect()->route('dashboard.admin.roles.index')
@@ -122,4 +134,60 @@ class RoleController extends Controller
         return redirect()->route('dashboard.admin.roles.index')
             ->with('success', 'Role deleted successfully.');
     }
-} 
+
+    /**
+     * Resolve submitted permission ids or names; unknown entries are a validation error.
+     */
+    protected function resolvePermissions(array $input): Collection
+    {
+        $input = array_values(array_unique(array_filter($input, fn ($v) => is_scalar($v) && $v !== '')));
+        if ($input === []) {
+            return collect();
+        }
+
+        $ids = array_map('intval', array_filter($input, 'is_numeric'));
+        $names = array_values(array_filter($input, fn ($v) => !is_numeric($v)));
+
+        $permissions = Permission::query()
+            ->where(fn ($q) => $q->whereIn('id', $ids)->orWhereIn('name', $names))
+            ->get();
+
+        if ($permissions->count() !== count($input)) {
+            throw ValidationException::withMessages(['permissions' => 'One or more permissions do not exist.']);
+        }
+
+        return $permissions;
+    }
+
+    /**
+     * Non-super-admins may only grant or revoke permissions they hold themselves.
+     * Permissions outside their reach are left exactly as they were on the role.
+     */
+    protected function permissionsToSync(Collection $requested, ?Role $role = null): Collection
+    {
+        $actor = auth()->user();
+        if ($actor->hasRole('super-admin')) {
+            return $requested;
+        }
+
+        $held = $actor->getAllPermissions()->pluck('name');
+        $existing = $role ? $role->permissions : collect();
+
+        $escalating = $requested->pluck('name')
+            ->diff($held)
+            ->diff($existing->pluck('name'));
+
+        if ($escalating->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'permissions' => 'You cannot grant permissions you do not have: ' . $escalating->implode(', '),
+            ]);
+        }
+
+        $untouchable = $existing->reject(fn ($p) => $held->contains($p->name));
+
+        return $requested->filter(fn ($p) => $held->contains($p->name))
+            ->merge($untouchable)
+            ->unique('id')
+            ->values();
+    }
+}

@@ -71,23 +71,20 @@ class UserController extends Controller
             'roles.*' => 'integer|exists:roles,id',
         ]);
 
+        // Frontend sends role IDs; convert to role names for Spatie
+        $roleNames = Role::whereIn('id', (array) $request->input('roles', []))->pluck('name')->all();
+        if ($error = $this->roleAssignmentError($roleNames)) {
+            return redirect()->route('dashboard.admin.users.index')->with('error', $error);
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
         ]);
 
-        if ($request->has('roles')) {
-            // Frontend sends role IDs; convert to role names for Spatie
-            $roleNames = Role::whereIn('id', (array) $request->roles)->pluck('name')->all();
-            // Prevent non-super-admins from assigning super-admin role
-            if (in_array('super-admin', $roleNames, true) && !auth()->user()->hasRole('super-admin')) {
-                return redirect()->route('dashboard.admin.users.index')
-                    ->with('error', 'You cannot assign the super-admin role.');
-            }
-            if ($roleNames) {
-                $user->assignRole($roleNames);
-            }
+        if ($roleNames) {
+            $user->assignRole($roleNames);
         }
 
         return redirect()->route('dashboard.admin.users.index')
@@ -127,19 +124,21 @@ class UserController extends Controller
             'roles.*' => 'integer|exists:roles,id',
         ]);
 
+        $roleNames = null;
+        if ($request->has('roles')) {
+            // Convert role IDs to names for Spatie
+            $roleNames = Role::whereIn('id', (array) $request->roles)->pluck('name')->all();
+            if ($error = $this->roleAssignmentError($roleNames, $user)) {
+                return redirect()->route('dashboard.admin.users.index')->with('error', $error);
+            }
+        }
+
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
         ]);
 
-        if ($request->has('roles')) {
-            // Convert role IDs to names for Spatie
-            $roleNames = Role::whereIn('id', (array) $request->roles)->pluck('name')->all();
-            // Prevent non-super-admins from assigning super-admin role
-            if (in_array('super-admin', $roleNames, true) && !auth()->user()->hasRole('super-admin')) {
-                return redirect()->route('dashboard.admin.users.index')
-                    ->with('error', 'You cannot assign the super-admin role.');
-            }
+        if ($roleNames !== null) {
             $user->syncRoles($roleNames);
         }
 
@@ -168,4 +167,40 @@ class UserController extends Controller
         return redirect()->route('dashboard.admin.users.index')
             ->with('success', 'User deleted successfully.');
     }
-} 
+
+    /**
+     * Non-super-admins can't change their own roles, hand out super-admin,
+     * or assign a role carrying permissions they don't hold themselves.
+     */
+    protected function roleAssignmentError(array $roleNames, ?User $target = null): ?string
+    {
+        $actor = auth()->user();
+        if ($actor->hasRole('super-admin')) {
+            return null;
+        }
+
+        if (in_array('super-admin', $roleNames, true)) {
+            return 'You cannot assign the super-admin role.';
+        }
+
+        if ($target && $target->is($actor)) {
+            $current = $target->roles->pluck('name')->sort()->values()->all();
+            $requested = collect($roleNames)->sort()->values()->all();
+            if ($current !== $requested) {
+                return 'You cannot change your own roles.';
+            }
+            return null;
+        }
+
+        $held = $actor->getAllPermissions()->pluck('name');
+        $granted = Role::whereIn('name', $roleNames)->with('permissions')->get()
+            ->flatMap(fn (Role $role) => $role->permissions->pluck('name'))
+            ->unique();
+
+        if ($granted->diff($held)->isNotEmpty()) {
+            return 'You cannot assign roles with permissions you do not have.';
+        }
+
+        return null;
+    }
+}
