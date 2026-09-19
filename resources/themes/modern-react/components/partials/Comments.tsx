@@ -29,6 +29,8 @@ const Comments: React.FC<CommentsProps> = ({ postId, comments = [], allowComment
     parent_id: null as number | null,
     author_name: auth.user ? '' : '',
     author_email: auth.user ? '' : '',
+    // Honeypot: humans never see or fill this field
+    website: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -93,6 +95,7 @@ const Comments: React.FC<CommentsProps> = ({ postId, comments = [], allowComment
           {replyingTo === comment.id && (
             <div className="mt-3">
               <form onSubmit={handleSubmit}>
+                <input type="text" name="website" value={data.website} onChange={(e) => setData('website', e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
                 {!auth.user && (
                   <div className="mb-3 space-y-2">
                     <div>
@@ -186,6 +189,7 @@ const Comments: React.FC<CommentsProps> = ({ postId, comments = [], allowComment
           )}
           
           <form onSubmit={handleSubmit}>
+            <input type="text" name="website" value={data.website} onChange={(e) => setData('website', e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
             {!auth.user && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
