@@ -8,7 +8,10 @@ This policy keeps migration history useful while preventing migration sprawl fro
    - Do not delete historical migrations during normal development.
 
 2. **Schema baseline is first-class**
-   - `database/schema/pgsql-schema.sql` is the baseline for fresh Postgres environments.
+   - `database/schema/pgsql-schema.sql` (optional) is the baseline for fresh Postgres environments.
+   - It must be generated with `php artisan schema:dump` (`./modulo.sh schema-dump dev`), which also stores the
+     `migrations` rows. A plain `pg_dump --schema-only` file makes fresh installs re-run every migration and fail.
+   - Loading it requires the `psql` client in the app container.
 
 3. **Small, scoped migrations**
    - One migration should solve one schema concern.

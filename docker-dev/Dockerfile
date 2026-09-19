@@ -7,6 +7,8 @@ RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       bash git unzip curl libpq-dev libzip-dev \
+      # psql: Laravel loads database/schema/pgsql-schema.sql with it on fresh migrations
+      postgresql-client \
       libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev; \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
     docker-php-ext-install -j"$(nproc)" \
@@ -37,4 +39,4 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 EXPOSE 5173
-CMD ["sh","-lc","npm install --legacy-peer-deps && npm run dev -- --host 0.0.0.0 --port 5173"]
+CMD ["sh","-lc","npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5173"]

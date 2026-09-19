@@ -11,7 +11,7 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   quality:
@@ -23,28 +23,29 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
+          tools: composer:v2
+          coverage: none
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 22
+          cache: npm
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-          bun install --frozen-lockfile
+          npm ci
 
-      - name: Run Pint
-        run: vendor/bin/pint
+      # Check only: CI must fail on violations instead of silently fixing them
+      - name: PHP code style (Pint)
+        run: vendor/bin/pint --test
 
-      - name: Format Frontend
-        run: bun run format
+      - name: Frontend formatting (Prettier)
+        run: npm run format:check
 
-      - name: Lint Frontend
-        run: bun run lint
+      - name: Frontend lint (ESLint)
+        run: npx eslint . --quiet
 
-      # - name: Commit Changes
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     commit_message: fix code style
-      #     commit_options: '--no-verify'
+      - name: TypeScript
+        run: npm run types

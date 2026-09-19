@@ -89,7 +89,12 @@ get_container_name() {
 
 run_compose() {
     local compose_file=$(get_compose_file)
-    docker compose -f "$compose_file" "$@"
+    if [[ "$ENV" == "prod" ]]; then
+        # Compose interpolates DB_* and WEB_PORT from .env.prod
+        docker compose --env-file "$SCRIPT_DIR/.env.prod" -f "$compose_file" "$@"
+    else
+        docker compose -f "$compose_file" "$@"
+    fi
 }
 
 run_app_command() {
@@ -196,8 +201,9 @@ case "${1:-}" in
         ENV="${2:-}"
         detect_env
         echo "Generating schema dump in $ENV (without pruning migrations)..."
-        mkdir -p "$SCRIPT_DIR/database/schema"
-        run_compose exec -T db sh -lc 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --schema-only --no-owner --no-acl' > "$SCRIPT_DIR/database/schema/pgsql-schema.sql"
+        # artisan schema:dump also stores the migrations table rows; a plain pg_dump
+        # --schema-only baseline makes fresh installs re-run every migration and fail.
+        run_compose exec -T app php artisan schema:dump
         echo "✅ Schema dump generated"
         ;;
     seed)
