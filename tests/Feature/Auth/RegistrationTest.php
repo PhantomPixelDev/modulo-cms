@@ -1,10 +1,13 @@
 <?php
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+use App\Models\SiteSetting;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 test('registration screen can be rendered', function () {
     // Enable registration (disabled by default)
-    \App\Models\SiteSetting::set('registration_enabled', true, 'advanced', 'boolean');
+    SiteSetting::set('registration_enabled', true, 'advanced', 'boolean');
 
     $response = $this->get('/register');
 
@@ -13,7 +16,7 @@ test('registration screen can be rendered', function () {
 
 test('new users can register', function () {
     // Enable registration (disabled by default)
-    \App\Models\SiteSetting::set('registration_enabled', true, 'advanced', 'boolean');
+    SiteSetting::set('registration_enabled', true, 'advanced', 'boolean');
 
     $response = $this->post('/register', [
         'name' => 'Test User',

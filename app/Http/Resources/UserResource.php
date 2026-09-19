@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,7 +15,7 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $settings = app(\App\Services\SiteSettingsService::class);
+        $settings = app(SiteSettingsService::class);
 
         return [
             'id' => $this->id,

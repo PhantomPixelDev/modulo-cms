@@ -3,13 +3,14 @@
 use Illuminate\Support\Facades\Mail;
 use Plugins\ModuloShop\src\Models\Order;
 use Plugins\ModuloShop\src\Services\CartService;
+use Tests\TestCase;
 
 beforeEach(function () {
     bootShopPlugin($this);
     Mail::fake();
 });
 
-function placeGuestOrder(\Tests\TestCase $test): string
+function placeGuestOrder(TestCase $test): string
 {
     $product = createShopProduct();
     app(CartService::class)->addItem($product->id, 1);

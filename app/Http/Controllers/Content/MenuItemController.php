@@ -29,7 +29,7 @@ class MenuItemController extends Controller
 
     public function index(Request $request)
     {
-        $this->authorize('viewAny', \App\Models\MenuItem::class);
+        $this->authorize('viewAny', MenuItem::class);
         $menuId = $request->query('menu_id');
         $query = MenuItem::query()->with(['translations', 'children']);
         if ($menuId) {
@@ -49,7 +49,7 @@ class MenuItemController extends Controller
 
     public function store(MenuItemRequest $request)
     {
-        $this->authorize('create', \App\Models\MenuItem::class);
+        $this->authorize('create', MenuItem::class);
         $data = $request->validated();
         $translations = $data['translations'] ?? [];
         unset($data['translations']);

@@ -90,7 +90,7 @@ class MediaController extends Controller
                 ->paginate($perPage)
                 ->appends($request->query())
                 ->through(function ($m) {
-                    /** @var \Spatie\MediaLibrary\MediaCollections\Models\Media $m */
+                    /** @var Media $m */
                     $fullUrl = method_exists($m, 'getFullUrl') ? $m->getFullUrl() : '';
                     $thumbUrl = $fullUrl;
                     if (method_exists($m, 'hasGeneratedConversion') && $m->hasGeneratedConversion('thumb')) {
@@ -258,7 +258,7 @@ class MediaController extends Controller
             'folder_id' => ['sometimes', 'nullable', 'integer', 'exists:media_buckets,id'],
         ]);
 
-        /** @var \Spatie\MediaLibrary\MediaCollections\Models\Media $media */
+        /** @var Media $media */
         $media = Media::findOrFail($id);
         if (array_key_exists('name', $data)) {
             $media->name = (string) $data['name'];
@@ -289,7 +289,7 @@ class MediaController extends Controller
             return back()->with('error', 'Media library package not installed yet.');
         }
 
-        /** @var \Spatie\MediaLibrary\MediaCollections\Models\Media $media */
+        /** @var Media $media */
         $media = Media::findOrFail($id);
         $media->delete();
 
@@ -305,7 +305,7 @@ class MediaController extends Controller
         }
 
         if ($id) {
-            /** @var \Spatie\MediaLibrary\MediaCollections\Models\Media $media */
+            /** @var Media $media */
             $media = Media::findOrFail($id);
             if (class_exists('Spatie\\MediaLibrary\\MediaCollections\\FileManipulator')) {
                 app('Spatie\\MediaLibrary\\MediaCollections\\FileManipulator')->createDerivedFiles($media);

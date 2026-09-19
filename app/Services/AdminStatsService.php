@@ -9,6 +9,7 @@ use App\Models\TaxonomyTerm;
 use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Models\Role;
 
 class AdminStatsService
@@ -24,7 +25,7 @@ class AdminStatsService
 
             $mediaCount = 0;
             if (class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
-                $mediaCount = \Spatie\MediaLibrary\MediaCollections\Models\Media::count();
+                $mediaCount = Media::count();
             }
 
             return [

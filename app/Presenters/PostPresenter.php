@@ -7,6 +7,8 @@ use App\Models\Locale;
 use App\Models\Post;
 use App\Models\SiteSetting;
 use App\Services\HtmlSanitizer;
+use App\Services\ShortcodeService;
+use App\Services\SiteSettingsService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -19,7 +21,7 @@ class PostPresenter
     public function presentPost(Post $post, bool $full = true): array
     {
         $content = $full ? $this->renderContent($post) : '';
-        $settings = app(\App\Services\SiteSettingsService::class);
+        $settings = app(SiteSettingsService::class);
         $commentsEnabled = $full && $this->commentsEnabled($post);
 
         return [
@@ -105,7 +107,7 @@ class PostPresenter
 
         if (is_string($content)) {
             try {
-                $content = app(\App\Services\ShortcodeService::class)->parse($content);
+                $content = app(ShortcodeService::class)->parse($content);
             } catch (\Throwable $e) {
                 \Log::warning('Failed to parse shortcodes', [
                     'post_id' => $post->id,

@@ -55,7 +55,7 @@ return new class extends Migration
                     // Drop unique index on name if exists
                     try {
                         $table->dropUnique('media_buckets_name_unique');
-                    } catch (\Throwable $e) {
+                    } catch (Throwable $e) {
                         // ignore if not exists
                     }
 
@@ -120,37 +120,37 @@ return new class extends Migration
                 // Drop FKs & indexes if exist
                 try {
                     $table->dropForeign(['parent_id']);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                 }
                 try {
                     $table->dropUnique(['parent_id', 'slug']);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                 }
                 try {
                     $table->dropUnique('media_buckets_path_unique');
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                 }
                 try {
                     $table->dropIndex(['parent_id']);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                 }
 
                 // Drop columns
                 try {
                     $table->dropColumn('parent_id');
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                 }
                 try {
                     $table->dropColumn('slug');
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                 }
                 try {
                     $table->dropColumn('path');
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                 }
                 try {
                     $table->dropSoftDeletes();
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                 }
 
                 // Restore unique on name

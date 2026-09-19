@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
+use App\Models\SiteSetting;
 use App\Models\Template;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,7 +21,7 @@ class TemplateController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Template::class);
-        $perPage = \App\Models\SiteSetting::get('posts_per_page', 15);
+        $perPage = SiteSetting::get('posts_per_page', 15);
         $templates = Template::with('creator')
             ->orderBy('type')
             ->orderBy('name')

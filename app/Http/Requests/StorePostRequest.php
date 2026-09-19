@@ -5,7 +5,9 @@ namespace App\Http\Requests;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class StorePostRequest extends FormRequest
@@ -21,7 +23,7 @@ class StorePostRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -82,7 +84,7 @@ class StorePostRequest extends FormRequest
         // Generate slug from title if not provided
         if (! $this->filled('slug') && $this->filled('title')) {
             $this->merge([
-                'slug' => \Illuminate\Support\Str::slug($this->title),
+                'slug' => Str::slug($this->title),
             ]);
         }
     }

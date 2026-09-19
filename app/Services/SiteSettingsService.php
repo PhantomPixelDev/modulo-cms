@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Post;
 use App\Models\SiteSetting;
+use Carbon\Carbon;
 
 class SiteSettingsService
 {
@@ -145,7 +147,7 @@ class SiteSettingsService
         if (! $date) {
             return '';
         }
-        $date = \Carbon\Carbon::parse($date);
+        $date = Carbon::parse($date);
 
         return $date->format($this->get('date_format', 'F j, Y'));
     }
@@ -158,7 +160,7 @@ class SiteSettingsService
         if (! $date) {
             return '';
         }
-        $date = \Carbon\Carbon::parse($date);
+        $date = Carbon::parse($date);
 
         return $date->format($this->get('time_format', 'g:i a'));
     }
@@ -171,7 +173,7 @@ class SiteSettingsService
         if (! $date) {
             return '';
         }
-        $date = \Carbon\Carbon::parse($date);
+        $date = Carbon::parse($date);
         $format = $this->get('date_format', 'F j, Y').' '.$this->get('time_format', 'g:i a');
 
         return $date->format($format);
@@ -180,7 +182,7 @@ class SiteSettingsService
     /**
      * Format a post URL using the configured permalink structure
      */
-    public function formatPostUrl(\App\Models\Post $post): string
+    public function formatPostUrl(Post $post): string
     {
         $structure = $this->get('permalink_structure', '/%postname%/');
         $slug = (string) $post->slug;

@@ -4,6 +4,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
@@ -12,11 +13,11 @@ function sitemapUser($perms = ['view sitemap'])
     $user = User::factory()->create();
     // Create permissions if they don't exist
     foreach ($perms as $perm) {
-        \Spatie\Permission\Models\Permission::findOrCreate($perm, 'web');
+        Permission::findOrCreate($perm, 'web');
     }
     $user->givePermissionTo($perms);
     // Also give access admin permission which is required for admin routes
-    \Spatie\Permission\Models\Permission::findOrCreate('access admin', 'web');
+    Permission::findOrCreate('access admin', 'web');
     $user->givePermissionTo('access admin');
 
     return $user;

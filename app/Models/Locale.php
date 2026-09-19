@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -36,10 +37,10 @@ class Locale extends Model
     /**
      * Get all active locales (cached)
      */
-    public static function getActive(): \Illuminate\Database\Eloquent\Collection
+    public static function getActive(): Collection
     {
         if (! self::localesTableAvailable()) {
-            return new \Illuminate\Database\Eloquent\Collection;
+            return new Collection;
         }
 
         return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {

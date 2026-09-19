@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Template;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DefaultTemplatesSeeder extends Seeder
 {
@@ -84,7 +85,7 @@ class DefaultTemplatesSeeder extends Seeder
 
         foreach ($templates as $template) {
             Template::updateOrCreate(
-                ['slug' => \Illuminate\Support\Str::slug($template['name'])],
+                ['slug' => Str::slug($template['name'])],
                 $template
             );
         }

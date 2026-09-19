@@ -1,13 +1,14 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 it('denies roles index without permission', function () {
     // Ensure permission exists but is not granted
-    Spatie\Permission\Models\Permission::findOrCreate('view roles', 'web');
+    Permission::findOrCreate('view roles', 'web');
     $user = makeAdminUserWithPermissions([]);
     $this->actingAs($user)
         ->get(route('dashboard.admin.roles.index'))

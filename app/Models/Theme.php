@@ -136,7 +136,7 @@ class Theme extends Model
 
         // Fallback: conventional location inside templates directory
         $conventional = $this->full_path.'/templates/'.$template.'.blade.php';
-        if (\Illuminate\Support\Facades\File::exists($conventional)) {
+        if (File::exists($conventional)) {
             return $conventional;
         }
 
@@ -157,7 +157,7 @@ class Theme extends Model
 
         // Fallback: conventional location inside partials directory
         $conventional = $this->full_path.'/partials/'.$partial.'.blade.php';
-        if (\Illuminate\Support\Facades\File::exists($conventional)) {
+        if (File::exists($conventional)) {
             return $conventional;
         }
 

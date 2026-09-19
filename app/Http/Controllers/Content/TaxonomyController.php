@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Content;
 use App\Http\Controllers\Controller;
 use App\Models\Locale;
 use App\Models\PostType;
+use App\Models\SiteSetting;
 use App\Models\Taxonomy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -39,7 +40,7 @@ class TaxonomyController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Taxonomy::class);
-        $perPage = \App\Models\SiteSetting::get('posts_per_page', 15);
+        $perPage = SiteSetting::get('posts_per_page', 15);
         $taxonomies = Taxonomy::orderBy('menu_position')->paginate($perPage);
 
         return Inertia::render('Dashboard', [

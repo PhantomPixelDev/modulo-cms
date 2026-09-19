@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -10,10 +12,10 @@ Route::middleware('auth')->group(function () {
     Route::redirect('settings', '/settings/profile');
 
     // CSRF is disabled for these routes only during tests to avoid 419 errors in feature tests
-    $csrfMiddleware = class_exists(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class)
-        ? \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class
-        : (class_exists(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
-            ? \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class
+    $csrfMiddleware = class_exists(ValidateCsrfToken::class)
+        ? ValidateCsrfToken::class
+        : (class_exists(VerifyCsrfToken::class)
+            ? VerifyCsrfToken::class
             : null);
 
     $profileEdit = Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');

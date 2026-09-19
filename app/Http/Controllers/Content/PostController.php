@@ -8,10 +8,12 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Models\Locale;
 use App\Models\Post;
 use App\Models\PostType;
+use App\Models\SiteSetting;
 use App\Models\TaxonomyTerm;
 use App\Models\User;
 use App\Presenters\PostPresenter;
 use App\Services\SiteSettingsService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -161,8 +163,8 @@ class PostController extends Controller
         // Group taxonomy terms by taxonomy
         $groupedTerms = $taxonomyTerms->groupBy('taxonomy.name');
 
-        $defaultStatus = \App\Models\SiteSetting::get('default_post_status', 'draft');
-        $defaultTypeName = \App\Models\SiteSetting::get('default_post_type', 'post');
+        $defaultStatus = SiteSetting::get('default_post_status', 'draft');
+        $defaultTypeName = SiteSetting::get('default_post_type', 'post');
         $defaultType = $postTypes->where('name', $defaultTypeName)->first() ?: $postTypes->first();
 
         // Return empty post data for the create form
@@ -218,7 +220,7 @@ class PostController extends Controller
         $publishedAt = null;
         if ($request->filled('published_at')) {
             try {
-                $publishedAt = \Carbon\Carbon::parse($request->published_at);
+                $publishedAt = Carbon::parse($request->published_at);
             } catch (\Exception $e) {
                 $publishedAt = null;
             }
@@ -391,7 +393,7 @@ class PostController extends Controller
         $publishedAt = $post->published_at;
         if ($request->filled('published_at')) {
             try {
-                $publishedAt = \Carbon\Carbon::parse($request->published_at);
+                $publishedAt = Carbon::parse($request->published_at);
             } catch (\Exception $e) {
                 // ignore parse error, keep previous
             }

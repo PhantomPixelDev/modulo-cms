@@ -2,8 +2,10 @@
 
 namespace Plugins\ModuloShop;
 
+use App\Models\PostType;
 use App\Plugins\BasePluginServiceProvider;
 use App\Services\ShortcodeService;
+use Plugins\ModuloShop\database\seeders\ShopSeeder;
 use Plugins\ModuloShop\src\Services\CartService;
 use Plugins\ModuloShop\src\Services\ModuloShopSettings;
 use Plugins\ModuloShop\src\Services\ShopShortcodeService;
@@ -57,9 +59,9 @@ class ModuloShopServiceProvider extends BasePluginServiceProvider
     protected function ensureProductPostType(): void
     {
         // Run seeder if product post type doesn't exist
-        if (! \App\Models\PostType::where('name', 'product')->exists()) {
+        if (! PostType::where('name', 'product')->exists()) {
             try {
-                $seeder = new \Plugins\ModuloShop\database\seeders\ShopSeeder;
+                $seeder = new ShopSeeder;
                 $seeder->setContainer($this->app);
                 $seeder->run();
             } catch (\Exception $e) {

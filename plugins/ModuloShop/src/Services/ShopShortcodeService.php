@@ -4,6 +4,8 @@ namespace Plugins\ModuloShop\src\Services;
 
 use App\Models\Post;
 use App\Models\PostType;
+use App\Models\Taxonomy;
+use App\Models\TaxonomyTerm;
 use App\Services\ShortcodeService;
 use Plugins\ModuloShop\src\Support\MetaSql;
 
@@ -188,12 +190,12 @@ class ShopShortcodeService
         $hideEmpty = ($attrs['hide_empty'] ?? 'yes') === 'yes';
 
         // Get product category taxonomy
-        $taxonomy = \App\Models\Taxonomy::where('slug', 'product-category')->first();
+        $taxonomy = Taxonomy::where('slug', 'product-category')->first();
         if (! $taxonomy) {
             return '<!-- Product category taxonomy not found -->';
         }
 
-        $query = \App\Models\TaxonomyTerm::where('taxonomy_id', $taxonomy->id);
+        $query = TaxonomyTerm::where('taxonomy_id', $taxonomy->id);
 
         if ($hideEmpty) {
             $query->has('posts');

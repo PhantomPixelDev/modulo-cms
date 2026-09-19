@@ -25,7 +25,7 @@ class ThemeController extends Controller
      */
     public function index()
     {
-        $this->authorize('viewAny', \App\Models\Theme::class);
+        $this->authorize('viewAny', Theme::class);
         $installedThemes = $this->themeManager->getInstalledThemes();
         $discoveredThemes = $this->themeManager->discoverThemes();
         $activeTheme = $this->themeManager->getActiveTheme();
@@ -43,7 +43,7 @@ class ThemeController extends Controller
      */
     public function install(InstallThemeRequest $request)
     {
-        $this->authorize('install', \App\Models\Theme::class);
+        $this->authorize('install', Theme::class);
 
         $discoveredThemes = $this->themeManager->discoverThemes();
         $themeToInstall = $discoveredThemes->firstWhere('config.slug', $request->validated('slug'));
@@ -68,12 +68,12 @@ class ThemeController extends Controller
     public function activate(string $slug)
     {
         // Find the theme to authorize activation; fallback to manager if not installed yet
-        $themeModel = \App\Models\Theme::where('slug', $slug)->first();
+        $themeModel = Theme::where('slug', $slug)->first();
         if ($themeModel) {
             $this->authorize('activate', $themeModel);
         } else {
             // If not installed, require install/activate permissions via install gate
-            $this->authorize('install', \App\Models\Theme::class);
+            $this->authorize('install', Theme::class);
         }
         try {
             $success = $this->themeManager->activateTheme($slug);
@@ -152,7 +152,7 @@ class ThemeController extends Controller
      */
     public function discover()
     {
-        $this->authorize('install', \App\Models\Theme::class);
+        $this->authorize('install', Theme::class);
         try {
             $installedThemes = $this->themeManager->installAllThemes(Auth::id());
             $this->themeManager->publishAllAssets();

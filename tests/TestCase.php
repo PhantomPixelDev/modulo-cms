@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Spatie\Permission\PermissionRegistrar;
@@ -23,8 +24,8 @@ abstract class TestCase extends BaseTestCase
         }
 
         // Disable only the CSRF middleware for tests (support Laravel 10/11)
-        if (class_exists(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class)) {
-            $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
+        if (class_exists(ValidateCsrfToken::class)) {
+            $this->withoutMiddleware(ValidateCsrfToken::class);
         }
         if (class_exists(VerifyCsrfToken::class)) {
             $this->withoutMiddleware(VerifyCsrfToken::class);

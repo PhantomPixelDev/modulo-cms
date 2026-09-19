@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Locale;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SiteSetting;
@@ -25,8 +26,8 @@ class SiteSettingsController extends Controller
         $this->authorize('viewAny', SiteSetting::class);
 
         $group = $request->query('group', 'general');
-        $currentLocale = $request->query('locale', \App\Models\Locale::getDefault()?->code ?? config('app.fallback_locale', 'en'));
-        $locales = \App\Models\Locale::getActive();
+        $currentLocale = $request->query('locale', Locale::getDefault()?->code ?? config('app.fallback_locale', 'en'));
+        $locales = Locale::getActive();
         $validGroups = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced'];
 
         if (! in_array($group, $validGroups)) {

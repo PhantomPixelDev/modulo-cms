@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class PagesController extends AdminBaseController
@@ -133,7 +134,7 @@ class PagesController extends AdminBaseController
 
         // Generate slug if not provided
         if (empty($data['slug'])) {
-            $data['slug'] = \Illuminate\Support\Str::slug($data['title']);
+            $data['slug'] = Str::slug($data['title']);
         }
 
         // Create the page/post
@@ -200,7 +201,7 @@ class PagesController extends AdminBaseController
 
         // Generate slug if not provided
         if (empty($data['slug'])) {
-            $data['slug'] = \Illuminate\Support\Str::slug($data['title']);
+            $data['slug'] = Str::slug($data['title']);
         }
 
         // Log the data before update for debugging

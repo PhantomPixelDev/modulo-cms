@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Http\Resources\ThemeResource;
+use App\Models\SiteSetting;
 use App\Models\Theme;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ReactTemplateRenderer
 {
@@ -21,7 +23,7 @@ class ReactTemplateRenderer
     /**
      * Render a React template using Inertia.js
      */
-    public function render(string $templateName, array $data = []): \Inertia\Response
+    public function render(string $templateName, array $data = []): Response
     {
         $theme = $this->themeManager->getActiveTheme();
 
@@ -137,8 +139,8 @@ class ReactTemplateRenderer
     protected function getSiteData(): array
     {
         return [
-            'name' => \App\Models\SiteSetting::get('site_name', config('app.name', 'Modulo CMS')),
-            'tagline' => \App\Models\SiteSetting::get('site_tagline', 'Modern Content Management System'),
+            'name' => SiteSetting::get('site_name', config('app.name', 'Modulo CMS')),
+            'tagline' => SiteSetting::get('site_tagline', 'Modern Content Management System'),
             'logo' => null, // TODO: Add site logo support
         ];
     }

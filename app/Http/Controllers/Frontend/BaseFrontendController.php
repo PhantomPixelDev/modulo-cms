@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Post;
 use App\Models\SiteSetting;
 use App\Presenters\PostPresenter;
 use App\Services\FrontendTemplateResolver;
@@ -50,7 +51,7 @@ abstract class BaseFrontendController extends Controller
 
         try {
             // Query-builder increment: doesn't touch updated_at or fire model events
-            \App\Models\Post::whereKey($content->id)->toBase()->increment('view_count');
+            Post::whereKey($content->id)->toBase()->increment('view_count');
         } catch (\Throwable $e) {
         }
 
@@ -60,7 +61,7 @@ abstract class BaseFrontendController extends Controller
 
         $templateName = $template;
         try {
-            if ($templateName === 'post' && $content instanceof \App\Models\Post) {
+            if ($templateName === 'post' && $content instanceof Post) {
                 $prefix = $content->postType?->route_prefix;
                 $prefix = ($prefix === null || $prefix === '' || $prefix === '/') ? null : ltrim((string) $prefix, '/');
                 if ($prefix) {

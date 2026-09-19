@@ -4,7 +4,9 @@ use App\Models\Comment;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SiteSetting;
+use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Permission;
 
 function moderationComment(array $attributes = []): Comment
 {
@@ -20,7 +22,7 @@ function moderationComment(array $attributes = []): Comment
     ], $attributes));
 }
 
-function moderator(): App\Models\User
+function moderator(): User
 {
     $user = makeAdminUserWithPermissions(['moderate comments']);
     $user->forceFill(['email_verified_at' => now()])->save();
@@ -29,7 +31,7 @@ function moderator(): App\Models\User
 }
 
 it('requires the moderate comments permission', function () {
-    Spatie\Permission\Models\Permission::findOrCreate('moderate comments', 'web');
+    Permission::findOrCreate('moderate comments', 'web');
     $user = makeAdminUserWithPermissions([]);
 
     $this->actingAs($user)->get(route('dashboard.admin.comments.index'))->assertForbidden();

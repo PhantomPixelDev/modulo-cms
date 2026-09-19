@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class SiteSettingsServiceProvider extends ServiceProvider
@@ -39,7 +40,7 @@ class SiteSettingsServiceProvider extends ServiceProvider
                 $siteUrl = SiteSetting::get('site_url');
                 if ($siteUrl) {
                     Config::set('app.url', $siteUrl);
-                    \Illuminate\Support\Facades\URL::forceRootUrl($siteUrl);
+                    URL::forceRootUrl($siteUrl);
                 }
 
                 // Override admin email

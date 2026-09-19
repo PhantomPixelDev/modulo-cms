@@ -8,6 +8,7 @@ use App\Models\SiteSetting;
 use App\Providers\DynamicRouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class PostTypeController extends Controller
@@ -210,7 +211,7 @@ class PostTypeController extends Controller
         $this->authorize('delete', $postType);
         // Prevent deleting default post types
         if (in_array($postType->name, ['post', 'page'])) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'postType' => 'Cannot delete default post types.',
             ]);
         }

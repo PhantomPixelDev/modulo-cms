@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\PostType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PostType>
+ * @extends Factory<PostType>
  */
 class PostTypeFactory extends Factory
 {

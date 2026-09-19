@@ -1,15 +1,21 @@
 <?php
 
 use App\Http\Controllers\Api\MenuApiController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Frontend\CommentController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\PostController;
 use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\Frontend\TaxonomyController;
+use App\Http\Controllers\HealthController;
+use App\Http\Controllers\RobotsController;
+use App\Http\Controllers\SitemapController;
+use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Route;
 
 // Health check endpoint for container orchestration (no closure to support route:cache)
-Route::get('/health', \App\Http\Controllers\HealthController::class);
+Route::get('/health', HealthController::class);
 
 Route::get('/', HomeController::class)->name('home');
 
@@ -19,14 +25,14 @@ Route::middleware('throttle:60,1')->group(function () {
 });
 
 // SEO: sitemap, robots.txt and RSS feed
-Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
-Route::get('/feed', [\App\Http\Controllers\FeedController::class, 'index'])->name('feed');
-Route::get('/robots.txt', \App\Http\Controllers\RobotsController::class)->name('robots.txt');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/feed', [FeedController::class, 'index'])->name('feed');
+Route::get('/robots.txt', RobotsController::class)->name('robots.txt');
 
 // Public routes with rate limiting (30 requests per minute per IP)
 Route::middleware('throttle:30,1')->group(function () {
-    $categoryBase = \App\Models\SiteSetting::get('category_base', 'category');
-    $tagBase = \App\Models\SiteSetting::get('tag_base', 'tag');
+    $categoryBase = SiteSetting::get('category_base', 'category');
+    $tagBase = SiteSetting::get('tag_base', 'tag');
 
     // Taxonomy archives
     Route::get("/{$tagBase}/{slug}", [TaxonomyController::class, 'show'])
@@ -64,7 +70,7 @@ Route::prefix('api/menus')->middleware('throttle:api')->group(function () {
 
 // Auth/Dashboard/Admin routes must be registered before frontend catch-all routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
 require __DIR__.'/settings.php';

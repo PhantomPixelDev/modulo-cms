@@ -13,6 +13,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
@@ -45,7 +46,7 @@ class RegisteredUserController extends Controller
     /**
      * Handle an incoming registration request.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function store(RegisteredUserRequest $request): SymfonyResponse
     {
@@ -64,7 +65,7 @@ class RegisteredUserController extends Controller
         // Force a full reload so we switch from themed auth root to standard app root
         $intended = $request->session()->pull('url.intended', route('dashboard', absolute: false));
 
-        return \Inertia\Inertia::location($intended);
+        return Inertia::location($intended);
     }
 
     protected function sendRegistrationEmails(User $user): void

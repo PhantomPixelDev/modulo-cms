@@ -1,6 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Plugins\ModuloShop\src\Http\Controllers\Admin\OrderController;
+use Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController;
+use Plugins\ModuloShop\src\Http\Controllers\Admin\ShopSettingsController;
+use Plugins\ModuloShop\src\Http\Controllers\CartController;
+use Plugins\ModuloShop\src\Http\Controllers\CheckoutController;
+use Plugins\ModuloShop\src\Http\Controllers\ShopController;
 
 /*
 |--------------------------------------------------------------------------
@@ -10,47 +16,47 @@ use Illuminate\Support\Facades\Route;
 
 // Public shop routes
 Route::prefix('shop')->group(function () {
-    Route::get('/', [\Plugins\ModuloShop\src\Http\Controllers\ShopController::class, 'index'])
+    Route::get('/', [ShopController::class, 'index'])
         ->name('shop.index');
 
     // Cart routes
-    Route::get('/cart', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'index'])
+    Route::get('/cart', [CartController::class, 'index'])
         ->name('shop.cart');
-    Route::post('/cart/add', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'add'])
+    Route::post('/cart/add', [CartController::class, 'add'])
         ->middleware('throttle:60,1')
         ->name('shop.cart.add');
-    Route::post('/cart/update', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'update'])
+    Route::post('/cart/update', [CartController::class, 'update'])
         ->middleware('throttle:60,1')
         ->name('shop.cart.update');
-    Route::post('/cart/remove', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'remove'])
+    Route::post('/cart/remove', [CartController::class, 'remove'])
         ->middleware('throttle:60,1')
         ->name('shop.cart.remove');
-    Route::post('/cart/clear', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'clear'])
+    Route::post('/cart/clear', [CartController::class, 'clear'])
         ->middleware('throttle:60,1')
         ->name('shop.cart.clear');
-    Route::get('/cart/count', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'count'])
+    Route::get('/cart/count', [CartController::class, 'count'])
         ->name('shop.cart.count');
-    Route::get('/cart/mini', [\Plugins\ModuloShop\src\Http\Controllers\CartController::class, 'mini'])
+    Route::get('/cart/mini', [CartController::class, 'mini'])
         ->name('shop.cart.mini');
 
     // Checkout routes
-    Route::get('/checkout', [\Plugins\ModuloShop\src\Http\Controllers\CheckoutController::class, 'index'])
+    Route::get('/checkout', [CheckoutController::class, 'index'])
         ->name('shop.checkout');
-    Route::post('/checkout', [\Plugins\ModuloShop\src\Http\Controllers\CheckoutController::class, 'store'])
+    Route::post('/checkout', [CheckoutController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('shop.checkout.store');
-    Route::get('/order/{orderNumber}', [\Plugins\ModuloShop\src\Http\Controllers\CheckoutController::class, 'confirmation'])
+    Route::get('/order/{orderNumber}', [CheckoutController::class, 'confirmation'])
         ->middleware('throttle:30,1')
         ->name('shop.order.confirmation');
 
     // Product single page (must be last due to catch-all slug)
-    Route::get('/{slug}', [\Plugins\ModuloShop\src\Http\Controllers\ShopController::class, 'show'])
+    Route::get('/{slug}', [ShopController::class, 'show'])
         ->where('slug', '[a-zA-Z0-9\-_]+')
         ->name('shop.show');
 });
 
 // Product category archive
-Route::get('/product-category/{slug}', [\Plugins\ModuloShop\src\Http\Controllers\ShopController::class, 'category'])
+Route::get('/product-category/{slug}', [ShopController::class, 'category'])
     ->where('slug', '[a-zA-Z0-9\-_]+')
     ->name('shop.category');
 
@@ -60,44 +66,44 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
     ->name('dashboard.admin.shop.')
     ->group(function () {
         // Products management (uses Post model)
-        Route::get('/products', [\Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController::class, 'index'])
+        Route::get('/products', [ProductController::class, 'index'])
             ->middleware('permission:view shop products')
             ->name('products.index');
-        Route::get('/products/create', [\Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController::class, 'create'])
+        Route::get('/products/create', [ProductController::class, 'create'])
             ->middleware('permission:create shop products')
             ->name('products.create');
-        Route::post('/products', [\Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController::class, 'store'])
+        Route::post('/products', [ProductController::class, 'store'])
             ->middleware('permission:create shop products')
             ->name('products.store');
-        Route::get('/products/{post}/edit', [\Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController::class, 'edit'])
+        Route::get('/products/{post}/edit', [ProductController::class, 'edit'])
             ->middleware('permission:edit shop products')
             ->name('products.edit');
-        Route::put('/products/{post}', [\Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController::class, 'update'])
+        Route::put('/products/{post}', [ProductController::class, 'update'])
             ->middleware('permission:edit shop products')
             ->name('products.update');
-        Route::delete('/products/{post}', [\Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController::class, 'destroy'])
+        Route::delete('/products/{post}', [ProductController::class, 'destroy'])
             ->middleware('permission:delete shop products')
             ->name('products.destroy');
 
         // Orders management
-        Route::get('/orders', [\Plugins\ModuloShop\src\Http\Controllers\Admin\OrderController::class, 'index'])
+        Route::get('/orders', [OrderController::class, 'index'])
             ->middleware('permission:view shop orders')
             ->name('orders.index');
-        Route::get('/orders/{order}', [\Plugins\ModuloShop\src\Http\Controllers\Admin\OrderController::class, 'show'])
+        Route::get('/orders/{order}', [OrderController::class, 'show'])
             ->middleware('permission:view shop orders')
             ->name('orders.show');
-        Route::put('/orders/{order}', [\Plugins\ModuloShop\src\Http\Controllers\Admin\OrderController::class, 'update'])
+        Route::put('/orders/{order}', [OrderController::class, 'update'])
             ->middleware('permission:manage shop orders')
             ->name('orders.update');
-        Route::delete('/orders/{order}', [\Plugins\ModuloShop\src\Http\Controllers\Admin\OrderController::class, 'destroy'])
+        Route::delete('/orders/{order}', [OrderController::class, 'destroy'])
             ->middleware('permission:manage shop orders')
             ->name('orders.destroy');
 
         // Shop settings
-        Route::get('/settings', [\Plugins\ModuloShop\src\Http\Controllers\Admin\ShopSettingsController::class, 'index'])
+        Route::get('/settings', [ShopSettingsController::class, 'index'])
             ->middleware('permission:manage shop settings')
             ->name('settings.index');
-        Route::put('/settings', [\Plugins\ModuloShop\src\Http\Controllers\Admin\ShopSettingsController::class, 'update'])
+        Route::put('/settings', [ShopSettingsController::class, 'update'])
             ->middleware('permission:manage shop settings')
             ->name('settings.update');
     });

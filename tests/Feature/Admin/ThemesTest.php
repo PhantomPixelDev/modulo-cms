@@ -1,12 +1,13 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
 it('denies themes index without permission', function () {
     // Ensure permission exists but is not granted
-    Spatie\Permission\Models\Permission::findOrCreate('view themes', 'web');
+    Permission::findOrCreate('view themes', 'web');
     $user = makeAdminUserWithPermissions([]);
     $this->actingAs($user)
         ->get(route('dashboard.admin.themes.index'))
@@ -22,7 +23,7 @@ it('allows themes index with permission', function () {
 
 it('denies theme discover without permission', function () {
     // Ensure permission exists but is not granted
-    Spatie\Permission\Models\Permission::findOrCreate('install themes', 'web');
+    Permission::findOrCreate('install themes', 'web');
     $user = makeAdminUserWithPermissions([]);
     $this->actingAs($user)
         ->post(route('dashboard.admin.themes.discover'))

@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class UpdatePostRequest extends FormRequest
@@ -74,7 +75,7 @@ class UpdatePostRequest extends FormRequest
     {
         if (! $this->has('slug') && $this->has('title')) {
             $this->merge([
-                'slug' => \Illuminate\Support\Str::slug($this->title),
+                'slug' => Str::slug($this->title),
             ]);
         }
     }

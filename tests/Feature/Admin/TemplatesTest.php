@@ -2,12 +2,13 @@
 
 use App\Models\Template;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
 it('denies templates index without permission', function () {
     // Ensure permission exists but is not granted
-    Spatie\Permission\Models\Permission::findOrCreate('view templates', 'web');
+    Permission::findOrCreate('view templates', 'web');
     $user = makeAdminUserWithPermissions([]);
     $this->actingAs($user)
         ->get(route('dashboard.admin.templates.index'))

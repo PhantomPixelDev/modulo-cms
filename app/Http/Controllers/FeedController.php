@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Services\SiteSettingsService;
 use Illuminate\Http\Response;
 
 class FeedController extends Controller
@@ -12,7 +13,7 @@ class FeedController extends Controller
      */
     public function index(): Response
     {
-        $settings = app(\App\Services\SiteSettingsService::class);
+        $settings = app(SiteSettingsService::class);
         $limit = $settings->get('feed_limit', 10);
         $siteName = $settings->get('site_name', config('app.name', 'Modulo CMS'));
         $siteTagline = $settings->get('site_tagline', '');

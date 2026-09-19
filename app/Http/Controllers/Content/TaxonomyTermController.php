@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Content;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TaxonomyTermRequest;
 use App\Models\Locale;
+use App\Models\SiteSetting;
 use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
 use App\Models\TaxonomyTermTranslation;
@@ -22,7 +23,7 @@ class TaxonomyTermController extends Controller
         $slug = Str::slug($base);
         $original = $slug;
         $i = 2;
-        while (\App\Models\TaxonomyTerm::where('taxonomy_id', $taxonomyId)
+        while (TaxonomyTerm::where('taxonomy_id', $taxonomyId)
             ->where('slug', $slug)
             ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->exists()) {
@@ -38,14 +39,14 @@ class TaxonomyTermController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorize('viewAny', \App\Models\TaxonomyTerm::class);
+        $this->authorize('viewAny', TaxonomyTerm::class);
         $query = TaxonomyTerm::with('taxonomy')->orderBy('term_order');
 
         if ($request->has('taxonomy_id')) {
             $query->where('taxonomy_id', $request->taxonomy_id);
         }
 
-        $perPage = \App\Models\SiteSetting::get('posts_per_page', 15);
+        $perPage = SiteSetting::get('posts_per_page', 15);
         $terms = $query->paginate($perPage);
 
         return Inertia::render('Dashboard', [
@@ -63,12 +64,12 @@ class TaxonomyTermController extends Controller
         // Find the taxonomy by slug
         $taxonomy = Taxonomy::where('slug', $taxonomySlug)->firstOrFail();
 
-        $this->authorize('viewAny', \App\Models\TaxonomyTerm::class);
+        $this->authorize('viewAny', TaxonomyTerm::class);
         $query = TaxonomyTerm::with('taxonomy')
             ->where('taxonomy_id', $taxonomy->id)
             ->orderBy('term_order');
 
-        $perPage = \App\Models\SiteSetting::get('posts_per_page', 15);
+        $perPage = SiteSetting::get('posts_per_page', 15);
         $terms = $query->paginate($perPage);
 
         return Inertia::render('Dashboard', [
@@ -84,7 +85,7 @@ class TaxonomyTermController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', \App\Models\TaxonomyTerm::class);
+        $this->authorize('create', TaxonomyTerm::class);
         $taxonomies = Taxonomy::all();
         $parentTerms = TaxonomyTerm::whereNull('parent_id')->get();
 
@@ -101,7 +102,7 @@ class TaxonomyTermController extends Controller
      */
     public function store(TaxonomyTermRequest $request)
     {
-        $this->authorize('create', \App\Models\TaxonomyTerm::class);
+        $this->authorize('create', TaxonomyTerm::class);
         $data = $request->validated();
         $translationsPayload = $data['translations'] ?? [];
         unset($data['translations']);

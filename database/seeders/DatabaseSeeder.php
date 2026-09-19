@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Seed dev user accounts if the seeder exists (guard against missing class)
-        if (class_exists(\Database\Seeders\DEVUserAccountsSeeder::class)) {
+        if (class_exists(DEVUserAccountsSeeder::class)) {
             $this->call([DEVUserAccountsSeeder::class]);
         }
     }

@@ -1,8 +1,14 @@
 <?php
 
+use App\Models\Post;
+use App\Models\PostType;
 use App\Models\User;
+use App\Services\ThemeManager;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Plugins\ModuloShop\ModuloShopServiceProvider;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
+use Tests\TestCase;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,8 +21,8 @@ use Spatie\Permission\PermissionRegistrar;
 |
 */
 
-uses(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+uses(TestCase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 beforeEach(function () {
@@ -40,9 +46,9 @@ function makeAdminUserWithPermissions(array $perms = []): User
 /**
  * Register the ModuloShop plugin and run its migrations for the current test.
  */
-function bootShopPlugin(\Tests\TestCase $test): void
+function bootShopPlugin(TestCase $test): void
 {
-    app()->register(\Plugins\ModuloShop\ModuloShopServiceProvider::class);
+    app()->register(ModuloShopServiceProvider::class);
     // Routes added after boot need their names indexed for route()
     app('router')->getRoutes()->refreshNameLookups();
 
@@ -52,16 +58,16 @@ function bootShopPlugin(\Tests\TestCase $test): void
     ]);
 }
 
-function createShopProduct(array $meta = []): \App\Models\Post
+function createShopProduct(array $meta = []): Post
 {
-    $postType = \App\Models\PostType::where('name', 'product')->first()
-        ?? \App\Models\PostType::factory()->create([
+    $postType = PostType::where('name', 'product')->first()
+        ?? PostType::factory()->create([
             'name' => 'product',
             'slug' => 'product',
             'route_prefix' => 'shop',
         ]);
 
-    return \App\Models\Post::factory()->published()->create([
+    return Post::factory()->published()->create([
         'post_type_id' => $postType->id,
         'meta_data' => array_merge([
             'price' => 29.99,
@@ -76,7 +82,7 @@ function createShopProduct(array $meta = []): \App\Models\Post
  */
 function activateReactTheme(string $slug = 'modern-react'): void
 {
-    $manager = app(\App\Services\ThemeManager::class);
+    $manager = app(ThemeManager::class);
     $theme = $manager->discoverThemes()->firstWhere('config.slug', $slug);
     $manager->installTheme($theme);
     $manager->activateTheme($slug);
@@ -85,10 +91,10 @@ function activateReactTheme(string $slug = 'modern-react'): void
 /**
  * Create a published page (post type "page", served at /{slug}).
  */
-function makePublishedPage(array $attributes = []): \App\Models\Post
+function makePublishedPage(array $attributes = []): Post
 {
-    $pageType = \App\Models\PostType::where('name', 'page')->first()
-        ?? \App\Models\PostType::factory()->create([
+    $pageType = PostType::where('name', 'page')->first()
+        ?? PostType::factory()->create([
             'name' => 'page',
             'slug' => 'page',
             'label' => 'Page',
@@ -96,7 +102,7 @@ function makePublishedPage(array $attributes = []): \App\Models\Post
             'has_comments' => false,
         ]);
 
-    return \App\Models\Post::factory()->published()->create(array_merge([
+    return Post::factory()->published()->create(array_merge([
         'post_type_id' => $pageType->id,
     ], $attributes));
 }

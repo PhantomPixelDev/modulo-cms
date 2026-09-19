@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\PluginFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Plugin extends Model
 {
-    /** @use HasFactory<\Database\Factories\PluginFactory> */
+    /** @use HasFactory<PluginFactory> */
     use HasFactory;
 
     protected $fillable = [
