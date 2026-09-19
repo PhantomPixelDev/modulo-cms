@@ -3,6 +3,7 @@
 namespace Plugins\ModuloShop\src\Services;
 
 use App\Models\Post;
+use Plugins\ModuloShop\src\Support\MetaSql;
 use App\Models\PostType;
 use App\Services\ShortcodeService;
 
@@ -87,7 +88,7 @@ class ShopShortcodeService
         // Ordering
         switch ($orderby) {
             case 'price':
-                $query->orderByRaw("CAST(JSON_EXTRACT(meta_data, '$.price') AS DECIMAL(10,2)) {$order}");
+                $query->orderByRaw(MetaSql::number('price').' '.$order);
                 break;
             case 'title':
                 $query->orderBy('title', $order);
@@ -231,7 +232,7 @@ class ShopShortcodeService
 
         $products = Post::where('post_type_id', $productType->id)
             ->published()
-            ->whereRaw("JSON_EXTRACT(meta_data, '$.featured') = true")
+            ->where('meta_data->featured', true)
             ->orderBy('published_at', 'desc')
             ->limit($limit)
             ->get();
@@ -254,8 +255,7 @@ class ShopShortcodeService
 
         $products = Post::where('post_type_id', $productType->id)
             ->published()
-            ->whereRaw("JSON_EXTRACT(meta_data, '$.sale_price') IS NOT NULL")
-            ->whereRaw("JSON_EXTRACT(meta_data, '$.sale_price') > 0")
+            ->whereRaw(MetaSql::number('sale_price').' > 0')
             ->orderBy('published_at', 'desc')
             ->limit($limit)
             ->get();

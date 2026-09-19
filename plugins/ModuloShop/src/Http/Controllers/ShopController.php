@@ -10,6 +10,7 @@ use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
+use Plugins\ModuloShop\src\Support\MetaSql;
 
 class ShopController
 {
@@ -60,29 +61,30 @@ class ShopController
         }
 
         // Search
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('content', 'like', "%{$search}%")
-                    ->orWhere('excerpt', 'like', "%{$search}%");
+        if ($search = trim((string) $request->get('search'))) {
+            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_substr($search, 0, 100)).'%';
+            $query->where(function ($q) use ($pattern) {
+                foreach (['title', 'content', 'excerpt'] as $column) {
+                    $q->orWhereRaw("LOWER({$column}) LIKE LOWER(?) ESCAPE '!'", [$pattern]);
+                }
             });
         }
 
         // Price filter
-        if ($minPrice = $request->get('min_price')) {
-            $query->whereRaw("CAST(JSON_EXTRACT(meta_data, '$.price') AS DECIMAL(10,2)) >= ?", [$minPrice]);
+        if (is_numeric($minPrice = $request->get('min_price'))) {
+            $query->whereRaw(MetaSql::number('price').' >= ?', [(float) $minPrice]);
         }
-        if ($maxPrice = $request->get('max_price')) {
-            $query->whereRaw("CAST(JSON_EXTRACT(meta_data, '$.price') AS DECIMAL(10,2)) <= ?", [$maxPrice]);
+        if (is_numeric($maxPrice = $request->get('max_price'))) {
+            $query->whereRaw(MetaSql::number('price').' <= ?', [(float) $maxPrice]);
         }
 
-        // Sorting
+        // Sorting (direction is interpolated into SQL below, so it must be whitelisted)
         $orderBy = $request->get('orderby', 'date');
-        $order = $request->get('order', 'desc');
+        $order = strtolower((string) $request->get('order', 'desc')) === 'asc' ? 'asc' : 'desc';
 
         switch ($orderBy) {
             case 'price':
-                $query->orderByRaw("CAST(JSON_EXTRACT(meta_data, '$.price') AS DECIMAL(10,2)) {$order}");
+                $query->orderByRaw(MetaSql::number('price').' '.$order);
                 break;
             case 'title':
                 $query->orderBy('title', $order);
@@ -94,7 +96,8 @@ class ShopController
                 $query->orderBy('published_at', $order);
         }
 
-        $products = $query->paginate($request->get('per_page', 12));
+        $perPage = min(max((int) $request->get('per_page', 12), 1), 60);
+        $products = $query->paginate($perPage);
 
         // Get categories for sidebar
         $categories = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-category'))
@@ -151,8 +154,8 @@ class ShopController
             ->with(['author', 'taxonomyTerms'])
             ->firstOrFail();
 
-        // Increment view count
-        $product->increment('view_count');
+        // Query-builder increment: don't bump updated_at on every view
+        Post::whereKey($product->id)->toBase()->increment('view_count');
 
         // Get related products
         $relatedProducts = Post::where('post_type_id', $productType->id)
