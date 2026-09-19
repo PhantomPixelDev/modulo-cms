@@ -165,11 +165,11 @@ class CheckoutController
                         'total' => $order->total,
                         'currency' => $order->currency,
                     ],
-                    'redirect' => route('shop.order.confirmation', $order->order_number),
+                    'redirect' => $order->confirmationUrl(),
                 ]);
             }
 
-            return redirect()->route('shop.order.confirmation', $order->order_number)
+            return redirect()->to($order->confirmationUrl())
                 ->with('success', 'Order placed successfully!');
 
         } catch (\Exception $e) {
@@ -192,11 +192,8 @@ class CheckoutController
             ->with('items')
             ->firstOrFail();
 
-        // Only allow viewing own orders or if guest matches email
-        $user = $request->user();
-        if ($order->user_id && (!$user || $user->id !== $order->user_id)) {
-            abort(403);
-        }
+        // Owners, or anyone holding the secret link from checkout. 404 so order numbers can't be probed.
+        abort_unless($order->canBeViewedWith($request->user(), $request->query('key')), 404);
 
         if ($request->wantsJson()) {
             return response()->json([

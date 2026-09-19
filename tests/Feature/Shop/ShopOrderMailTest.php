@@ -16,34 +16,10 @@ use Plugins\ModuloShop\src\Services\CartService;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->app->register(ModuloShopServiceProvider::class);
-    
-    // Run shop plugin migrations
-    $this->artisan('migrate', [
-        '--path' => 'plugins/ModuloShop/database/migrations',
-        '--realpath' => false,
-    ]);
-    
+    bootShopPlugin($this);
+
     config(['mail.admin_address' => 'admin@example.com']);
 });
-
-function createShopProduct(): Post
-{
-    $postType = PostType::factory()->create([
-        'name' => 'product',
-        'slug' => 'product',
-        'route_prefix' => 'shop',
-    ]);
-
-    return Post::factory()->published()->create([
-        'post_type_id' => $postType->id,
-        'meta_data' => [
-            'price' => 29.99,
-            'currency' => 'USD',
-            'sku' => 'SKU-TEST',
-        ],
-    ]);
-}
 
 test('checkout sends order placed emails', function () {
     Mail::fake();
@@ -64,7 +40,7 @@ test('checkout sends order placed emails', function () {
 
     $response = $this->post('/shop/checkout', $payload);
 
-    $response->assertRedirect();
+    $response->assertSessionHasNoErrors()->assertRedirectContains('/shop/order/');
 
     Mail::assertSent(OrderPlacedCustomer::class, function ($mail) use ($payload) {
         return $mail->hasTo($payload['customer_email']);

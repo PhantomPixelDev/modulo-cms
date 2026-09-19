@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
@@ -74,13 +75,43 @@ class Order extends Model
     public const PAYMENT_FAILED = 'failed';
     public const PAYMENT_REFUNDED = 'refunded';
 
+    protected $hidden = ['access_token'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Order $order) {
+            $order->access_token ??= Str::random(40);
+        });
+    }
+
     public static function generateOrderNumber(): string
     {
         $prefix = 'ORD';
         $timestamp = now()->format('Ymd');
-        $random = strtoupper(substr(uniqid(), -4));
-        
+        // Random (not time-derived) so numbers can't be guessed or collide
+        $random = Str::upper(Str::random(8));
+
         return "{$prefix}-{$timestamp}-{$random}";
+    }
+
+    /**
+     * Secret link that lets the (possibly guest) customer view the order.
+     */
+    public function confirmationUrl(): string
+    {
+        return route('shop.order.confirmation', [
+            'orderNumber' => $this->order_number,
+            'key' => $this->access_token,
+        ]);
+    }
+
+    public function canBeViewedWith(?User $user, ?string $key): bool
+    {
+        if ($user && $this->user_id && $user->id === $this->user_id) {
+            return true;
+        }
+
+        return is_string($key) && is_string($this->access_token) && hash_equals($this->access_token, $key);
     }
 
     public function user(): BelongsTo
