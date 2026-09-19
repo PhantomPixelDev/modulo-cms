@@ -21,11 +21,7 @@ Route::middleware('throttle:60,1')->group(function () {
 // SEO: sitemap, robots.txt and RSS feed
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/feed', [\App\Http\Controllers\FeedController::class, 'index'])->name('feed');
-Route::get('/robots.txt', function () {
-    $content = \App\Models\SiteSetting::get('robots_txt', "User-agent: *\nAllow: /");
-
-    return response($content)->header('Content-Type', 'text/plain');
-})->name('robots.txt');
+Route::get('/robots.txt', \App\Http\Controllers\RobotsController::class)->name('robots.txt');
 
 // Public routes with rate limiting (30 requests per minute per IP)
 Route::middleware('throttle:30,1')->group(function () {
