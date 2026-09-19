@@ -116,8 +116,8 @@ export function AppSidebar() {
                                 .sort((a: any, b: any) => (a.menu_position || 999) - (b.menu_position || 999))
                                 .map((taxonomy: any) => (
                                 <SidebarMenuItem key={taxonomy.id}>
-                                    <SidebarMenuButton asChild isActive={url.startsWith(`/dashboard/admin/taxonomies/${taxonomy.slug}`)} tooltip={{ children: taxonomy.label || taxonomy.name }}>
-                                        <Link href={`/dashboard/admin/taxonomies/${taxonomy.slug}`} prefetch>
+                                    <SidebarMenuButton asChild isActive={url.startsWith(`/dashboard/admin/taxonomies/${taxonomy.slug}/terms`)} tooltip={{ children: taxonomy.label || taxonomy.name }}>
+                                        <Link href={`/dashboard/admin/taxonomies/${taxonomy.slug}/terms`} prefetch>
                                             {taxonomy.menu_icon && React.createElement(getIcon(taxonomy.menu_icon), { className: 'h-4 w-4' })}
                                             <span>{taxonomy.label || taxonomy.name}</span>
                                         </Link>

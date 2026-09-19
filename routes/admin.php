@@ -46,7 +46,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('taxonomy-terms', [TaxonomyTermController::class, 'index'])->name('taxonomy-terms.index');
         Route::resource('taxonomy-terms', TaxonomyTermController::class)->except(['index']);
         // Specific route for listing taxonomy terms by taxonomy slug
-        Route::get('taxonomies/{taxonomy}', [TaxonomyTermController::class, 'indexByTaxonomy'])->name('taxonomy-terms.byTaxonomy');
+        Route::get('taxonomies/{taxonomy}/terms', [TaxonomyTermController::class, 'indexByTaxonomy'])->name('taxonomy-terms.byTaxonomy');
         Route::resource('templates', TemplateController::class);
         Route::resource('themes', ThemeController::class);
 

@@ -112,3 +112,31 @@ it('denies create/edit/update/destroy without respective permissions', function 
     ])->assertForbidden();
     $this->delete(route('dashboard.admin.taxonomies.destroy', $tax))->assertForbidden();
 });
+
+it('serves taxonomy details and its term list on separate urls', function () {
+    $tax = Taxonomy::create([
+        'name' => 'Genres',
+        'label' => 'Genre',
+        'plural_label' => 'Genres',
+        'description' => null,
+        'slug' => 'genres',
+        'is_hierarchical' => false,
+        'is_public' => true,
+        'post_types' => [],
+        'show_in_menu' => true,
+        'menu_icon' => null,
+        'menu_position' => 5,
+    ]);
+
+    $user = makeAdminUserWithPermissions(['view taxonomies', 'view taxonomy terms']);
+
+    $this->actingAs($user)
+        ->get(route('dashboard.admin.taxonomies.show', $tax))
+        ->assertOk()
+        ->assertSee('taxonomies.show');
+
+    $this->actingAs($user)
+        ->get(route('dashboard.admin.taxonomy-terms.byTaxonomy', $tax->slug))
+        ->assertOk()
+        ->assertSee('taxonomy-terms');
+});
