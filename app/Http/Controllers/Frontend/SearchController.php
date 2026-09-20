@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Models\Post;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class SearchController extends BaseFrontendController
 {
@@ -30,10 +32,6 @@ class SearchController extends BaseFrontendController
 
         $searchTerm = mb_substr(trim($query), 0, 100);
 
-        // Case-insensitive on every driver (plain LIKE is case-sensitive on PostgreSQL),
-        // with user-supplied % and _ treated literally.
-        $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $searchTerm).'%';
-
         $posts = Post::with([
             'postType',
             'author',
@@ -41,13 +39,9 @@ class SearchController extends BaseFrontendController
         ])
             ->published()
             ->whereHas('postType', fn ($q) => $q->where('is_public', true))
-            ->where(function ($q) use ($pattern) {
-                foreach (['title', 'excerpt', 'content'] as $column) {
-                    $q->orWhereRaw("LOWER({$column}) LIKE LOWER(?) ESCAPE '!'", [$pattern]);
-                }
-            })
-            ->orderBy('published_at', 'desc')
-            ->paginate($this->getPerPage());
+            ->tap(fn ($q) => $this->applySearch($q, $searchTerm))
+            ->paginate($this->getPerPage())
+            ->withQueryString();
 
         $presented = $this->postPresenter->presentPaginator($posts);
 
@@ -58,5 +52,29 @@ class SearchController extends BaseFrontendController
             'pagination' => $presented['pagination'],
             'searchQuery' => $searchTerm,
         ]);
+    }
+
+    /**
+     * Full-text search on PostgreSQL (ranked, GIN indexed); LIKE everywhere else.
+     */
+    protected function applySearch(Builder $query, string $term): void
+    {
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            $query->whereRaw("search_vector @@ websearch_to_tsquery('simple', ?)", [$term])
+                ->orderByRaw("ts_rank(search_vector, websearch_to_tsquery('simple', ?)) DESC", [$term])
+                ->orderBy('published_at', 'desc');
+
+            return;
+        }
+
+        // Case-insensitive on every driver (plain LIKE is case-sensitive on
+        // PostgreSQL), with user-supplied % and _ treated literally.
+        $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term).'%';
+
+        $query->where(function ($q) use ($pattern) {
+            foreach (['title', 'excerpt', 'content'] as $column) {
+                $q->orWhereRaw("LOWER({$column}) LIKE LOWER(?) ESCAPE '!'", [$pattern]);
+            }
+        })->orderBy('published_at', 'desc');
     }
 }
