@@ -64,6 +64,22 @@ If the dev stack feels slow on Windows, that is the bind mount — see
 
 ## Production
 
+The quickest path, if you have Docker or Podman:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/PhantomPixelDev/modulo-cms/main/install.sh
+less install.sh          # read it before running it
+bash install.sh
+```
+
+On Windows, download `install.ps1` instead and run `.\install.ps1`.
+
+It checks prerequisites, generates a unique `APP_KEY` and database password,
+starts the stack and prints a URL to finish setup in your browser. It only
+writes inside the directory it creates.
+
+To set things up by hand instead:
+
 ```bash
 cp .env.prod.example .env.prod
 # Required: APP_KEY, DB_PASSWORD, APP_URL. Generate a key with:
@@ -89,24 +105,20 @@ such as `v1.2.3` for a predictable deploy.
 > checkout. Locally built images are not stamped with a version and report themselves
 > as `0.0.0-dev`.
 
-> **Known gap (pre-1.0):** the production entrypoint does not seed, so a fresh
-> production database has no users, roles or settings and you will not be able to log
-> in. Until the installer lands, create the bootstrap data by hand:
->
-> ```bash
-> MODULO_ENV=prod ./modulo.sh artisan db:seed --class=RolePermissionSeeder --force
-> MODULO_ENV=prod ./modulo.sh artisan db:seed --class=ContentSeeder --force
-> MODULO_ENV=prod ./modulo.sh artisan db:seed --class=LocaleSeeder --force
-> MODULO_ENV=prod ./modulo.sh artisan db:seed --class=SiteSettingsSeeder --force
-> MODULO_ENV=prod ./modulo.sh artisan user:create-superadmin
-> ```
->
-> That gives you roles, permissions, the `post` type, two taxonomies, locales and
-> settings — enough to log in and publish. The `page` post type currently only exists
-> in a demo seeder, so add it under **Content → Post Types** if you want pages.
->
-> Do **not** run the full `db:seed` in production — it creates demo accounts with
-> publicly documented passwords.
+### First run
+
+Visit `/install` and the wizard walks through requirements, database setup, the
+administrator account and your site name. It closes itself afterwards and returns 404.
+
+For a headless deployment, do the same from the command line:
+
+```bash
+MODULO_ENV=prod ./modulo.sh artisan modulo:install
+```
+
+Both paths run the same code. Neither seeds demo content unless you ask for it —
+sample data creates accounts whose passwords are published in this README, so it is
+off by default and `modulo:seed-demo` refuses to run in production without `--force`.
 
 `docker/docker-compose.yml` starts:
 
