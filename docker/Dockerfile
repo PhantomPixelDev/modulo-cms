@@ -67,7 +67,7 @@ CMD ["php-fpm"]
 
 
 # --- nginx ---------------------------------------------------------------------
-FROM nginx:1.27-alpine AS web
+FROM nginx:1.29-alpine AS web
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/nginx-entrypoint.sh /usr/local/bin/modulo-nginx-entrypoint
