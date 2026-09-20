@@ -2,7 +2,7 @@
 <!-- Runs the suite against PostgreSQL (the production database): vendor/bin/pest -c phpunit.pgsql.xml -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
 >
     <testsuites>
