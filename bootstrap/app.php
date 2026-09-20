@@ -4,9 +4,11 @@ use App\Http\Middleware\CacheResponseHeaders;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\EnsureNotInstalled;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LocaleFromUrl;
+use App\Http\Middleware\RedirectToInstaller;
 use App\Http\Middleware\RoleOrPermission;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -15,6 +17,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\AuthenticateSession;
+use Illuminate\Support\Facades\Route;
 use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -23,9 +26,20 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        // Registered before web.php, whose catch-all would otherwise treat
+        // /install as a content slug.
+        then: function () {
+            Route::middleware('web')->group(__DIR__.'/../routes/install.php');
+        },
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+
+        $middleware->web(prepend: [
+            // Before anything that reads site settings or sidebar data: on a
+            // fresh install those tables do not exist yet.
+            RedirectToInstaller::class,
+        ]);
 
         $middleware->web(append: [
             // Invalidates a user's other sessions when their password changes
@@ -48,6 +62,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'cache.response' => CacheResponseHeaders::class,
             // Locale from URL prefix
             'locale.url' => LocaleFromUrl::class,
+            // 404s the installer once setup has completed
+            'install.guard' => EnsureNotInstalled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

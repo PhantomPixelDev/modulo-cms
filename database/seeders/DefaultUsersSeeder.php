@@ -11,7 +11,7 @@ class DefaultUsersSeeder extends Seeder
     public function run(): void
     {
         // Create super admin user
-        User::updateOrCreate(
+        User::firstOrCreate(
             ['email' => 'admin@example.com'],
             [
                 'name' => 'Super Admin',
@@ -22,7 +22,7 @@ class DefaultUsersSeeder extends Seeder
         );
 
         // Create regular example user
-        User::updateOrCreate(
+        User::firstOrCreate(
             ['email' => 'user@example.com'],
             [
                 'name' => 'Example User',
@@ -33,7 +33,7 @@ class DefaultUsersSeeder extends Seeder
         );
 
         // Create editor user
-        User::updateOrCreate(
+        User::firstOrCreate(
             ['email' => 'editor@example.com'],
             [
                 'name' => 'Content Editor',
@@ -138,7 +138,7 @@ class DefaultUsersSeeder extends Seeder
         ];
 
         foreach ($additionalUsers as $userData) {
-            User::updateOrCreate(
+            User::firstOrCreate(
                 ['email' => $userData['email']],
                 [
                     'name' => $userData['name'],
@@ -147,6 +147,17 @@ class DefaultUsersSeeder extends Seeder
                     'is_admin' => $userData['is_admin'],
                 ]
             );
+        }
+
+        // Assign roles here rather than in RolePermissionSeeder: that one is
+        // bootstrap data and now runs before any user exists, so it would find
+        // nothing to assign to.
+        foreach (['admin@example.com' => 'super-admin', 'editor@example.com' => 'editor', 'user@example.com' => 'user'] as $email => $role) {
+            $user = User::where('email', $email)->first();
+
+            if ($user && ! $user->hasRole($role)) {
+                $user->assignRole($role);
+            }
         }
 
         $this->command->info('Created '.(count($additionalUsers) + 3).' users for testing');

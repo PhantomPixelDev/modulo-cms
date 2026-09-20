@@ -11,6 +11,7 @@ return [
     |
     */
     'reserved_slugs' => [
+        'install',
         'dashboard',
         'login',
         'register',
@@ -45,6 +46,7 @@ return [
     |
     */
     'reserved_post_type_prefixes' => [
+        'install',
         'dashboard',
         'login',
         'register',

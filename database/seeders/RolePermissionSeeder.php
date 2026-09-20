@@ -95,6 +95,11 @@ class RolePermissionSeeder extends Seeder
             // Settings management
             'view settings',
             'edit settings',
+
+            // Sitemap permissions. Checked by SitemapController but previously
+            // created by nothing, so no role could ever hold them.
+            'view sitemap',
+            'edit sitemap',
             'system settings',
 
             // Menus
@@ -139,6 +144,7 @@ class RolePermissionSeeder extends Seeder
                 'view shop products', 'create shop products', 'edit shop products', 'delete shop products',
                 'view shop orders', 'manage shop orders', 'manage shop settings',
                 'view settings', 'edit settings',
+                'view sitemap', 'edit sitemap',
                 'view analytics', 'export data',
                 'create backups', 'restore backups',
                 'view menus', 'create menus', 'edit menus', 'delete menus',
@@ -154,6 +160,7 @@ class RolePermissionSeeder extends Seeder
                 'view post types', 'view taxonomies', 'view taxonomy terms',
                 'view plugins',
                 'view settings',
+                'view sitemap',
                 'view analytics',
             ],
             'editor' => [
@@ -169,28 +176,21 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($roles as $roleName => $rolePermissions) {
-            // Idempotent: create role if missing, then sync its permissions
             $role = Role::findOrCreate($roleName, 'web');
-            $role->syncPermissions($rolePermissions);
+
+            // Additive, not a sync. This seeder runs on every upgrade, and
+            // syncPermissions() would silently revert any permission an
+            // administrator had granted or revoked through the admin UI.
+            // Grant what is missing and leave everything else alone.
+            $missing = array_values(array_diff(
+                $rolePermissions,
+                $role->permissions()->pluck('name')->all()
+            ));
+
+            if ($missing !== []) {
+                $role->givePermissionTo($missing);
+            }
         }
 
-        // Assign roles to existing users (users created by DefaultUsersSeeder)
-        // admin@example.com gets super-admin role (main admin account)
-        $admin = User::where('email', 'admin@example.com')->first();
-        if ($admin) {
-            $admin->assignRole('super-admin');
-        }
-
-        // editor@example.com gets editor role
-        $editor = User::where('email', 'editor@example.com')->first();
-        if ($editor) {
-            $editor->assignRole('editor');
-        }
-
-        // user@example.com gets user role
-        $user = User::where('email', 'user@example.com')->first();
-        if ($user) {
-            $user->assignRole('user');
-        }
     }
 }

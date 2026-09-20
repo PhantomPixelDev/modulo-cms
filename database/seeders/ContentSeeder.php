@@ -36,6 +36,31 @@ class ContentSeeder extends Seeder
             ]
         );
 
+        // Pages live at the site root and carry no taxonomies. This used to be
+        // created by DefaultPagesSeeder, which also seeds demo pages -- so a
+        // production install that (correctly) skipped the demo content ended up
+        // with no page type at all and no way to create a page.
+        PostType::updateOrCreate(
+            ['name' => 'page'],
+            [
+                'label' => 'Page',
+                'plural_label' => 'Pages',
+                'description' => 'Static pages',
+                'has_taxonomies' => false,
+                'has_featured_image' => true,
+                'has_excerpt' => true,
+                'has_comments' => false,
+                'supports' => json_encode(['title', 'editor', 'thumbnail', 'excerpt']),
+                'taxonomies' => json_encode([]),
+                'slug' => 'page',
+                'route_prefix' => null,
+                'is_public' => true,
+                'is_hierarchical' => true,
+                'menu_icon' => 'file',
+                'menu_position' => 4,
+            ]
+        );
+
         // Create only essential taxonomies
         $categoryTaxonomy = Taxonomy::updateOrCreate(
             ['name' => 'category'],

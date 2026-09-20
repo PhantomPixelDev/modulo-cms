@@ -11,37 +11,22 @@ class DefaultPagesSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ensure page post type exists
-        $pageType = PostType::updateOrCreate(
-            ['name' => 'page'],
-            [
-                'label' => 'Page',
-                'plural_label' => 'Pages',
-                'description' => 'Static pages',
-                'has_taxonomies' => false,
-                'has_featured_image' => true,
-                'has_excerpt' => true,
-                'has_comments' => false,
-                'supports' => json_encode(['title', 'editor', 'thumbnail', 'excerpt']),
-                'taxonomies' => json_encode([]),
-                'slug' => 'page',
-                'route_prefix' => null,  // Pages appear at root
-                'is_public' => true,
-                'is_hierarchical' => true,
-                'menu_icon' => 'file',
-                'menu_position' => 4,
-            ]
-        );
+        // The page post type is bootstrap data and belongs to ContentSeeder.
+        // If it is missing, this seeder has been run out of order.
+        $pageType = PostType::where('name', 'page')->first();
 
-        // Get first admin user or create system user
+        if (! $pageType) {
+            $this->command?->warn('DefaultPagesSeeder: no "page" post type; run ContentSeeder first. Skipping.');
+
+            return;
+        }
+
         $author = User::where('is_admin', true)->first() ?? User::first();
+
         if (! $author) {
-            $author = User::create([
-                'name' => 'System',
-                'email' => 'system@example.com',
-                'password' => bcrypt('password'),
-                'is_admin' => true,
-            ]);
+            $this->command?->warn('DefaultPagesSeeder: no user to attribute pages to. Skipping.');
+
+            return;
         }
 
         // Create default pages

@@ -33,11 +33,11 @@ class LocaleSeeder extends Seeder
             ],
         ];
 
-        // Remove locales that are no longer supported
-        Locale::whereNotIn('code', array_column($locales, 'code'))->delete();
-
         foreach ($locales as $locale) {
-            Locale::updateOrCreate(
+            // firstOrCreate, not updateOrCreate: an administrator may have
+            // renamed a locale or changed which one is default, and re-running
+            // this on an upgrade must not undo that.
+            Locale::firstOrCreate(
                 ['code' => $locale['code']],
                 $locale
             );

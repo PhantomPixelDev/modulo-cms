@@ -3,8 +3,10 @@
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\User;
+use App\Services\InstallService;
 use App\Services\ThemeManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Plugins\ModuloShop\ModuloShopServiceProvider;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
@@ -27,7 +29,46 @@ uses(TestCase::class)
 
 beforeEach(function () {
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    // Treat the site as installed unless a test says otherwise, so the
+    // installer redirect does not swallow unrelated requests.
+    markInstalled();
 });
+
+afterEach(function () {
+    markNotInstalled();
+});
+
+function installLockPath(): string
+{
+    return storage_path(InstallService::LOCK_FILE);
+}
+
+function markInstalled(): void
+{
+    File::put(installLockPath(), 'testing');
+}
+
+function markNotInstalled(): void
+{
+    File::delete(installLockPath());
+    File::delete(installProgressPath());
+}
+
+function installProgressPath(): string
+{
+    return storage_path(InstallService::PROGRESS_FILE);
+}
+
+/**
+ * A wizard run that has started but not finished -- the state the installer is
+ * in from the moment someone loads it until they press Finish.
+ */
+function markInstalling(): void
+{
+    markNotInstalled();
+    File::put(installProgressPath(), 'testing');
+}
 
 function makeAdminUserWithPermissions(array $perms = []): User
 {
