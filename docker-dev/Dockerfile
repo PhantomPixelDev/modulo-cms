@@ -32,7 +32,7 @@ ENTRYPOINT ["/bin/sh","/usr/local/bin/app-entrypoint"]
 CMD ["php-fpm"]
 
 
-FROM node:22-bookworm-slim AS vite
+FROM node:25-bookworm-slim AS vite
 WORKDIR /app
 
 RUN set -eux; \
