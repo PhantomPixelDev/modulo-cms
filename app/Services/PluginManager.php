@@ -106,6 +106,27 @@ class PluginManager
     }
 
     /**
+     * Re-read one plugin from disk, clearing any uninstall record for it.
+     *
+     * Used after installing or updating a package: full rediscovery would
+     * also resurrect every other plugin an operator had deliberately removed.
+     */
+    public function rediscoverSlug(string $slug): void
+    {
+        File::delete($this->uninstallRecordPath($slug));
+
+        $directory = $this->findPluginDirectoryBySlug($slug);
+
+        if ($directory !== null) {
+            File::delete(rtrim($directory, '/').'/'.$this->uninstallMarker);
+        }
+
+        Cache::forget($this->discoveryCacheKey());
+
+        $this->discover();
+    }
+
+    /**
      * Sync filesystem plugins into DB only when plugin manifests changed.
      */
     public function syncDiscoveredPluginsCached(): void

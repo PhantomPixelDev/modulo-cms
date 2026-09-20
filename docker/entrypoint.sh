@@ -32,6 +32,18 @@ if [ "${CONTAINER_ROLE:-app}" = "app" ]; then
 
   php artisan storage:link >/dev/null 2>&1 || true
 
+  # Refresh the bundled plugins over the volume. A named volume keeps whatever
+  # it was seeded with on first boot, so without this an image upgrade would
+  # never reach the plugins that ship with it. Plugins installed at runtime have
+  # their own directories and are left alone.
+  if [ -d plugins-bundled ]; then
+    cp -a plugins-bundled/. plugins/ 2>/dev/null || true
+  fi
+
+  # Publish plugin assets to the volume nginx serves from; the web image bakes
+  # public/ in at build time and cannot see runtime writes otherwise.
+  php artisan plugin:publish-assets >/dev/null 2>&1 || true
+
   # First boot: make sure the public site has a theme (never overrides an active one)
   php artisan theme:ensure "${DEFAULT_THEME:-modern-react}" || echo "WARNING: no active theme; install one in the admin." >&2
 

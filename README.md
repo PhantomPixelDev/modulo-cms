@@ -221,6 +221,22 @@ MODULO_ENV=prod ./modulo.sh artisan queue:failed
 MODULO_ENV=prod ./modulo.sh artisan queue:retry all
 ```
 
+## Plugins
+
+```bash
+php artisan plugin:list --available
+php artisan plugin:install contact-form --activate
+php artisan plugin:update --all
+```
+
+Packages are downloaded from allowlisted hosts and verified against the checksum in
+the registry before anything is unpacked, then extracted defensively — traversal
+entries, symlinks, oversized archives and unexpected file types are all refused
+before a byte is written. A failed update restores the previous version.
+
+Note that a plugin runs as part of the application and is not sandboxed. See
+[docs/plugins.md](docs/plugins.md).
+
 ## Bundled plugins
 
 **Contact Form** — a `[contact_form]` shortcode that stores submissions and emails the
