@@ -756,6 +756,7 @@ return [
         'settings_description' => 'Configure plugin options and preferences.',
         'actions' => [
             'back' => 'Back to Plugins',
+            'discover' => 'Buscar plugins',
             'settings' => 'Settings',
             'uninstall' => 'Uninstall',
             'details' => 'Details',

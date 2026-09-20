@@ -114,6 +114,7 @@ export const ROUTE = {
     },
     plugins: {
         index: () => route('dashboard.admin.plugins.index'),
+        discover: () => route('dashboard.admin.plugins.discover'),
         activate: (slug: string) => route('dashboard.admin.plugins.activate', { slug }),
         deactivate: (slug: string) => route('dashboard.admin.plugins.deactivate', { slug }),
         settings: (slug: string) => route('dashboard.admin.plugins.settings', { slug }),

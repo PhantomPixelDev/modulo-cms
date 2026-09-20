@@ -21,12 +21,21 @@ class Plugin extends Model
         'is_active',
         'settings',
         'installed_at',
+        'source',
+        'source_url',
+        'checksum',
+        'available_version',
+        'last_checked_at',
+        'min_core_version',
+        'requires',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'settings' => 'array',
         'installed_at' => 'datetime',
+        'last_checked_at' => 'datetime',
+        'requires' => 'array',
     ];
 
     /**

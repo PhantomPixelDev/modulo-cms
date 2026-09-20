@@ -5,7 +5,6 @@ namespace Plugins\ContactForm;
 use App\Models\Plugin;
 use App\Plugins\BasePluginServiceProvider;
 use App\Services\ShortcodeService;
-use Illuminate\Support\Facades\Artisan;
 use Plugins\ContactForm\src\Services\ContactFormShortcodeService;
 
 class ContactFormServiceProvider extends BasePluginServiceProvider
@@ -24,27 +23,12 @@ class ContactFormServiceProvider extends BasePluginServiceProvider
     protected function bootPlugin(): void
     {
         $this->ensureDefaultSettings();
-        $this->ensureContactSubmissionsTable();
 
         $this->app->singleton(ContactFormShortcodeService::class, function ($app) {
             return new ContactFormShortcodeService($app->make(ShortcodeService::class));
         });
 
         $this->app->make(ContactFormShortcodeService::class);
-    }
-
-    protected function ensureContactSubmissionsTable(): void
-    {
-        if (schema_has_table('contact_submissions')) {
-            return;
-        }
-
-        if (! $this->app->runningInConsole()) {
-            Artisan::call('migrate', [
-                '--path' => 'plugins/ContactForm/database/migrations',
-                '--force' => true,
-            ]);
-        }
     }
 
     protected function ensureDefaultSettings(): void

@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
+import { RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { PluginSettingsForm } from '../../components/plugins/PluginSettingsForm';
@@ -18,9 +19,22 @@ export function getPluginsSections({
     ROUTE: any;
     t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
+    const canManagePlugins = can('activate plugins') || can('deactivate plugins');
+
     const renderPlugins = () => (
-        <SectionWrapper title={t('dashboard.plugins.title')} description={t('dashboard.plugins.description')}>
-            <PluginsList plugins={plugins || []} canEdit={can('edit settings')} />
+        <SectionWrapper
+            title={t('dashboard.plugins.title')}
+            description={t('dashboard.plugins.description')}
+            actions={
+                can('install plugins') ? (
+                    <Button variant="outline" size="sm" onClick={() => router.post(ROUTE.plugins.discover(), {}, { preserveScroll: true })}>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        {t('dashboard.plugins.actions.discover')}
+                    </Button>
+                ) : undefined
+            }
+        >
+            <PluginsList plugins={plugins || []} canEdit={canManagePlugins} />
         </SectionWrapper>
     );
 
@@ -34,7 +48,7 @@ export function getPluginsSections({
                 </Button>
             }
         >
-            <PluginSettingsForm plugin={plugin} canEdit={can('edit settings')} />
+            <PluginSettingsForm plugin={plugin} canEdit={can('install plugins')} />
         </SectionWrapper>
     );
 
