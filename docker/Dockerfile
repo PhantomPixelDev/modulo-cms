@@ -18,7 +18,7 @@ RUN composer dump-autoload --no-dev --optimize --no-scripts
 
 
 # --- Frontend build ------------------------------------------------------------
-FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS assets
+FROM --platform=$BUILDPLATFORM node:25-bookworm-slim AS assets
 WORKDIR /app
 
 COPY package.json package-lock.json ./
