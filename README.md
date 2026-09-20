@@ -141,6 +141,30 @@ Configure `MAIL_ADMIN_ADDRESS` in `.env.dev` to receive:
 ./modulo.sh up dev
 ```
 
+#### If the dev stack feels slow on Windows
+
+It is the bind mount, not the application. Measured inside the running
+containers, a single `stat()` costs about **2.2ms** against a Windows bind
+mount and **0.09ms** on a native volume -- roughly 25x. Laravel touches ~790
+files per request, so path resolution, not PHP, dominates the response time.
+Reaching the stack through `localhost` adds another ~150ms of WSL port
+forwarding on top: the same request measured 220-300ms from inside the podman
+network and 360-740ms from the Windows host.
+
+`config:cache` does not help (opcache already holds those files) and neither
+does `opcache.validate_timestamps=0`; both were measured and made no
+difference. What actually helps, in order:
+
+1. **Keep the repository on the Linux filesystem.** Clone it inside WSL
+   (`~/modulo-cms`, reachable from Windows at `\\wsl.localhost\...`) rather
+   than under `C:\`, and run the stack from there. This removes the 25x
+   penalty rather than working around it.
+2. Give the podman machine more CPU if the watcher still competes with PHP:
+   `podman machine stop && podman machine set --cpus 8 && podman machine start`.
+
+`vendor/`, `storage/` and `node_modules/` already live on named volumes, so
+they are unaffected either way.
+
 ### Production
 
 ```bash
