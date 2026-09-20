@@ -111,22 +111,34 @@ prepare_env_file() {
 }
 
 ensure_app_key() {
-  if [ ! -f .env ]; then
-    return
-  fi
+  # Compose passes the env file's variables straight into the container, and
+  # Laravel's Dotenv never overrides a real environment variable. So an empty
+  # APP_KEY= in .env.dev shadows anything written to .env. Generate the key
+  # once into the source env file, and export it so php-fpm (clear_env = no)
+  # hands the app a usable key on this very first boot.
+  ENV_FILE_PATH="${LARAVEL_ENV_FILE:-.env}"
 
-  CURRENT_KEY=$(grep '^APP_KEY=' .env 2>/dev/null | head -n1 | cut -d '=' -f2-)
+  [ -f "$ENV_FILE_PATH" ] || return 0
 
-  if [ -z "$CURRENT_KEY" ]; then
-    GENERATED_KEY=$(php -r "echo 'base64:'.base64_encode(random_bytes(32));" 2>/dev/null || true)
-    if [ -n "$GENERATED_KEY" ]; then
-      if grep -q '^APP_KEY=' .env 2>/dev/null; then
-        sed -i "s|^APP_KEY=.*$|APP_KEY=$GENERATED_KEY|" .env || true
-      else
-        printf '\nAPP_KEY=%s\n' "$GENERATED_KEY" >> .env || true
-      fi
+  FILE_KEY=$(grep '^APP_KEY=' "$ENV_FILE_PATH" 2>/dev/null | head -n1 | cut -d '=' -f2-)
+
+  if [ -z "$FILE_KEY" ]; then
+    FILE_KEY=$(php -r "echo 'base64:'.base64_encode(random_bytes(32));" 2>/dev/null || true)
+
+    [ -n "$FILE_KEY" ] || return 0
+
+    if grep -q '^APP_KEY=' "$ENV_FILE_PATH" 2>/dev/null; then
+      sed -i "s|^APP_KEY=.*$|APP_KEY=$FILE_KEY|" "$ENV_FILE_PATH" || true
+    else
+      echo "" >> "$ENV_FILE_PATH" || true
+      echo "APP_KEY=$FILE_KEY" >> "$ENV_FILE_PATH" || true
     fi
+
+    echo "Generated a new APP_KEY in $ENV_FILE_PATH"
   fi
+
+  APP_KEY="$FILE_KEY"
+  export APP_KEY
 }
 
 # Initial permission fix
