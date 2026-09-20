@@ -5,6 +5,7 @@ import { Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { SiteSettingsForm } from '../../components/settings/SiteSettingsForm';
+import { SystemInfoCard } from '../../components/settings/SystemInfoCard';
 
 export function getSiteSettingsSections({
     settings,
@@ -50,6 +51,10 @@ export function getSiteSettingsSections({
                     locales={locales}
                     currentLocale={currentLocale}
                 />
+
+                <div className="mt-6">
+                    <SystemInfoCard description="Include this when reporting a problem." />
+                </div>
             </SectionWrapper>
         );
     };

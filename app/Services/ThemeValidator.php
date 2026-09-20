@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\File;
 
 class ThemeValidator
 {
+    /**
+     * Semantic version: MAJOR.MINOR.PATCH with optional -prerelease and +build.
+     */
+    public const SEMVER_PATTERN = '/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/';
+
     protected array $requiredFields = ['name', 'slug', 'version'];
 
     protected array $errors = [];
@@ -64,12 +69,16 @@ class ThemeValidator
     }
 
     /**
-     * Validate version format
+     * Validate version format.
+     *
+     * Accepts the optional prerelease and build-metadata parts of semver, so a
+     * theme can ship 1.0.0-beta.1 or 2.0.0-rc.2+build.5. The previous pattern
+     * allowed MAJOR.MINOR.PATCH only and rejected every prerelease outright.
      */
     protected function validateVersion(array $config): void
     {
-        if (isset($config['version']) && ! preg_match('/^\d+\.\d+\.\d+$/', $config['version'])) {
-            $this->errors[] = 'Invalid version format. Use semantic versioning (e.g., 1.0.0).';
+        if (isset($config['version']) && ! preg_match(self::SEMVER_PATTERN, (string) $config['version'])) {
+            $this->errors[] = 'Invalid version format. Use semantic versioning (e.g., 1.0.0 or 1.0.0-beta.1).';
         }
     }
 

@@ -22,9 +22,17 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface ModuloBuild {
+    version: string;
+    channel: 'docker' | 'tarball' | 'git';
+    isDev: boolean;
+    commit: string | null;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
+    modulo: ModuloBuild;
     auth: Auth;
     ziggy: Config & { location: string };
     sidebarOpen: boolean;

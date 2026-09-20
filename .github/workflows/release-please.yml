@@ -1,0 +1,34 @@
+name: release-please
+
+# Maintains a release pull request from Conventional Commits. Merging it writes
+# VERSION and CHANGELOG.md and pushes a vX.Y.Z tag, which is what the release
+# workflow builds from.
+#
+# release-type "simple" is chosen deliberately: it maintains a plain version
+# file rather than a language manifest. The version has to be readable by three
+# install channels (Docker, tarball, git) and .dockerignore excludes .git, so a
+# committed file is the only thing all three can see.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          release-type: simple
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json

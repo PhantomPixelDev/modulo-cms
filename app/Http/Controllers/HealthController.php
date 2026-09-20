@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\InstallChannel;
+use App\Support\Version;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +33,10 @@ class HealthController extends Controller
 
         return response()->json([
             'status' => $healthy ? 'ok' : 'degraded',
+            // So a deploy can be diffed against what was expected without
+            // shelling into the container.
+            'version' => Version::current(),
+            'channel' => InstallChannel::detect(),
             'checks' => $checks,
         ], $healthy ? 200 : 503);
     }

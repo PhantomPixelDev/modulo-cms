@@ -50,6 +50,13 @@ COPY --chown=www-data:www-data . .
 COPY --chown=www-data:www-data --from=vendor /app/vendor ./vendor
 COPY --chown=www-data:www-data --from=assets /app/public/build ./public/build
 
+# Stamp the build. Passed by the release workflow from the git tag; without it
+# the committed VERSION file stands and the image reports itself as a dev build.
+ARG MODULO_VERSION=""
+ARG MODULO_COMMIT=""
+ENV MODULO_COMMIT=${MODULO_COMMIT}
+RUN if [ -n "$MODULO_VERSION" ]; then echo "${MODULO_VERSION#v}" > VERSION; fi && cat VERSION
+
 RUN set -eux; \
     rm -f .env bootstrap/cache/*.php; \
     mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; \

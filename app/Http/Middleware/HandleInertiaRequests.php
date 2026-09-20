@@ -9,6 +9,8 @@ use App\Models\TaxonomyTerm;
 use App\Services\AdminStatsService;
 use App\Services\SiteSettingsService;
 use App\Services\TranslationService;
+use App\Support\InstallChannel;
+use App\Support\Version;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -125,6 +127,14 @@ class HandleInertiaRequests extends Middleware
             ...$parentShared,
             'name' => $this->settings->get('site_name', config('app.name')),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
+            // Build identity, for the admin footer and the update panel. Cheap
+            // enough to share unconditionally: it is config reads, no queries.
+            'modulo' => [
+                'version' => Version::current(),
+                'channel' => InstallChannel::detect(),
+                'isDev' => Version::isDev(),
+                'commit' => Version::shortCommit(),
+            ],
             // Use lazy props to avoid querying DB on every request (e.g. admin actions)
             'categories' => fn () => $this->getSidebarDataCached()['categories'],
             'tags' => fn () => $this->getSidebarDataCached()['tags'],

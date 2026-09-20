@@ -67,9 +67,23 @@ new error; fix the code instead. The baseline is expected to shrink over time.
 
 ## Conventions
 
-- **Commit messages** describe the behaviour change and why, not the diff. If a change
-  is non-obvious, the reasoning belongs in the commit message where `git blame` will
-  find it.
+- **Commit messages use [Conventional Commits](https://www.conventionalcommits.org).**
+  This is not decoration: release-please reads them to decide the next version number
+  and to write `CHANGELOG.md`, so a release is only as accurate as the commit subjects.
+
+  ```
+  feat: add a plugin registry client
+  fix: run pending plugin migrations when a plugin is updated
+  fix!: drop the theme customizer column
+  ```
+
+  Types that appear in the changelog: `feat` (minor bump), `fix` and `perf` (patch),
+  `deps`. Types that are hidden but still valid: `refactor`, `docs`, `chore`, `test`,
+  `ci`. A `!` before the colon, or a `BREAKING CHANGE:` footer, forces a major bump.
+
+  The subject line describes the behaviour change; the body explains *why*, because
+  that is what `git blame` will surface years later. If a change is non-obvious, the
+  reasoning belongs there rather than in a comment that will drift.
 - **Every bug fix gets a test that fails without the fix.** This is the one rule we are
   strict about.
 - **Migrations are append-only.** Never edit a migration that has shipped; add a new
