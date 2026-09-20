@@ -45,7 +45,17 @@ export default defineConfig(({ command }) => ({
         // Compile the entries and the active theme up front, so the first
         // navigation does not pay for a cold transform.
         warmup: {
-            clientFiles: ['./resources/css/app.css', './resources/js/app.tsx', './resources/themes/*/components/*.tsx'],
+            // Warmup transforms the listed files but does not follow their
+            // imports, so the shell app.tsx pulls in on every page has to be
+            // named explicitly -- cold, those cost seconds each.
+            clientFiles: [
+                './resources/css/app.css',
+                './resources/js/app.tsx',
+                './resources/js/ErrorBoundary.tsx',
+                './resources/js/components/admin/AdminToastProvider.tsx',
+                './resources/js/hooks/use-appearance.tsx',
+                './resources/themes/*/components/*.tsx',
+            ],
         },
     },
     plugins: [
