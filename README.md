@@ -161,7 +161,8 @@ cp .env.prod.example .env.prod
 | `db` / `redis` | PostgreSQL 16 and Redis 7 |
 
 The stack speaks plain HTTP: put a TLS-terminating proxy (Caddy, Traefik, a load balancer) in front of `web`.
-Routes are intentionally **not** cached (`route:cache`): post type and taxonomy routes come from the database.
+Config, routes, views and events are cached on boot. Post type, taxonomy and locale URLs are resolved at
+request time by `FrontendRouterController`, so adding content types never requires rebuilding the route cache.
 Seeders are for development: never seed the demo accounts in production.
 
 ### Tests

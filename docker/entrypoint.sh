@@ -35,8 +35,8 @@ if [ "${CONTAINER_ROLE:-app}" = "app" ]; then
   # First boot: make sure the public site has a theme (never overrides an active one)
   php artisan theme:ensure "${DEFAULT_THEME:-modern-react}" || echo "WARNING: no active theme; install one in the admin." >&2
 
-  # Routes are NOT cached: post type and taxonomy routes are registered from the database.
   php artisan config:cache
+  php artisan route:cache
   php artisan view:cache
   php artisan event:cache
 else

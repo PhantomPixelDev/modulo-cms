@@ -22,7 +22,59 @@ class PostController extends BaseFrontendController
         parent::__construct($reactRenderer, $templateResolver, $postPresenter);
     }
 
-    public function index(Request $request, $postTypeSlug = null)
+    /**
+     * Archive for a post type (null = the configured posts page / classic posts).
+     */
+    public function archive(Request $request, ?PostType $postType = null)
+    {
+        return $this->index($request, $postType?->route_prefix, $postType);
+    }
+
+    /**
+     * A single post of a custom post type.
+     */
+    public function typedPost(Request $request, PostType $postType, string $slug)
+    {
+        if ($resp = $this->requireReactTheme()) {
+            return $resp;
+        }
+
+        // Slugs are unique per post type, so look up within this type only
+        $content = $this->postService->getPostBySlugForType($slug, $postType);
+
+        if (! $content) {
+            abort(404);
+        }
+
+        return $this->renderContent($content, 'post', 'post');
+    }
+
+    /**
+     * A page (post of the "page" type) served at the site root.
+     */
+    public function page(Request $request, string $slug)
+    {
+        if ($resp = $this->requireReactTheme()) {
+            return $resp;
+        }
+
+        $content = $this->postService->getPostBySlug($slug, 'page');
+
+        if (! $content) {
+            abort(404, 'Page not found');
+        }
+
+        return $this->renderContent($content, 'page', 'page');
+    }
+
+    public function isPostsPage(string $slug, int $postsPageId): bool
+    {
+        $content = $this->postService->getPostBySlug($slug, 'page');
+
+        return $content !== null && (int) $content->id === $postsPageId;
+    }
+
+    public function index(Request $request, $postTypeSlug = null, ?PostType $resolvedType = null)
     {
         if ($resp = $this->requireReactTheme()) {
             return $resp;
@@ -46,7 +98,7 @@ class PostController extends BaseFrontendController
             ->orderBy('published_at', 'desc');
 
         $routeName = $request->route()->getName();
-        $routePostTypeId = $request->route('postTypeId');
+        $routePostTypeId = $resolvedType !== null ? $resolvedType->id : $request->route('postTypeId');
 
         if ($routePostTypeId) {
             $query->where('post_type_id', $routePostTypeId);
@@ -79,8 +131,10 @@ class PostController extends BaseFrontendController
 
         $posts = $query->paginate($this->getPerPage());
 
-        $postType = null;
-        if ($routePostTypeId) {
+        $postType = $resolvedType;
+        if ($postType) {
+            // already resolved by the router controller
+        } elseif ($routePostTypeId) {
             $postType = PostType::find($routePostTypeId);
         } elseif ($postTypeSlug) {
             $postType = PostType::where('route_prefix', $postTypeSlug)->first();

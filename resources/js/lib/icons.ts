@@ -1,95 +1,125 @@
-import * as LucideIcons from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
+import {
+    BookOpen,
+    Boxes,
+    Briefcase,
+    Calendar,
+    Camera,
+    Circle,
+    Cog,
+    CreditCard,
+    File,
+    Files,
+    FileText,
+    Folder,
+    FolderTree,
+    Github,
+    Globe,
+    Heart,
+    HelpCircle,
+    Image,
+    Images,
+    Info,
+    LayoutDashboard,
+    LayoutGrid,
+    List,
+    Lock,
+    type LucideIcon,
+    Mail,
+    MapPin,
+    Menu,
+    MessageCircle,
+    Newspaper,
+    Package,
+    Palette,
+    Plug,
+    Plus,
+    Puzzle,
+    Send,
+    Settings,
+    Shield,
+    ShieldCheck,
+    ShoppingBag,
+    ShoppingCart,
+    Star,
+    Store,
+    Tag,
+    Tags,
+    TrendingUp,
+    User,
+    Users,
+    Video,
+    Wrench,
+} from 'lucide-react';
 
 /**
- * Convert kebab-case icon name to PascalCase and get the Lucide icon component
- * e.g., "shopping-bag" -> ShoppingBag
+ * Icons offered by the icon picker and resolvable from stored names
+ * (post type / taxonomy menu_icon).
+ *
+ * Import every icon explicitly: `import * as LucideIcons` plus a dynamic
+ * lookup defeats tree shaking and pulled the whole icon library (~540 kB)
+ * into the admin bundle.
+ */
+export const ICON_OPTIONS: ReadonlyArray<{ name: string; label: string; Icon: LucideIcon }> = [
+    { name: 'file-text', label: 'Document', Icon: FileText },
+    { name: 'newspaper', label: 'News', Icon: Newspaper },
+    { name: 'file', label: 'File', Icon: File },
+    { name: 'files', label: 'Files', Icon: Files },
+    { name: 'folder', label: 'Folder', Icon: Folder },
+    { name: 'folder-tree', label: 'Folder Tree', Icon: FolderTree },
+    { name: 'tag', label: 'Tag', Icon: Tag },
+    { name: 'tags', label: 'Tags', Icon: Tags },
+    { name: 'boxes', label: 'Boxes', Icon: Boxes },
+    { name: 'shopping-bag', label: 'Shopping Bag', Icon: ShoppingBag },
+    { name: 'shopping-cart', label: 'Cart', Icon: ShoppingCart },
+    { name: 'store', label: 'Store', Icon: Store },
+    { name: 'package', label: 'Package', Icon: Package },
+    { name: 'credit-card', label: 'Payment', Icon: CreditCard },
+    { name: 'users', label: 'Users', Icon: Users },
+    { name: 'user', label: 'User', Icon: User },
+    { name: 'shield', label: 'Shield', Icon: Shield },
+    { name: 'shield-check', label: 'Security', Icon: ShieldCheck },
+    { name: 'lock', label: 'Lock', Icon: Lock },
+    { name: 'image', label: 'Image', Icon: Image },
+    { name: 'images', label: 'Gallery', Icon: Images },
+    { name: 'camera', label: 'Camera', Icon: Camera },
+    { name: 'video', label: 'Video', Icon: Video },
+    { name: 'menu', label: 'Menu', Icon: Menu },
+    { name: 'layout-dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+    { name: 'layout-grid', label: 'Grid', Icon: LayoutGrid },
+    { name: 'list', label: 'List', Icon: List },
+    { name: 'settings', label: 'Settings', Icon: Settings },
+    { name: 'cog', label: 'Cog', Icon: Cog },
+    { name: 'wrench', label: 'Tools', Icon: Wrench },
+    { name: 'puzzle', label: 'Plugin', Icon: Puzzle },
+    { name: 'plug', label: 'Connect', Icon: Plug },
+    { name: 'mail', label: 'Email', Icon: Mail },
+    { name: 'message-circle', label: 'Message', Icon: MessageCircle },
+    { name: 'send', label: 'Send', Icon: Send },
+    { name: 'palette', label: 'Theme', Icon: Palette },
+    { name: 'globe', label: 'Globe', Icon: Globe },
+    { name: 'map-pin', label: 'Location', Icon: MapPin },
+    { name: 'calendar', label: 'Calendar', Icon: Calendar },
+    { name: 'star', label: 'Star', Icon: Star },
+    { name: 'heart', label: 'Heart', Icon: Heart },
+    { name: 'briefcase', label: 'Portfolio', Icon: Briefcase },
+    { name: 'trending-up', label: 'Trending', Icon: TrendingUp },
+    { name: 'help-circle', label: 'Help', Icon: HelpCircle },
+    { name: 'info', label: 'Info', Icon: Info },
+    { name: 'book-open', label: 'Docs', Icon: BookOpen },
+    { name: 'github', label: 'GitHub', Icon: Github },
+    { name: 'circle', label: 'Circle', Icon: Circle },
+    { name: 'plus', label: 'Plus', Icon: Plus },
+];
+
+export const iconMap: Record<string, LucideIcon> = Object.fromEntries(ICON_OPTIONS.map(({ name, Icon }) => [name, Icon]));
+
+/**
+ * Resolve a stored kebab-case icon name; unknown names fall back to a circle.
  */
 export function getIcon(iconName: string | null | undefined): LucideIcon {
     if (!iconName) {
-        return LucideIcons.Circle;
+        return Circle;
     }
 
-    // Convert kebab-case to PascalCase
-    const pascalCase = iconName
-        .split('-')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join('');
-
-    // Look up the icon in Lucide
-    const icon = (LucideIcons as unknown as Record<string, LucideIcon>)[pascalCase];
-
-    return icon || LucideIcons.Circle;
+    return iconMap[iconName] ?? Circle;
 }
-
-/**
- * Common icon mappings for quick reference
- */
-export const iconMap: Record<string, LucideIcon> = {
-    // Content
-    'file-text': LucideIcons.FileText,
-    file: LucideIcons.File,
-    files: LucideIcons.Files,
-    newspaper: LucideIcons.Newspaper,
-
-    // Organization
-    folder: LucideIcons.Folder,
-    'folder-tree': LucideIcons.FolderTree,
-    tag: LucideIcons.Tag,
-    tags: LucideIcons.Tags,
-    boxes: LucideIcons.Boxes,
-
-    // Shop
-    'shopping-bag': LucideIcons.ShoppingBag,
-    'shopping-cart': LucideIcons.ShoppingCart,
-    store: LucideIcons.Store,
-    package: LucideIcons.Package,
-    'credit-card': LucideIcons.CreditCard,
-
-    // Users & Security
-    users: LucideIcons.Users,
-    user: LucideIcons.User,
-    shield: LucideIcons.Shield,
-    'shield-check': LucideIcons.ShieldCheck,
-    lock: LucideIcons.Lock,
-
-    // Media
-    image: LucideIcons.Image,
-    images: LucideIcons.Images,
-    camera: LucideIcons.Camera,
-    video: LucideIcons.Video,
-
-    // Navigation & Layout
-    menu: LucideIcons.Menu,
-    'layout-dashboard': LucideIcons.LayoutDashboard,
-    'layout-grid': LucideIcons.LayoutGrid,
-    list: LucideIcons.List,
-
-    // Settings & Tools
-    settings: LucideIcons.Settings,
-    cog: LucideIcons.Cog,
-    wrench: LucideIcons.Wrench,
-    puzzle: LucideIcons.Puzzle,
-    plug: LucideIcons.Plug,
-
-    // Communication
-    mail: LucideIcons.Mail,
-    'message-circle': LucideIcons.MessageCircle,
-    send: LucideIcons.Send,
-
-    // Misc
-    palette: LucideIcons.Palette,
-    globe: LucideIcons.Globe,
-    'map-pin': LucideIcons.MapPin,
-    calendar: LucideIcons.Calendar,
-    star: LucideIcons.Star,
-    heart: LucideIcons.Heart,
-    briefcase: LucideIcons.Briefcase,
-    'trending-up': LucideIcons.TrendingUp,
-    'help-circle': LucideIcons.HelpCircle,
-    info: LucideIcons.Info,
-    'book-open': LucideIcons.BookOpen,
-    github: LucideIcons.Github,
-    circle: LucideIcons.Circle,
-    plus: LucideIcons.Plus,
-};

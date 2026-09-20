@@ -10,13 +10,21 @@ use Illuminate\Http\Request;
 
 class TaxonomyController extends BaseFrontendController
 {
-    public function show(Request $request, string $slug)
+    /**
+     * Term archive for an already resolved taxonomy (see FrontendRouterController).
+     */
+    public function archive(Request $request, Taxonomy $taxonomy, string $slug)
+    {
+        return $this->show($request, $slug, $taxonomy);
+    }
+
+    public function show(Request $request, string $slug, ?Taxonomy $resolvedTaxonomy = null)
     {
         if ($resp = $this->requireReactTheme()) {
             return $resp;
         }
 
-        $taxonomySlug = strtolower((string) $request->route('taxonomySlug'));
+        $taxonomySlug = strtolower((string) ($resolvedTaxonomy !== null ? $resolvedTaxonomy->slug : $request->route('taxonomySlug')));
         if (config('theme.debug')) {
             \Log::debug('listByTaxonomyTerm', [
                 'slug' => $slug,
@@ -25,7 +33,7 @@ class TaxonomyController extends BaseFrontendController
             ]);
         }
 
-        $taxonomy = Taxonomy::where('slug', $taxonomySlug)
+        $taxonomy = $resolvedTaxonomy ?? Taxonomy::where('slug', $taxonomySlug)
             ->where('is_public', true)
             ->firstOrFail();
 

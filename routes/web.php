@@ -4,14 +4,13 @@ use App\Http\Controllers\Api\MenuApiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Frontend\CommentController;
+use App\Http\Controllers\Frontend\FrontendRouterController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\PostController;
 use App\Http\Controllers\Frontend\SearchController;
-use App\Http\Controllers\Frontend\TaxonomyController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SitemapController;
-use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Route;
 
 // Health check endpoint for container orchestration (no closure to support route:cache)
@@ -28,39 +27,6 @@ Route::middleware('throttle:60,1')->group(function () {
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/feed', [FeedController::class, 'index'])->name('feed');
 Route::get('/robots.txt', RobotsController::class)->name('robots.txt');
-
-// Public routes with rate limiting (30 requests per minute per IP)
-Route::middleware('throttle:30,1')->group(function () {
-    $categoryBase = SiteSetting::get('category_base', 'category');
-    $tagBase = SiteSetting::get('tag_base', 'tag');
-
-    // Taxonomy archives
-    Route::get("/{$tagBase}/{slug}", [TaxonomyController::class, 'show'])
-        ->name('tag.show')
-        ->defaults('taxonomySlug', 'tags')
-        ->where('slug', '[a-zA-Z0-9\-_]+');
-
-    // Plural alias for tags if it's different from base
-    if ($tagBase !== 'tags') {
-        Route::get('/tags/{slug}', [TaxonomyController::class, 'show'])
-            ->name('tags.show')
-            ->defaults('taxonomySlug', 'tags')
-            ->where('slug', '[a-zA-Z0-9\-_]+');
-    }
-
-    Route::get("/{$categoryBase}/{slug}", [TaxonomyController::class, 'show'])
-        ->name('category.show')
-        ->defaults('taxonomySlug', 'categories')
-        ->where('slug', '[a-zA-Z0-9\-_]+');
-
-    // Plural alias for categories if it's different from base
-    if ($categoryBase !== 'categories') {
-        Route::get('/categories/{slug}', [TaxonomyController::class, 'show'])
-            ->name('categories.show')
-            ->defaults('taxonomySlug', 'categories')
-            ->where('slug', '[a-zA-Z0-9\-_]+');
-    }
-});
 
 // Public API endpoints for menus (place before dynamic catch-all)
 Route::prefix('api/menus')->middleware('throttle:api')->group(function () {
@@ -85,48 +51,35 @@ Route::get('/posts/{slug}', [PostController::class, 'show'])
     ->where('slug', '[a-zA-Z0-9\-_]+')
     ->name('post.show');
 
-// Dynamic post type routes are now registered in DynamicRouteServiceProvider
-// This allows route caching and better performance
-
 Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
     ->middleware('throttle:15,1')
     ->name('posts.comments.store');
 
-// Dynamic routes for all post types (like /news/some-news)
-// Reserved slugs are defined in config/routes.php for easy maintenance
-$reservedPrefixes = implode('|', array_map('preg_quote', config('routes.reserved_post_type_prefixes', [])));
-$reservedSlugs = implode('|', array_map('preg_quote', config('routes.reserved_slugs', [])));
+// Everything else public (pages, post type archives, taxonomy archives, single
+// posts, all of them optionally prefixed with a locale) is resolved at request
+// time by FrontendRouterController. Keeping these routes static - instead of
+// registering them from the database on every boot - is what makes route:cache
+// usable and stops a two-letter page slug from being read as a locale.
+$segment = '[a-zA-Z0-9\-_]+';
 
-// Locale-prefixed routes (e.g., /es/posts/my-post, /es/about). Placed before catch-all routes.
-Route::prefix('{locale}')
-    ->where(['locale' => '[a-z]{2}'])
-    ->middleware(['locale.url'])
-    ->group(function () use ($reservedPrefixes, $reservedSlugs) {
-        Route::get('/', [HomeController::class, '__invoke'])->name('locale.home');
+// Reserved first segments (dashboard, api, shop, ...) are owned by explicit
+// routes or by plugins, which may register after this file is loaded.
+// Symfony strips ^ and $ from route requirements, so the lookahead has to end
+// on a segment boundary itself - otherwise /shop/order/123 passes a "not shop"
+// check because "shop" is not at the end of the path.
+$reserved = implode('|', array_map('preg_quote', config('routes.reserved_slugs', [])));
+$firstSegment = '(?!(?:'.$reserved.')(?:/|$))'.$segment;
 
-        Route::get('/posts', [PostController::class, 'index'])->name('locale.posts.index');
+Route::middleware('throttle:30,1')->group(function () use ($segment, $firstSegment) {
+    Route::get('/{one}', FrontendRouterController::class)
+        ->where('one', $firstSegment)
+        ->name('frontend.one');
 
-        Route::get('/posts/{slug}', [PostController::class, 'show'])
-            ->where('slug', '[a-zA-Z0-9\-_]+')
-            ->name('locale.post.show');
+    Route::get('/{one}/{two}', FrontendRouterController::class)
+        ->where(['one' => $firstSegment, 'two' => $segment])
+        ->name('frontend.two');
 
-        Route::get('/{postTypeSlug}/{slug}', [PostController::class, 'showContent'])
-            ->where('postTypeSlug', "^(?!{$reservedPrefixes}).+$")
-            ->where('slug', '[a-zA-Z0-9\-_]+')
-            ->name('locale.content.show');
-
-        Route::get('/{slug}', [PostController::class, 'showContent'])
-            ->where('slug', "^(?!{$reservedSlugs}).+$")
-            ->name('locale.page.show');
-    });
-
-// Catch-all non-locale routes must come last
-Route::get('/{postTypeSlug}/{slug}', [PostController::class, 'showContent'])
-    ->where('postTypeSlug', "^(?!{$reservedPrefixes}).+$")
-    ->where('slug', '[a-zA-Z0-9\-_]+')
-    ->name('content.show');
-
-// Handle top-level pages (like /about). Prevent collisions with two-letter locale codes.
-Route::get('/{slug}', [PostController::class, 'showContent'])
-    ->where('slug', "^(?!{$reservedSlugs})(?![a-z]{2}$)[a-zA-Z0-9\-_]+$")
-    ->name('page.show');
+    Route::get('/{one}/{two}/{three}', FrontendRouterController::class)
+        ->where(['one' => $firstSegment, 'two' => $segment, 'three' => $segment])
+        ->name('frontend.three');
+});

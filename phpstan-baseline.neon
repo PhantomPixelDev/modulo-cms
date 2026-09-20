@@ -133,12 +133,6 @@ parameters:
 			path: app/Http/Controllers/Content/MenuItemController.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\Post\:\:\$featured_image_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Content/PagesController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 1
@@ -961,12 +955,6 @@ parameters:
 			path: app/Presenters/PostPresenter.php
 
 		-
-			message: '#^Negated boolean expression is always false\.$#'
-			identifier: booleanNot.alwaysFalse
-			count: 1
-			path: app/Providers/DynamicRouteServiceProvider.php
-
-		-
 			message: '#^If condition is always true\.$#'
 			identifier: if.alwaysTrue
 			count: 1
@@ -1091,12 +1079,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/TranslationService.php
-
-		-
-			message: '#^Static method Illuminate\\Support\\Facades\\Event\:\:listen\(\) invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: app/helpers.php
 
 		-
 			message: '#^Access to an undefined property Plugins\\ContactForm\\src\\Models\\ContactSubmission\:\:\$email\.$#'
