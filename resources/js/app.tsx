@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './ErrorBoundary';
 import { AdminToastProvider } from './components/admin/AdminToastProvider';
 import { initializeTheme } from './hooks/use-appearance';
+import { resolvePluginComponent } from './plugin-runtime';
 
 declare global {
     interface Window {
@@ -24,6 +25,15 @@ const themeComponents = import.meta.glob('../themes/**/components/**/*.tsx', { e
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => {
+        // Plugins/<slug>/<Component>: loaded from the plugin's own bundle at
+        // runtime. These cannot come from import.meta.glob, which Rollup
+        // expands at build time -- a plugin installed afterwards has no chunk.
+        if (name.startsWith('Plugins/')) {
+            const [, slug, ...rest] = name.split('/');
+
+            return resolvePluginComponent(slug, rest.join('/'));
+        }
+
         // Check for theme components first (e.g., Themes/ModernReact/Index or Themes/ModernReact/Shop/Archive)
         if (name.startsWith('Themes/')) {
             // Convert Themes/ModernReact/Index to modern-react/Index

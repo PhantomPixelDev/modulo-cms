@@ -15,6 +15,14 @@ createServer((page) =>
         render: ReactDOMServer.renderToString,
         title: (title) => (title ? `${title} - ${appName}` : appName),
         resolve: (name) => {
+            if (name.startsWith('Plugins/')) {
+                // Plugin components are client-only: their bundle is fetched
+                // over HTTP and registers itself on window, and this runs in
+                // Node with neither. Render nothing and let hydration fill it
+                // in, rather than failing the whole page.
+                return Promise.resolve({ default: () => null });
+            }
+
             if (name.startsWith('Themes/')) {
                 const parts = name.split('/');
                 const themeNamePascal = parts[1];
