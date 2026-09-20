@@ -70,6 +70,11 @@ CMD ["php-fpm"]
 FROM nginx:1.27-alpine AS web
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx-entrypoint.sh /usr/local/bin/modulo-nginx-entrypoint
+RUN chmod +x /usr/local/bin/modulo-nginx-entrypoint
+ENTRYPOINT ["modulo-nginx-entrypoint"]
+CMD ["nginx", "-g", "daemon off;"]
+
 COPY --from=app /var/www/html/public /var/www/html/public
 # Uploaded media is served from the shared storage volume
 RUN ln -s /var/www/html/storage/app/public /var/www/html/public/storage
