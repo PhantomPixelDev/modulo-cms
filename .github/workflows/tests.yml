@@ -95,6 +95,113 @@ jobs:
       - name: Tests (PostgreSQL)
         run: ./vendor/bin/pest -c phpunit.pgsql.xml
 
+  upgrade:
+    name: upgrade an existing database
+    runs-on: ubuntu-latest
+
+    # migrate:fresh proves a new install works and says nothing about upgrading
+    # one that already has data. This migrates a real old database to HEAD,
+    # which is the case that actually breaks.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: modulo_upgrade
+          POSTGRES_USER: modulo
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U modulo -d modulo_upgrade"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: modulo_upgrade
+      DB_USERNAME: modulo
+      DB_PASSWORD: secret
+      # No release tag exists yet, so the "old install" is pinned to a commit.
+      # Switch this to the newest tag once one has been published.
+      UPGRADE_BASE_REF: 9d225ca
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          tools: composer:v2
+          coverage: none
+
+      - name: Resolve the base to upgrade from
+        id: base
+        run: |
+          set -euo pipefail
+          base="$(git tag --list 'v*' --sort=-v:refname | head -n1 || true)"
+          if [ -z "$base" ]; then
+            base="${UPGRADE_BASE_REF}"
+            echo "No release tag yet; using pinned commit ${base}."
+          fi
+          echo "ref=${base}" >> "$GITHUB_OUTPUT"
+
+      - name: Build a database at the older version
+        run: |
+          set -euo pipefail
+          git checkout --detach "${{ steps.base.outputs.ref }}"
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --force
+          # Seed the way that version did, so the upgrade runs against content.
+          php artisan db:seed --force
+          php artisan migrate:status | tail -n 5
+
+      - name: Return to the version under test
+        run: |
+          set -euo pipefail
+          git checkout --force "${GITHUB_SHA}"
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Preflight the upgrade
+        run: php artisan modulo:upgrade --dry-run
+
+      - name: Migrate the existing database to HEAD
+        run: php artisan migrate --force
+
+      - name: Assert nothing is left pending
+        run: |
+          set -euo pipefail
+          php artisan migrate:status
+          if php artisan migrate:status | grep -q 'Pending'; then
+            echo "::error::Migrations are still pending after upgrading."
+            exit 1
+          fi
+
+      - name: Assert bootstrap data is idempotent on an upgraded database
+        run: php artisan db:seed --class=BootstrapSeeder --force
+
+      - name: Assert the application still boots
+        run: |
+          set -euo pipefail
+          php artisan serve --port=8123 &
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8123/up >/dev/null 2>&1; then
+              echo "Application responded after upgrading."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::The application did not respond after upgrading."
+          exit 1
+
   frontend:
     name: frontend build
     runs-on: ubuntu-latest

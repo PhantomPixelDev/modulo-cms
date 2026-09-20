@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SitemapController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\TranslationController;
+use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Content\MenuController;
 use App\Http\Controllers\Content\MenuItemController;
@@ -96,6 +97,10 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('/settings', [SiteSettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings/{group}', [SiteSettingsController::class, 'update'])->name('settings.update');
         Route::post('/settings/clear-cache', [SiteSettingsController::class, 'clearCache'])->name('settings.clear-cache');
+
+        // Updates: reports availability, never applies anything
+        Route::get('/updates', [UpdateController::class, 'show'])->name('updates.show');
+        Route::post('/updates/refresh', [UpdateController::class, 'refresh'])->name('updates.refresh');
 
         // Translations
         Route::get('/translations', [TranslationController::class, 'index'])->name('translations.index');

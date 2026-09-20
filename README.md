@@ -179,6 +179,20 @@ Note that `RUN_MIGRATIONS` and `RUN_SEEDERS` control behaviour on **subsequent**
 A fresh database (no `migrations` table) always migrates and seeds regardless, so the
 first boot gives you a working site.
 
+## Upgrading
+
+```bash
+MODULO_ENV=prod ./modulo.sh artisan modulo:upgrade --dry-run   # see what would happen
+MODULO_ENV=prod ./modulo.sh artisan modulo:upgrade
+```
+
+It backs up, takes the site down, migrates, applies bootstrap data and lifts
+maintenance mode — and refuses to start if a preflight check finds data that would
+break a migration partway through. **Settings → System** shows whether a newer
+release exists and the exact commands for your install channel.
+
+See [docs/upgrading.md](docs/upgrading.md).
+
 ## Operations
 
 **Health** — `GET /health` returns `{"status":"ok"}`, or 503 when the database or cache
