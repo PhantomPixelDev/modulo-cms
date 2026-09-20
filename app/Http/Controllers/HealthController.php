@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Readiness probe for the container stack: reports 503 when a dependency the
@@ -17,9 +18,12 @@ class HealthController extends Controller
         $checks = [
             'database' => $this->check(fn () => DB::connection()->select('select 1') !== []),
             'cache' => $this->check(function () {
-                Cache::put('health:ping', 1, 10);
+                // A string round-trips identically on every store; the Redis
+                // store hands numbers back as numeric strings.
+                $token = Str::random(12);
+                Cache::put('health:ping', $token, 10);
 
-                return Cache::get('health:ping') === 1;
+                return Cache::get('health:ping') === $token;
             }),
         ];
 
