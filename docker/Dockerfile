@@ -6,7 +6,7 @@
 # Built by docker/docker-compose.yml; see README "Production".
 
 # --- Composer dependencies (no dev packages) ---------------------------------
-FROM composer:2 AS vendor
+FROM --platform=$BUILDPLATFORM composer:2 AS vendor
 WORKDIR /app
 
 COPY composer.json composer.lock ./
@@ -18,7 +18,7 @@ RUN composer dump-autoload --no-dev --optimize --no-scripts
 
 
 # --- Frontend build ------------------------------------------------------------
-FROM node:22-bookworm-slim AS assets
+FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS assets
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -54,7 +54,10 @@ COPY --chown=www-data:www-data --from=assets /app/public/build ./public/build
 # the committed VERSION file stands and the image reports itself as a dev build.
 ARG MODULO_VERSION=""
 ARG MODULO_COMMIT=""
+ARG MODULO_BUILT_AT=""
 ENV MODULO_COMMIT=${MODULO_COMMIT}
+ENV MODULO_BUILT_AT=${MODULO_BUILT_AT}
+ENV MODULO_INSTALL_CHANNEL=docker
 RUN if [ -n "$MODULO_VERSION" ]; then echo "${MODULO_VERSION#v}" > VERSION; fi && cat VERSION
 
 RUN set -eux; \

@@ -9,6 +9,7 @@ on:
     branches:
       - dev
       - main
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -116,3 +117,12 @@ jobs:
 
       - name: Build assets
         run: npm run build
+
+      # Kept so a broken bundle can be inspected without reproducing the build.
+      - name: Upload built assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-build-${{ github.sha }}
+          path: public/build
+          retention-days: 7
+          if-no-files-found: error

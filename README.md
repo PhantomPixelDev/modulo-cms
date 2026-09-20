@@ -74,6 +74,21 @@ cp .env.prod.example .env.prod
 The production site is served on `WEB_PORT`, **which defaults to 8080** — not 8000 like
 the dev stack.
 
+The production stack runs published images from GHCR. `MODULO_TAG` in `.env.prod`
+selects the release — `latest` follows the newest non-prerelease; pin an exact version
+such as `v1.2.3` for a predictable deploy.
+
+> **No release has been published yet.** Until the first tag exists there is nothing to
+> pull, so build the images locally instead:
+>
+> ```bash
+> MODULO_BUILD=1 ./modulo.sh up prod
+> ```
+>
+> That layers `docker/docker-compose.build.yml` over the stack and builds from this
+> checkout. Locally built images are not stamped with a version and report themselves
+> as `0.0.0-dev`.
+
 > **Known gap (pre-1.0):** the production entrypoint does not seed, so a fresh
 > production database has no users, roles or settings and you will not be able to log
 > in. Until the installer lands, create the bootstrap data by hand:

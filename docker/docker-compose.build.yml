@@ -1,0 +1,45 @@
+# Build the production images locally instead of pulling them from GHCR.
+#
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.build.yml up -d --build
+#
+# or, through the helper:
+#
+#   MODULO_BUILD=1 ./modulo.sh up prod
+#
+# Images built this way are not stamped with a version, so they report
+# themselves as 0.0.0-dev. Pass MODULO_VERSION as a build argument if you need
+# a local build to claim a specific one.
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: app
+      args:
+        MODULO_VERSION: ${MODULO_VERSION:-}
+        MODULO_COMMIT: ${MODULO_COMMIT:-}
+
+  queue:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: app
+      args:
+        MODULO_VERSION: ${MODULO_VERSION:-}
+        MODULO_COMMIT: ${MODULO_COMMIT:-}
+
+  scheduler:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: app
+      args:
+        MODULO_VERSION: ${MODULO_VERSION:-}
+        MODULO_COMMIT: ${MODULO_COMMIT:-}
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: web

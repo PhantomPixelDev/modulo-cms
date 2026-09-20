@@ -115,12 +115,18 @@ detect_runtime() {
 
 run_compose() {
     local compose_file=$(get_compose_file)
+    local -a files=(-f "$compose_file")
     detect_runtime
+
+    if [[ "$ENV" == "prod" && -n "${MODULO_BUILD:-}" ]]; then
+        files+=(-f "$SCRIPT_DIR/docker/docker-compose.build.yml")
+    fi
+
     if [[ "$ENV" == "prod" ]]; then
-        # Compose interpolates DB_* and WEB_PORT from .env.prod
-        "$RUNTIME" compose --env-file "$SCRIPT_DIR/.env.prod" -f "$compose_file" "$@"
+        # Compose interpolates DB_*, WEB_PORT and MODULO_TAG from .env.prod
+        "$RUNTIME" compose --env-file "$SCRIPT_DIR/.env.prod" "${files[@]}" "$@"
     else
-        "$RUNTIME" compose -f "$compose_file" "$@"
+        "$RUNTIME" compose "${files[@]}" "$@"
     fi
 }
 
@@ -160,7 +166,12 @@ case "${1:-}" in
         ENV="${2:-}"
         detect_env
         echo "Starting $ENV environment..."
-        run_compose up -d --build
+        if [[ "$ENV" == "prod" && -z "${MODULO_BUILD:-}" ]]; then
+            run_compose pull
+            run_compose up -d
+        else
+            run_compose up -d --build
+        fi
         echo "✅ Services started"
         ;;
     down)

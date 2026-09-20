@@ -1,0 +1,283 @@
+name: release
+
+# Builds and publishes a release from a tag pushed by release-please.
+#
+# Two delivery channels, because the project supports both Docker and
+# bare-metal installs:
+#   - multi-arch images on GHCR
+#   - a tarball with vendor/ and public/build already built, so a bare-metal
+#     install needs neither Composer nor Node on the target host
+#
+# Run it manually with workflow_dispatch to rehearse a build without tagging;
+# that path publishes nothing.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      dry_run_version:
+        description: 'Version to rehearse a build with (nothing is published)'
+        required: false
+        default: '0.0.0-rc.0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Gate the release on the same suites that guard every push, rather than
+  # duplicating them here and letting the two drift apart.
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  prepare:
+    name: prepare
+    runs-on: ubuntu-latest
+    needs: [tests, lint]
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      image_base: ${{ steps.meta.outputs.image_base }}
+      is_prerelease: ${{ steps.meta.outputs.is_prerelease }}
+      built_at: ${{ steps.meta.outputs.built_at }}
+      publish: ${{ steps.meta.outputs.publish }}
+    steps:
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            raw="${GITHUB_REF_NAME}"
+            publish=true
+          else
+            raw="${{ inputs.dry_run_version }}"
+            publish=false
+          fi
+
+          version="${raw#v}"
+
+          # GHCR rejects uppercase, and the owner here is mixed case.
+          image_base="ghcr.io/$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+
+          # Anything with a hyphen after the patch number is a prerelease and
+          # must not move the `latest` tag.
+          if echo "$version" | grep -q -- '-'; then
+            is_prerelease=true
+          else
+            is_prerelease=false
+          fi
+
+          {
+            echo "version=$version"
+            echo "image_base=$image_base"
+            echo "is_prerelease=$is_prerelease"
+            echo "publish=$publish"
+            echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Releasing $version (prerelease=$is_prerelease, publish=$publish)"
+
+  image:
+    name: image (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    needs: prepare
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: app
+            suffix: ''
+          - target: web
+            suffix: '-web'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: needs.prepare.outputs.publish == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ needs.prepare.outputs.image_base }}${{ matrix.suffix }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.prepare.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.prepare.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.prepare.outputs.version }}
+            type=raw,value=latest,enable=${{ needs.prepare.outputs.is_prerelease == 'false' }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          target: ${{ matrix.target }}
+          # The vendor and assets stages are pinned to BUILDPLATFORM in the
+          # Dockerfile; without that, arm64 fails on the x64-only rollup,
+          # oxide and lightningcss binaries pinned in package.json.
+          platforms: linux/amd64,linux/arm64
+          push: ${{ needs.prepare.outputs.publish == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            MODULO_VERSION=${{ needs.prepare.outputs.version }}
+            MODULO_COMMIT=${{ github.sha }}
+            MODULO_BUILT_AT=${{ needs.prepare.outputs.built_at }}
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target }}
+          provenance: false
+
+  tarball:
+    name: tarball
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Stamp the version
+        run: |
+          echo "${{ needs.prepare.outputs.version }}" > VERSION
+          cat VERSION
+
+      - name: Install PHP dependencies (no dev)
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Create tarball
+        id: pack
+        run: |
+          set -euo pipefail
+          name="modulo-cms-${{ needs.prepare.outputs.version }}"
+
+          # Deliberately tar the working tree rather than using `git archive`:
+          # the whole point is to ship vendor/ and public/build, which git does
+          # not track.
+          tar -czf "${name}.tar.gz" \
+            --transform "s,^\./,${name}/," \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./node_modules' \
+            --exclude='./tests' \
+            --exclude='./.env' \
+            --exclude='./.env.dev' \
+            --exclude='./.env.prod' \
+            --exclude='./.env.local' \
+            --exclude='./.env.testing' \
+            --exclude='./storage/logs/*' \
+            --exclude='./storage/framework/cache/*' \
+            --exclude='./storage/framework/sessions/*' \
+            --exclude='./storage/framework/views/*' \
+            --exclude='./bootstrap/cache/*.php' \
+            --exclude='./phpstan-baseline.neon' \
+            --exclude="./${name}.tar.gz" \
+            ./
+
+          sha256sum "${name}.tar.gz" > "${name}.tar.gz.sha256"
+          echo "name=${name}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify the tarball is self-contained
+        run: |
+          set -euo pipefail
+          name="${{ steps.pack.outputs.name }}"
+
+          # A bare-metal install must not need Composer or Node, so the two
+          # build outputs have to be inside. And secrets must not be.
+          tar -tzf "${name}.tar.gz" > listing.txt
+          grep -q "^${name}/vendor/autoload.php$" listing.txt
+          grep -q "^${name}/public/build/manifest.json$" listing.txt
+          grep -q "^${name}/VERSION$" listing.txt
+          ! grep -qE "^${name}/\.git/" listing.txt
+          ! grep -qE "^${name}/\.env$" listing.txt
+          ! grep -qE "^${name}/\.env\.prod$" listing.txt
+          grep -q "^${name}/.env.example$" listing.txt
+          grep -q "^${name}/.env.prod.example$" listing.txt
+          ! grep -qE "^${name}/node_modules/" listing.txt
+
+          echo "Tarball verified: $(wc -l < listing.txt) entries, $(du -h "${name}.tar.gz" | cut -f1)"
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-tarball
+          path: |
+            ${{ steps.pack.outputs.name }}.tar.gz
+            ${{ steps.pack.outputs.name }}.tar.gz.sha256
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    name: publish
+    runs-on: ubuntu-latest
+    needs: [prepare, image, tarball]
+    if: needs.prepare.outputs.publish == 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: release-tarball
+          path: dist
+
+      - name: Stage deployment files
+        run: |
+          cp docker/docker-compose.yml dist/docker-compose.yml
+          cp .env.prod.example dist/.env.prod.example
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          prerelease: ${{ needs.prepare.outputs.is_prerelease == 'true' }}
+          # release-please owns the release body; do not overwrite its changelog.
+          generate_release_notes: false
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
+            dist/docker-compose.yml
+            dist/.env.prod.example
