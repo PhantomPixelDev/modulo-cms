@@ -11,6 +11,17 @@
         "content-management"
     ],
     "license": "MIT",
+    "homepage": "https://github.com/PhantomPixelDev/modulo-cms",
+    "authors": [
+        {
+            "name": "PhantomPixelDev",
+            "homepage": "https://github.com/PhantomPixelDev"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/PhantomPixelDev/modulo-cms/issues",
+        "source": "https://github.com/PhantomPixelDev/modulo-cms"
+    },
     "require": {
         "php": "^8.4",
         "inertiajs/inertia-laravel": "^2.0",
@@ -58,11 +69,6 @@
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
-        ],
-        "post-create-project-cmd": [
-            "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
-            "@php artisan migrate --graceful --ansi"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",

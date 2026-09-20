@@ -1,4 +1,16 @@
 {
+    "name": "modulo-cms",
+    "version": "0.0.0-dev",
+    "description": "A modern, modular content management system built on Laravel 12 with a React 19 frontend.",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/PhantomPixelDev/modulo-cms.git"
+    },
+    "homepage": "https://github.com/PhantomPixelDev/modulo-cms",
+    "bugs": {
+        "url": "https://github.com/PhantomPixelDev/modulo-cms/issues"
+    },
     "private": true,
     "type": "module",
     "scripts": {
@@ -9,10 +21,9 @@
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "types": "tsc --noEmit",
-        "clean": "bash scripts/clean.sh",
+        "clean": "npm run clean:php && npm run clean:frontend",
         "clean:php": "bash -lc 'php artisan optimize:clear && php artisan cache:clear && php artisan view:clear || true'",
         "clean:frontend": "bash -lc 'rm -rf .vite public/build tsconfig.tsbuildinfo resources/js/*.tsbuildinfo .eslintcache'",
-        "build:flexia": "sass --no-source-map --style=compressed resources/themes/flexia/assets/scss/main.scss resources/themes/flexia/assets/css/style.min.css",
         "test:js": "vitest run",
         "test:js:watch": "vitest"
     },

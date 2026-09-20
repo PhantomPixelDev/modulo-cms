@@ -1,0 +1,69 @@
+name: Bug report
+description: Something does not work as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please do not use this form for security issues —
+        see [SECURITY.md](../blob/main/SECURITY.md) instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See error
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown in the admin footer, or run `./modulo.sh artisan --version`.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: channel
+    attributes:
+      label: How did you install it?
+      options:
+        - Docker (published image)
+        - Docker (built locally)
+        - Release tarball
+        - Git checkout
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Container runtime
+      options:
+        - Docker
+        - Podman
+        - Not applicable
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Output of `./modulo.sh logs`, or the contents of storage/logs/laravel.log.
+      render: shell
+    validations:
+      required: false

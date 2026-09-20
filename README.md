@@ -1,209 +1,171 @@
 # Modulo CMS
 
-Modern, modular CMS built with Laravel 12 & React 19.
+[![tests](https://github.com/PhantomPixelDev/modulo-cms/actions/workflows/tests.yml/badge.svg)](https://github.com/PhantomPixelDev/modulo-cms/actions/workflows/tests.yml)
+[![linter](https://github.com/PhantomPixelDev/modulo-cms/actions/workflows/lint.yml/badge.svg)](https://github.com/PhantomPixelDev/modulo-cms/actions/workflows/lint.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PHP 8.4](https://img.shields.io/badge/PHP-8.4-777BB4.svg)](https://www.php.net/)
+[![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20.svg)](https://laravel.com/)
 
-## 🚀 Quick Start
+A self-hosted, modular content management system built on Laravel 12 with a React 19
+front end. Custom post types, taxonomies and menus; a media library; multi-language
+content; role-based permissions; and a plugin and theme system.
 
-### PROD
+> **Status: pre-1.0.** It runs, it is tested, and it is in use — but there are no tagged
+> releases yet and upgrade tooling is still being built. Pin to a commit if you deploy it.
+
+## What you get
+
+- **Content** — custom post types and taxonomies, hierarchical pages, drafts and
+  scheduling, a media library with conversions, and full-text search (PostgreSQL
+  `tsvector` with ranking).
+- **Multi-language** — per-locale translations for posts, terms, menus and settings.
+- **Access control** — roles and granular permissions, with guards against privilege
+  escalation. A non-super-admin cannot edit the `super-admin` role or grant themselves
+  permissions they do not hold.
+- **Themes** — React components resolved per theme, with a default `modern-react` theme.
+- **Plugins** — a service-provider based plugin system with WordPress-style
+  `add_action` / `add_filter` hooks. Ships with a contact form and a small shop.
+- **Operations** — a real `/health` readiness probe, nightly database backups, a queue
+  worker and scheduler, and a hardened nginx configuration.
+
+## Requirements
+
+Docker or Podman with a Compose provider. Nothing else — no local PHP, Node or
+PostgreSQL. `modulo.sh` is a bash script, so on Windows use Git Bash or WSL.
+
+## Quick start (development)
 
 ```bash
-# 1. Clone & Setup env
-git clone https://github.com/PhantomPixelDev/modulo-cms.git
-cd modulo-cms
-cp .env.prod.example .env.prod   # then set APP_KEY, DB_PASSWORD and mail credentials
-
-# 2. Start with Docker (production)
-./modulo.sh up prod
-```
-
-### DEV
-
-```bash
-# 1. Clone & Setup env
 git clone https://github.com/PhantomPixelDev/modulo-cms.git
 cd modulo-cms
 cp .env.dev.example .env.dev
-
-# 2. Start with Docker (development)
 ./modulo.sh up dev
 ```
 
-**Access:**
-- Dashboard: [http://localhost:8000/dashboard](http://localhost:8000/dashboard)
-- Frontend: [http://localhost:8000](http://localhost:8000)
-- Mailpit (email testing): [http://localhost:8025](http://localhost:8025)
+First boot takes a few minutes: it builds images, installs dependencies, generates an
+`APP_KEY`, migrates, seeds demo content and installs the default theme.
 
-**Dev admin credentials** (created by the dev seeder; never use them in production):
-- **Email:** `admin@example.com`
-- **Password:** `admin123`
+| | |
+|---|---|
+| Site | <http://localhost:8000> |
+| Dashboard | <http://localhost:8000/dashboard> |
+| Mailpit (captured email) | <http://localhost:8025> |
 
----
+Seeded logins — **development fixtures, never use them in production**:
 
-## 🛠 Helper Script
+| Email | Password | Role |
+|---|---|---|
+| `admin@example.com` | `admin123` | super-admin |
+| `editor@example.com` | `editor123` | editor |
+| `user@example.com` | `user123` | user |
 
-Use `./modulo.sh` for common commands:
+If the dev stack feels slow on Windows, that is the bind mount — see
+[docs/performance-windows.md](docs/performance-windows.md).
 
-```bash
-# Development (default)
-./modulo.sh up dev          # Start services
-./modulo.sh restart         # Restart dev
-./modulo.sh logs dev        # Show logs
-./modulo.sh shell dev       # Open shell
-./modulo.sh artisan migrate:status dev
-./modulo.sh migrate dev     # Run migrations
-./modulo.sh migrate-status dev  # Show migration status
-./modulo.sh schema-dump dev     # Generate database/schema/pgsql-schema.sql baseline
-./modulo.sh seed dev        # Run seeders
-./modulo.sh bootstrap-dev   # Rebuild from scratch (down -v, up --build, composer install, migrate, seed)
-./modulo.sh test dev        # Run tests
-./modulo.sh status dev      # Show container status
-
-# Production
-./modulo.sh up prod
-./modulo.sh logs prod
-
-# Help
-./modulo.sh help
-```
-
-### Dev startup automation toggles
-
-`docker-dev/docker-compose.yml` includes optional startup toggles on the `app` service:
-
-- `FORCE_COMPOSER_INSTALL` (default `false`)
-- `RUN_MIGRATIONS` (default `false`)
-- `RUN_SEEDERS` (default `false`)
-- `ENSURE_DEFAULT_THEME` (default `true`)
-- `DEFAULT_THEME_SLUG` (default `modern-react`)
-
-With defaults, startup remains fast and safe, while still ensuring the default React theme is available/active for the public site.
-
----
-
-## 📬 Contact Form Plugin
-
-The Contact Form plugin adds a `[contact_form]` shortcode that stores submissions in the database and emails the configured admin address.
-
-### Setup
-
-1. Activate **Contact Form** in the admin plugin manager.
-2. Run migrations for the submissions table:
-
-```bash
-./modulo.sh migrate dev
-```
-
-3. Set an admin recipient in **Site Settings → General → Admin Email** or via `MAIL_ADMIN_ADDRESS` in `.env.dev`.
-
-### Shortcode Usage
-
-```
-[contact_form]
-```
-
-Optional default subject:
-
-```
-[contact_form subject="Support request"]
-```
-
----
-
-## 🛍 Shop Plugin
-
-The Shop plugin provides e‑commerce functionality with products, orders, and email notifications.
-
-### Features
-
-- Product management (using Posts)
-- Order processing
-- Email notifications (customer & admin)
-- Admin dashboard integration
-
-### Email Notifications
-
-Configure `MAIL_ADMIN_ADDRESS` in `.env.dev` to receive:
-- New order notifications
-- Customer order status updates
-
----
-
-## 🐳 Docker Environments
-
-| Environment | Config File | Use Case |
-|-------------|-------------|----------|
-| **Development** | `.env.dev` | Local development with Mailpit |
-| **Production** | `.env.prod` | Production deployment (Redis, PostgreSQL, SMTP) |
-
-### Development
-
-```bash
-./modulo.sh up dev
-```
-
-#### If the dev stack feels slow on Windows
-
-It is the bind mount, not the application. Measured inside the running
-containers, a single `stat()` costs about **2.2ms** against a Windows bind
-mount and **0.09ms** on a native volume -- roughly 25x. Laravel touches ~790
-files per request, so path resolution, not PHP, dominates the response time.
-Reaching the stack through `localhost` adds another ~150ms of WSL port
-forwarding on top: the same request measured 220-300ms from inside the podman
-network and 360-740ms from the Windows host.
-
-`config:cache` does not help (opcache already holds those files) and neither
-does `opcache.validate_timestamps=0`; both were measured and made no
-difference. What actually helps, in order:
-
-1. **Keep the repository on the Linux filesystem.** Clone it inside WSL
-   (`~/modulo-cms`, reachable from Windows at `\\wsl.localhost\...`) rather
-   than under `C:\`, and run the stack from there. This removes the 25x
-   penalty rather than working around it.
-2. Do not bother tuning the podman machine's CPU or memory. On WSL2 those
-   settings are ignored -- the VM takes its resources from `.wslconfig` -- and
-   they were not the constraint here anyway (12 cores, 7.5GB, mostly idle
-   while requests were slow).
-
-`vendor/`, `storage/` and `node_modules/` already live on named volumes, so
-they are unaffected either way.
-
-### Production
+## Production
 
 ```bash
 cp .env.prod.example .env.prod
-# Set APP_URL, DB_PASSWORD, mail credentials and a key:
+# Required: APP_KEY, DB_PASSWORD, APP_URL. Generate a key with:
 #   docker run --rm php:8.4-cli php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
 ./modulo.sh up prod
 ```
 
+The production site is served on `WEB_PORT`, **which defaults to 8080** — not 8000 like
+the dev stack.
+
+> **Known gap (pre-1.0):** the production entrypoint does not seed, so a fresh
+> production database has no users, roles or settings and you will not be able to log
+> in. Until the installer lands, create the bootstrap data by hand:
+>
+> ```bash
+> MODULO_ENV=prod ./modulo.sh artisan db:seed --class=RolePermissionSeeder --force
+> MODULO_ENV=prod ./modulo.sh artisan db:seed --class=ContentSeeder --force
+> MODULO_ENV=prod ./modulo.sh artisan db:seed --class=LocaleSeeder --force
+> MODULO_ENV=prod ./modulo.sh artisan db:seed --class=SiteSettingsSeeder --force
+> MODULO_ENV=prod ./modulo.sh artisan user:create-superadmin
+> ```
+>
+> That gives you roles, permissions, the `post` type, two taxonomies, locales and
+> settings — enough to log in and publish. The `page` post type currently only exists
+> in a demo seeder, so add it under **Content → Post Types** if you want pages.
+>
+> Do **not** run the full `db:seed` in production — it creates demo accounts with
+> publicly documented passwords.
+
 `docker/docker-compose.yml` starts:
 
 | Service | Purpose |
-|---------|---------|
+|---|---|
 | `web` | nginx on `WEB_PORT` (default 8080); serves `public/`, only `/index.php` runs PHP |
-| `app` | PHP-FPM with opcache; runs migrations when `RUN_MIGRATIONS=true`, caches config/views |
-| `queue` | `queue:work` (queued mail etc.) |
+| `app` | PHP-FPM with opcache; migrates when `RUN_MIGRATIONS=true`, caches config and views |
+| `queue` | `queue:work` for queued mail and jobs |
 | `scheduler` | `schedule:work` |
 | `db` / `redis` | PostgreSQL 16 and Redis 7 |
 
-The stack speaks plain HTTP: put a TLS-terminating proxy (Caddy, Traefik, a load balancer) in front of `web`.
-Config, routes, views and events are cached on boot. Post type, taxonomy and locale URLs are resolved at
-request time by `FrontendRouterController`, so adding content types never requires rebuilding the route cache.
-Seeders are for development: never seed the demo accounts in production.
+The stack speaks plain HTTP by design: put a TLS-terminating proxy (Caddy, Traefik, a
+load balancer) in front of `web` and set `APP_URL` to the `https://` address.
 
-### Operations
+Post type, taxonomy and locale URLs are resolved at request time, so adding content
+types never requires rebuilding the route cache.
 
-**Health** — `GET /health` returns `{"status":"ok"}` (503 when the database or cache is unreachable);
-the `web` and `app` containers use it as their healthcheck.
+See [SECURITY.md](SECURITY.md) for the full hardening checklist.
 
-**Backups** — the scheduler runs a dump nightly at 03:15 into `storage/app/backups`, keeping the last 7:
+## The helper script
+
+`modulo.sh` wraps Compose for both stacks. It uses Docker if it is on `PATH` and
+otherwise Podman; set `MODULO_RUNTIME` to force one.
 
 ```bash
-./modulo.sh artisan modulo:db-backup prod          # on demand
-./modulo.sh artisan "modulo:db-backup --keep=30" prod
+./modulo.sh up dev              # start (dev is the default environment)
+./modulo.sh logs                # follow logs
+./modulo.sh shell               # shell in the app container
+./modulo.sh migrate             # run migrations
+./modulo.sh test                # run the test suite
+./modulo.sh status              # container status
+./modulo.sh bootstrap-dev       # rebuild dev from scratch (destroys dev data)
+./modulo.sh up prod             # the same commands take a prod argument
 ```
 
-Restore a PostgreSQL dump (stop the app containers first so nothing writes during the restore):
+For Artisan, the environment comes from `MODULO_ENV` — everything after `artisan` is
+passed through untouched:
+
+```bash
+./modulo.sh artisan migrate:status
+./modulo.sh artisan modulo:db-backup --keep=30
+MODULO_ENV=prod ./modulo.sh artisan queue:failed
+```
+
+### Dev startup toggles
+
+`docker-dev/docker-compose.yml` sets these on the `app` service:
+
+| Variable | Default | Effect |
+|---|---|---|
+| `FORCE_COMPOSER_INSTALL` | `false` | Reinstall Composer dependencies on every boot |
+| `RUN_MIGRATIONS` | `false` | Migrate on every boot |
+| `RUN_SEEDERS` | `false` | Seed on every boot |
+| `ENSURE_DEFAULT_THEME` | `true` | Install and activate the default theme if none is active |
+| `DEFAULT_THEME_SLUG` | `modern-react` | Which theme that is |
+
+Note that `RUN_MIGRATIONS` and `RUN_SEEDERS` control behaviour on **subsequent** boots.
+A fresh database (no `migrations` table) always migrates and seeds regardless, so the
+first boot gives you a working site.
+
+## Operations
+
+**Health** — `GET /health` returns `{"status":"ok"}`, or 503 when the database or cache
+is unreachable. Both the `web` and `app` containers use it as their healthcheck.
+
+**Backups** — the scheduler dumps nightly at 03:15 into `storage/app/backups`, keeping
+the last 7.
+
+```bash
+MODULO_ENV=prod ./modulo.sh artisan modulo:db-backup
+MODULO_ENV=prod ./modulo.sh artisan modulo:db-backup --keep=30
+```
+
+Restore a PostgreSQL dump, stopping the writers first:
 
 ```bash
 docker compose -f docker/docker-compose.yml stop app queue scheduler
@@ -211,28 +173,48 @@ docker compose -f docker/docker-compose.yml exec -T db psql -U modulo -d modulo_
 docker compose -f docker/docker-compose.yml start app queue scheduler
 ```
 
-**Failed jobs** — queued mail that keeps failing lands in the `failed_jobs` table:
+**Failed jobs** — queued mail that keeps failing lands in `failed_jobs`:
 
 ```bash
-./modulo.sh artisan queue:failed prod
-./modulo.sh artisan queue:retry all prod
+MODULO_ENV=prod ./modulo.sh artisan queue:failed
+MODULO_ENV=prod ./modulo.sh artisan queue:retry all
 ```
 
-### Tests
+## Bundled plugins
+
+**Contact Form** — a `[contact_form]` shortcode that stores submissions and emails the
+configured admin address. Activate it in the admin plugin manager, then set a recipient
+in **Site Settings → General → Admin Email** or via `MAIL_ADMIN_ADDRESS`.
+
+```
+[contact_form]
+[contact_form subject="Support request"]
+```
+
+**Shop** — products (as a post type), cart, checkout, stock handling and order emails,
+with an admin section for orders.
+
+## Tests
 
 ```bash
-./modulo.sh test dev                          # SQLite in-memory
-vendor/bin/pest -c phpunit.pgsql.xml          # PostgreSQL (uses DB_HOST/DB_USERNAME/DB_PASSWORD, database modulo_test)
-npm run test:js                               # Vitest (frontend)
+./modulo.sh test                        # Pest, SQLite in-memory
+npm run test:js                         # Vitest, front end
+vendor/bin/pest -c phpunit.pgsql.xml    # Pest against PostgreSQL
 ```
 
----
+The PostgreSQL run needs a reachable server and a `modulo_test` database; CI runs it on
+every push, because production is PostgreSQL and some bugs only reproduce there.
 
-## 🏗 Tech Stack
-- **Backend:** PHP 8.4, Laravel 12
-- **Frontend:** React 19, Inertia.js, Tailwind CSS 4
-- **Database:** PostgreSQL 16
-- **Tools:** Vite, Docker, Mailpit (dev), Redis (prod)
+## Contributing
 
-## 📄 License
-MIT License. See [LICENSE](LICENSE) for details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and the quality gates,
+and [docs/migration-policy.md](docs/migration-policy.md) before writing a migration.
+
+## Tech stack
+
+PHP 8.4 · Laravel 12 · React 19 · Inertia.js · Tailwind CSS 4 · PostgreSQL 16 · Redis 7
+· Vite 7 · Pest · Vitest
+
+## License
+
+MIT — see [LICENSE](LICENSE).

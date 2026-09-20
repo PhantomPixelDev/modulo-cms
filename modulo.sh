@@ -23,6 +23,7 @@ print_usage() {
     echo "  logs        Show logs"
     echo "  shell       Open shell in app container"
     echo "  artisan     Run artisan command in app container"
+    echo "              (environment comes from MODULO_ENV, not a trailing argument)"
     echo "  migrate     Run migrations"
     echo "  migrate-status  Show migration status"
     echo "  schema-dump     Generate database schema dump (non-pruning)"
@@ -39,7 +40,8 @@ print_usage() {
     echo "  ./modulo.sh up dev"
     echo "  ./modulo.sh restart"
     echo "  ./modulo.sh logs prod"
-    echo "  ./modulo.sh artisan migrate:status dev"
+    echo "  ./modulo.sh artisan migrate:status"
+    echo "  MODULO_ENV=prod ./modulo.sh artisan queue:failed"
     echo "  ./modulo.sh bootstrap-dev --force"
     echo "  ./modulo.sh test dev"
 }
@@ -87,19 +89,53 @@ get_container_name() {
     esac
 }
 
-run_compose() {
-    local compose_file=$(get_compose_file)
-    if [[ "$ENV" == "prod" ]]; then
-        # Compose interpolates DB_* and WEB_PORT from .env.prod
-        docker compose --env-file "$SCRIPT_DIR/.env.prod" -f "$compose_file" "$@"
+# Container runtime: docker if present, otherwise podman. Override with
+# MODULO_RUNTIME=podman when both are installed.
+RUNTIME="${MODULO_RUNTIME:-}"
+
+detect_runtime() {
+    if [[ -n "$RUNTIME" ]]; then
+        :
+    elif command -v docker >/dev/null 2>&1; then
+        RUNTIME="docker"
+    elif command -v podman >/dev/null 2>&1; then
+        RUNTIME="podman"
     else
-        docker compose -f "$compose_file" "$@"
+        echo "Error: neither docker nor podman found on PATH." >&2
+        echo "Install one, or set MODULO_RUNTIME to the command to use." >&2
+        exit 1
+    fi
+
+    if ! "$RUNTIME" compose version >/dev/null 2>&1; then
+        echo "Error: '$RUNTIME compose' is unavailable." >&2
+        echo "Install the Compose plugin (docker) or podman-compose provider (podman)." >&2
+        exit 1
     fi
 }
 
+run_compose() {
+    local compose_file=$(get_compose_file)
+    detect_runtime
+    if [[ "$ENV" == "prod" ]]; then
+        # Compose interpolates DB_* and WEB_PORT from .env.prod
+        "$RUNTIME" compose --env-file "$SCRIPT_DIR/.env.prod" -f "$compose_file" "$@"
+    else
+        "$RUNTIME" compose -f "$compose_file" "$@"
+    fi
+}
+
+# Extra `-e KEY=VALUE` arguments for the next run_app_command call.
+EXEC_ENV=()
+
 run_app_command() {
     local container=$(get_container_name)
-    docker exec -it "$container" "$@"
+    detect_runtime
+    # No -t when stdin is not a terminal, so CI and scripted use work.
+    if [[ -t 0 ]]; then
+        "$RUNTIME" exec -it "${EXEC_ENV[@]}" "$container" "$@"
+    else
+        "$RUNTIME" exec -i "${EXEC_ENV[@]}" "$container" "$@"
+    fi
 }
 
 confirm_destructive_action() {
@@ -162,9 +198,13 @@ case "${1:-}" in
         run_app_command bash
         ;;
     artisan)
-        ENV="${3:-dev}"
+        ENV="${MODULO_ENV:-}"
         detect_env
-        shift 2
+        shift
+        if [[ $# -eq 0 ]]; then
+            echo "Usage: [MODULO_ENV=prod] ./modulo.sh artisan <command> [args...]" >&2
+            exit 1
+        fi
         echo "Running artisan command in $ENV: artisan $*"
         run_app_command php artisan "$@"
         ;;
@@ -216,7 +256,7 @@ case "${1:-}" in
     bootstrap-dev)
         ENV="dev"
         local_force="${2:-}"
-        confirm_destructive_action "This will delete dev volumes/data (docker compose down -v)." "$local_force"
+        confirm_destructive_action "This will delete dev volumes and data (compose down -v)." "$local_force"
 
         echo "Rebuilding dev stack from scratch..."
         run_compose down -v
@@ -238,7 +278,14 @@ case "${1:-}" in
         ENV="${2:-}"
         detect_env
         echo "Running tests in $ENV..."
+        EXEC_ENV=(
+            -e CACHE_STORE=array
+            -e SESSION_DRIVER=array
+            -e QUEUE_CONNECTION=sync
+            -e MAIL_MAILER=array
+        )
         run_app_command php artisan test
+        EXEC_ENV=()
         ;;
     status)
         ENV="${2:-}"
