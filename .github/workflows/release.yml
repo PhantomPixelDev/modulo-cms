@@ -193,7 +193,7 @@ jobs:
           # Deliberately tar the working tree rather than using `git archive`:
           # the whole point is to ship vendor/ and public/build, which git does
           # not track.
-          tar -czf "${name}.tar.gz" \
+          tar -czf "${RUNNER_TEMP}/${name}.tar.gz" \
             --transform "s,^\./,${name}/," \
             --exclude='./.git' \
             --exclude='./.github' \
@@ -210,9 +210,9 @@ jobs:
             --exclude='./storage/framework/views/*' \
             --exclude='./bootstrap/cache/*.php' \
             --exclude='./phpstan-baseline.neon' \
-            --exclude="./${name}.tar.gz" \
             ./
 
+          mv "${RUNNER_TEMP}/${name}.tar.gz" .
           sha256sum "${name}.tar.gz" > "${name}.tar.gz.sha256"
           echo "name=${name}" >> "$GITHUB_OUTPUT"
 
