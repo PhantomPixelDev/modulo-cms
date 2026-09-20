@@ -53,3 +53,10 @@ jobs:
 
       - name: TypeScript
         run: npm run types
+
+      # Known advisories in locked dependencies fail the build
+      - name: PHP dependency audit
+        run: composer audit
+
+      - name: JS dependency audit
+        run: npm audit --audit-level=high

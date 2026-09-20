@@ -4,6 +4,10 @@ use App\Models\SiteSetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schedule;
+
+// Nightly database dump, pruned to the last week (the scheduler container runs it)
+Schedule::command('modulo:db-backup')->dailyAt('03:15')->onOneServer();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

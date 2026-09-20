@@ -165,11 +165,39 @@ Config, routes, views and events are cached on boot. Post type, taxonomy and loc
 request time by `FrontendRouterController`, so adding content types never requires rebuilding the route cache.
 Seeders are for development: never seed the demo accounts in production.
 
+### Operations
+
+**Health** — `GET /health` returns `{"status":"ok"}` (503 when the database or cache is unreachable);
+the `web` and `app` containers use it as their healthcheck.
+
+**Backups** — the scheduler runs a dump nightly at 03:15 into `storage/app/backups`, keeping the last 7:
+
+```bash
+./modulo.sh artisan modulo:db-backup prod          # on demand
+./modulo.sh artisan "modulo:db-backup --keep=30" prod
+```
+
+Restore a PostgreSQL dump (stop the app containers first so nothing writes during the restore):
+
+```bash
+docker compose -f docker/docker-compose.yml stop app queue scheduler
+docker compose -f docker/docker-compose.yml exec -T db psql -U modulo -d modulo_prod < backup.sql
+docker compose -f docker/docker-compose.yml start app queue scheduler
+```
+
+**Failed jobs** — queued mail that keeps failing lands in the `failed_jobs` table:
+
+```bash
+./modulo.sh artisan queue:failed prod
+./modulo.sh artisan queue:retry all prod
+```
+
 ### Tests
 
 ```bash
 ./modulo.sh test dev                          # SQLite in-memory
 vendor/bin/pest -c phpunit.pgsql.xml          # PostgreSQL (uses DB_HOST/DB_USERNAME/DB_PASSWORD, database modulo_test)
+npm run test:js                               # Vitest (frontend)
 ```
 
 ---

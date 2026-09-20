@@ -29,6 +29,12 @@ services:
       target: app
     environment:
       CONTAINER_ROLE: app
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\", 9000) ? 0 : 1);'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   queue:
     <<: *app
@@ -64,6 +70,13 @@ services:
     depends_on:
       app:
         condition: service_started
+    healthcheck:
+      # End to end: nginx -> php-fpm -> database and cache
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health | grep -q '\"status\":\"ok\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     restart: unless-stopped
     networks:
       - modulo
