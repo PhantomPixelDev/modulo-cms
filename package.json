@@ -12,20 +12,28 @@
         "clean": "bash scripts/clean.sh",
         "clean:php": "bash -lc 'php artisan optimize:clear && php artisan cache:clear && php artisan view:clear || true'",
         "clean:frontend": "bash -lc 'rm -rf .vite public/build tsconfig.tsbuildinfo resources/js/*.tsbuildinfo .eslintcache'",
-        "build:flexia": "sass --no-source-map --style=compressed resources/themes/flexia/assets/scss/main.scss resources/themes/flexia/assets/css/style.min.css"
+        "build:flexia": "sass --no-source-map --style=compressed resources/themes/flexia/assets/scss/main.scss resources/themes/flexia/assets/css/style.min.css",
+        "test:js": "vitest run",
+        "test:js:watch": "vitest"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
+        "@testing-library/jest-dom": "^7.0.1",
+        "@testing-library/react": "^16.3.3",
+        "@testing-library/user-event": "^14.6.7",
         "@types/node": "^24.3.1",
+        "@vitest/coverage-v8": "^5.0.1",
         "eslint": "^9.17.0",
         "eslint-config-prettier": "^10.0.1",
         "eslint-plugin-react": "^7.37.3",
         "eslint-plugin-react-hooks": "^5.1.0",
+        "jsdom": "^30.1.0",
         "prettier": "^3.4.2",
         "prettier-plugin-organize-imports": "^4.3.0",
         "prettier-plugin-tailwindcss": "^0.8.1",
         "sass": "^1.77.8",
-        "typescript-eslint": "^8.23.0"
+        "typescript-eslint": "^8.23.0",
+        "vitest": "^5.0.1"
     },
     "dependencies": {
         "@headlessui/react": "^2.2.0",
