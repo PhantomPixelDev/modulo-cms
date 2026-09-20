@@ -73,7 +73,7 @@
         "sonner": "^2.0.7",
         "tailwind-merge": "^3.0.1",
         "tailwindcss-animate": "^1.0.7",
-        "typescript": "^5.9.2",
+        "typescript": "^7.0.2",
         "vite": "^7.3.6",
         "ziggy-js": "^2.2.2"
     },
