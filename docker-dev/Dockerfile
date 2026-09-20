@@ -19,6 +19,8 @@ RUN set -eux; \
       -e 's#^;?\s*clear_env\s*=\s*.*#clear_env = no#' \
       /usr/local/etc/php-fpm.d/www.conf
 
+COPY docker-dev/php.ini "$PHP_INI_DIR/conf.d/zz-modulo-dev.ini"
+
 # Composer (for dev container)
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
