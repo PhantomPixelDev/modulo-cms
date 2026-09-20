@@ -159,8 +159,10 @@ difference. What actually helps, in order:
    (`~/modulo-cms`, reachable from Windows at `\\wsl.localhost\...`) rather
    than under `C:\`, and run the stack from there. This removes the 25x
    penalty rather than working around it.
-2. Give the podman machine more CPU if the watcher still competes with PHP:
-   `podman machine stop && podman machine set --cpus 8 && podman machine start`.
+2. Do not bother tuning the podman machine's CPU or memory. On WSL2 those
+   settings are ignored -- the VM takes its resources from `.wslconfig` -- and
+   they were not the constraint here anyway (12 cores, 7.5GB, mostly idle
+   while requests were slow).
 
 `vendor/`, `storage/` and `node_modules/` already live on named volumes, so
 they are unaffected either way.
