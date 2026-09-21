@@ -6,8 +6,8 @@ import { type RouteName, route } from 'ziggy-js';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-const pages = import.meta.glob('./pages/**/*.tsx', { eager: false });
-const themeComponents = import.meta.glob('../themes/**/components/**/*.tsx', { eager: false });
+const pages = import.meta.glob(['./pages/**/*.tsx', '!./pages/**/*.test.tsx'], { eager: false });
+const themeComponents = import.meta.glob(['../themes/**/components/**/*.tsx', '!../themes/**/*.test.tsx'], { eager: false });
 
 createServer((page) =>
     createInertiaApp({

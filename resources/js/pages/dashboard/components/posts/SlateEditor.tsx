@@ -107,7 +107,7 @@ function toggleBlock(editor: Editor, type: CustomElement['type']) {
         else newType = 'paragraph';
     }
 
-    Transforms.setNodes(editor, { type: newType } as Partial<SlateElement>);
+    Transforms.setNodes<SlateElement>(editor, { type: newType } as Partial<SlateElement>);
 
     if (!isActive && isList) {
         const block: SlateElement = { type, children: [] } as any;
@@ -127,7 +127,7 @@ function toggleMark(editor: Editor, format: keyof Omit<FormattedText, 'text'>) {
 }
 
 function setAlign(editor: Editor, align: Align) {
-    Transforms.setNodes(editor, { align } as Partial<SlateElement>, { match: (n) => SlateElement.isElement(n) });
+    Transforms.setNodes<SlateElement>(editor, { align } as Partial<SlateElement>, { match: (n) => SlateElement.isElement(n) });
 }
 
 function isLinkActive(editor: Editor) {

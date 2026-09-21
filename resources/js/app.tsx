@@ -19,8 +19,8 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 // Page components (standardized to a single `pages/` directory)
 // Use lazy imports to avoid evaluating every page at startup
-const pages = import.meta.glob('./pages/**/*.tsx', { eager: false });
-const themeComponents = import.meta.glob('../themes/**/components/**/*.tsx', { eager: false });
+const pages = import.meta.glob(['./pages/**/*.tsx', '!./pages/**/*.test.tsx'], { eager: false });
+const themeComponents = import.meta.glob(['../themes/**/components/**/*.tsx', '!../themes/**/*.test.tsx'], { eager: false });
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
