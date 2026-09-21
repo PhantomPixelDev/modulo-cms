@@ -102,7 +102,7 @@ jobs:
             suffix: '-web'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -156,7 +156,7 @@ jobs:
     needs: prepare
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -255,7 +255,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download tarball
         uses: actions/download-artifact@v4
