@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.1.0...v0.1.1) (2026-09-21)
+
+
+### Bug Fixes
+
+* installer scripts start the published stack; clearer release assets ([#19](https://github.com/PhantomPixelDev/modulo-cms/issues/19)) ([a94a819](https://github.com/PhantomPixelDev/modulo-cms/commit/a94a819a2e057d9909bea2b32955c51d720ca554))
+
 ## 0.1.0 (2026-09-21)
 
 
