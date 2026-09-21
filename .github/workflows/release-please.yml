@@ -9,10 +9,11 @@ name: release-please
 # prevent loops -- so relying on `on: push: tags` would tag the release and
 # build nothing.
 #
-# release-type "simple" is chosen deliberately: it maintains a plain version
-# file rather than a language manifest. The version has to be readable by three
-# install channels (Docker, tarball, git) and .dockerignore excludes .git, so a
-# committed file is the only thing all three can see.
+# release-type "simple" (set in release-please-config.json) is chosen
+# deliberately: it rewrites a plain VERSION file rather than a language
+# manifest. The version has to be readable by three install channels (Docker,
+# tarball, git) and .dockerignore excludes .git, so a committed file is the only
+# thing all three can see.
 
 on:
   push:
@@ -36,8 +37,10 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v5
         id: release
+        # No release-type here: passing one makes the action ignore
+        # release-please-config.json entirely, and with it version-file and
+        # initial-version.
         with:
-          release-type: simple
           token: ${{ secrets.GITHUB_TOKEN }}
 
   release:

@@ -10,9 +10,7 @@
       "draft": false,
       "prerelease": false,
       "include-v-in-tag": true,
-      "extra-files": [
-        "VERSION"
-      ],
+      "version-file": "VERSION",
       "changelog-sections": [
         {
           "type": "feat",
