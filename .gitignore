@@ -36,3 +36,7 @@ build/
 cookies.txt
 /storage/media-library/
 /storage/framework/phpstan
+/playwright-report
+/test-results
+/blob-report
+/playwright/.cache

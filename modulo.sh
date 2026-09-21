@@ -31,6 +31,11 @@ print_usage() {
     echo "  bootstrap-dev  Rebuild dev from scratch (down -v, up --build, composer install, migrate, seed)"
     echo "  test        Run tests"
     echo "  status      Show container status"
+    echo "  version     Show the running version and install channel"
+    echo "  install     First-run setup (migrate, bootstrap data, administrator)"
+    echo "  update      Pull new images (prod) and migrate safely"
+    echo "  backup      Dump the database"
+    echo "  restore     Restore a dump (destructive)"
     echo ""
     echo "Environments:"
     echo "  dev         Development (docker-dev) - default"
@@ -303,6 +308,63 @@ case "${1:-}" in
         detect_env
         echo "Status for $ENV environment:"
         run_compose ps
+        ;;
+    version)
+        ENV="${2:-}"
+        detect_env
+        run_app_command php artisan tinker --execute="echo App\\Support\\Version::current().' ('.App\\Support\\InstallChannel::detect().')'.PHP_EOL;"
+        ;;
+    install)
+        ENV="${2:-}"
+        detect_env
+        echo "Setting up Modulo CMS in $ENV..."
+        run_app_command php artisan modulo:install
+        ;;
+    update)
+        ENV="${2:-}"
+        detect_env
+        # Deliberately two steps. Fetching new code is channel-specific and, on
+        # Docker, cannot happen from inside the container at all: the image is
+        # immutable and opcache runs with validate_timestamps off. So pull the
+        # new image first, then migrate what is now on disk.
+        if [[ "$ENV" == "prod" && -z "${MODULO_BUILD:-}" ]]; then
+            echo "Pulling the published images..."
+            run_compose pull
+            run_compose up -d
+        fi
+        echo "Migrating..."
+        run_app_command php artisan modulo:upgrade
+        ;;
+    backup)
+        ENV="${2:-}"
+        detect_env
+        run_app_command php artisan modulo:db-backup
+        ;;
+    restore)
+        ENV="${2:-}"
+        detect_env
+        DUMP="${3:-}"
+        if [[ -z "$DUMP" ]]; then
+            echo "Usage: ./modulo.sh restore <env> <dump-file>" >&2
+            echo "Restoring overwrites the current database. Take a backup first." >&2
+            exit 1
+        fi
+        if [[ ! -f "$DUMP" ]]; then
+            echo "Error: '$DUMP' not found." >&2
+            exit 1
+        fi
+        confirm_destructive_action "This will overwrite the $ENV database with '$DUMP'." ""
+        detect_runtime
+        # Stop everything that writes, so nothing lands mid-restore.
+        run_compose stop app queue scheduler >/dev/null 2>&1 || true
+        echo "Restoring..."
+        if "$RUNTIME" compose $( [[ "$ENV" == "prod" ]] && echo "--env-file $SCRIPT_DIR/.env.prod" ) -f "$(get_compose_file)" exec -T db psql -U "${DB_USERNAME:-modulo}" -d "${DB_DATABASE:-modulo}" < "$DUMP"; then
+            echo "✅ Restored"
+        else
+            echo "❌ Restore failed; the writers are still stopped so you can retry." >&2
+            exit 1
+        fi
+        run_compose start app queue scheduler >/dev/null 2>&1 || true
         ;;
     help|--help|-h|"")
         print_usage

@@ -10,8 +10,9 @@ A self-hosted, modular content management system built on Laravel 12 with a Reac
 front end. Custom post types, taxonomies and menus; a media library; multi-language
 content; role-based permissions; and a plugin and theme system.
 
-> **Status: pre-1.0.** It runs, it is tested, and it is in use — but there are no tagged
-> releases yet and upgrade tooling is still being built. Pin to a commit if you deploy it.
+> **Status:** it runs, it is tested, and it has an installer, tagged releases and a
+> supported upgrade path. The plugin API is new and may still change; pin `MODULO_TAG`
+> to an exact version rather than following `latest` if that matters to you.
 
 ## What you get
 
@@ -195,6 +196,14 @@ See [docs/upgrading.md](docs/upgrading.md).
 
 ## Operations
 
+```bash
+./modulo.sh version                       # running version and install channel
+./modulo.sh backup                        # dump the database
+./modulo.sh restore prod backup.sql       # destructive; stops writers first
+MODULO_ENV=prod ./modulo.sh update        # pull images, then migrate safely
+```
+
+
 **Health** — `GET /health` returns `{"status":"ok"}`, or 503 when the database or cache
 is unreachable. Both the `web` and `app` containers use it as their healthcheck.
 
@@ -261,6 +270,22 @@ vendor/bin/pest -c phpunit.pgsql.xml    # Pest against PostgreSQL
 
 The PostgreSQL run needs a reachable server and a `modulo_test` database; CI runs it on
 every push, because production is PostgreSQL and some bugs only reproduce there.
+
+## Documentation
+
+| | |
+|---|---|
+| [Installation](docs/installation.md) | Docker, tarball or git, and first-run setup |
+| [Configuration](docs/configuration.md) | Every environment variable that matters |
+| [Upgrading](docs/upgrading.md) | `modulo:upgrade`, preflight checks, per-channel commands |
+| [Backups](docs/backup-restore.md) | What is dumped, what is not, and testing a restore |
+| [Security](docs/security.md) | Hardening, what is covered and what is not |
+| [Plugins](docs/plugins.md) | Installing, the registry, and how packages are verified |
+| [Plugin front ends](docs/plugin-frontend.md) | Shipping React from a plugin |
+| [Themes](docs/theme-development.md) | Building one, and why a rebuild is required |
+| [Releasing](docs/releasing.md) | How a tag becomes images and a tarball |
+| [Versioning](docs/versioning.md) | Where the version lives and why |
+| [Windows performance](docs/performance-windows.md) | Why the dev stack is slow, with measurements |
 
 ## Contributing
 

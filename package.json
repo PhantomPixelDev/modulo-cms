@@ -25,10 +25,12 @@
         "clean:php": "bash -lc 'php artisan optimize:clear && php artisan cache:clear && php artisan view:clear || true'",
         "clean:frontend": "bash -lc 'rm -rf .vite public/build tsconfig.tsbuildinfo resources/js/*.tsbuildinfo .eslintcache'",
         "test:js": "vitest run",
-        "test:js:watch": "vitest"
+        "test:js:watch": "vitest",
+        "test:e2e": "playwright test"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
+        "@playwright/test": "^1.63.0",
         "@testing-library/jest-dom": "^7.0.1",
         "@testing-library/react": "^16.3.3",
         "@testing-library/user-event": "^14.6.7",
