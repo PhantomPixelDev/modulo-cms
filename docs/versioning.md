@@ -28,7 +28,9 @@ Version::satisfiesMinimum('1.2.0');
 Version::compare('v1.5.0');      // -1, 0 or 1; a leading "v" is ignored
 ```
 
-`0.0.0-dev` is a sentinel meaning "untagged working copy", not a real version.
+`0.0.0-dev` is a sentinel meaning "unversioned working copy", not a real version. It
+is what `VERSION` holds until the first release; from then on `main` carries the most
+recently released version, and a checkout of `main` reports that.
 **Anything that gates on a version must treat a development build as "unknown, allow
 with a warning"** — which `satisfiesMinimum()` already does by returning `true`. The
 alternative is that every plugin becomes uninstallable on a development checkout,
