@@ -63,7 +63,7 @@ RUN if [ -n "$MODULO_VERSION" ]; then echo "${MODULO_VERSION#v}" > VERSION; fi &
 # Keep a pristine copy of the bundled plugins. /var/www/html/plugins is a named
 # volume in production, and a named volume is seeded from the image exactly
 # once -- so without this, bundled plugins would freeze at whatever version
-# first booted and never update again. The entrypoint syncs these over it.
+# first booted and never update again. The entrypoint applies newer ones over it (plugin:sync-bundled).
 RUN cp -a plugins plugins-bundled
 
 RUN set -eux; \

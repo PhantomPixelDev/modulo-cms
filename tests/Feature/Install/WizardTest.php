@@ -151,14 +151,15 @@ it('does not seed demo content unless it was asked for', function () {
 
 it('does not let one database inherit another database\'s install lock', function () {
     $installer = app(InstallService::class);
-    $original = config('database.connections.sqlite.database');
+    $key = 'database.connections.'.config('database.default').'.database';
+    $original = config($key);
 
     // Mark the current database installed, then point at a different one that
     // shares the same storage -- a new environment, or a second site.
     markInstalled();
     $installedLock = $installer->lockPath();
 
-    config(['database.connections.sqlite.database' => '/tmp/modulo-never-installed.sqlite']);
+    config([$key => 'modulo_never_installed']);
     $otherLock = $installer->lockPath();
 
     try {
@@ -169,7 +170,7 @@ it('does not let one database inherit another database\'s install lock', functio
     } finally {
         // Storage outlives the test, and the global afterEach would otherwise
         // write a lock for this database -- failing the next run.
-        config(['database.connections.sqlite.database' => $original]);
+        config([$key => $original]);
         File::delete($otherLock);
     }
 });
