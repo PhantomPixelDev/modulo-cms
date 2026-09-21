@@ -93,8 +93,10 @@ Two volumes matter:
 
 A named volume is seeded from the image **once** and never refreshed, which would
 freeze bundled plugins at whatever version first booted. The image therefore keeps a
-pristine copy at `plugins-bundled/` and the entrypoint syncs it over the volume on
-every boot. Plugins installed at runtime have their own directories and are untouched.
+pristine copy at `plugins-bundled/`, and on every boot `plugin:sync-bundled` copies a
+bundled plugin over the volume **only when it is strictly newer** than what is there. A
+plugin you updated from the registry is never rolled back to the image's older copy,
+and plugins installed at runtime have their own directories and are untouched.
 
 ## Uninstalling
 

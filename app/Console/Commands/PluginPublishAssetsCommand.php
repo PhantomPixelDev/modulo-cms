@@ -66,9 +66,7 @@ class PluginPublishAssetsCommand extends Command
 
     protected function sourceFor(string $slug): ?string
     {
-        $root = rtrim((string) config('plugins.path'), '/');
-
-        foreach (File::directories($root) as $directory) {
+        foreach (app(PluginManager::class)->pluginDirectories() as $directory) {
             $manifest = $directory.'/plugin.json';
 
             if (! File::exists($manifest)) {

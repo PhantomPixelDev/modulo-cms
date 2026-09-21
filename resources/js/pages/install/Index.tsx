@@ -131,7 +131,9 @@ export default function Install() {
                 {step === 'requirements' && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Requirements</CardTitle>
+                            <CardTitle>
+                                <h2 className="text-lg font-semibold">Requirements</h2>
+                            </CardTitle>
                             <CardDescription>Everything here must pass before the site can run.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -165,7 +167,9 @@ export default function Install() {
                 {step === 'database' && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Database</CardTitle>
+                            <CardTitle>
+                                <h2 className="text-lg font-semibold">Database</h2>
+                            </CardTitle>
                             <CardDescription>
                                 {channel === 'docker'
                                     ? 'Database settings come from your compose environment file.'
@@ -197,7 +201,9 @@ export default function Install() {
                 {step === 'administrator' && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Administrator account</CardTitle>
+                            <CardTitle>
+                                <h2 className="text-lg font-semibold">Administrator account</h2>
+                            </CardTitle>
                             <CardDescription>This account gets full control of the site.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -249,7 +255,9 @@ export default function Install() {
                 {step === 'site' && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Your site</CardTitle>
+                            <CardTitle>
+                                <h2 className="text-lg font-semibold">Your site</h2>
+                            </CardTitle>
                             <CardDescription>You can change all of this later in Settings.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -305,7 +313,9 @@ export default function Install() {
                 {step === 'done' && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Ready</CardTitle>
+                            <CardTitle>
+                                <h2 className="text-lg font-semibold">Ready</h2>
+                            </CardTitle>
                             <CardDescription>{configured ? 'Your site is set up.' : 'Finish to close the installer.'}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">

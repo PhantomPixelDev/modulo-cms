@@ -128,7 +128,13 @@ class PluginInstaller
     {
         try {
             $response = Http::timeout((int) config('plugins.timeout'))
-                ->withOptions(['sink' => $destination])
+                // GitHub answers release downloads with a redirect to its asset
+                // CDN. Follow it, but never down to plain HTTP; the checksum
+                // is what guarantees the bytes either way.
+                ->withOptions([
+                    'sink' => $destination,
+                    'allow_redirects' => ['max' => 5, 'protocols' => ['https'], 'strict' => true],
+                ])
                 ->get($url);
         } catch (Throwable $e) {
             throw new RuntimeException('Could not download the package: '.$e->getMessage());
@@ -245,36 +251,69 @@ class PluginInstaller
     /**
      * Move the staged package into place, keeping the old one until it works.
      *
+     * Every rename happens inside the plugins directory. rename() cannot move
+     * a directory across filesystems, and in Docker the plugins directory and
+     * storage are separate volumes -- so the package is first copied next to
+     * its destination, under a dot-prefixed name discovery ignores.
+     *
      * @throws RuntimeException
      */
     protected function swapIntoPlace(string $package, string $target, string $slug): void
     {
-        $backup = null;
+        $parent = dirname($target);
+        $suffix = $slug.'-'.bin2hex(random_bytes(4));
+        $incoming = $parent.'/.incoming-'.$suffix;
+        $previous = $parent.'/.previous-'.$suffix;
 
-        if (File::isDirectory($target)) {
-            $backup = rtrim((string) config('plugins.backup_path'), '/').'/'.$slug.'-'.now()->format('Ymd-His');
-            File::ensureDirectoryExists(dirname($backup));
+        File::ensureDirectoryExists($parent);
 
-            if (! File::moveDirectory($target, $backup)) {
-                throw new RuntimeException('Could not set the existing plugin aside; nothing was changed.');
-            }
+        if (! File::copyDirectory($package, $incoming)) {
+            File::deleteDirectory($incoming);
+
+            throw new RuntimeException('Could not copy the package into the plugins directory; nothing was changed.');
         }
 
-        try {
-            File::ensureDirectoryExists(dirname($target));
+        $hadPrevious = File::isDirectory($target);
 
-            if (! File::moveDirectory($package, $target)) {
-                throw new RuntimeException('Could not move the package into place.');
-            }
-        } catch (Throwable $e) {
+        if ($hadPrevious && ! File::moveDirectory($target, $previous)) {
+            File::deleteDirectory($incoming);
+
+            throw new RuntimeException('Could not set the existing plugin aside; nothing was changed.');
+        }
+
+        if (! File::moveDirectory($incoming, $target)) {
             // Put the old version back rather than leaving the site with no
             // plugin at all.
-            if ($backup !== null && File::isDirectory($backup)) {
-                File::moveDirectory($backup, $target);
+            if ($hadPrevious) {
+                File::moveDirectory($previous, $target);
                 Log::warning('Plugin "'.$slug.'" install failed; restored the previous version.');
             }
+            File::deleteDirectory($incoming);
 
-            throw $e;
+            throw new RuntimeException('Could not move the package into place.');
+        }
+
+        if ($hadPrevious) {
+            $this->keepBackup($previous, $slug);
+        }
+    }
+
+    /**
+     * Keep the replaced version where an operator can find it. Best effort:
+     * the install has already succeeded, and a failed backup must not undo it.
+     */
+    protected function keepBackup(string $previous, string $slug): void
+    {
+        $backup = rtrim((string) config('plugins.backup_path'), '/').'/'.$slug.'-'.now()->format('Ymd-His');
+
+        try {
+            File::ensureDirectoryExists(dirname($backup));
+
+            if (! File::copyDirectory($previous, $backup)) {
+                Log::warning('Could not keep a backup of plugin "'.$slug.'".');
+            }
+        } finally {
+            File::deleteDirectory($previous);
         }
     }
 }

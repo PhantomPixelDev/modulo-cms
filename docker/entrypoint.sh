@@ -34,11 +34,9 @@ if [ "${CONTAINER_ROLE:-app}" = "app" ]; then
 
   # Refresh the bundled plugins over the volume. A named volume keeps whatever
   # it was seeded with on first boot, so without this an image upgrade would
-  # never reach the plugins that ship with it. Plugins installed at runtime have
-  # their own directories and are left alone.
-  if [ -d plugins-bundled ]; then
-    cp -a plugins-bundled/. plugins/ 2>/dev/null || true
-  fi
+  # never reach the plugins that ship with it. Only strictly newer copies are
+  # applied: a plugin updated from the registry is never rolled back.
+  php artisan plugin:sync-bundled || echo "WARNING: bundled plugin sync failed." >&2
 
   # Publish plugin assets to the volume nginx serves from; the web image bakes
   # public/ in at build time and cannot see runtime writes otherwise.

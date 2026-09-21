@@ -231,14 +231,38 @@ class InstallService
         Artisan::call('optimize:clear');
     }
 
+    /**
+     * The lock for the database currently configured.
+     *
+     * Qualified by database because storage is shared across every database
+     * the application might be pointed at. A single global lock meant that
+     * switching to a fresh database -- a new environment, a restored backup
+     * elsewhere, a second site on the same storage -- left the wizard locked
+     * out of a database that had never been set up.
+     */
     public function lockPath(): string
     {
-        return storage_path(self::LOCK_FILE);
+        return storage_path(self::LOCK_FILE.'-'.$this->databaseKey());
     }
 
     public function progressPath(): string
     {
-        return storage_path(self::PROGRESS_FILE);
+        return storage_path(self::PROGRESS_FILE.'-'.$this->databaseKey());
+    }
+
+    /**
+     * A short, stable identifier for the configured database.
+     *
+     * Read from configuration rather than the live connection, so it is
+     * available -- and identical -- whether or not the database is reachable.
+     */
+    protected function databaseKey(): string
+    {
+        $connection = (string) config('database.default');
+        $database = (string) config('database.connections.'.$connection.'.database');
+        $host = (string) config('database.connections.'.$connection.'.host');
+
+        return substr(sha1($connection.'|'.$host.'|'.$database), 0, 12);
     }
 
     protected function writeLock(): void
