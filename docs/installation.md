@@ -19,10 +19,14 @@ template pinned to a published release, generates a unique `APP_KEY` and
 database password with `openssl`, starts the stack, and prints the URL to
 finish setup. It only writes inside the directory it creates.
 
+That directory holds `docker-compose.yml` and a `.env` with your secrets. Compose reads
+`.env` by itself, so plain `docker compose pull`, `up -d`, `logs` and `exec` work there
+without extra flags. Keep `.env`; it is the only copy of your `APP_KEY`.
+
 Documented as download-then-run rather than `curl | sh` on purpose: piping a
 script from the internet into a shell means running code you have not read.
 
-Options: `WEB_PORT=8081`, `MODULO_DIR=my-site`, `MODULO_TAG=v1.2.3`.
+Options: `WEB_PORT=8081`, `MODULO_DIR=my-site`, `MODULO_TAG=1.2.3`.
 
 ## Docker, by hand
 

@@ -138,6 +138,9 @@ jobs:
           images: ${{ needs.prepare.outputs.image_base }}${{ matrix.suffix }}
           tags: |
             type=semver,pattern={{version}},value=${{ needs.prepare.outputs.version }}
+            # Also as vX.Y.Z, the form the git tag uses, so either spelling of
+            # MODULO_TAG pulls.
+            type=semver,pattern=v{{version}},value=${{ needs.prepare.outputs.version }}
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.prepare.outputs.version }}
             type=semver,pattern={{major}},value=${{ needs.prepare.outputs.version }}
             type=raw,value=latest,enable=${{ needs.prepare.outputs.is_prerelease == 'false' }}
@@ -283,7 +286,10 @@ jobs:
       - name: Stage deployment files
         run: |
           cp docker/docker-compose.yml dist/docker-compose.yml
-          cp .env.prod.example dist/.env.prod.example
+          # Without the leading dot: GitHub renames dotfile assets to
+          # "default.<name>", which nobody would recognise.
+          cp .env.prod.example dist/env.prod.example
+          cp install.sh install.ps1 dist/
 
       - name: Publish release
         uses: softprops/action-gh-release@v3
@@ -297,4 +303,6 @@ jobs:
             dist/*.tar.gz
             dist/*.tar.gz.sha256
             dist/docker-compose.yml
-            dist/.env.prod.example
+            dist/env.prod.example
+            dist/install.sh
+            dist/install.ps1

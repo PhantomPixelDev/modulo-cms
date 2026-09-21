@@ -9,7 +9,7 @@
 #   less install.sh
 #   bash install.sh
 #
-# It creates a directory, writes a .env.prod with generated secrets, starts the
+# It creates a directory, writes a .env with generated secrets, starts the
 # stack and prints the URL to finish setup in a browser. It never modifies
 # anything outside the directory it creates.
 
@@ -115,30 +115,43 @@ DB_PASSWORD="$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-32)"
 APP_URL="${APP_URL:-http://localhost:${WEB_PORT}}"
 
 # sed over the template rather than writing a fresh file, so new settings added
-# upstream survive instead of being silently dropped.
+# upstream survive instead of being silently dropped. The git tag is vX.Y.Z;
+# the image tag is the bare X.Y.Z.
 sed \
     -e "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" \
     -e "s|^APP_URL=.*|APP_URL=${APP_URL}|" \
     -e "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" \
     -e "s|^WEB_PORT=.*|WEB_PORT=${WEB_PORT}|" \
-    -e "s|^MODULO_TAG=.*|MODULO_TAG=${TAG}|" \
-    .env.prod.example > .env.prod
+    -e "s|^MODULO_TAG=.*|MODULO_TAG=${TAG#v}|" \
+    .env.prod.example > .env
 
-chmod 600 .env.prod
-ok "Generated .env.prod with a unique application key and database password"
+# Written as .env, which compose reads on its own, so plain "docker compose
+# pull / up / exec" work in this directory without --env-file. The compose
+# file's env_file defaults to ../.env.prod (its place in a repository
+# checkout); point it here instead.
+printf '\n# Where the containers read this file from (set by the installer).\nMODULO_ENV_FILE=.env\n' >> .env
+rm -f .env.prod.example
+
+chmod 600 .env
+ok "Generated .env with a unique application key and database password"
+
+# Compose prefers the shell's environment over .env, so a MODULO_TAG
+# passed to this script as vX.Y.Z would otherwise override the bare image tag
+# written above and fail the pull.
+export MODULO_TAG="${TAG#v}"
 
 # --- Start ------------------------------------------------------------------
 
 info "Starting the stack. The first run downloads images and may take a few minutes."
 
-if ! "$RUNTIME" compose --env-file .env.prod -f docker-compose.yml pull 2>/dev/null; then
+if ! "$RUNTIME" compose pull 2>/dev/null; then
     warn "Could not pull published images."
     warn "If no release exists yet, clone the repository and use: MODULO_BUILD=1 ./modulo.sh up prod"
     die "Aborting."
 fi
 
-"$RUNTIME" compose --env-file .env.prod -f docker-compose.yml up -d \
-    || die "The stack failed to start. Check: $RUNTIME compose -f docker-compose.yml logs"
+"$RUNTIME" compose up -d \
+    || die "The stack failed to start. Check: $RUNTIME compose logs"
 
 # --- Wait for health --------------------------------------------------------
 
@@ -153,13 +166,13 @@ done
 
 if [ "${READY:-0}" != "1" ]; then
     warn "The site did not respond in time. It may still be starting."
-    warn "Check with: cd ${TARGET_DIR} && $RUNTIME compose -f docker-compose.yml logs"
+    warn "Check with: cd ${TARGET_DIR} && $RUNTIME compose logs"
 else
     ok "The site is up"
 fi
 
 printf '\n  \033[32mReady.\033[0m Open this to finish setup:\n\n'
 printf '    http://localhost:%s/install\n\n' "$WEB_PORT"
-info "Your secrets are in ${TARGET_DIR}/.env.prod - keep it, and do not commit it."
-info "Stop the site with:  cd ${TARGET_DIR} && $RUNTIME compose -f docker-compose.yml down"
+info "Your secrets are in ${TARGET_DIR}/.env - keep it, and do not commit it."
+info "Stop the site with:  cd ${TARGET_DIR} && $RUNTIME compose down"
 printf '\n'

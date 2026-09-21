@@ -10,7 +10,7 @@
         Get-Content install.ps1
         .\install.ps1
 
-    Creates a directory, writes a .env.prod with generated secrets, starts the
+    Creates a directory, writes a .env with generated secrets, starts the
     stack, and prints the URL to finish setup in a browser. Nothing outside the
     directory it creates is modified.
 
@@ -135,27 +135,38 @@ $content = $content -replace '(?m)^APP_KEY=.*$', "APP_KEY=$appKey"
 $content = $content -replace '(?m)^APP_URL=.*$', "APP_URL=$appUrl"
 $content = $content -replace '(?m)^DB_PASSWORD=.*$', "DB_PASSWORD=$dbPassword"
 $content = $content -replace '(?m)^WEB_PORT=.*$', "WEB_PORT=$WebPort"
-$content = $content -replace '(?m)^MODULO_TAG=.*$', "MODULO_TAG=$Tag"
+# The git tag is vX.Y.Z; the image tag is the bare X.Y.Z.
+$content = $content -replace '(?m)^MODULO_TAG=.*$', "MODULO_TAG=$($Tag.TrimStart('v'))"
 
+# Written as .env, which compose reads on its own, so plain "docker compose
+# pull / up / exec" work in this directory without --env-file. The compose
+# file's env_file defaults to ../.env.prod (its place in a repository
+# checkout); point it here instead.
+$content = $content.TrimEnd() + "`n`n# Where the containers read this file from (set by the installer).`nMODULO_ENV_FILE=.env`n"
 # UTF-8 without a BOM: a BOM on the first line would become part of the first
 # variable's name and the application would not see it.
-[System.IO.File]::WriteAllText((Join-Path $PWD '.env.prod'), $content, [System.Text.UTF8Encoding]::new($false))
-Write-Ok 'Generated .env.prod with a unique application key and database password'
+[System.IO.File]::WriteAllText((Join-Path $PWD '.env'), $content, [System.Text.UTF8Encoding]::new($false))
+Remove-Item '.env.prod.example' -ErrorAction SilentlyContinue
+Write-Ok 'Generated .env with a unique application key and database password'
+
+# Compose prefers the process environment over .env; a stray MODULO_TAG
+# there would override the image tag written above.
+$env:MODULO_TAG = $Tag.TrimStart('v')
 
 # --- Start ------------------------------------------------------------------
 
 Write-Info 'Starting the stack. The first run downloads images and may take a few minutes.'
 
-& $runtime compose --env-file .env.prod -f docker-compose.yml pull
+& $runtime compose pull
 if ($LASTEXITCODE -ne 0) {
     Write-Warn 'Could not pull published images.'
     Write-Warn 'If no release exists yet, clone the repository and use: MODULO_BUILD=1 ./modulo.sh up prod'
     Stop-WithError 'Aborting.'
 }
 
-& $runtime compose --env-file .env.prod -f docker-compose.yml up -d
+& $runtime compose up -d
 if ($LASTEXITCODE -ne 0) {
-    Stop-WithError "The stack failed to start. Check: $runtime compose -f docker-compose.yml logs"
+    Stop-WithError "The stack failed to start. Check: $runtime compose logs"
 }
 
 # --- Wait for health --------------------------------------------------------
@@ -174,13 +185,13 @@ foreach ($attempt in 1..60) {
 
 if (-not $ready) {
     Write-Warn 'The site did not respond in time. It may still be starting.'
-    Write-Warn "Check with: cd $Directory; $runtime compose -f docker-compose.yml logs"
+    Write-Warn "Check with: cd $Directory; $runtime compose logs"
 } else {
     Write-Ok 'The site is up'
 }
 
 Write-Host "`n  Ready. Open this to finish setup:`n" -ForegroundColor Green
 Write-Host "    http://localhost:$WebPort/install`n"
-Write-Info "Your secrets are in $Directory\.env.prod - keep it, and do not commit it."
-Write-Info "Stop the site with:  cd $Directory; $runtime compose -f docker-compose.yml down"
+Write-Info "Your secrets are in $Directory\.env - keep it, and do not commit it."
+Write-Info "Stop the site with:  cd $Directory; $runtime compose down"
 Write-Host ''
