@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Plugin;
+use App\Services\PluginManager;
 use App\Services\Plugins\PluginInstaller;
 use App\Services\Plugins\PluginRegistry;
 use Illuminate\Support\Facades\Cache;
@@ -249,4 +250,58 @@ it('only offers registry entries that could actually be installed', function () 
     $slugs = array_column(app(PluginRegistry::class)->all(), 'slug');
 
     expect($slugs)->toBe(['good']);
+});
+
+it('never discovers a package still being staged next to the plugins', function () {
+    // Installs copy the package beside its destination before the rename,
+    // because a rename cannot cross filesystems and in Docker the plugins
+    // directory is its own volume. A half-copied package must stay invisible.
+    $staged = config('plugins.path').'/.incoming-fixture-abc123';
+    File::ensureDirectoryExists($staged);
+    File::put($staged.'/plugin.json', json_encode([
+        'name' => 'Fixture', 'slug' => 'fixture', 'namespace' => 'Fixture', 'version' => '1.0.0',
+        'service_provider' => 'Plugins\Fixture\FixtureServiceProvider',
+    ]));
+
+    $manager = app(PluginManager::class);
+    $manager->discover();
+
+    expect(Plugin::where('slug', 'fixture')->exists())->toBeFalse()
+        ->and($manager->getLastError())->toBeNull();
+});
+
+it('leaves only the installed plugin behind after an update', function () {
+    $current = null;
+
+    // Answered per request: a stubbed response body is a stream that can only
+    // be read once, and the second install needs the second package.
+    Http::fake(function ($request) use (&$current) {
+        if (str_contains($request->url(), 'raw.githubusercontent.com')) {
+            return Http::response([
+                'schema' => 1,
+                'plugins' => [['slug' => 'fixture', 'namespace' => 'Fixture', 'latest' => [
+                    'version' => $current['version'],
+                    'asset_url' => 'https://github.com/owner/fixture/releases/download/v'.$current['version'].'/fixture.zip',
+                    'sha256' => hash_file('sha256', $current['archive']),
+                    'min_core_version' => '1.0.0',
+                ]]],
+            ]);
+        }
+
+        return Http::response(File::get($current['archive']));
+    });
+
+    foreach (['1.0.0', '1.1.0'] as $version) {
+        $current = [
+            'version' => $version,
+            'archive' => packagePlugin($this->work.'/pkg-'.$version.'.zip', 'fixture', 'Fixture', $version),
+        ];
+        Cache::forget(PluginRegistry::CACHE_KEY);
+
+        app(PluginInstaller::class)->install('fixture');
+    }
+
+    expect(array_map('basename', File::directories(config('plugins.path'))))->toBe(['Fixture'])
+        ->and(File::directories(config('plugins.backup_path')))->toHaveCount(1)
+        ->and(Plugin::where('slug', 'fixture')->value('version'))->toBe('1.1.0');
 });

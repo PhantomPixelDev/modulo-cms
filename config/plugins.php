@@ -61,6 +61,7 @@ return [
         'github.com',
         'codeload.github.com',
         'objects.githubusercontent.com',
+        'release-assets.githubusercontent.com',
         'raw.githubusercontent.com',
     ],
 

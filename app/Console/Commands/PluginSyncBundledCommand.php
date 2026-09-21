@@ -82,8 +82,9 @@ class PluginSyncBundledCommand extends Command
      */
     protected function replace(string $from, string $to): void
     {
-        $staging = $to.'.sync-'.bin2hex(random_bytes(4));
-        $backup = $to.'.old-'.bin2hex(random_bytes(4));
+        // Dot-prefixed so discovery never picks up a half-copied package.
+        $staging = dirname($to).'/.sync-'.basename($to).'-'.bin2hex(random_bytes(4));
+        $backup = dirname($to).'/.old-'.basename($to).'-'.bin2hex(random_bytes(4));
 
         if (! File::copyDirectory($from, $staging)) {
             File::deleteDirectory($staging);

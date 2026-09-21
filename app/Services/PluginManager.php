@@ -33,6 +33,27 @@ class PluginManager
         return $path;
     }
 
+    /**
+     * Plugin directories, excluding dot-prefixed ones.
+     *
+     * Installs and syncs stage a package next to its destination -- a rename
+     * only works within one filesystem, and in Docker the plugins directory is
+     * its own volume -- so a half-copied package must never be discovered.
+     *
+     * @return array<int, string>
+     */
+    public function pluginDirectories(): array
+    {
+        if (! File::isDirectory($this->pluginPath())) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            File::directories($this->pluginPath()),
+            fn (string $directory) => ! str_starts_with(basename($directory), '.'),
+        ));
+    }
+
     protected function uninstallPath(): string
     {
         return (string) config('plugins.uninstall_path', storage_path('app/plugins/uninstalled'));
@@ -50,7 +71,7 @@ class PluginManager
         }
 
         $plugins = [];
-        $directories = File::directories($this->pluginPath());
+        $directories = $this->pluginDirectories();
 
         foreach ($directories as $directory) {
             if ($this->isMarkedUninstalled($directory)) {
@@ -91,7 +112,7 @@ class PluginManager
      */
     public function rediscover(): array
     {
-        foreach (File::directories($this->pluginPath()) as $directory) {
+        foreach ($this->pluginDirectories() as $directory) {
             $marker = rtrim($directory, '/').'/'.$this->uninstallMarker;
             if (File::exists($marker)) {
                 File::delete($marker);
@@ -165,7 +186,7 @@ class PluginManager
             return 'none';
         }
 
-        $directories = File::directories($this->pluginPath());
+        $directories = $this->pluginDirectories();
         sort($directories);
 
         $parts = [];
@@ -231,7 +252,7 @@ class PluginManager
             return null;
         }
 
-        foreach (File::directories($this->pluginPath()) as $directory) {
+        foreach ($this->pluginDirectories() as $directory) {
             $manifestPath = $directory.'/plugin.json';
             if (! File::exists($manifestPath)) {
                 continue;
