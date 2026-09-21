@@ -41,7 +41,7 @@ afterEach(function () {
 
 function installLockPath(): string
 {
-    return storage_path(InstallService::LOCK_FILE);
+    return app(InstallService::class)->lockPath();
 }
 
 function markInstalled(): void
@@ -58,7 +58,7 @@ function markNotInstalled(): void
 
 function installProgressPath(): string
 {
-    return storage_path(InstallService::PROGRESS_FILE);
+    return app(InstallService::class)->progressPath();
 }
 
 /**

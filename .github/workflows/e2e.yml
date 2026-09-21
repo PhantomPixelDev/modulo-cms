@@ -52,6 +52,9 @@ jobs:
       QUEUE_CONNECTION: sync
       MAIL_MAILER: log
       MODULO_E2E_URL: http://127.0.0.1:8000
+      # Asset and link URLs must match where the browser reaches the app.
+      APP_URL: http://127.0.0.1:8000
+      ASSET_URL: http://127.0.0.1:8000
 
     steps:
       - name: Checkout
@@ -63,6 +66,7 @@ jobs:
           php-version: 8.4
           tools: composer:v2
           coverage: none
+          extensions: pdo_pgsql, gd, exif, bcmath, zip, intl, mbstring, openssl
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -89,7 +93,10 @@ jobs:
 
       - name: Serve the application
         run: |
-          php artisan serve --host=127.0.0.1 --port=8000 &
+          # --no-reload keeps the job's environment: without it, artisan serve
+          # unsets every variable outside a short passthrough list and the
+          # app re-reads .env, never seeing the DB_* settings above.
+          php artisan serve --no-reload --host=127.0.0.1 --port=8000 &
           for _ in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1; then
               echo "Application is up."

@@ -4,6 +4,7 @@ use App\Models\User;
 use App\Services\InstallService;
 use App\Services\SiteSettingsService;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Support\Facades\Schema;
 
 beforeEach(function () {
     // These tests are about the uninstalled state, which the suite otherwise
@@ -146,4 +147,39 @@ it('does not seed demo content unless it was asked for', function () {
 
     // Demo accounts carry documented passwords; they must never appear by default.
     expect(User::where('email', 'admin@example.com')->exists())->toBeFalse();
+});
+
+it('does not let one database inherit another database\'s install lock', function () {
+    $installer = app(InstallService::class);
+    $original = config('database.connections.sqlite.database');
+
+    // Mark the current database installed, then point at a different one that
+    // shares the same storage -- a new environment, or a second site.
+    markInstalled();
+    $installedLock = $installer->lockPath();
+
+    config(['database.connections.sqlite.database' => '/tmp/modulo-never-installed.sqlite']);
+    $otherLock = $installer->lockPath();
+
+    try {
+        expect($otherLock)->not->toBe($installedLock)
+            // The other database has never been set up; a global lock used to
+            // claim it had been, and locked the wizard out of it.
+            ->and(File::exists($otherLock))->toBeFalse();
+    } finally {
+        // Storage outlives the test, and the global afterEach would otherwise
+        // write a lock for this database -- failing the next run.
+        config(['database.connections.sqlite.database' => $original]);
+        File::delete($otherLock);
+    }
+});
+
+it('serves the wizard before any table exists', function () {
+    // The suite migrates before every test, so it never sees the state the
+    // wizard exists for. Recreate it: every Inertia response loads translation
+    // overrides, and on a fresh install that table does not exist yet -- which
+    // used to make the installer itself return a 500.
+    Schema::drop('translation_overrides');
+
+    $this->get('/install')->assertOk();
 });

@@ -1,8 +1,13 @@
 name: release-please
 
 # Maintains a release pull request from Conventional Commits. Merging it writes
-# VERSION and CHANGELOG.md and pushes a vX.Y.Z tag, which is what the release
-# workflow builds from.
+# VERSION and CHANGELOG.md, pushes a vX.Y.Z tag, and creates the GitHub
+# release.
+#
+# The build is started from here rather than by the tag. A tag pushed with
+# GITHUB_TOKEN does not trigger other workflows -- GitHub suppresses that to
+# prevent loops -- so relying on `on: push: tags` would tag the release and
+# build nothing.
 #
 # release-type "simple" is chosen deliberately: it maintains a plain version
 # file rather than a language manifest. The version has to be readable by three
@@ -25,8 +30,23 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v5
+        id: release
         with:
           release-type: simple
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: write
+      packages: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit

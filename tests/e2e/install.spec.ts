@@ -12,12 +12,12 @@ test.describe('install wizard', () => {
 
         await expect(page.getByRole('heading', { name: 'Install Modulo CMS' })).toBeVisible();
 
-        // Requirements are reported, not assumed.
-        await expect(page.getByText(/PHP 8\.4 or newer/)).toBeVisible();
-
-        const continueButton = page.getByRole('button', { name: 'Continue' });
-        if (await continueButton.isVisible()) {
-            await continueButton.click();
+        // The requirements step is shown only when something fails; with the
+        // environment satisfied the wizard starts at the database step.
+        const requirements = page.getByRole('heading', { name: 'Requirements' });
+        if (await requirements.isVisible()) {
+            await expect(page.getByText(/PHP 8\.4 or newer/)).toBeVisible();
+            await page.getByRole('button', { name: 'Continue' }).click();
         }
 
         await expect(page.getByRole('heading', { name: 'Database' })).toBeVisible();

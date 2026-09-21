@@ -187,6 +187,13 @@ class TranslationService
      */
     protected function applyOverrides(string $locale, array $translations, ?array $domains = null): array
     {
+        // Every Inertia response shares translations, including the install
+        // wizard on a database that has no tables yet. Unguarded, this query
+        // made the installer itself return a 500 on a fresh install.
+        if (! schema_has_table('translation_overrides')) {
+            return $translations;
+        }
+
         $query = TranslationOverride::query()->where('locale', $locale);
 
         if ($domains) {

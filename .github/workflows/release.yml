@@ -15,6 +15,12 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Release tag to build and publish, e.g. v1.2.0'
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       dry_run_version:
@@ -48,13 +54,17 @@ jobs:
       is_prerelease: ${{ steps.meta.outputs.is_prerelease }}
       built_at: ${{ steps.meta.outputs.built_at }}
       publish: ${{ steps.meta.outputs.publish }}
+      tag: ${{ steps.meta.outputs.tag }}
     steps:
       - name: Resolve release metadata
         id: meta
         run: |
           set -euo pipefail
 
-          if [ "${{ github.event_name }}" = "push" ]; then
+          if [ -n "${{ inputs.tag }}" ]; then
+            raw="${{ inputs.tag }}"
+            publish=true
+          elif [ "${{ github.event_name }}" = "push" ]; then
             raw="${GITHUB_REF_NAME}"
             publish=true
           else
@@ -80,6 +90,7 @@ jobs:
             echo "image_base=$image_base"
             echo "is_prerelease=$is_prerelease"
             echo "publish=$publish"
+            echo "tag=${raw}"
             echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           } >> "$GITHUB_OUTPUT"
 
@@ -103,6 +114,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -157,6 +170,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -256,6 +271,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Download tarball
         uses: actions/download-artifact@v8
@@ -271,7 +288,7 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.prepare.outputs.tag }}
           prerelease: ${{ needs.prepare.outputs.is_prerelease == 'true' }}
           # release-please owns the release body; do not overwrite its changelog.
           generate_release_notes: false

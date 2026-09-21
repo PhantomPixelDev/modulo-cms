@@ -40,3 +40,5 @@ cookies.txt
 /test-results
 /blob-report
 /playwright/.cache
+/storage/installed*
+/storage/installing*
