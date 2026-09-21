@@ -1,4 +1,12 @@
 version: 2
+
+# Grouping is not cosmetic here. Several of these packages have peer
+# dependencies on each other, so a major raised on its own is unmergeable by
+# construction: @eslint/js 10 needs eslint 10, @vitejs/plugin-react 6 needs
+# vite 8, and typescript-eslint has to support a TypeScript major before that
+# major can land. Toolchains that move together are grouped so they arrive in
+# one pull request that can actually pass CI.
+
 updates:
   - package-ecosystem: composer
     directory: /
@@ -8,6 +16,12 @@ updates:
     groups:
       php-minor-and-patch:
         update-types: [minor, patch]
+      # Laravel's first-party packages release majors in lockstep.
+      laravel-majors:
+        patterns:
+          - 'laravel/*'
+          - 'illuminate/*'
+        update-types: [major]
 
   - package-ecosystem: npm
     directory: /
@@ -18,10 +32,48 @@ updates:
       js-minor-and-patch:
         update-types: [minor, patch]
 
+      # eslint and its plugins validate each other's majors.
+      eslint-toolchain:
+        patterns:
+          - 'eslint'
+          - '@eslint/*'
+          - 'eslint-*'
+          - 'typescript-eslint'
+          - '@typescript-eslint/*'
+        update-types: [major]
+
+      # A plugin major usually requires the matching vite major.
+      vite-toolchain:
+        patterns:
+          - 'vite'
+          - '@vitejs/*'
+          - 'laravel-vite-plugin'
+          - 'vitest'
+          - '@vitest/*'
+        update-types: [major]
+
+      react-toolchain:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+        update-types: [major]
+
+    ignore:
+      # TypeScript majors ripple through typescript-eslint, the Prettier
+      # plugins and every @types package, so they are raised deliberately
+      # rather than automatically.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns: ['*']
 
   - package-ecosystem: docker
     directories:
@@ -29,3 +81,6 @@ updates:
       - /docker-dev
     schedule:
       interval: monthly
+    groups:
+      docker-images:
+        patterns: ['*']
