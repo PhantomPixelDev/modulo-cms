@@ -46,6 +46,7 @@ function installLockPath(): string
 
 function markInstalled(): void
 {
+    File::delete(installProgressPath());
     File::put(installLockPath(), 'testing');
 }
 
