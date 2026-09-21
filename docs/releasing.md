@@ -67,7 +67,7 @@ If you remove those pins, arm64 releases stop working. Rehearse with
 **Docker** — set `MODULO_TAG` in `.env.prod` and pull:
 
 ```bash
-MODULO_TAG=v1.2.3 ./modulo.sh up prod
+MODULO_TAG=1.2.3 ./modulo.sh up prod
 ```
 
 **Bare metal** — download the tarball and its checksum, verify, extract:
