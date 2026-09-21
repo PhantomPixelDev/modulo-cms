@@ -283,7 +283,10 @@ jobs:
       - name: Stage deployment files
         run: |
           cp docker/docker-compose.yml dist/docker-compose.yml
-          cp .env.prod.example dist/.env.prod.example
+          # Without the leading dot: GitHub renames dotfile assets to
+          # "default.<name>", which nobody would recognise.
+          cp .env.prod.example dist/env.prod.example
+          cp install.sh install.ps1 dist/
 
       - name: Publish release
         uses: softprops/action-gh-release@v3
@@ -297,4 +300,6 @@ jobs:
             dist/*.tar.gz
             dist/*.tar.gz.sha256
             dist/docker-compose.yml
-            dist/.env.prod.example
+            dist/env.prod.example
+            dist/install.sh
+            dist/install.ps1
