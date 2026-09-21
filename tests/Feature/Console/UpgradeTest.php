@@ -6,6 +6,27 @@ use App\Models\User;
 use App\Services\UpgradePreflight;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Create a row whose parent_id points nowhere.
+ *
+ * On PostgreSQL the foreign key this guards against already exists, so the
+ * database refuses the insert. That is the point: the preflight is about
+ * databases written *before* that migration ran, so the constraint is dropped
+ * to reproduce them. SQLite does not enforce it and needs no such help.
+ */
+function makeOrphanedPost(): Post
+{
+    $post = preflightPost();
+
+    if (DB::getDriverName() === 'pgsql') {
+        DB::statement('ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_parent_fk');
+    }
+
+    DB::table('posts')->where('id', $post->id)->update(['parent_id' => 999_999]);
+
+    return $post;
+}
+
 function preflightPost(): Post
 {
     $type = PostType::firstOrCreate(
@@ -35,11 +56,7 @@ it('passes when parent references are consistent', function () {
 });
 
 it('blocks the upgrade when a post points at a parent that does not exist', function () {
-    $orphan = preflightPost();
-
-    // Bypass the model so the bad value lands exactly as it would in a real
-    // database that predates the foreign key.
-    DB::table('posts')->where('id', $orphan->id)->update(['parent_id' => 999_999]);
+    $orphan = makeOrphanedPost();
 
     $preflight = app(UpgradePreflight::class);
     $results = $preflight->run(['2026_02_22_000003_align_parent_ids_to_bigint']);
@@ -54,8 +71,7 @@ it('blocks the upgrade when a post points at a parent that does not exist', func
 });
 
 it('only runs checks for migrations that are actually pending', function () {
-    $orphan = preflightPost();
-    DB::table('posts')->where('id', $orphan->id)->update(['parent_id' => 999_999]);
+    $orphan = makeOrphanedPost();
 
     // The orphan is present, but that migration is not pending, so no check
     // should fire and nothing should block.
@@ -72,8 +88,7 @@ it('reports the cost of the full-text index migration', function () {
 });
 
 it('changes nothing on a dry run', function () {
-    $orphan = preflightPost();
-    DB::table('posts')->where('id', $orphan->id)->update(['parent_id' => 999_999]);
+    $orphan = makeOrphanedPost();
 
     // Nothing is pending in a freshly migrated database, so this succeeds --
     // the point is that it touched nothing on the way through.

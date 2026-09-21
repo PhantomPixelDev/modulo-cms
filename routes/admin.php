@@ -49,9 +49,12 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Specific route for listing taxonomy terms by taxonomy slug
         Route::get('taxonomies/{taxonomy}/terms', [TaxonomyTermController::class, 'indexByTaxonomy'])->name('taxonomy-terms.byTaxonomy');
         Route::resource('templates', TemplateController::class);
-        Route::resource('themes', ThemeController::class);
+        Route::resource('themes', ThemeController::class)->only(['index', 'show', 'update', 'destroy']);
 
         // Theme-specific routes
+        // install() existed with no route at all, so the only way to install a
+        // theme was the all-or-nothing Discover action.
+        Route::post('/themes/install', [ThemeController::class, 'install'])->name('themes.install');
         Route::post('/themes/discover', [ThemeController::class, 'discover'])->name('themes.discover');
         Route::post('/themes/clear-cache', [ThemeController::class, 'clearCache'])->name('themes.clear-cache');
         Route::post('/themes/{slug}/activate', [ThemeController::class, 'activate'])->name('themes.activate');

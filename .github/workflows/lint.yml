@@ -59,6 +59,30 @@ jobs:
       - name: TypeScript
         run: npm run types
 
+      - name: Static analysis baseline must not grow
+        run: |
+          set -euo pipefail
+          recorded=$(grep -c 'message:' phpstan-baseline.neon)
+          echo "Baseline entries: ${recorded}"
+
+          # Regenerate against the current code and compare. A new entry means
+          # new code was added with a known problem and then silenced.
+          cp phpstan-baseline.neon /tmp/baseline-before.neon
+          vendor/bin/phpstan analyse --generate-baseline --memory-limit=1G --no-progress >/dev/null 2>&1 || true
+          regenerated=$(grep -c 'message:' phpstan-baseline.neon)
+          cp /tmp/baseline-before.neon phpstan-baseline.neon
+
+          echo "Regenerated entries: ${regenerated}"
+
+          if [ "${regenerated}" -gt "${recorded}" ]; then
+            echo "::error::The PHPStan baseline would grow from ${recorded} to ${regenerated}. Fix the new finding rather than baselining it."
+            exit 1
+          fi
+
+          if [ "${regenerated}" -lt "${recorded}" ]; then
+            echo "::notice::The baseline can shrink from ${recorded} to ${regenerated}. Run phpstan --generate-baseline and commit it."
+          fi
+
       # Known advisories in locked dependencies fail the build
       - name: PHP dependency audit
         run: composer audit

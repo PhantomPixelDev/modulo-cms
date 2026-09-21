@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Services\InstallService;
 use App\Services\SiteSettingsService;
+use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
     // These tests are about the uninstalled state, which the suite otherwise
@@ -37,8 +38,9 @@ it('answers API callers with 503 rather than a redirect', function () {
 });
 
 it('creates the first administrator as a super admin', function () {
-    // The real flow runs the database step first; roles come from there.
-    $this->post('/install/migrate')->assertRedirect();
+    // The real flow gets roles from the database step; seed them directly so
+    // this test is not entangled with running migrations inside a request.
+    $this->seed(RolePermissionSeeder::class);
 
     $this->post('/install/administrator', [
         'name' => 'First Admin',

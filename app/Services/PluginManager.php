@@ -11,10 +11,6 @@ use Illuminate\Support\Str;
 
 class PluginManager
 {
-    protected string $pluginPath;
-
-    protected string $uninstallPath;
-
     /**
      * Legacy marker, written inside the plugin's own directory.
      *
@@ -26,14 +22,20 @@ class PluginManager
 
     protected ?string $lastError = null;
 
-    public function __construct()
+    protected function pluginPath(): string
     {
-        $this->pluginPath = (string) config('plugins.path', base_path('plugins'));
-        $this->uninstallPath = (string) config('plugins.uninstall_path', storage_path('app/plugins/uninstalled'));
+        $path = (string) config('plugins.path', base_path('plugins'));
 
-        if (! File::exists($this->pluginPath)) {
-            File::makeDirectory($this->pluginPath, 0755, true);
+        if (! File::exists($path)) {
+            File::makeDirectory($path, 0755, true);
         }
+
+        return $path;
+    }
+
+    protected function uninstallPath(): string
+    {
+        return (string) config('plugins.uninstall_path', storage_path('app/plugins/uninstalled'));
     }
 
     /**
@@ -43,12 +45,12 @@ class PluginManager
     {
         $this->lastError = null;
 
-        if (! File::exists($this->pluginPath)) {
+        if (! File::exists($this->pluginPath())) {
             return [];
         }
 
         $plugins = [];
-        $directories = File::directories($this->pluginPath);
+        $directories = File::directories($this->pluginPath());
 
         foreach ($directories as $directory) {
             if ($this->isMarkedUninstalled($directory)) {
@@ -89,15 +91,15 @@ class PluginManager
      */
     public function rediscover(): array
     {
-        foreach (File::directories($this->pluginPath) as $directory) {
+        foreach (File::directories($this->pluginPath()) as $directory) {
             $marker = rtrim($directory, '/').'/'.$this->uninstallMarker;
             if (File::exists($marker)) {
                 File::delete($marker);
             }
         }
 
-        if (File::isDirectory($this->uninstallPath)) {
-            File::cleanDirectory($this->uninstallPath);
+        if (File::isDirectory($this->uninstallPath())) {
+            File::cleanDirectory($this->uninstallPath());
         }
 
         Cache::forget($this->discoveryCacheKey());
@@ -159,11 +161,11 @@ class PluginManager
      */
     protected function getDiscoveryFingerprint(): string
     {
-        if (! File::exists($this->pluginPath)) {
+        if (! File::exists($this->pluginPath())) {
             return 'none';
         }
 
-        $directories = File::directories($this->pluginPath);
+        $directories = File::directories($this->pluginPath());
         sort($directories);
 
         $parts = [];
@@ -207,7 +209,7 @@ class PluginManager
 
     protected function uninstallRecordPath(string $slug): string
     {
-        return rtrim($this->uninstallPath, '/').'/'.$slug.'.json';
+        return rtrim($this->uninstallPath(), '/').'/'.$slug.'.json';
     }
 
     protected function slugForDirectory(string $directory): ?string
@@ -225,11 +227,11 @@ class PluginManager
 
     protected function findPluginDirectoryBySlug(string $slug): ?string
     {
-        if (! File::exists($this->pluginPath)) {
+        if (! File::exists($this->pluginPath())) {
             return null;
         }
 
-        foreach (File::directories($this->pluginPath) as $directory) {
+        foreach (File::directories($this->pluginPath()) as $directory) {
             $manifestPath = $directory.'/plugin.json';
             if (! File::exists($manifestPath)) {
                 continue;
@@ -595,7 +597,7 @@ class PluginManager
         // destroyed the next time those files are replaced, silently bringing
         // back a plugin the operator removed.
         try {
-            File::ensureDirectoryExists($this->uninstallPath);
+            File::ensureDirectoryExists($this->uninstallPath());
             File::put($this->uninstallRecordPath($slug), json_encode([
                 'slug' => $slug,
                 'uninstalled_at' => now()->toIso8601String(),

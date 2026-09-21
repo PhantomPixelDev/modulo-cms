@@ -7,7 +7,8 @@ use Illuminate\Console\Command;
 
 class ThemeInstallCommand extends Command
 {
-    protected $signature = 'theme:install {slug : The theme slug to install}';
+    protected $signature = 'theme:install {slug : The theme slug to install}
+        {--activate : Activate it once installed, without prompting}';
 
     protected $description = 'Install a theme from the themes directory';
 
@@ -41,9 +42,12 @@ class ThemeInstallCommand extends Command
             $this->line("  Slug: {$installed->slug}");
             $this->line("  Version: {$installed->version}");
 
-            if ($this->confirm('Would you like to activate this theme?', false)) {
-                $themeManager->activateTheme($installed->slug);
-                $this->info('✓ Theme activated!');
+            if ($this->option('activate') || ($this->input->isInteractive() && $this->confirm('Would you like to activate this theme?', false))) {
+                if ($themeManager->activateTheme($installed->slug)) {
+                    $this->info('✓ Theme activated!');
+                } else {
+                    $this->warn('Installed, but activation failed. Only React themes can be activated.');
+                }
             }
 
             return self::SUCCESS;
