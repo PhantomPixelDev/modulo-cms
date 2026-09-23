@@ -114,18 +114,18 @@ the dev stack.
 
 The production stack runs published images from GHCR. `MODULO_TAG` in `.env.prod`
 selects the release — `latest` follows the newest non-prerelease; pin an exact version
-such as `v1.2.3` for a predictable deploy.
+such as `0.1.2` for a predictable deploy. See
+[releases](https://github.com/PhantomPixelDev/modulo-cms/releases).
 
-> **No release has been published yet.** Until the first tag exists there is nothing to
-> pull, so build the images locally instead:
->
-> ```bash
-> MODULO_BUILD=1 ./modulo.sh up prod
-> ```
->
-> That layers `docker/docker-compose.build.yml` over the stack and builds from this
-> checkout. Locally built images are not stamped with a version and report themselves
-> as `0.0.0-dev`.
+To run your own changes instead of a published image, build locally:
+
+```bash
+MODULO_BUILD=1 ./modulo.sh up prod
+```
+
+That layers `docker/docker-compose.build.yml` over the stack and builds from this
+checkout. Locally built images are not stamped with a version unless you pass
+`MODULO_VERSION`.
 
 ### First run
 
