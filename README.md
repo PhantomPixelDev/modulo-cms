@@ -6,6 +6,8 @@
 [![PHP 8.4](https://img.shields.io/badge/PHP-8.4-777BB4.svg)](https://www.php.net/)
 [![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20.svg)](https://laravel.com/)
 
+![Modulo CMS: the public site and the admin dashboard](docs/screenshots/hero.png)
+
 A self-hosted, modular content management system built on Laravel 12 with a React 19
 front end. Custom post types, taxonomies and menus; a media library; multi-language
 content; role-based permissions; and a plugin and theme system.
@@ -25,9 +27,28 @@ content; role-based permissions; and a plugin and theme system.
   permissions they do not hold.
 - **Themes** — React components resolved per theme, with a default `modern-react` theme.
 - **Plugins** — a service-provider based plugin system with WordPress-style
-  `add_action` / `add_filter` hooks. Ships with a contact form and a small shop.
+  `add_action` / `add_filter` hooks. Ships with a contact form and a small shop, and
+  installs more from the checksum-verified
+  [plugin registry](https://github.com/PhantomPixelDev/modulo-registry).
 - **Operations** — a real `/health` readiness probe, nightly database backups, a queue
   worker and scheduler, and a hardened nginx configuration.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/site-home.png" alt="Public site with the default modern-react theme"><br><sub>Public site, default <code>modern-react</code> theme</sub></td>
+    <td width="50%"><img src="docs/screenshots/admin-dashboard.png" alt="Admin dashboard"><br><sub>Admin dashboard</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/admin-editor.png" alt="Post editor"><br><sub>Post editor, per-locale content</sub></td>
+    <td width="50%"><img src="docs/screenshots/admin-plugins.png" alt="Plugin management"><br><sub>Plugins</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/install-wizard.png" alt="First-run install wizard"><br><sub>First-run install wizard</sub></td>
+    <td width="50%"></td>
+  </tr>
+</table>
 
 ## Requirements
 
