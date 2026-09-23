@@ -59,3 +59,27 @@ it('can cache the route table', function () {
     $this->artisan('route:cache')->assertSuccessful();
     $this->artisan('route:clear')->assertSuccessful();
 });
+
+it('serves a page at its translated slug in that locale', function () {
+    // The sitemap and hreflang links publish /{locale}/{translated-slug};
+    // matching only the default slug made every one of them a 404.
+    Locale::create(['code' => 'es', 'name' => 'Spanish', 'native_name' => 'Espanol', 'is_active' => true, 'is_default' => false]);
+    $page = makePublishedPage(['slug' => 'about', 'title' => 'About us']);
+    $page->setTranslation('es', ['title' => 'Acerca de', 'slug' => 'acerca', 'content' => 'Contenido']);
+
+    $this->get('/es/acerca')->assertOk();
+    $this->get('/es/about')->assertOk();
+});
+
+it('serves a custom post type entry at its translated slug', function () {
+    Locale::create(['code' => 'en', 'name' => 'English', 'native_name' => 'English', 'is_active' => true, 'is_default' => true]);
+    Locale::create(['code' => 'es', 'name' => 'Spanish', 'native_name' => 'Espanol', 'is_active' => true, 'is_default' => false]);
+    $news = PostType::factory()->create(['name' => 'news', 'slug' => 'news', 'route_prefix' => 'news', 'is_public' => true]);
+    $post = Post::factory()->published()->create(['post_type_id' => $news->id, 'slug' => 'launch', 'title' => 'News Launch']);
+    $post->setTranslation('es', ['title' => 'Lanzamiento', 'slug' => 'lanzamiento', 'content' => 'Contenido']);
+
+    // A translated slug belongs to its own locale only. Checked first: visiting
+    // /es/... stores the locale in the session for later requests.
+    $this->get('/news/lanzamiento')->assertNotFound();
+    $this->get('/es/news/lanzamiento')->assertOk();
+});

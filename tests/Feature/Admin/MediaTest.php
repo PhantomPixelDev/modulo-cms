@@ -5,6 +5,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Models\Permission;
 
@@ -109,4 +110,62 @@ it('updates and deletes media records', function () {
         ->delete(route('dashboard.admin.media.destroy', $media->id))
         ->assertRedirect();
     expect(Media::count())->toBe(0);
+});
+
+/**
+ * A media row attached to something other than the library, the way a plugin
+ * attaches files to its own models.
+ */
+function foreignMedia(): Media
+{
+    return Media::query()->create([
+        'model_type' => 'Plugins\Shop\Product',
+        'model_id' => 1,
+        'uuid' => (string) Str::uuid(),
+        'collection_name' => 'images',
+        'name' => 'product-photo',
+        'file_name' => 'product-photo.jpg',
+        'mime_type' => 'image/jpeg',
+        'disk' => 'public',
+        'conversions_disk' => 'public',
+        'size' => 1024,
+        'manipulations' => [],
+        'custom_properties' => [],
+        'generated_conversions' => [],
+        'responsive_images' => [],
+    ]);
+}
+
+it('does not let the library rename or delete media it does not own', function () {
+    Storage::fake('public');
+    $user = mediaUser();
+    $media = foreignMedia();
+
+    $this->actingAs($user)
+        ->put(route('dashboard.admin.media.update', $media->id), ['name' => 'hijacked'])
+        ->assertNotFound();
+    $this->actingAs($user)
+        ->delete(route('dashboard.admin.media.destroy', $media->id))
+        ->assertNotFound();
+
+    expect($media->fresh())->not->toBeNull()
+        ->and($media->fresh()->name)->toBe('product-photo');
+});
+
+it('ignores media it does not own in bulk actions', function () {
+    Storage::fake('public');
+    $user = mediaUser();
+    $media = foreignMedia();
+    $folder = MediaBucket::firstOrCreate(['name' => 'default', 'parent_id' => null]);
+
+    // "move" used to reassign any row to the library, taking it from its owner.
+    $this->actingAs($user)->post(route('dashboard.admin.media.bulk'), [
+        'action' => 'move', 'ids' => [$media->id], 'target_folder_id' => $folder->id,
+    ])->assertRedirect();
+    $this->actingAs($user)->post(route('dashboard.admin.media.bulk'), [
+        'action' => 'delete', 'ids' => [$media->id],
+    ])->assertRedirect();
+
+    expect($media->fresh())->not->toBeNull()
+        ->and($media->fresh()->model_type)->toBe('Plugins\Shop\Product');
 });
