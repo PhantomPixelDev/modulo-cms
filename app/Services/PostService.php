@@ -25,29 +25,28 @@ class PostService
      *
      * Comments are intentionally not cached; load them per request.
      */
-    public function getPostBySlug(string $slug, ?string $postType = null): ?Post
+    public function getPostBySlug(string $slug, ?string $postType = null, ?string $locale = null): ?Post
     {
-        return $this->remember('name:'.($postType ?? 'any').":{$slug}", function () use ($slug, $postType) {
-            $query = $this->baseQuery();
+        $locale ??= app()->getLocale();
 
-            if ($postType) {
-                $query->whereHas('postType', fn ($q) => $q->where('name', $postType));
-            }
-
-            return $query->where('slug', $slug)->first();
+        return $this->remember('name:'.($postType ?? 'any').":{$locale}:{$slug}", function () use ($slug, $postType, $locale) {
+            return $this->findBySlug($slug, $locale, function ($query) use ($postType) {
+                if ($postType) {
+                    $query->whereHas('postType', fn ($q) => $q->where('name', $postType));
+                }
+            });
         });
     }
 
     /**
      * Get a published post by slug within one post type (slugs are only unique per type).
      */
-    public function getPostBySlugForType(string $slug, PostType $postType): ?Post
+    public function getPostBySlugForType(string $slug, PostType $postType, ?string $locale = null): ?Post
     {
-        return $this->remember("type:{$postType->id}:{$slug}", function () use ($slug, $postType) {
-            return $this->baseQuery()
-                ->where('post_type_id', $postType->id)
-                ->where('slug', $slug)
-                ->first();
+        $locale ??= app()->getLocale();
+
+        return $this->remember("type:{$postType->id}:{$locale}:{$slug}", function () use ($slug, $postType, $locale) {
+            return $this->findBySlug($slug, $locale, fn ($query) => $query->where('post_type_id', $postType->id));
         });
     }
 
@@ -112,6 +111,30 @@ class PostService
             'children',
             'translations',
         ])->published();
+    }
+
+    /**
+     * A post by the slug of its translation in this locale, else by its own slug.
+     *
+     * The sitemap and hreflang links publish /{locale}/.../{translated-slug};
+     * matching only posts.slug made every one of those URLs a 404. The
+     * translation is tried first so that, in its locale, a translated slug
+     * wins over another post that happens to use the same slug by default.
+     */
+    protected function findBySlug(string $slug, string $locale, \Closure $scope): ?Post
+    {
+        $translated = $this->baseQuery()
+            ->whereHas('translations', fn ($q) => $q->where('locale', $locale)->where('slug', $slug));
+        $scope($translated);
+
+        if ($post = $translated->first()) {
+            return $post;
+        }
+
+        $query = $this->baseQuery()->where('slug', $slug);
+        $scope($query);
+
+        return $query->first();
     }
 
     protected function remember(string $key, \Closure $callback): ?Post

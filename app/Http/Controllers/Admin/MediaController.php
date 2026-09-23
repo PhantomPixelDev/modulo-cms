@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MediaUploadRequest;
 use App\Models\MediaBucket;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -45,12 +46,7 @@ class MediaController extends Controller
 
         $mediaPaginator = null;
         if (class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
-            /** @var class-string<\\Spatie\\MediaLibrary\\MediaCollections\\Models\\Media> $Media */
-            $Media = '\\Spatie\\MediaLibrary\\MediaCollections\\Models\\Media';
-            $query = $Media::query()
-                ->where('model_type', MediaBucket::class)
-                ->where('model_id', $bucket->id)
-                ->where('collection_name', $this->collection);
+            $query = $this->libraryQuery()->where('model_id', $bucket->id);
 
             if ($q !== '') {
                 $query->where(function ($sub) use ($q) {
@@ -258,8 +254,7 @@ class MediaController extends Controller
             'folder_id' => ['sometimes', 'nullable', 'integer', 'exists:media_buckets,id'],
         ]);
 
-        /** @var Media $media */
-        $media = Media::findOrFail($id);
+        $media = $this->libraryMedia($id);
         if (array_key_exists('name', $data)) {
             $media->name = (string) $data['name'];
         }
@@ -289,9 +284,7 @@ class MediaController extends Controller
             return back()->with('error', 'Media library package not installed yet.');
         }
 
-        /** @var Media $media */
-        $media = Media::findOrFail($id);
-        $media->delete();
+        $this->libraryMedia($id)->delete();
 
         return back()->with('success', 'Media deleted');
     }
@@ -305,8 +298,7 @@ class MediaController extends Controller
         }
 
         if ($id) {
-            /** @var Media $media */
-            $media = Media::findOrFail($id);
+            $media = $this->libraryMedia($id);
             if (class_exists('Spatie\\MediaLibrary\\MediaCollections\\FileManipulator')) {
                 app('Spatie\\MediaLibrary\\MediaCollections\\FileManipulator')->createDerivedFiles($media);
             }
@@ -337,20 +329,17 @@ class MediaController extends Controller
             return back()->with('error', 'Media library package not installed yet.');
         }
 
-        /** @var class-string<\\Spatie\\MediaLibrary\\MediaCollections\\Models\\Media> $Media */
-        $Media = '\\Spatie\\MediaLibrary\\MediaCollections\\Models\\Media';
-
         if ($action === 'delete') {
             $this->authorizeDelete();
             // Delete through the model so Spatie also removes the files from disk
-            $Media::query()->whereIn('id', $ids)->get()->each->delete();
+            $this->libraryQuery()->whereIn('id', $ids)->get()->each->delete();
 
             return back()->with('success', 'Selected media deleted');
         }
 
         if ($action === 'regenerate') {
             $this->authorizeEdit();
-            $items = $Media::query()->whereIn('id', $ids)->get();
+            $items = $this->libraryQuery()->whereIn('id', $ids)->get();
             if (class_exists('Spatie\\MediaLibrary\\MediaCollections\\FileManipulator')) {
                 foreach ($items as $m) {
                     app('Spatie\\MediaLibrary\\MediaCollections\\FileManipulator')->createDerivedFiles($m);
@@ -367,7 +356,7 @@ class MediaController extends Controller
                 return back()->with('error', 'Target folder is required');
             }
             $target = MediaBucket::findOrFail($targetId);
-            $Media::query()->whereIn('id', $ids)->update([
+            $this->libraryQuery()->whereIn('id', $ids)->update([
                 'model_type' => MediaBucket::class,
                 'model_id' => $target->id,
             ]);
@@ -376,6 +365,28 @@ class MediaController extends Controller
         }
 
         return back()->with('error', 'Unknown action');
+    }
+
+    /**
+     * Media that belongs to the library, and nothing else.
+     *
+     * Every media row in the application shares one table -- plugins attach
+     * files to their own models -- so a lookup by id alone would let anyone
+     * allowed to manage the library rename, delete or (via "move") take over
+     * files that belong to something else.
+     *
+     * @return Builder<Media>
+     */
+    protected function libraryQuery(): Builder
+    {
+        return Media::query()
+            ->where('model_type', MediaBucket::class)
+            ->where('collection_name', $this->collection);
+    }
+
+    protected function libraryMedia(int $id): Media
+    {
+        return $this->libraryQuery()->whereKey($id)->firstOrFail();
     }
 
     protected function authorizeView(): void

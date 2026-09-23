@@ -67,12 +67,6 @@ parameters:
 			path: app/Http/Controllers/Admin/MediaController.php
 
 		-
-			message: '#^PHPDoc tag @var has invalid value \(class\-string\<\\\\Spatie\\\\MediaLibrary\\\\MediaCollections\\\\Models\\\\Media\> \$Media\)\: Unexpected token "\\\\\\\\Spatie\\\\\\\\MediaLibrary\\\\\\\\MediaCollections\\\\\\\\Models\\\\\\\\Media\>", expected type at offset 22 on line 1$#'
-			identifier: phpDoc.parseError
-			count: 2
-			path: app/Http/Controllers/Admin/MediaController.php
-
-		-
 			message: '#^Call to function method_exists\(\) with App\\Models\\MediaBucket and ''getMedia'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
