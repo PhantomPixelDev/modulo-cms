@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.1.1...v0.1.2) (2026-09-23)
+
+
+### Bug Fixes
+
+* scope media actions to the library, serve translated slugs ([#21](https://github.com/PhantomPixelDev/modulo-cms/issues/21)) ([d2fea5a](https://github.com/PhantomPixelDev/modulo-cms/commit/d2fea5aaca9c03deb6b5e777824978c5137bdac5))
+
 ## [0.1.1](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.1.0...v0.1.1) (2026-09-21)
 
 
