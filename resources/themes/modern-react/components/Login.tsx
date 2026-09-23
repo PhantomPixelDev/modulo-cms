@@ -31,7 +31,7 @@ export default function Login({ canResetPassword = true, status }: Props) {
 
     return (
         <AuthLayout title="Log in">
-            <Head title="Log in Forin TEMPLATE" />
+            <Head title="Log in" />
 
             <div className="py-6">
                 <div className="">

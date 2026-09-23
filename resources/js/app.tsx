@@ -15,7 +15,7 @@ declare global {
     }
 }
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Modulo CMS';
 
 // Page components (standardized to a single `pages/` directory)
 // Use lazy imports to avoid evaluating every page at startup

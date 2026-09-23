@@ -45,7 +45,7 @@ export function getPostsSections({
 }): Record<string, () => ReactNode> {
     // Get the display name for the current post type
     const postTypeName = currentPostType?.label || currentPostType?.plural_label || t('dashboard.posts.title');
-    const postTypeSingular = currentPostType?.label || currentPostType?.name || t('dashboard.posts.view_post');
+    const postTypeSingular = currentPostType?.label || currentPostType?.name || t('dashboard.posts.singular');
     const handlePostSubmit = async (formData: any, editId?: number) => {
         try {
             const url = editId ? ROUTE.posts.update(editId) : ROUTE.posts.store();
