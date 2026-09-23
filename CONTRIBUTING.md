@@ -45,7 +45,7 @@ for the measurements and the fix.
 
 ## Quality gates
 
-CI runs these on every push and pull request to `dev` and `main`, and a red build
+CI runs these on every push and pull request to `main`, and a red build
 blocks a merge. Run them locally first:
 
 ```bash
