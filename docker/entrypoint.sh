@@ -27,7 +27,21 @@ if [ "${CONTAINER_ROLE:-app}" = "app" ]; then
   wait_for_database
 
   if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
-    php artisan migrate --force
+    if ! php artisan migrate:status >/dev/null 2>&1; then
+      # Fresh database: nothing to back up or protect yet.
+      php artisan migrate --force
+    elif php artisan migrate:status 2>/dev/null | grep -q Pending; then
+      # An existing site on a newer image. Go through the guarded path --
+      # preflight, backup, maintenance window -- rather than a bare migrate.
+      if ! php artisan modulo:upgrade --no-interaction; then
+        # Whatever stopped it (a preflight blocker, a failed backup or a failed
+        # migration), this image's code must not serve the old schema. Keep the
+        # site in maintenance mode until someone has looked.
+        php artisan down --retry=60 >/dev/null 2>&1 || true
+        echo "ERROR: the upgrade did not complete; the site is in maintenance mode." >&2
+        echo "       See the output above, then run: docker compose exec app php artisan modulo:upgrade" >&2
+      fi
+    fi
   fi
 
   php artisan storage:link >/dev/null 2>&1 || true

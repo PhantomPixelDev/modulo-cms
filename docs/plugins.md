@@ -73,13 +73,19 @@ by path, so the two have to agree or the classes never load.
 A manifest that cannot be loaded is reported with the reason, rather than the package
 silently not appearing.
 
+`migrations_path` is what makes activation and updates create the plugin's tables.
+Its migrations run whenever the plugin is switched on, and on every update. The
+optional `seeder` runs on each activation too, so it must be idempotent — use
+`firstOrCreate` / `updateOrCreate`, as the bundled plugins do.
+
 ## Updating
 
 `plugin:update` compares the registry's version with the installed one. New
 migrations run **before** the version is recorded, so a failed migration leaves the
 recorded version behind and the update is retried rather than assumed done. A package
-older than what is installed is refused; rolling a plugin's schema backwards is not
-something this can do safely.
+older than what is installed is refused before it is downloaded; rolling a plugin's
+schema backwards is not something this can do safely. Uninstall the plugin first if an
+older version is really needed.
 
 ## Docker
 

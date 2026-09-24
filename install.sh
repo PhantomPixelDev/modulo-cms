@@ -106,6 +106,13 @@ curl -fsSL "${BASE}/docker/docker-compose.yml" -o docker-compose.yml \
     || die "Could not download docker-compose.yml for ${REF}."
 curl -fsSL "${BASE}/.env.prod.example" -o .env.prod.example \
     || die "Could not download the environment template for ${REF}."
+# The site helper (update / backup / restore). Optional: an install still
+# works without it, so a failed download only warns.
+if curl -fsSL "${BASE}/docker/modulo" -o modulo; then
+    chmod +x modulo
+else
+    warn "Could not download the ./modulo helper; updates can still be run by hand (see docs/upgrading.md)."
+fi
 ok "Downloaded deployment files"
 
 # --- Configuration ----------------------------------------------------------
@@ -174,5 +181,6 @@ fi
 printf '\n  \033[32mReady.\033[0m Open this to finish setup:\n\n'
 printf '    http://localhost:%s/install\n\n' "$WEB_PORT"
 info "Your secrets are in ${TARGET_DIR}/.env - keep it, and do not commit it."
+info "Update it with:      cd ${TARGET_DIR} && ./modulo update"
 info "Stop the site with:  cd ${TARGET_DIR} && $RUNTIME compose down"
 printf '\n'

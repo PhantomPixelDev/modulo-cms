@@ -11,11 +11,9 @@ use Throwable;
 /**
  * Asks GitHub whether a newer release exists.
  *
- * Mirrors ThemeManager::hasUpdates(), which is the same shape with the local
- * filesystem as its "remote". The difference worth stating: this never applies
- * anything. Delivering new code is channel-specific and, on Docker,
- * impossible from inside the container -- so the result is advice plus the
- * exact command for the detected channel.
+ * This never applies anything. Delivering new code is channel-specific and, on
+ * Docker, impossible from inside the container -- so the result is advice plus
+ * the exact commands for the detected channel.
  */
 class UpdateChecker
 {
@@ -46,18 +44,24 @@ class UpdateChecker
             return $this->result($current, null, null, null, 'Development build; not checking for updates.');
         }
 
-        if ($force) {
-            Cache::forget(self::CACHE_KEY);
+        $release = $force ? null : Cache::get(self::CACHE_KEY);
+
+        if (! is_array($release)) {
+            $release = $this->fetchLatestRelease();
+
+            // A failed check is only remembered briefly: one network hiccup or
+            // rate limit must not hide a (possibly security) release for half
+            // a day, but retrying on every admin page load would make a rate
+            // limit worse.
+            $ttl = $release['error'] === null
+                ? (int) config('updates.cache_ttl')
+                : (int) config('updates.error_cache_ttl', 600);
+
+            Cache::put(self::CACHE_KEY, $release, $ttl);
         }
 
-        $release = Cache::remember(
-            self::CACHE_KEY,
-            (int) config('updates.cache_ttl'),
-            fn () => $this->fetchLatestRelease(),
-        );
-
-        if ($release === null || ($release['error'] ?? null) !== null) {
-            return $this->result($current, null, null, null, $release['error'] ?? 'Could not reach the update server.');
+        if ($release['error'] !== null) {
+            return $this->result($current, null, null, null, $release['error']);
         }
 
         return $this->result(
@@ -70,45 +74,59 @@ class UpdateChecker
     }
 
     /**
-     * The command that actually performs the update for this install.
+     * The commands that actually perform the update for this install.
      *
-     * A Docker install cannot rewrite itself: the image is immutable, opcache
-     * runs with validate_timestamps off, and public/ is baked into the nginx
-     * image at build time, so an app container that replaced its own assets
-     * would serve new markup with stale files.
+     * A Docker install cannot rewrite itself: the image is immutable and
+     * public/ is baked into the nginx image at build time, so an app container
+     * that replaced its own files would serve new markup with stale assets.
+     * The new image is pulled on the host instead; its app container runs the
+     * guarded `modulo:upgrade` on boot.
      *
      * @return array<int, string>
      */
-    public function upgradeCommands(): array
+    public function upgradeCommands(?string $version = null): array
     {
+        $version = $version !== null && $version !== '' ? Version::normalize($version) : null;
+        $target = $version ?? '<version>';
+
         return match (InstallChannel::detect()) {
             InstallChannel::DOCKER => [
+                '# From the folder with docker-compose.yml (backs up, pulls, migrates, checks health):',
+                './modulo update'.($version !== null ? ' '.$version : ''),
+                '',
+                '# Or by hand:',
+                "sed -i 's/^MODULO_TAG=.*/MODULO_TAG={$target}/' .env",
                 'docker compose pull',
                 'docker compose up -d',
+                '# Only needed when RUN_MIGRATIONS is not "true" in .env:',
                 'docker compose exec app php artisan modulo:upgrade',
             ],
             InstallChannel::GIT => [
-                'git fetch --tags && git checkout <version>',
+                "git fetch --tags && git checkout v{$target}",
                 'composer install --no-dev --optimize-autoloader',
                 'npm ci && npm run build',
                 'php artisan modulo:upgrade',
             ],
             default => [
-                '# download and verify the release tarball, then replace the directory',
+                "# Download modulo-cms-{$target}.tar.gz and its .sha256 from the release page,",
+                '# verify it (sha256sum -c), and unpack it over the site keeping .env, storage/ and plugins/.',
                 'php artisan modulo:upgrade',
             ],
         };
     }
 
     /**
-     * @return array{version: string, url: string|null, published_at: string|null, error: string|null}|null
+     * @return array{version: string, url: string|null, published_at: string|null, error: string|null}
      */
-    protected function fetchLatestRelease(): ?array
+    protected function fetchLatestRelease(): array
     {
+        // GitHub's /releases/latest never returns a prerelease, so following
+        // prereleases means reading the (newest-first) release list instead.
+        $includePrereleases = (bool) config('updates.include_prereleases');
         $endpoint = str_replace(
             ':repository',
             (string) config('updates.repository'),
-            (string) config('updates.endpoint'),
+            (string) config($includePrereleases ? 'updates.list_endpoint' : 'updates.endpoint'),
         );
 
         try {
@@ -118,21 +136,30 @@ class UpdateChecker
                 ->withHeaders(['Accept' => 'application/vnd.github+json'])
                 ->get($endpoint);
 
+            if ($response->status() === 429
+                || ($response->status() === 403 && $response->header('X-RateLimit-Remaining') === '0')) {
+                return $this->failure('GitHub rate limit reached; the check will be retried shortly.');
+            }
+
             if (! $response->successful()) {
-                return ['version' => '', 'url' => null, 'published_at' => null, 'error' => 'Update server returned '.$response->status().'.'];
+                return $this->failure('Update server returned '.$response->status().'.');
             }
 
             $payload = $response->json();
         } catch (Throwable $e) {
-            return ['version' => '', 'url' => null, 'published_at' => null, 'error' => $e->getMessage()];
+            return $this->failure($e->getMessage());
+        }
+
+        if ($includePrereleases && is_array($payload) && array_is_list($payload)) {
+            $payload = collect($payload)->first(fn ($release) => is_array($release) && ! ($release['draft'] ?? false));
         }
 
         if (! is_array($payload) || ! isset($payload['tag_name'])) {
-            return ['version' => '', 'url' => null, 'published_at' => null, 'error' => 'Unexpected response from the update server.'];
+            return $this->failure('Unexpected response from the update server.');
         }
 
-        if (($payload['prerelease'] ?? false) && ! config('updates.include_prereleases')) {
-            return ['version' => '', 'url' => null, 'published_at' => null, 'error' => 'Latest release is a prerelease.'];
+        if (($payload['prerelease'] ?? false) && ! $includePrereleases) {
+            return $this->failure('Latest release is a prerelease.');
         }
 
         return [
@@ -141,6 +168,14 @@ class UpdateChecker
             'published_at' => isset($payload['published_at']) ? (string) $payload['published_at'] : null,
             'error' => null,
         ];
+    }
+
+    /**
+     * @return array{version: string, url: null, published_at: null, error: string}
+     */
+    protected function failure(string $error): array
+    {
+        return ['version' => '', 'url' => null, 'published_at' => null, 'error' => $error];
     }
 
     /**

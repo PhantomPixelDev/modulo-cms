@@ -1,0 +1,197 @@
+#!/bin/sh
+# Modulo CMS site helper.
+#
+# The installer puts this next to docker-compose.yml and .env. Run it from
+# that folder:
+#
+#   ./modulo update [version]   Update to the latest release (or a given one)
+#   ./modulo backup             Dump the database into the storage volume
+#   ./modulo restore <dump>     Replace the database with a dump (destructive)
+#   ./modulo version            Show the running version
+#   ./modulo status | logs      Container status / follow the logs
+#
+# It only wraps docker compose, so every step can also be run by hand.
+set -eu
+
+REPO="${MODULO_REPO:-PhantomPixelDev/modulo-cms}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+cd "$HERE"
+
+say() { printf '\033[36m==>\033[0m %s\n' "$*"; }
+ok() { printf '\033[32m ok\033[0m %s\n' "$*"; }
+warn() { printf '\033[33m  !\033[0m %s\n' "$*" >&2; }
+die() { printf '\033[31merror\033[0m %s\n' "$*" >&2; exit 1; }
+
+[ -f docker-compose.yml ] || die "Run this from the folder that contains docker-compose.yml."
+[ -f .env ] || die "No .env here; this does not look like a Modulo install folder."
+
+if command -v docker >/dev/null 2>&1; then
+    RUNTIME=docker
+elif command -v podman >/dev/null 2>&1; then
+    RUNTIME=podman
+else
+    die "Neither docker nor podman is installed."
+fi
+
+compose() { "$RUNTIME" compose "$@"; }
+
+# Read one KEY=value from .env without sourcing it (values may contain
+# characters a shell would interpret).
+env_value() {
+    sed -n "s/^$1=//p" .env | tail -n1 | sed -e 's/^"//' -e 's/"$//'
+}
+
+set_env_value() {
+    if grep -q "^$1=" .env; then
+        tmp="$(mktemp)"
+        sed "s|^$1=.*|$1=$2|" .env > "$tmp" && cat "$tmp" > .env && rm -f "$tmp"
+    else
+        printf '%s=%s\n' "$1" "$2" >> .env
+    fi
+}
+
+latest_release() {
+    curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null \
+        | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n1
+}
+
+wait_for_health() {
+    port="$(env_value WEB_PORT)"
+    port="${port:-8080}"
+    for _ in $(seq 1 100); do
+        if curl -fsS "http://localhost:${port}/health" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 3
+    done
+    return 1
+}
+
+running_version() {
+    compose exec -T app php artisan tinker --execute="echo App\\Support\\Version::current();" 2>/dev/null | tr -d '\r' | tail -n1
+}
+
+app_is_running() {
+    compose ps --status running --services 2>/dev/null | grep -qx app
+}
+
+cmd_backup() {
+    app_is_running || die "The app container is not running; start it with: $RUNTIME compose up -d"
+    compose exec -T app php artisan modulo:db-backup
+}
+
+cmd_update() {
+    target="${1:-}"
+    if [ -z "$target" ]; then
+        say "Looking up the latest release..."
+        target="$(latest_release)"
+        [ -n "$target" ] || die "Could not reach GitHub to find the latest release. Pass a version: ./modulo update 1.2.3"
+    fi
+    target="${target#v}"
+    current="$(env_value MODULO_TAG)"
+
+    if [ "$current" = "$target" ]; then
+        ok "Already on ${target}. (To re-pull the same tag: $RUNTIME compose pull && $RUNTIME compose up -d)"
+        return 0
+    fi
+
+    say "Updating ${current:-unknown} -> ${target}"
+
+    # A restore point taken by the *current* version, before anything changes.
+    # The new container takes its own backup too, but only once it has booted.
+    if app_is_running; then
+        say "Backing up the database..."
+        compose exec -T app php artisan modulo:db-backup || die "Backup failed; nothing was changed."
+    else
+        warn "The app is not running, so no backup was taken first."
+    fi
+
+    set_env_value MODULO_TAG "$target"
+    # Compose prefers the shell environment over .env.
+    export MODULO_TAG="$target"
+
+    say "Pulling ${target}..."
+    if ! compose pull; then
+        set_env_value MODULO_TAG "$current"
+        die "Could not pull ${target}. MODULO_TAG was put back to ${current}."
+    fi
+
+    say "Restarting on ${target}..."
+    compose up -d
+
+    # With RUN_MIGRATIONS=true (the default) the new app container runs the
+    # guarded upgrade on boot. Otherwise it is our job.
+    if [ "$(env_value RUN_MIGRATIONS)" != "true" ]; then
+        say "Migrating..."
+        compose exec -T app php artisan modulo:upgrade
+    fi
+
+    say "Waiting for the site..."
+    if wait_for_health; then
+        ok "Now running Modulo CMS $(running_version)"
+    else
+        warn "The site did not become healthy. It may be in maintenance mode after a failed upgrade."
+        warn "Inspect:      $RUNTIME compose logs app"
+        warn "Roll back:    ./modulo update ${current}   (then ./modulo restore <backup> if the schema changed)"
+        exit 1
+    fi
+}
+
+cmd_restore() {
+    dump="${1:-}"
+    [ -n "$dump" ] || die "Usage: ./modulo restore <dump-file>   (a path on this machine, or storage/app/backups/<file> inside the app volume)"
+
+    db_name="$(env_value DB_DATABASE)"
+    db_user="$(env_value DB_USERNAME)"
+    db_name="${db_name:-modulo_prod}"
+    db_user="${db_user:-modulo}"
+
+    printf 'This replaces the "%s" database with %s. Type "restore" to continue: ' "$db_name" "$dump"
+    read -r answer
+    [ "$answer" = "restore" ] || die "Cancelled."
+
+    # Stream the dump from wherever it lives: this machine, or the app volume.
+    if [ -f "$dump" ]; then
+        source_cmd="cat"
+        source_arg="$dump"
+    else
+        app_is_running || die "'$dump' is not on this machine and the app container is not running to read it from."
+        compose exec -T app test -f "$dump" || die "'$dump' not found here or in the app container."
+        source_cmd="container"
+        source_arg="$dump"
+    fi
+
+    say "Stopping everything that writes..."
+    compose stop app queue scheduler >/dev/null 2>&1 || true
+
+    say "Restoring..."
+    # Start from an empty schema (a plain pg_dump has no DROP statements, so
+    # loading it over existing tables fails half-way), stop at the first error,
+    # and do it in one transaction so a failure leaves the old data in place.
+    stream() {
+        printf 'DROP SCHEMA IF EXISTS public CASCADE;\nCREATE SCHEMA public;\n'
+        if [ "$source_cmd" = "cat" ]; then cat "$source_arg"; else compose run --rm --no-deps -T --entrypoint cat app "$source_arg"; fi
+    }
+    if stream | compose exec -T db psql -v ON_ERROR_STOP=1 --single-transaction --quiet -U "$db_user" -d "$db_name" >/dev/null; then
+        ok "Restored ${dump}"
+    else
+        compose start app queue scheduler >/dev/null 2>&1 || true
+        die "Restore failed and was rolled back; the database is unchanged."
+    fi
+
+    compose start app queue scheduler >/dev/null 2>&1 || true
+    compose exec -T app php artisan optimize:clear >/dev/null 2>&1 || true
+}
+
+case "${1:-help}" in
+    update) shift; cmd_update "${1:-}" ;;
+    backup) cmd_backup ;;
+    restore) shift; cmd_restore "${1:-}" ;;
+    version) running_version ;;
+    status) compose ps ;;
+    logs) shift; compose logs -f "$@" ;;
+    help|-h|--help)
+        sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+        ;;
+    *) die "Unknown command '$1'. Try: ./modulo help" ;;
+esac

@@ -6,9 +6,8 @@ namespace App\Support;
  * How this installation was delivered.
  *
  * The update path differs per channel, and one of them cannot update itself at
- * all: a Docker image is immutable, is compiled with opcache.validate_timestamps
- * off, and has its public/ directory baked into a separate nginx image at build
- * time. An app container that rewrote its own files would serve new markup with
+ * all: a Docker image is immutable and has its public/ directory baked into a
+ * separate nginx image at build time. An app container that rewrote its own files would serve new markup with
  * stale assets. So the admin shows the right command for the detected channel
  * rather than pretending one updater fits all three.
  */

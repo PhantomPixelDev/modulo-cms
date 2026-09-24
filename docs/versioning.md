@@ -46,13 +46,15 @@ from a checkout that still contains `.git`.
 The channel exists because **a Docker install cannot update itself in place**, and that
 is a hard architectural fact rather than a policy preference:
 
-1. `docker/php.ini` sets `opcache.validate_timestamps = 0`, so rewritten files are never
-   re-read.
-2. The `web` image does `COPY --from=app /var/www/html/public` at *build* time, so an
+1. The `web` image does `COPY --from=app /var/www/html/public` at *build* time, so an
    app container that rewrote `public/build` would leave PHP serving new markup while
    nginx served stale assets.
-3. `compose up` replaces the container filesystem wholesale, discarding any in-place
+2. `compose up` replaces the container filesystem wholesale, discarding any in-place
    change.
+
+(OPcache does revalidate files every couple of seconds, but only so that plugins
+installed or updated at runtime into the `plugins` volume take effect; core code only
+changes with the image.)
 
 `InstallChannel::canSelfUpdate()` returns false there, and the admin shows the correct
 command for the detected channel instead of pretending one updater fits all three.

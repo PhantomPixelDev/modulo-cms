@@ -305,3 +305,23 @@ it('leaves only the installed plugin behind after an update', function () {
         ->and(File::directories(config('plugins.backup_path')))->toHaveCount(1)
         ->and(Plugin::where('slug', 'fixture')->value('version'))->toBe('1.1.0');
 });
+
+it('refuses to downgrade an installed plugin', function () {
+    Plugin::create([
+        'name' => 'Fixture',
+        'slug' => 'fixture',
+        'version' => '2.0.0',
+        'service_provider' => 'Plugins\\Fixture\\FixtureServiceProvider',
+        'is_active' => false,
+    ]);
+
+    fakeRegistry('fixture', '1.0.0', str_repeat('a', 64));
+
+    expect(fn () => app(PluginInstaller::class)->install('fixture'))
+        ->toThrow(RuntimeException::class, 'Refusing to downgrade');
+
+    // Nothing was fetched or written.
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), '/releases/download/'));
+    expect(File::exists(config('plugins.path').'/Fixture'))->toBeFalse()
+        ->and(Plugin::where('slug', 'fixture')->value('version'))->toBe('2.0.0');
+});

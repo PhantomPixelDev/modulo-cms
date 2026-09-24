@@ -51,9 +51,19 @@ MODULO_ENV=prod ./modulo.sh artisan modulo:upgrade
 ```
 
 In order: back up, enable Laravel maintenance mode, migrate, apply bootstrap data,
-rebuild caches, and lift maintenance mode. Maintenance mode is lifted in a `finally`,
-so a failed migration never leaves the site dark — it leaves it on the old schema,
-which is recoverable.
+rebuild caches, and lift maintenance mode.
+
+What happens when something goes wrong:
+
+- **The backup fails** — the upgrade stops before anything changes. Fix the backup,
+  or pass `--skip-backup` if you have taken one yourself.
+- **A migration or the bootstrap data fails** — the site **stays in maintenance
+  mode**. The schema may be part-way between versions, and serving traffic from it
+  risks writes that neither the old nor the new code reads correctly. The command
+  prints the backup it took; fix the problem and run `modulo:upgrade` again, or
+  restore the backup, then `php artisan up`.
+- **Rebuilding the caches fails** — the schema already matches the code, so the site
+  comes back up and you are told to run `php artisan optimize` later.
 
 Note that `php artisan down` is used rather than the maintenance-mode site setting.
 The setting only stops web visitors; `down` is also respected by the queue worker and
@@ -66,18 +76,40 @@ scheduler, which would otherwise keep writing during the migration.
 That part is channel-specific, and the admin shows the right commands for your
 install under **Settings → System**.
 
-**Docker** — the image is replaced, not updated:
+**Docker** — the image is replaced, not updated. The installer puts a `modulo` helper
+next to `docker-compose.yml`; from that folder:
 
 ```bash
-docker compose pull
-docker compose up -d
-docker compose exec app php artisan modulo:upgrade
+./modulo update          # latest release
+./modulo update 1.2.3    # a specific one
 ```
 
-A container genuinely cannot update itself in place here. `docker/php.ini` sets
-`opcache.validate_timestamps = 0` so rewritten files are never re-read, the `web`
-image bakes `public/` in at build time so PHP would serve new markup against stale
-assets, and `compose up` replaces the container filesystem anyway.
+It backs up the database, sets `MODULO_TAG` in `.env`, pulls the new images, restarts,
+and waits for `/health`. With `RUN_MIGRATIONS=true` (the default) the new `app`
+container runs `modulo:upgrade` itself on boot — the guarded path above, not a bare
+`migrate`. If that upgrade cannot finish, the container keeps the site in maintenance
+mode instead of serving new code against the old schema.
+
+By hand, the same thing is:
+
+```bash
+sed -i 's/^MODULO_TAG=.*/MODULO_TAG=1.2.3/' .env
+docker compose pull
+docker compose up -d
+docker compose exec app php artisan modulo:upgrade   # only if RUN_MIGRATIONS is not "true"
+```
+
+`MODULO_TAG` has to change: the installer pins it to the release it installed, so
+`docker compose pull` alone re-pulls the same version.
+
+A container cannot update itself in place: the `web` image bakes `public/` in at build
+time, so PHP would serve new markup against stale assets, and `compose up` replaces
+the container filesystem anyway.
+
+**Rolling back** — `./modulo update <previous version>`, then, if the schema changed,
+`./modulo restore storage/app/backups/<dump>.sql`. The restore starts from an empty
+schema and runs in a single transaction, so a failed restore leaves the database as
+it was.
 
 **Git checkout:**
 
@@ -95,16 +127,20 @@ php artisan modulo:upgrade
 ## Is an upgrade available?
 
 **Settings → System** shows the running version, the install channel, and whether a
-newer release exists. The check asks the GitHub releases API at most twice a day and
-caches the answer; a development build never checks, and prereleases are ignored.
+newer release exists, with the exact commands for that release. The check asks the
+GitHub releases API at most twice a day and caches the answer; a failed check is
+retried after ten minutes rather than hiding updates for hours. A development build
+never checks. Prereleases are ignored unless `MODULO_UPDATE_PRERELEASES=true`.
 
 Disable it entirely with `MODULO_UPDATE_CHECK=false`.
 
 ## What we test
 
-CI migrates a real database built at an older version up to the current commit on
-every push, asserts nothing is left pending, re-runs the bootstrap seeder to prove it
-is idempotent, and boots the application. `migrate:fresh` only ever proved that a new
+CI builds a real database at the newest earlier release, runs `modulo:upgrade` to the
+current commit on every push, asserts nothing is left pending and the site is not left
+in maintenance mode, re-runs the bootstrap seeder to prove it is idempotent, and boots
+the application. Releases are gated on it, on the unit/feature suites, and on the
+browser test of the install wizard. `migrate:fresh` only ever proved that a new
 install works, which is not the case that breaks.
 
 ## Seeders and upgrades

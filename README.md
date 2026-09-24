@@ -147,7 +147,7 @@ off by default and `modulo:seed-demo` refuses to run in production without `--fo
 | Service | Purpose |
 |---|---|
 | `web` | nginx on `WEB_PORT` (default 8080); serves `public/`, only `/index.php` runs PHP |
-| `app` | PHP-FPM with opcache; migrates when `RUN_MIGRATIONS=true`, caches config and views |
+| `app` | PHP-FPM with opcache; runs `modulo:upgrade` on boot when `RUN_MIGRATIONS=true`, caches config and views |
 | `queue` | `queue:work` for queued mail and jobs |
 | `scheduler` | `schedule:work` |
 | `db` / `redis` | PostgreSQL 16 and Redis 7 |

@@ -50,6 +50,21 @@ class PluginInstaller
 
         $existing = Plugin::where('slug', $slug)->first();
 
+        // Older code over a newer schema is the one outcome nothing downstream
+        // can undo: plugin migrations only ever run forwards. Refuse before a
+        // single byte is downloaded.
+        if ($existing !== null && version_compare(
+            Version::normalize((string) $release['version']),
+            Version::normalize((string) $existing->version),
+        ) < 0) {
+            throw new RuntimeException(sprintf(
+                'Refusing to downgrade "%s" from %s to %s. Uninstall it first if an older version is really needed.',
+                $slug,
+                $existing->version,
+                $release['version'],
+            ));
+        }
+
         $staging = rtrim((string) config('plugins.staging_path'), '/').'/'.$slug.'-'.uniqid();
         $archive = $staging.'.zip';
 

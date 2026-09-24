@@ -14,6 +14,7 @@ use App\Http\Controllers\Content\MenuController;
 use App\Http\Controllers\Content\MenuItemController;
 use App\Http\Controllers\Content\PagesController;
 use App\Http\Controllers\Content\PostController;
+use App\Http\Controllers\Content\PostTranslationController;
 use App\Http\Controllers\Content\PostTypeController;
 use App\Http\Controllers\Content\TaxonomyController;
 use App\Http\Controllers\Content\TaxonomyTermController;
@@ -38,8 +39,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Specific route for listing posts by post type
         Route::get('posts/type/{postType}', [PostController::class, 'indexByType'])->name('posts.byType');
         // Post translation routes
-        Route::post('posts/{post}/translations', [App\Http\Controllers\Dashboard\Admin\PostController::class, 'storeTranslation'])->name('posts.translations.store');
-        Route::delete('posts/{post}/translations/{locale}', [App\Http\Controllers\Dashboard\Admin\PostController::class, 'destroyTranslation'])->name('posts.translations.destroy');
+        Route::post('posts/{post}/translations', [PostTranslationController::class, 'store'])->name('posts.translations.store');
+        Route::delete('posts/{post}/translations/{locale}', [PostTranslationController::class, 'destroy'])->name('posts.translations.destroy');
         Route::resource('post-types', PostTypeController::class);
         Route::resource('menus', MenuController::class);
         Route::resource('menu-items', MenuItemController::class);

@@ -430,16 +430,16 @@ class PluginManager
         $slug = $manifest['slug'];
 
         try {
-            Artisan::call('migrate', [
+            $exitCode = Artisan::call('migrate', [
                 '--path' => $this->relativeMigrationPath($migrationsPath),
                 '--realpath' => ! Str::startsWith($migrationsPath, base_path()),
                 '--force' => true,
             ]);
 
-            $output = Artisan::output();
-
-            if (str_contains(strtolower($output), 'error') || str_contains(strtolower($output), 'failed')) {
-                return [false, "Plugin '{$slug}' migration reported an error."];
+            // The exit code, not the output: a migration named
+            // "create_error_log_table" is not a failure.
+            if ($exitCode !== 0) {
+                return [false, "Plugin '{$slug}' migration failed: ".trim(Artisan::output())];
             }
 
             Log::info("Plugin '{$slug}' migrations executed successfully.");
@@ -483,7 +483,10 @@ class PluginManager
             return false;
         }
 
-        // Run plugin migrations and seeder on first activation
+        // Migrations and seeder run whenever the plugin goes from inactive to
+        // active, not only the first time -- a plugin updated while switched
+        // off catches up here. Plugin seeders must therefore be idempotent
+        // (firstOrCreate / updateOrCreate), as the bundled ones are.
         $wasInactive = ! $plugin->is_active;
 
         $plugin->update(['is_active' => true]);
@@ -533,14 +536,13 @@ class PluginManager
             $seederClass = $manifest['seeder'];
             if (class_exists($seederClass)) {
                 try {
-                    Artisan::call('db:seed', [
+                    $exitCode = Artisan::call('db:seed', [
                         '--class' => $seederClass,
                         '--force' => true,
                     ]);
 
-                    $output = Artisan::output();
-                    if (str_contains(strtolower($output), 'error') || str_contains(strtolower($output), 'failed')) {
-                        return [false, "Plugin '{$slug}' seeder reported an error."];
+                    if ($exitCode !== 0) {
+                        return [false, "Plugin '{$slug}' seeder failed: ".trim(Artisan::output())];
                     }
 
                     Log::info("Plugin '{$slug}' seeder executed successfully.");

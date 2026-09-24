@@ -18,7 +18,7 @@ are the templates; copy, do not edit in place.
 | `WEB_PORT` | `8080` | Host port for production. The dev stack is fixed at 8000. |
 | `MODULO_TAG` | `latest` | Release to run. Pin an exact version for predictable deploys. |
 | `APP_DEBUG` | `false` | Never `true` in production. |
-| `RUN_MIGRATIONS` | `true` (prod) | Migrate on container start. Turn off if you prefer `modulo:upgrade`. |
+| `RUN_MIGRATIONS` | `true` (prod) | On container start, migrate a fresh database, or run the guarded `modulo:upgrade` (backup, preflight, maintenance window) when an existing one has pending migrations. Set `false` to run `modulo:upgrade` yourself. |
 | `DEFAULT_THEME` | `modern-react` | Installed on first boot if no theme is active. |
 
 ## Updates and plugins

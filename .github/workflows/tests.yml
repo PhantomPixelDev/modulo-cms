@@ -122,8 +122,7 @@ jobs:
       DB_DATABASE: modulo_upgrade
       DB_USERNAME: modulo
       DB_PASSWORD: secret
-      # No release tag exists yet, so the "old install" is pinned to a commit.
-      # Switch this to the newest tag once one has been published.
+      # Only used if the repository has no earlier release tag at all.
       UPGRADE_BASE_REF: 9d225ca
 
     steps:
@@ -143,11 +142,16 @@ jobs:
         id: base
         run: |
           set -euo pipefail
-          base="$(git tag --list 'v*' --sort=-v:refname | head -n1 || true)"
+          # The newest release that does not already contain this commit. When
+          # a release run calls this workflow, the tag it just created points at
+          # HEAD; upgrading from that would upgrade from itself and test nothing.
+          base="$(git tag --list 'v*' --sort=-v:refname --no-contains HEAD | head -n1 || true)"
           if [ -z "$base" ]; then
             base="${UPGRADE_BASE_REF}"
-            echo "No release tag yet; using pinned commit ${base}."
+            echo "No earlier release tag; using pinned commit ${base}."
           fi
+          echo "Upgrading from ${base}."
+
           echo "ref=${base}" >> "$GITHUB_OUTPUT"
 
       - name: Build a database at the older version
@@ -171,8 +175,19 @@ jobs:
       - name: Preflight the upgrade
         run: php artisan modulo:upgrade --dry-run
 
-      - name: Migrate the existing database to HEAD
-        run: php artisan migrate --force
+      # The real command a site runs, not a bare migrate: maintenance window,
+      # migrations, bootstrap data, caches. The runner's pg_dump does not match
+      # the server's major version, so the backup step is skipped here.
+      - name: Upgrade the existing database to HEAD
+        run: php artisan modulo:upgrade --skip-backup --no-interaction
+
+      - name: Assert the site is not left in maintenance mode
+        run: |
+          set -euo pipefail
+          if [ -f storage/framework/down ]; then
+            echo "::error::modulo:upgrade left the site in maintenance mode."
+            exit 1
+          fi
 
       - name: Assert nothing is left pending
         run: |
