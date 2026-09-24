@@ -93,14 +93,11 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
     if (!order) {
         return (
             <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Order Not Found">
-                <div className="min-h-screen bg-gray-50 py-12">
-                    <div className="mx-auto max-w-2xl px-4 text-center">
-                        <Package className="mx-auto mb-6 h-20 w-20 text-gray-200" />
-                        <h1 className="mb-4 text-2xl font-bold text-gray-900">Order not found</h1>
-                        <Link
-                            href="/shop"
-                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white hover:bg-indigo-700"
-                        >
+                <div>
+                    <div className="mx-auto max-w-2xl py-12 text-center">
+                        <Package className="mx-auto mb-6 h-20 w-20 text-muted-foreground/40" />
+                        <h1 className="mb-4 text-2xl font-semibold tracking-tight text-foreground">Order not found</h1>
+                        <Link href="/shop" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-white hover:bg-primary/90">
                             Continue Shopping
                         </Link>
                     </div>
@@ -113,36 +110,36 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
         <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title={`Order ${order.order_number}`}>
             <SEOHead title={`Order Confirmed - ${order.order_number}`} description="Thank you for your order" />
 
-            <div className="min-h-screen bg-gray-50 py-12">
-                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div>
+                <div className="mx-auto max-w-4xl">
                     {/* Success Message */}
-                    <div className="mb-8 rounded-2xl bg-white p-8 text-center shadow-sm">
-                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-                            <CheckCircle className="h-12 w-12 text-green-600" />
+                    <div className="mb-8 rounded-xl border bg-card p-8 text-center shadow-xs">
+                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
+                            <CheckCircle className="h-12 w-12 text-success" />
                         </div>
-                        <h1 className="mb-2 text-3xl font-bold text-gray-900">Thank you for your order!</h1>
-                        <p className="mb-4 text-gray-600">Your order has been received and is being processed.</p>
-                        <div className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2">
-                            <span className="text-gray-600">Order Number:</span>
-                            <span className="font-bold text-gray-900">{order.order_number}</span>
+                        <h1 className="mb-2 text-3xl font-semibold tracking-tight text-foreground">Thank you for your order!</h1>
+                        <p className="mb-4 text-muted-foreground">Your order has been received and is being processed.</p>
+                        <div className="inline-flex items-center gap-2 rounded-lg bg-muted px-4 py-2">
+                            <span className="text-muted-foreground">Order Number:</span>
+                            <span className="font-bold text-foreground">{order.order_number}</span>
                         </div>
                     </div>
 
                     <div className="grid gap-8 md:grid-cols-2">
                         {/* Order Details */}
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                <Package className="h-5 w-5 text-indigo-600" />
+                        <div className="rounded-xl border bg-card p-6 shadow-xs">
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                <Package className="h-5 w-5 text-primary" />
                                 Order Details
                             </h2>
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Order Number</span>
-                                    <span className="font-medium text-gray-900">{order.order_number}</span>
+                                    <span className="text-muted-foreground">Order Number</span>
+                                    <span className="font-medium text-foreground">{order.order_number}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Date</span>
-                                    <span className="font-medium text-gray-900">
+                                    <span className="text-muted-foreground">Date</span>
+                                    <span className="font-medium text-foreground">
                                         {new Date(order.created_at).toLocaleDateString('en-US', {
                                             year: 'numeric',
                                             month: 'long',
@@ -151,16 +148,16 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Status</span>
-                                    <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                                    <span className="text-muted-foreground">Status</span>
+                                    <span className="inline-flex items-center rounded-full bg-warning/20 px-2.5 py-0.5 text-xs font-medium text-warning-foreground">
                                         {order.status_label}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Payment</span>
+                                    <span className="text-muted-foreground">Payment</span>
                                     <span
                                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                            order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                            order.payment_status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/20 text-warning-foreground'
                                         }`}
                                     >
                                         {order.payment_status_label}
@@ -170,24 +167,24 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
                         </div>
 
                         {/* Customer Info */}
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                <Mail className="h-5 w-5 text-indigo-600" />
+                        <div className="rounded-xl border bg-card p-6 shadow-xs">
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                <Mail className="h-5 w-5 text-primary" />
                                 Customer Information
                             </h2>
                             <div className="space-y-2 text-sm">
-                                <p className="font-medium text-gray-900">{order.customer_name}</p>
-                                <p className="text-gray-600">{order.customer_email}</p>
+                                <p className="font-medium text-foreground">{order.customer_name}</p>
+                                <p className="text-muted-foreground">{order.customer_email}</p>
                             </div>
                         </div>
 
                         {/* Billing Address */}
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                <MapPin className="h-5 w-5 text-indigo-600" />
+                        <div className="rounded-xl border bg-card p-6 shadow-xs">
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                <MapPin className="h-5 w-5 text-primary" />
                                 Billing Address
                             </h2>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-muted-foreground">
                                 {formatAddress(order.billing_address).map((line, i) => (
                                     <p key={i}>{line}</p>
                                 ))}
@@ -195,36 +192,36 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
                         </div>
 
                         {/* Payment Method */}
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                <CreditCard className="h-5 w-5 text-indigo-600" />
+                        <div className="rounded-xl border bg-card p-6 shadow-xs">
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                <CreditCard className="h-5 w-5 text-primary" />
                                 Payment Method
                             </h2>
-                            <p className="text-sm text-gray-600">{getPaymentMethodLabel(order.payment_method)}</p>
+                            <p className="text-sm text-muted-foreground">{getPaymentMethodLabel(order.payment_method)}</p>
                         </div>
                     </div>
 
                     {/* Order Items */}
-                    <div className="mt-8 rounded-xl bg-white p-6 shadow-sm">
-                        <h2 className="mb-6 text-lg font-bold text-gray-900">Order Items</h2>
+                    <div className="mt-8 rounded-xl border bg-card p-6 shadow-xs">
+                        <h2 className="mb-6 text-lg font-semibold tracking-tight text-foreground">Order Items</h2>
                         <div className="space-y-4">
                             {order.items.map((item) => (
-                                <div key={item.id} className="flex gap-4 border-b border-gray-100 py-4 last:border-0">
+                                <div key={item.id} className="flex gap-4 border-b border-border py-4 last:border-0">
                                     {item.product_data?.image ? (
                                         <img src={item.product_data.image} alt={item.product_name} className="h-16 w-16 rounded-lg object-cover" />
                                     ) : (
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100">
-                                            <ShoppingBag className="h-6 w-6 text-gray-300" />
+                                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
+                                            <ShoppingBag className="h-6 w-6 text-muted-foreground/60" />
                                         </div>
                                     )}
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-medium text-gray-900">{item.product_name}</p>
-                                        {item.product_sku && <p className="text-sm text-gray-500">SKU: {item.product_sku}</p>}
-                                        <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                                        <p className="font-medium text-foreground">{item.product_name}</p>
+                                        {item.product_sku && <p className="text-sm text-muted-foreground">SKU: {item.product_sku}</p>}
+                                        <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-medium text-gray-900">{formatPrice(item.subtotal, order.currency)}</p>
-                                        <p className="text-sm text-gray-500">{formatPrice(item.price, order.currency)} each</p>
+                                        <p className="font-medium text-foreground">{formatPrice(item.subtotal, order.currency)}</p>
+                                        <p className="text-sm text-muted-foreground">{formatPrice(item.price, order.currency)} each</p>
                                     </div>
                                 </div>
                             ))}
@@ -232,27 +229,27 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
 
                         {/* Totals */}
                         <div className="mt-6 space-y-3 border-t pt-6">
-                            <div className="flex justify-between text-gray-600">
+                            <div className="flex justify-between text-muted-foreground">
                                 <span>Subtotal</span>
                                 <span>{formatPrice(order.subtotal, order.currency)}</span>
                             </div>
                             {order.discount > 0 && (
-                                <div className="flex justify-between text-green-600">
+                                <div className="flex justify-between text-success">
                                     <span>Discount</span>
                                     <span>-{formatPrice(order.discount, order.currency)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between text-gray-600">
+                            <div className="flex justify-between text-muted-foreground">
                                 <span>Shipping</span>
                                 <span>{order.shipping > 0 ? formatPrice(order.shipping, order.currency) : 'Free'}</span>
                             </div>
                             {order.tax > 0 && (
-                                <div className="flex justify-between text-gray-600">
+                                <div className="flex justify-between text-muted-foreground">
                                     <span>Tax</span>
                                     <span>{formatPrice(order.tax, order.currency)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between border-t pt-3 text-xl font-bold text-gray-900">
+                            <div className="flex justify-between border-t pt-3 text-xl font-semibold tracking-tight text-foreground">
                                 <span>Total</span>
                                 <span>{formatPrice(order.total, order.currency)}</span>
                             </div>
@@ -261,9 +258,9 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
 
                     {/* Customer Note */}
                     {order.customer_note && (
-                        <div className="mt-8 rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 text-lg font-bold text-gray-900">Order Notes</h2>
-                            <p className="text-gray-600">{order.customer_note}</p>
+                        <div className="mt-8 rounded-xl border bg-card p-6 shadow-xs">
+                            <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">Order Notes</h2>
+                            <p className="text-muted-foreground">{order.customer_note}</p>
                         </div>
                     )}
 
@@ -271,7 +268,7 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
                     <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
                         <Link
                             href="/shop"
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-700"
+                            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 font-semibold text-white transition-colors hover:bg-primary/90"
                         >
                             <ShoppingBag className="h-5 w-5" />
                             Continue Shopping

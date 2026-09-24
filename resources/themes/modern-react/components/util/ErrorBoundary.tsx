@@ -33,9 +33,9 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
         if (this.state.hasError) {
             return (
                 this.props.fallback ?? (
-                    <div className="my-4 rounded-lg border border-red-300 bg-red-50 p-4 text-red-800">
+                    <div className="my-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
                         <strong>{this.props.name || 'Section'} failed to render.</strong>
-                        <div className="mt-1 text-xs text-red-700">{this.state.error?.toString()}</div>
+                        <div className="mt-1 text-xs opacity-80">{this.state.error?.toString()}</div>
                     </div>
                 )
             );

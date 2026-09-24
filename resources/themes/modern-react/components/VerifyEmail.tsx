@@ -20,16 +20,16 @@ export default function VerifyEmail({ status }: Props) {
         <AuthLayout title="Verify your email">
             <Head title="Verify Email" />
 
-            <div className="py-6">
-                <div className="">
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight">Verify your email</h1>
-                    <p className="mb-6 text-muted-foreground">
+            <div>
+                <div>
+                    <h1 className="mb-1.5 text-2xl font-semibold tracking-tight">Verify your email</h1>
+                    <p className="mb-6 text-sm text-muted-foreground">
                         Thanks for signing up! Before getting started, please verify your email address by clicking on the link we just emailed to
                         you. If you didn’t receive the email, we can send you another.
                     </p>
 
                     {status === 'verification-link-sent' && (
-                        <div className="mb-6 rounded-md bg-green-50 p-3 text-sm text-green-700">
+                        <div className="mb-6 rounded-md bg-success/10 p-3 text-sm text-success">
                             A new verification link has been sent to your email address.
                         </div>
                     )}

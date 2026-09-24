@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
-import Layout from './Layout';
+import AuthLayout from './AuthLayout';
 
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -20,17 +20,17 @@ export default function ConfirmPassword() {
     };
 
     return (
-        <Layout title="Confirm password">
+        <AuthLayout title="Confirm password">
             <Head title="Confirm password" />
 
-            <div className="py-16">
-                <div className="mx-auto max-w-md">
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight">Confirm your password</h1>
-                    <p className="mb-8 text-muted-foreground">
+            <div>
+                <div>
+                    <h1 className="mb-1.5 text-2xl font-semibold tracking-tight">Confirm your password</h1>
+                    <p className="mb-8 text-sm text-muted-foreground">
                         This is a secure area of the application. Please confirm your password before continuing.
                     </p>
 
-                    <form className="space-y-6" onSubmit={submit}>
+                    <form className="space-y-5" onSubmit={submit}>
                         <div className="space-y-2">
                             <Label htmlFor="password">Password</Label>
                             <Input
@@ -51,6 +51,6 @@ export default function ConfirmPassword() {
                     </form>
                 </div>
             </div>
-        </Layout>
+        </AuthLayout>
     );
 }

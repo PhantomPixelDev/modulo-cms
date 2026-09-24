@@ -101,27 +101,27 @@ export default function Products({ products, posts, categories, filters, paginat
             <SEOHead title={`${pageTitle} | ${safeSite.name}`} description={pageDescription} />
 
             <div className="space-y-8">
-                {/* Hero Header */}
-                <header className="rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 py-12 text-center text-white">
-                    <h1 className="mb-4 text-4xl font-bold md:text-5xl">{pageTitle}</h1>
-                    <p className="mx-auto max-w-2xl text-xl opacity-90">{pageDescription}</p>
-                    {pagination && <p className="mt-4 text-sm opacity-75">{pagination.total} products</p>}
+                {/* Header */}
+                <header className="space-y-2 border-b pb-8">
+                    <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{pageTitle}</h1>
+                    {pageDescription && <p className="max-w-2xl text-muted-foreground">{pageDescription}</p>}
+                    {pagination && <p className="text-sm text-muted-foreground tabular-nums">{pagination.total} products</p>}
                 </header>
 
                 {/* Toolbar */}
-                <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-4 shadow-xs">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 transition-colors hover:bg-gray-200"
+                            className="flex items-center gap-2 rounded-lg bg-muted px-4 py-2 transition-colors hover:bg-accent"
                         >
                             <Filter className="h-4 w-4" />
                             Filters
                         </button>
                         {filters?.category && (
-                            <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm text-indigo-700">
+                            <span className="rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
                                 {filters.category}
-                                <a href="/shop" className="ml-2 hover:text-indigo-900">
+                                <a href="/shop" className="ml-2 hover:text-primary/80">
                                     ×
                                 </a>
                             </span>
@@ -131,23 +131,23 @@ export default function Products({ products, posts, categories, filters, paginat
                         <select
                             defaultValue={filters?.orderby || 'date'}
                             onChange={(e) => (window.location.href = `/shop?orderby=${e.target.value}`)}
-                            className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500"
+                            className="h-9 rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                         >
                             <option value="date">Latest</option>
                             <option value="price">Price: Low to High</option>
                             <option value="title">Name</option>
                             <option value="popularity">Popularity</option>
                         </select>
-                        <div className="flex overflow-hidden rounded-lg border border-gray-200">
+                        <div className="flex overflow-hidden rounded-lg border">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-2 ${viewMode === 'grid' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`p-2 ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-accent'}`}
                             >
                                 <Grid className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-2 ${viewMode === 'list' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`p-2 ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-accent'}`}
                             >
                                 <List className="h-4 w-4" />
                             </button>
@@ -159,13 +159,13 @@ export default function Products({ products, posts, categories, filters, paginat
                     {/* Sidebar Filters */}
                     {showFilters && categories && categories.length > 0 && (
                         <aside className="w-64 flex-shrink-0">
-                            <div className="sticky top-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                                <h3 className="mb-4 font-semibold text-gray-900">Categories</h3>
+                            <div className="sticky top-4 rounded-xl border bg-card p-6 shadow-xs">
+                                <h3 className="mb-4 font-semibold text-foreground">Categories</h3>
                                 <ul className="space-y-2">
                                     <li>
                                         <a
                                             href="/shop"
-                                            className={`block py-1 ${!filters?.category ? 'font-medium text-indigo-600' : 'text-gray-600 hover:text-gray-900'}`}
+                                            className={`block py-1 ${!filters?.category ? 'font-medium text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             All Products
                                         </a>
@@ -174,11 +174,11 @@ export default function Products({ products, posts, categories, filters, paginat
                                         <li key={cat.id}>
                                             <a
                                                 href={`/shop?category=${cat.slug}`}
-                                                className={`block py-1 ${filters?.category === cat.slug ? 'font-medium text-indigo-600' : 'text-gray-600 hover:text-gray-900'}`}
+                                                className={`block py-1 ${filters?.category === cat.slug ? 'font-medium text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                             >
                                                 {cat.name}
                                                 {cat.posts_count !== undefined && (
-                                                    <span className="ml-2 text-sm text-gray-400">({cat.posts_count})</span>
+                                                    <span className="ml-2 text-sm text-muted-foreground/80">({cat.posts_count})</span>
                                                 )}
                                             </a>
                                         </li>
@@ -191,11 +191,11 @@ export default function Products({ products, posts, categories, filters, paginat
                     {/* Product Grid/List */}
                     <div className="flex-1">
                         {list.length === 0 ? (
-                            <div className="rounded-xl border border-gray-100 bg-white py-16 text-center">
-                                <ShoppingCart className="mx-auto mb-4 h-16 w-16 text-gray-300" />
-                                <p className="text-lg text-gray-600">No products found.</p>
+                            <div className="rounded-xl border bg-card py-16 text-center">
+                                <ShoppingCart className="mx-auto mb-4 h-16 w-16 text-muted-foreground/60" />
+                                <p className="text-lg text-muted-foreground">No products found.</p>
                                 {filters?.category && (
-                                    <a href="/shop" className="mt-4 inline-block text-indigo-600 hover:text-indigo-700">
+                                    <a href="/shop" className="mt-4 inline-block text-primary hover:text-primary">
                                         View all products →
                                     </a>
                                 )}
@@ -211,9 +211,9 @@ export default function Products({ products, posts, categories, filters, paginat
                                     return (
                                         <article
                                             key={p.id}
-                                            className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-xl"
+                                            className="group overflow-hidden rounded-xl border bg-card shadow-xs transition-all duration-300 hover:shadow-xl"
                                         >
-                                            <div className="relative aspect-square overflow-hidden bg-gray-100">
+                                            <div className="relative aspect-square overflow-hidden bg-muted">
                                                 {p.featured_image ? (
                                                     <a href={href} className="block h-full w-full">
                                                         <img
@@ -223,51 +223,54 @@ export default function Products({ products, posts, categories, filters, paginat
                                                         />
                                                     </a>
                                                 ) : (
-                                                    <a href={href} className="flex h-full w-full items-center justify-center text-gray-400">
+                                                    <a
+                                                        href={href}
+                                                        className="flex h-full w-full items-center justify-center text-muted-foreground/80"
+                                                    >
                                                         <ShoppingCart className="h-12 w-12" />
                                                     </a>
                                                 )}
                                                 {discount && (
-                                                    <span className="absolute top-3 right-3 rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white">
+                                                    <span className="absolute top-3 right-3 rounded-full bg-destructive px-2 py-1 text-xs font-bold text-white">
                                                         -{discount}%
                                                     </span>
                                                 )}
                                                 {p.in_stock === false && (
-                                                    <span className="absolute top-3 left-3 rounded-full bg-gray-800 px-2 py-1 text-xs text-white">
+                                                    <span className="absolute top-3 left-3 rounded-full bg-foreground px-2 py-1 text-xs text-white">
                                                         Out of Stock
                                                     </span>
                                                 )}
                                                 {p.featured && (
-                                                    <span className="absolute top-3 left-3 rounded-full bg-yellow-400 px-2 py-1 text-xs font-bold text-yellow-900">
+                                                    <span className="absolute top-3 left-3 rounded-full bg-warning px-2 py-1 text-xs font-bold text-warning-foreground">
                                                         Featured
                                                     </span>
                                                 )}
                                             </div>
                                             <div className="p-4">
                                                 {p.categories && p.categories.length > 0 && (
-                                                    <p className="mb-1 text-xs text-gray-500">{p.categories.map((c) => c.name).join(', ')}</p>
+                                                    <p className="mb-1 text-xs text-muted-foreground">{p.categories.map((c) => c.name).join(', ')}</p>
                                                 )}
-                                                <h2 className="mb-2 line-clamp-2 font-semibold text-gray-900">
-                                                    <a href={href} className="transition-colors hover:text-indigo-600">
+                                                <h2 className="mb-2 line-clamp-2 font-semibold text-foreground">
+                                                    <a href={href} className="transition-colors hover:text-primary">
                                                         {p.title || '(untitled)'}
                                                     </a>
                                                 </h2>
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         {p.sale_price && p.sale_price < (p.price || 0) && (
-                                                            <span className="text-sm text-gray-400 line-through">
+                                                            <span className="text-sm text-muted-foreground/80 line-through">
                                                                 {formatPrice(p.price, p.currency)}
                                                             </span>
                                                         )}
                                                         <span
-                                                            className={`font-bold ${p.sale_price && p.sale_price < (p.price || 0) ? 'text-red-600' : 'text-gray-900'}`}
+                                                            className={`font-bold ${p.sale_price && p.sale_price < (p.price || 0) ? 'text-destructive' : 'text-foreground'}`}
                                                         >
                                                             {formatPrice(displayPrice, p.currency)}
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <button
-                                                    className="mt-3 w-full rounded-lg bg-indigo-600 py-2 font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                                                    className="mt-3 w-full rounded-md bg-primary py-2 font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                                                     disabled={p.in_stock === false}
                                                     data-product-id={p.id}
                                                 >
@@ -289,20 +292,20 @@ export default function Products({ products, posts, categories, filters, paginat
                                     return (
                                         <article
                                             key={p.id}
-                                            className="flex gap-6 overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:shadow-lg"
+                                            className="flex gap-6 overflow-hidden rounded-xl border bg-card p-4 shadow-xs transition-all hover:shadow-lg"
                                         >
-                                            <div className="relative h-48 w-48 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                                            <div className="relative h-48 w-48 flex-shrink-0 overflow-hidden rounded-xl bg-muted">
                                                 {p.featured_image ? (
                                                     <a href={href} className="block h-full w-full">
                                                         <img src={p.featured_image} alt={p.title} className="h-full w-full object-cover" />
                                                     </a>
                                                 ) : (
-                                                    <div className="flex h-full w-full items-center justify-center text-gray-400">
+                                                    <div className="flex h-full w-full items-center justify-center text-muted-foreground/80">
                                                         <ShoppingCart className="h-12 w-12" />
                                                     </div>
                                                 )}
                                                 {discount && (
-                                                    <span className="absolute top-2 right-2 rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white">
+                                                    <span className="absolute top-2 right-2 rounded-full bg-destructive px-2 py-1 text-xs font-bold text-white">
                                                         -{discount}%
                                                     </span>
                                                 )}
@@ -310,28 +313,32 @@ export default function Products({ products, posts, categories, filters, paginat
                                             <div className="flex flex-1 flex-col justify-between">
                                                 <div>
                                                     {p.categories && p.categories.length > 0 && (
-                                                        <p className="mb-1 text-xs text-gray-500">{p.categories.map((c) => c.name).join(', ')}</p>
+                                                        <p className="mb-1 text-xs text-muted-foreground">
+                                                            {p.categories.map((c) => c.name).join(', ')}
+                                                        </p>
                                                     )}
-                                                    <h2 className="mb-2 text-xl font-semibold text-gray-900">
-                                                        <a href={href} className="transition-colors hover:text-indigo-600">
+                                                    <h2 className="mb-2 text-xl font-semibold text-foreground">
+                                                        <a href={href} className="transition-colors hover:text-primary">
                                                             {p.title}
                                                         </a>
                                                     </h2>
-                                                    {p.excerpt && <p className="line-clamp-2 text-sm text-gray-600">{p.excerpt}</p>}
+                                                    {p.excerpt && <p className="line-clamp-2 text-sm text-muted-foreground">{p.excerpt}</p>}
                                                 </div>
                                                 <div className="mt-4 flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         {p.sale_price && p.sale_price < (p.price || 0) && (
-                                                            <span className="text-gray-400 line-through">{formatPrice(p.price, p.currency)}</span>
+                                                            <span className="text-muted-foreground/80 line-through">
+                                                                {formatPrice(p.price, p.currency)}
+                                                            </span>
                                                         )}
                                                         <span
-                                                            className={`text-xl font-bold ${p.sale_price && p.sale_price < (p.price || 0) ? 'text-red-600' : 'text-gray-900'}`}
+                                                            className={`text-xl font-semibold tracking-tight ${p.sale_price && p.sale_price < (p.price || 0) ? 'text-destructive' : 'text-foreground'}`}
                                                         >
                                                             {formatPrice(displayPrice, p.currency)}
                                                         </span>
                                                     </div>
                                                     <button
-                                                        className="rounded-lg bg-indigo-600 px-6 py-2 font-medium text-white transition-colors hover:bg-indigo-700 disabled:bg-gray-300"
+                                                        className="rounded-md bg-primary px-6 py-2 font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
                                                         disabled={p.in_stock === false}
                                                         data-product-id={p.id}
                                                     >
@@ -351,18 +358,18 @@ export default function Products({ products, posts, categories, filters, paginat
                                 {pagination.prev_page_url && (
                                     <a
                                         href={pagination.prev_page_url}
-                                        className="rounded-lg border border-gray-200 bg-white px-4 py-2 transition-colors hover:bg-gray-50"
+                                        className="rounded-md border bg-card px-4 py-2 transition-colors hover:bg-accent"
                                     >
                                         ← Previous
                                     </a>
                                 )}
-                                <span className="px-4 py-2 text-gray-600">
+                                <span className="px-4 py-2 text-muted-foreground">
                                     Page {pagination.current_page} of {pagination.last_page}
                                 </span>
                                 {pagination.next_page_url && (
                                     <a
                                         href={pagination.next_page_url}
-                                        className="rounded-lg border border-gray-200 bg-white px-4 py-2 transition-colors hover:bg-gray-50"
+                                        className="rounded-md border bg-card px-4 py-2 transition-colors hover:bg-accent"
                                     >
                                         Next →
                                     </a>

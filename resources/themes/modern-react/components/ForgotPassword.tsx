@@ -25,14 +25,14 @@ export default function ForgotPassword({ status }: Props) {
         <AuthLayout title="Forgot password">
             <Head title="Forgot password" />
 
-            <div className="py-6">
-                <div className="">
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight">Forgot your password?</h1>
-                    <p className="mb-6 text-muted-foreground">Enter your email to receive the password reset link.</p>
+            <div>
+                <div>
+                    <h1 className="mb-1.5 text-2xl font-semibold tracking-tight">Forgot your password?</h1>
+                    <p className="mb-6 text-sm text-muted-foreground">Enter your email to receive the password reset link.</p>
 
-                    {status && <div className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">{status}</div>}
+                    {status && <div className="mb-4 rounded-md bg-success/10 p-3 text-sm text-success">{status}</div>}
 
-                    <form className="space-y-6" onSubmit={submit}>
+                    <form className="space-y-5" onSubmit={submit}>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email address</Label>
                             <Input

@@ -1,7 +1,9 @@
 import SEOHead from '@/components/SEOHead';
+import { FileText } from 'lucide-react';
 import React from 'react';
 import Layout from './Layout';
 import PostCard from './partials/PostCard';
+import { EmptyState, PageHeader, Pagination, useThemeT } from './partials/ui';
 
 interface ArchiveProps {
     title: string;
@@ -17,7 +19,8 @@ interface ArchiveProps {
     keywords?: string;
 }
 
-const Archive: React.FC<ArchiveProps> = ({ title, posts, pagination, site, theme, menus, keywords }) => {
+const Archive: React.FC<ArchiveProps> = ({ title, posts = [], pagination, site, theme, menus, keywords }) => {
+    const tt = useThemeT();
     const archiveTitle = `${title} - ${site.name}`;
     const archiveDescription = `Browse ${title} on ${site.name}`;
     const archiveKeywords =
@@ -29,34 +32,27 @@ const Archive: React.FC<ArchiveProps> = ({ title, posts, pagination, site, theme
             : [];
 
     return (
-        <Layout title={archiveTitle} description={archiveDescription} site={site} theme={theme} menus={menus} keywords={archiveKeywords.join(', ')}>
+        <Layout
+            title={archiveTitle}
+            description={archiveDescription}
+            site={site}
+            theme={theme}
+            menus={menus}
+            keywords={archiveKeywords.join(', ')}
+            sidebar
+        >
             <SEOHead title={archiveTitle} description={archiveDescription} />
-            <section className="py-12">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <PageHeader title={title} />
+            {posts.length === 0 ? (
+                <EmptyState icon={FileText} title={tt('posts.empty', 'No posts found.')} />
+            ) : (
+                <div className="grid gap-6 sm:grid-cols-2">
                     {posts.map((post) => (
                         <PostCard key={post.id} post={post} />
                     ))}
                 </div>
-                <div className="mt-8 flex justify-center">
-                    <nav className="flex items-center space-x-2">
-                        {pagination.current_page > 1 && (
-                            <a href={`?page=${pagination.current_page - 1}`} className="rounded-md border px-4 py-2 hover:bg-gray-100">
-                                Previous
-                            </a>
-                        )}
-
-                        <span className="px-4 py-2">
-                            Page {pagination.current_page} of {pagination.last_page}
-                        </span>
-
-                        {pagination.current_page < pagination.last_page && (
-                            <a href={`?page=${pagination.current_page + 1}`} className="rounded-md border px-4 py-2 hover:bg-gray-100">
-                                Next
-                            </a>
-                        )}
-                    </nav>
-                </div>
-            </section>
+            )}
+            <Pagination pagination={pagination} />
         </Layout>
     );
 };

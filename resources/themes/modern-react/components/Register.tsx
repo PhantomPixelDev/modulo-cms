@@ -26,12 +26,12 @@ export default function Register() {
         <AuthLayout title="Create an account">
             <Head title="Register" />
 
-            <div className="py-6">
-                <div className="">
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight">Create your account</h1>
-                    <p className="mb-8 text-muted-foreground">Join to start managing your content</p>
+            <div>
+                <div>
+                    <h1 className="mb-1.5 text-2xl font-semibold tracking-tight">Create your account</h1>
+                    <p className="mb-8 text-sm text-muted-foreground">Join to start managing your content</p>
 
-                    <form className="space-y-6" onSubmit={submit}>
+                    <form className="space-y-5" onSubmit={submit}>
                         <div className="space-y-2">
                             <Label htmlFor="name">Full name</Label>
                             <Input
@@ -90,7 +90,7 @@ export default function Register() {
                         </div>
 
                         <Button type="submit" className="w-full" disabled={processing}>
-                            {processing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                            {processing && <LoaderCircle className="animate-spin" />}
                             Create account
                         </Button>
 

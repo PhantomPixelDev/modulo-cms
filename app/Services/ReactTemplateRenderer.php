@@ -57,6 +57,8 @@ class ReactTemplateRenderer
             'theme' => $themeData,
             'site' => $siteData,
             'menus' => $menuData,
+            // Strings from the theme's lang/{locale}.json, read on the client as t('theme.*')
+            'themeTranslations' => $this->themeManager->getTranslations($theme),
         ]);
 
         // Ensure posts data structure is correct for React components

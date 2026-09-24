@@ -1,5 +1,8 @@
 import SEOHead from '@/components/SEOHead';
+import { FileText } from 'lucide-react';
 import Layout from './Layout';
+import PostCard from './partials/PostCard';
+import { EmptyState, PageHeader, Pagination, useThemeT } from './partials/ui';
 import LoadingSkeleton from './util/LoadingSkeleton';
 
 interface Post {
@@ -66,88 +69,38 @@ interface PostsProps {
     showFilters?: boolean;
 }
 
-export default function Posts({ posts, postType, site, theme, menus, loading = false, pagination, basePath, pageTitle, showFilters }: PostsProps) {
-    const safeTheme = theme && typeof theme === 'object' ? theme : {};
+export default function Posts({ posts, postType, site, theme, menus, loading = false, pagination }: PostsProps) {
+    const tt = useThemeT();
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
-    const safeMenus = menus && typeof menus === 'object' ? menus : {};
+    const list = (Array.isArray(posts?.data) ? posts.data : []).filter((p) => p && typeof p === 'object' && p.id);
 
-    const allPosts: any[] = Array.isArray((posts as any)?.data) ? (posts as any).data : [];
-
-    // Display all posts passed from the controller (filtering is handled server-side)
-    const list = allPosts;
-
-    // Dynamic header content based on post type
-    const dynamicPageTitle = postType?.plural_label || 'Blog Posts';
-    const dynamicPageDescription = postType?.description || 'Browse all our latest blog posts and articles';
-    const resolvedTitle = dynamicPageTitle;
-    const resolvedDescription = dynamicPageDescription;
+    const title = postType?.plural_label || tt('posts.title', 'Blog Posts');
+    const description = postType?.description || tt('posts.description', 'Browse all our latest posts and articles.');
 
     return (
-        <Layout theme={safeTheme} site={safeSite} menus={safeMenus} title={resolvedTitle} description={resolvedDescription}>
-            <SEOHead title={`${resolvedTitle} | ${safeSite.name}`} description={resolvedDescription} />
-            <div className="space-y-8">
-                <header className="rounded-lg bg-indigo-700 py-12 text-center text-white">
-                    <h1 className="mb-4 text-4xl font-bold md:text-5xl">{dynamicPageTitle}</h1>
-                    <p className="mx-auto max-w-2xl text-xl opacity-90">{dynamicPageDescription}</p>
-                </header>
+        <Layout theme={theme} site={safeSite} menus={menus} title={title} description={description} sidebar>
+            <SEOHead title={`${title} | ${safeSite.name}`} description={description} />
+            <PageHeader title={title} description={description} />
 
-                {loading ? (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {Array.from({ length: 6 }, (_, i) => (
-                            <article key={i} className="rounded-lg bg-white p-6 shadow-lg">
-                                <LoadingSkeleton lines={3} className="mb-4" />
-                                <div className="flex items-center justify-between">
-                                    <LoadingSkeleton className="h-4 w-20" />
-                                    <LoadingSkeleton className="h-4 w-16" />
-                                </div>
-                            </article>
-                        ))}
-                    </div>
-                ) : list.length === 0 ? (
-                    <div className="py-16 text-center">
-                        <p className="text-gray-600">No posts found.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {list.map((p) => {
-                            if (!p || typeof p !== 'object' || !p.id) return null;
-                            const slug = p.slug || '';
-                            const prefix = p.post_type?.route_prefix || 'posts';
-                            const href = `/${prefix}/${slug}`;
-                            return (
-                                <article key={p.id} className="rounded-lg bg-white p-6 shadow-lg transition-shadow hover:shadow-xl">
-                                    <h2 className="mb-3 text-xl font-bold">
-                                        <a href={href} className="text-blue-600 hover:underline">
-                                            {p.title || '(untitled)'}
-                                        </a>
-                                    </h2>
-                                    {p.excerpt && <p className="mb-4 line-clamp-3 text-sm text-gray-600">{p.excerpt}</p>}
-                                    {p.published_at && <p className="text-xs text-gray-500">{new Date(p.published_at).toLocaleDateString()}</p>}
-                                </article>
-                            );
-                        })}
-                    </div>
-                )}
+            {loading ? (
+                <div className="grid gap-6 sm:grid-cols-2">
+                    {Array.from({ length: 4 }, (_, i) => (
+                        <div key={i} className="rounded-xl border bg-card p-5">
+                            <LoadingSkeleton lines={3} />
+                        </div>
+                    ))}
+                </div>
+            ) : list.length === 0 ? (
+                <EmptyState icon={FileText} title={tt('posts.empty', 'No posts found.')} />
+            ) : (
+                <div className="grid gap-6 sm:grid-cols-2">
+                    {list.map((post) => (
+                        <PostCard key={post.id} post={post} />
+                    ))}
+                </div>
+            )}
 
-                {/* Pagination */}
-                {pagination && !loading && (
-                    <div className="mt-8 flex justify-center">
-                        {pagination.prev_page_url && (
-                            <a href={pagination.prev_page_url} className="mr-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-                                Previous
-                            </a>
-                        )}
-                        <span className="px-4 py-2 text-gray-600">
-                            Page {pagination.current_page} of {pagination.last_page}
-                        </span>
-                        {pagination.next_page_url && (
-                            <a href={pagination.next_page_url} className="ml-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-                                Next
-                            </a>
-                        )}
-                    </div>
-                )}
-            </div>
+            {!loading && <Pagination pagination={pagination} />}
         </Layout>
     );
 }

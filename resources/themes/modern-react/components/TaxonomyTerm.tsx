@@ -1,4 +1,7 @@
+import { Tag } from 'lucide-react';
 import Layout from './Layout';
+import PostCard from './partials/PostCard';
+import { EmptyState, PageHeader, Pagination, useThemeT } from './partials/ui';
 
 interface TaxonomyTermProps {
     term: {
@@ -48,13 +51,9 @@ interface TaxonomyTermProps {
 }
 
 export default function TaxonomyTerm(props: TaxonomyTermProps) {
-    const { term, posts, pagination } = props;
-
-    const getPostUrl = (post: any) => {
-        const slug = post.slug || 'unknown';
-        const prefix = post.post_type?.route_prefix;
-        return prefix ? `/${prefix}/${slug}` : `/posts/${slug}`;
-    };
+    const { term, posts = [], pagination } = props;
+    const tt = useThemeT();
+    const total = pagination?.total ?? posts.length;
 
     return (
         <Layout
@@ -62,71 +61,37 @@ export default function TaxonomyTerm(props: TaxonomyTermProps) {
             site={props.site}
             menus={props.menus}
             title={`${term.name} - ${term.taxonomy.label}`}
-            description={term.description || `Browse posts in ${term.name}`}
+            description={term.description || tt('taxonomy.browse', 'Browse posts in :name', { name: term.name })}
+            sidebar
         >
-            <div className="space-y-8">
-                <header className="rounded-lg bg-indigo-700 py-12 text-center text-white">
-                    <div className="mb-2">
-                        <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-sm">{term.taxonomy.label}</span>
-                    </div>
-                    <h1 className="mb-4 text-4xl font-bold md:text-5xl">{term.name}</h1>
-                    {term.description && <p className="mx-auto max-w-2xl text-xl opacity-90">{term.description}</p>}
-                    <p className="mt-2 text-lg opacity-80">
-                        {pagination.total} {pagination.total === 1 ? 'post' : 'posts'} found
-                    </p>
-                </header>
+            <PageHeader
+                eyebrow={term.taxonomy.label}
+                title={term.name}
+                description={
+                    <>
+                        {term.description && <span className="block">{term.description}</span>}
+                        <span className="mt-1 block text-sm">
+                            {total === 1 ? tt('taxonomy.count_one', '1 post') : tt('taxonomy.count_other', ':count posts', { count: total })}
+                        </span>
+                    </>
+                }
+            />
 
-                {posts && posts.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {posts.map((post) => {
-                            const url = getPostUrl(post);
-                            const published = post.published_at ? new Date(post.published_at).toLocaleDateString() : '';
+            {posts.length > 0 ? (
+                <div className="grid gap-6 sm:grid-cols-2">
+                    {posts.map((post) => (
+                        <PostCard key={post.id} post={post} />
+                    ))}
+                </div>
+            ) : (
+                <EmptyState
+                    icon={Tag}
+                    title={tt('taxonomy.empty_title', 'No posts in “:name” yet', { name: term.name })}
+                    description={tt('taxonomy.empty_description', 'There are no published posts here at the moment.')}
+                />
+            )}
 
-                            return (
-                                <div key={post.id} className="rounded-lg bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
-                                    <h3 className="mb-2 text-xl font-semibold text-gray-900">
-                                        <a href={url} className="transition-colors hover:text-blue-600">
-                                            {post.title}
-                                        </a>
-                                    </h3>
-                                    <p className="mb-4 line-clamp-3 text-gray-600">{post.excerpt}</p>
-                                    <div className="space-y-1 text-sm text-gray-500">
-                                        <p>By: {post.author?.name || 'Unknown Author'}</p>
-                                        <p>Type: {post.post_type?.label || 'Post'}</p>
-                                        {published && <p>Published: {published}</p>}
-                                    </div>
-                                    {post.terms && post.terms.length > 0 && (
-                                        <div className="mt-3 flex flex-wrap gap-1">
-                                            {post.terms.map((termTag, idx) => (
-                                                <span key={idx} className="inline-block rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                                                    {termTag.name}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <div className="py-16 text-center">
-                        <div className="mx-auto max-w-md">
-                            <div className="mb-6">
-                                <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={1}
-                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                                    />
-                                </svg>
-                            </div>
-                            <h3 className="mb-2 text-xl font-medium text-gray-900">No posts found in "{term.name}"</h3>
-                            <p className="text-gray-600">There are no published posts in this category at the moment.</p>
-                        </div>
-                    </div>
-                )}
-            </div>
+            <Pagination pagination={pagination} />
         </Layout>
     );
 }

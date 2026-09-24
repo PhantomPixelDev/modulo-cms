@@ -112,34 +112,34 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
         <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Shopping Cart">
             <SEOHead title="Shopping Cart" description="Review your shopping cart" />
 
-            <div className="min-h-screen bg-gray-50 py-12">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div>
+                <div>
                     {/* Breadcrumb */}
-                    <nav className="mb-8 flex items-center gap-2 text-sm text-gray-500">
-                        <Link href="/" className="hover:text-indigo-600">
+                    <nav className="mb-8 flex items-center gap-2 text-sm text-muted-foreground">
+                        <Link href="/" className="hover:text-primary">
                             Home
                         </Link>
                         <span>/</span>
-                        <Link href="/shop" className="hover:text-indigo-600">
+                        <Link href="/shop" className="hover:text-primary">
                             Shop
                         </Link>
                         <span>/</span>
-                        <span className="text-gray-900">Cart</span>
+                        <span className="text-foreground">Cart</span>
                     </nav>
 
-                    <h1 className="mb-8 flex items-center gap-3 text-3xl font-bold text-gray-900">
+                    <h1 className="mb-8 flex items-center gap-3 text-3xl font-semibold tracking-tight text-foreground">
                         <ShoppingCart className="h-8 w-8" />
                         Shopping Cart
                     </h1>
 
                     {isEmpty ? (
-                        <div className="rounded-2xl bg-white p-12 text-center shadow-sm">
-                            <ShoppingBag className="mx-auto mb-6 h-20 w-20 text-gray-200" />
-                            <h2 className="mb-4 text-2xl font-bold text-gray-900">Your cart is empty</h2>
-                            <p className="mb-8 text-gray-500">Looks like you haven't added any products yet.</p>
+                        <div className="rounded-xl border bg-card p-12 text-center shadow-xs">
+                            <ShoppingBag className="mx-auto mb-6 h-20 w-20 text-muted-foreground/40" />
+                            <h2 className="mb-4 text-2xl font-semibold tracking-tight text-foreground">Your cart is empty</h2>
+                            <p className="mb-8 text-muted-foreground">Looks like you haven't added any products yet.</p>
                             <Link
                                 href="/shop"
-                                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white transition-colors hover:bg-indigo-700"
+                                className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-white transition-colors hover:bg-primary/90"
                             >
                                 <ShoppingBag className="h-5 w-5" />
                                 Continue Shopping
@@ -152,15 +152,15 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                                 {items.map((item) => (
                                     <div
                                         key={item.product_id}
-                                        className={`flex gap-6 rounded-xl bg-white p-6 shadow-sm ${loading === item.product_id ? 'opacity-50' : ''}`}
+                                        className={`flex gap-6 rounded-xl border bg-card p-6 shadow-xs ${loading === item.product_id ? 'opacity-50' : ''}`}
                                     >
                                         {/* Product Image */}
                                         <Link href={item.product_url} className="shrink-0">
                                             {item.product_image ? (
                                                 <img src={item.product_image} alt={item.product_name} className="h-24 w-24 rounded-lg object-cover" />
                                             ) : (
-                                                <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-gray-100">
-                                                    <ShoppingBag className="h-8 w-8 text-gray-300" />
+                                                <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-muted">
+                                                    <ShoppingBag className="h-8 w-8 text-muted-foreground/60" />
                                                 </div>
                                             )}
                                         </Link>
@@ -168,17 +168,17 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                                         {/* Product Details */}
                                         <div className="min-w-0 flex-1">
                                             <Link href={item.product_url}>
-                                                <h3 className="font-semibold text-gray-900 transition-colors hover:text-indigo-600">
+                                                <h3 className="font-semibold text-foreground transition-colors hover:text-primary">
                                                     {item.product_name}
                                                 </h3>
                                             </Link>
-                                            {item.sku && <p className="mt-1 text-sm text-gray-500">SKU: {item.sku}</p>}
+                                            {item.sku && <p className="mt-1 text-sm text-muted-foreground">SKU: {item.sku}</p>}
                                             <div className="mt-2 flex items-center gap-2">
-                                                <span className="text-lg font-bold text-gray-900">
+                                                <span className="text-lg font-semibold tracking-tight text-foreground">
                                                     {formatPrice(item.price, cartTotals?.currency)}
                                                 </span>
                                                 {item.original_price > item.price && (
-                                                    <span className="text-sm text-gray-400 line-through">
+                                                    <span className="text-sm text-muted-foreground/80 line-through">
                                                         {formatPrice(item.original_price, cartTotals?.currency)}
                                                     </span>
                                                 )}
@@ -187,11 +187,11 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
 
                                         {/* Quantity Controls */}
                                         <div className="flex flex-col items-end gap-4">
-                                            <div className="flex items-center rounded-lg border border-gray-200">
+                                            <div className="flex items-center rounded-lg border">
                                                 <button
                                                     onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
                                                     disabled={loading === item.product_id || item.quantity <= 1}
-                                                    className="p-2 hover:bg-gray-50 disabled:opacity-50"
+                                                    className="p-2 hover:bg-accent disabled:opacity-50"
                                                 >
                                                     <Minus className="h-4 w-4" />
                                                 </button>
@@ -199,20 +199,22 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                                                 <button
                                                     onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
                                                     disabled={loading === item.product_id || (item.stock != null && item.quantity >= item.stock)}
-                                                    className="p-2 hover:bg-gray-50 disabled:opacity-50"
+                                                    className="p-2 hover:bg-accent disabled:opacity-50"
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                 </button>
                                             </div>
 
                                             <div className="text-right">
-                                                <p className="text-lg font-bold text-gray-900">{formatPrice(item.subtotal, cartTotals?.currency)}</p>
+                                                <p className="text-lg font-semibold tracking-tight text-foreground">
+                                                    {formatPrice(item.subtotal, cartTotals?.currency)}
+                                                </p>
                                             </div>
 
                                             <button
                                                 onClick={() => removeItem(item.product_id)}
                                                 disabled={loading === item.product_id}
-                                                className="p-2 text-red-500 hover:text-red-700"
+                                                className="p-2 text-destructive hover:text-destructive/80"
                                             >
                                                 <Trash2 className="h-5 w-5" />
                                             </button>
@@ -223,21 +225,21 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
 
                             {/* Order Summary */}
                             <div className="lg:col-span-1">
-                                <div className="sticky top-24 rounded-xl bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 text-lg font-bold text-gray-900">Order Summary</h2>
+                                <div className="sticky top-24 rounded-xl border bg-card p-6 shadow-xs">
+                                    <h2 className="mb-6 text-lg font-semibold tracking-tight text-foreground">Order Summary</h2>
 
                                     <div className="space-y-4">
-                                        <div className="flex justify-between text-gray-600">
+                                        <div className="flex justify-between text-muted-foreground">
                                             <span>Subtotal</span>
                                             <span>{formatPrice(cartTotals?.subtotal ?? 0, cartTotals?.currency)}</span>
                                         </div>
                                         {(cartTotals?.discount ?? 0) > 0 && (
-                                            <div className="flex justify-between text-green-600">
+                                            <div className="flex justify-between text-success">
                                                 <span>Discount</span>
                                                 <span>-{formatPrice(cartTotals?.discount ?? 0, cartTotals?.currency)}</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between text-gray-600">
+                                        <div className="flex justify-between text-muted-foreground">
                                             <span>Shipping</span>
                                             <span>
                                                 {cartTotals?.shipping
@@ -246,14 +248,14 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                                             </span>
                                         </div>
                                         {(cartTotals?.tax ?? 0) > 0 && (
-                                            <div className="flex justify-between text-gray-600">
+                                            <div className="flex justify-between text-muted-foreground">
                                                 <span>Tax</span>
                                                 <span>{formatPrice(cartTotals?.tax ?? 0, cartTotals?.currency)}</span>
                                             </div>
                                         )}
 
                                         <div className="border-t pt-4">
-                                            <div className="flex justify-between text-xl font-bold text-gray-900">
+                                            <div className="flex justify-between text-xl font-semibold tracking-tight text-foreground">
                                                 <span>Total</span>
                                                 <span>{formatPrice(cartTotals?.total ?? 0, cartTotals?.currency)}</span>
                                             </div>
@@ -262,7 +264,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
 
                                     <Link
                                         href="/shop/checkout"
-                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 font-semibold text-white transition-colors hover:bg-indigo-700"
+                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-primary px-6 py-4 font-semibold text-white transition-colors hover:bg-primary/90"
                                     >
                                         Proceed to Checkout
                                         <ArrowRight className="h-5 w-5" />
@@ -270,7 +272,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
 
                                     <Link
                                         href="/shop"
-                                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border px-6 py-3 font-medium text-foreground/80 transition-colors hover:bg-accent"
                                     >
                                         Continue Shopping
                                     </Link>

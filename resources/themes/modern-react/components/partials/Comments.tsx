@@ -1,6 +1,11 @@
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { PageProps } from '@/types';
-import { useForm, usePage } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
+import { MessageSquare } from 'lucide-react';
 import React, { useState } from 'react';
+import { formatDate, useThemeT } from './ui';
 
 interface Comment {
     id: number;
@@ -18,16 +23,36 @@ interface CommentsProps {
     allowComments: boolean;
 }
 
-const Comments: React.FC<CommentsProps> = ({ postId, comments = [], allowComments = true }) => {
-    const { auth } = usePage<PageProps>().props;
-    const [replyingTo, setReplyingTo] = useState<number | null>(null);
-    const [showLoginMessage, setShowLoginMessage] = useState(false);
+function Avatar({ name, src }: { name: string; src: string | null }) {
+    if (src) {
+        return <img className="size-9 shrink-0 rounded-full object-cover" src={src} alt="" />;
+    }
+    return (
+        <span
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground"
+            aria-hidden="true"
+        >
+            {(name || '?').charAt(0).toUpperCase()}
+        </span>
+    );
+}
 
+interface CommentFormProps {
+    postId: number;
+    parentId?: number | null;
+    onDone?: () => void;
+    onCancel?: () => void;
+}
+
+function CommentForm({ postId, parentId = null, onDone, onCancel }: CommentFormProps) {
+    const tt = useThemeT();
+    const { auth } = usePage<PageProps>().props;
+    const [showGuestHint, setShowGuestHint] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         content: '',
-        parent_id: null as number | null,
-        author_name: auth.user ? '' : '',
-        author_email: auth.user ? '' : '',
+        parent_id: parentId,
+        author_name: '',
+        author_email: '',
         // Honeypot: humans never see or fill this field
         website: '',
     });
@@ -36,223 +61,167 @@ const Comments: React.FC<CommentsProps> = ({ postId, comments = [], allowComment
         e.preventDefault();
 
         if (!auth.user && (!data.author_name || !data.author_email)) {
-            setShowLoginMessage(true);
+            setShowGuestHint(true);
             return;
         }
 
         post(`/posts/${postId}/comments`, {
+            preserveScroll: true,
             onSuccess: () => {
-                reset();
-                setReplyingTo(null);
-                setShowLoginMessage(false);
+                reset('content');
+                setShowGuestHint(false);
+                onDone?.();
             },
         });
     };
 
-    const startReply = (commentId: number) => {
-        setReplyingTo(commentId);
-        setData('parent_id', commentId);
-    };
+    const isReply = parentId !== null;
 
-    const cancelReply = () => {
-        setReplyingTo(null);
-        setData('parent_id', null);
-    };
+    return (
+        <form onSubmit={handleSubmit} className="space-y-3">
+            <input
+                type="text"
+                name="website"
+                value={data.website}
+                onChange={(e) => setData('website', e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="hidden"
+            />
 
-    const renderComment = (comment: Comment, depth = 0) => (
-        <div key={comment.id} className={`mt-4 ${depth > 0 ? 'ml-8 border-l-2 border-gray-200 pl-4' : ''}`}>
-            <div className="flex items-start">
-                <div className="flex-shrink-0">
-                    <img
-                        className="h-10 w-10 rounded-full"
-                        src={comment.author_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author_name)}&background=random`}
-                        alt={comment.author_name}
-                    />
-                </div>
-                <div className="ml-3 flex-1">
-                    <div className="flex items-center">
-                        <h4 className="text-sm font-medium text-gray-900">{comment.author_name}</h4>
-                        <span className="ml-2 text-xs text-gray-500">{new Date(comment.created_at).toLocaleDateString()}</span>
+            {showGuestHint && !auth.user && (
+                <p className="rounded-md bg-warning/15 px-3 py-2 text-sm text-warning-foreground dark:text-warning">
+                    {tt('comments.guest_hint', 'Please enter your name and email to comment, or')}{' '}
+                    <Link href="/login" className="font-medium underline underline-offset-4">
+                        {tt('comments.log_in', 'log in')}
+                    </Link>
+                    .
+                </p>
+            )}
+
+            {!auth.user && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                        <Input
+                            placeholder={tt('comments.name', 'Your name')}
+                            aria-label={tt('comments.name', 'Your name')}
+                            value={data.author_name}
+                            onChange={(e) => setData('author_name', e.target.value)}
+                            aria-invalid={!!errors.author_name}
+                            required
+                        />
+                        {errors.author_name && <p className="mt-1 text-xs text-destructive">{errors.author_name}</p>}
                     </div>
-                    <div className="mt-1 text-sm text-gray-700">{comment.content}</div>
-                    <div className="mt-2 flex items-center">
-                        <button onClick={() => startReply(comment.id)} className="text-xs text-blue-600 hover:text-blue-800">
-                            Reply
-                        </button>
+                    <div>
+                        <Input
+                            type="email"
+                            placeholder={tt('comments.email', 'Your email')}
+                            aria-label={tt('comments.email', 'Your email')}
+                            value={data.author_email}
+                            onChange={(e) => setData('author_email', e.target.value)}
+                            aria-invalid={!!errors.author_email}
+                            required
+                        />
+                        {errors.author_email && <p className="mt-1 text-xs text-destructive">{errors.author_email}</p>}
                     </div>
-
-                    {replyingTo === comment.id && (
-                        <div className="mt-3">
-                            <form onSubmit={handleSubmit}>
-                                <input
-                                    type="text"
-                                    name="website"
-                                    value={data.website}
-                                    onChange={(e) => setData('website', e.target.value)}
-                                    tabIndex={-1}
-                                    autoComplete="off"
-                                    aria-hidden="true"
-                                    className="hidden"
-                                />
-                                {!auth.user && (
-                                    <div className="mb-3 space-y-2">
-                                        <div>
-                                            <input
-                                                type="text"
-                                                placeholder="Your name"
-                                                className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                                value={data.author_name}
-                                                onChange={(e) => setData('author_name', e.target.value)}
-                                                required
-                                            />
-                                            {errors.author_name && <p className="mt-1 text-xs text-red-600">{errors.author_name}</p>}
-                                        </div>
-                                        <div>
-                                            <input
-                                                type="email"
-                                                placeholder="Your email"
-                                                className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                                value={data.author_email || ''}
-                                                onChange={(e) => setData('author_email', e.target.value)}
-                                                required
-                                            />
-                                            {errors.author_email && <p className="mt-1 text-xs text-red-600">{errors.author_email}</p>}
-                                        </div>
-                                    </div>
-                                )}
-                                <div>
-                                    <textarea
-                                        rows={3}
-                                        className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        placeholder="Write your reply..."
-                                        value={data.content}
-                                        onChange={(e) => setData('content', e.target.value)}
-                                        required
-                                    />
-                                    {errors.content && <p className="mt-1 text-xs text-red-600">{errors.content}</p>}
-                                </div>
-                                <div className="mt-2 flex justify-end space-x-2">
-                                    <button
-                                        type="button"
-                                        onClick={cancelReply}
-                                        className="rounded-md bg-gray-100 px-3 py-1 text-sm text-gray-700 hover:bg-gray-200"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-                                    >
-                                        {processing ? 'Posting...' : 'Post Reply'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
                 </div>
+            )}
+
+            <div>
+                <Textarea
+                    rows={isReply ? 3 : 4}
+                    placeholder={isReply ? tt('comments.reply_placeholder', 'Write your reply…') : tt('comments.placeholder', 'Write your comment…')}
+                    aria-label={isReply ? tt('comments.reply_placeholder', 'Write your reply…') : tt('comments.placeholder', 'Write your comment…')}
+                    value={data.content}
+                    onChange={(e) => setData('content', e.target.value)}
+                    aria-invalid={!!errors.content}
+                    required
+                />
+                {errors.content && <p className="mt-1 text-xs text-destructive">{errors.content}</p>}
             </div>
 
-            {/* Render replies */}
-            {comment.replies && comment.replies.length > 0 && (
-                <div className="mt-4">{comment.replies.map((reply) => renderComment(reply, depth + 1))}</div>
-            )}
-        </div>
+            <div className="flex justify-end gap-2">
+                {onCancel && (
+                    <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+                        {tt('comments.cancel', 'Cancel')}
+                    </Button>
+                )}
+                <Button type="submit" size={isReply ? 'sm' : 'default'} disabled={processing}>
+                    {processing
+                        ? tt('comments.posting', 'Posting…')
+                        : isReply
+                          ? tt('comments.post_reply', 'Post reply')
+                          : tt('comments.post_comment', 'Post comment')}
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+const Comments: React.FC<CommentsProps> = ({ postId, comments = [], allowComments = true }) => {
+    const tt = useThemeT();
+    const [replyingTo, setReplyingTo] = useState<number | null>(null);
+
+    const renderComment = (comment: Comment, depth = 0) => (
+        <li key={comment.id} className={depth > 0 ? 'mt-5 border-l pl-5' : ''}>
+            <div className="flex gap-3">
+                <Avatar name={comment.author_name} src={comment.author_avatar} />
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-baseline gap-x-2">
+                        <span className="text-sm font-medium text-foreground">{comment.author_name}</span>
+                        <time dateTime={comment.created_at} className="text-xs text-muted-foreground">
+                            {formatDate(comment.created_at)}
+                        </time>
+                    </div>
+                    <p className="mt-1 text-sm leading-relaxed whitespace-pre-line text-foreground/90">{comment.content}</p>
+                    {allowComments && replyingTo !== comment.id && (
+                        <button
+                            type="button"
+                            onClick={() => setReplyingTo(comment.id)}
+                            className="mt-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            {tt('comments.reply', 'Reply')}
+                        </button>
+                    )}
+                    {replyingTo === comment.id && (
+                        <div className="mt-3">
+                            <CommentForm
+                                postId={postId}
+                                parentId={comment.id}
+                                onDone={() => setReplyingTo(null)}
+                                onCancel={() => setReplyingTo(null)}
+                            />
+                        </div>
+                    )}
+                    {comment.replies && comment.replies.length > 0 && <ul>{comment.replies.map((reply) => renderComment(reply, depth + 1))}</ul>}
+                </div>
+            </div>
+        </li>
     );
 
     return (
-        <div className="mt-12">
-            <h3 className="mb-6 text-lg font-medium text-gray-900">
-                {comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}
-            </h3>
+        <section className="mt-16 border-t pt-10" aria-labelledby="comments-heading">
+            <h2 id="comments-heading" className="flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground">
+                <MessageSquare className="size-5 text-muted-foreground" />
+                {comments.length === 1
+                    ? tt('comments.count_one', '1 comment')
+                    : tt('comments.count_other', ':count comments', { count: comments.length })}
+            </h2>
 
-            {/* Comment Form */}
             {allowComments && (
-                <div className="mb-8">
-                    <h4 className="mb-3 text-sm font-medium text-gray-900">Leave a comment</h4>
-
-                    {showLoginMessage && !auth.user && (
-                        <div className="mb-4 rounded-md bg-yellow-50 p-3 text-sm text-yellow-700">
-                            Please enter your name and email to post a comment, or{' '}
-                            <a href="/login" className="text-blue-600 hover:underline">
-                                log in
-                            </a>{' '}
-                            to your account.
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit}>
-                        <input
-                            type="text"
-                            name="website"
-                            value={data.website}
-                            onChange={(e) => setData('website', e.target.value)}
-                            tabIndex={-1}
-                            autoComplete="off"
-                            aria-hidden="true"
-                            className="hidden"
-                        />
-                        {!auth.user && (
-                            <div className="mb-3 grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <input
-                                        type="text"
-                                        placeholder="Your name *"
-                                        className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        value={data.author_name}
-                                        onChange={(e) => setData('author_name', e.target.value)}
-                                        required
-                                    />
-                                    {errors.author_name && <p className="mt-1 text-xs text-red-600">{errors.author_name}</p>}
-                                </div>
-                                <div>
-                                    <input
-                                        type="email"
-                                        placeholder="Your email *"
-                                        className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        value={data.author_email || ''}
-                                        onChange={(e) => setData('author_email', e.target.value)}
-                                        required
-                                    />
-                                    {errors.author_email && <p className="mt-1 text-xs text-red-600">{errors.author_email}</p>}
-                                </div>
-                            </div>
-                        )}
-
-                        <div>
-                            <textarea
-                                rows={4}
-                                className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                placeholder="Write your comment..."
-                                value={data.content}
-                                onChange={(e) => setData('content', e.target.value)}
-                                required
-                            />
-                            {errors.content && <p className="mt-1 text-xs text-red-600">{errors.content}</p>}
-                        </div>
-
-                        <div className="mt-3">
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
-                            >
-                                {processing ? 'Posting...' : 'Post Comment'}
-                            </button>
-                        </div>
-                    </form>
+                <div className="mt-6 rounded-xl border bg-card p-5 shadow-xs">
+                    <h3 className="mb-3 text-sm font-medium text-foreground">{tt('comments.leave', 'Leave a comment')}</h3>
+                    <CommentForm postId={postId} />
                 </div>
             )}
 
-            {/* Comments List */}
-            <div className="space-y-6">
-                {comments.length > 0 ? (
-                    comments.map((comment) => renderComment(comment))
-                ) : (
-                    <p className="text-gray-500">No comments yet. Be the first to comment!</p>
-                )}
-            </div>
-        </div>
+            {comments.length > 0 ? (
+                <ul className="mt-8 space-y-8">{comments.map((comment) => renderComment(comment))}</ul>
+            ) : (
+                <p className="mt-6 text-sm text-muted-foreground">{tt('comments.empty', 'No comments yet. Be the first to comment!')}</p>
+            )}
+        </section>
     );
 };
 
