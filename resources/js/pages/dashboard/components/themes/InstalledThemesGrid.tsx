@@ -46,7 +46,7 @@ export function InstalledThemesGrid({
                     const cfg = t?.config || {};
                     const previewPath = cfg.preview || cfg.screenshot;
                     return (
-                        <div key={t.id} className={`rounded-md border p-4 ${isActive ? 'ring-1 ring-accent' : ''}`}>
+                        <div key={t.id} className={`rounded-xl border bg-card p-4 shadow-xs ${isActive ? 'border-primary ring-1 ring-primary' : ''}`}>
                             <div className="flex items-start justify-between">
                                 <div className="flex gap-3">
                                     {previewPath ? (

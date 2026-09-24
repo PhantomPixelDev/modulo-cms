@@ -377,7 +377,7 @@ export default function DashboardContent({
                 <title key="title">{pageTitle}</title>
                 <meta name="description" content={pageTitle} key="description" />
             </Head>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900">{renderSection()}</div>
+            <div className="min-h-screen bg-background">{renderSection()}</div>
         </>
     );
 }

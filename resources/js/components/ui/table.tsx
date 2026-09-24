@@ -12,7 +12,7 @@ export function Table({ className, dense, ...props }: TableProps) {
     <TableContext.Provider value={{ dense }}>
       <table
         className={cn(
-          'w-full text-sm text-[var(--foreground)]',
+          'w-full caption-bottom text-sm text-foreground',
           className,
         )}
         {...props}
@@ -23,12 +23,12 @@ export function Table({ className, dense, ...props }: TableProps) {
 
 export function TableContainer({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('overflow-x-auto rounded-md border border-border p-4', className)} {...props} />
+    <div className={cn('overflow-x-auto rounded-xl border bg-card shadow-xs', className)} {...props} />
   );
 }
 
 export function TableHeader({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn('bg-[var(--muted)]/80 text-[var(--foreground)]/80', className)} {...props} />;
+  return <thead className={cn('bg-muted/50 [&_tr]:border-b', className)} {...props} />;
 }
 
 export function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
@@ -39,8 +39,7 @@ export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTable
   return (
     <tr
       className={cn(
-        'border-b last:border-0 hover:bg-[var(--muted)]/40 odd:bg-[var(--muted)]/20 even:bg-transparent transition-colors',
-        'transition-colors',
+        'border-b transition-colors last:border-0 hover:bg-muted/40 data-[state=selected]:bg-muted',
         className,
       )}
       {...props}
@@ -53,8 +52,8 @@ export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTa
   return (
     <th
       className={cn(
-        'text-left font-semibold text-[var(--foreground)]/80 uppercase tracking-wide text-xs',
-        dense ? 'py-1.5 pr-3' : 'py-2.5 pr-4',
+        'whitespace-nowrap px-3 text-left align-middle text-xs font-medium text-muted-foreground first:pl-4 last:pr-4',
+        dense ? 'h-8' : 'h-10',
         className,
       )}
       {...props}
@@ -67,8 +66,8 @@ export function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTa
   return (
     <td
       className={cn(
-        'text-[var(--foreground)]/90',
-        dense ? 'py-1.5 pr-3' : 'py-2.5 pr-4',
+        'px-3 align-middle first:pl-4 last:pr-4',
+        dense ? 'py-1.5' : 'py-3',
         className,
       )}
       {...props}

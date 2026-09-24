@@ -88,16 +88,17 @@ export function PostForm({
         [t],
     );
 
+    const underlineTabClass =
+        'h-11 flex-none rounded-none border-0 border-b-2 border-transparent px-0.5 text-sm text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none dark:data-[state=active]:border-primary dark:data-[state=active]:bg-transparent';
+
     return (
         <form ref={formRef} onSubmit={handleSubmit} className="mx-auto max-w-5xl space-y-8 pb-20">
-            <Card className="overflow-hidden border-border shadow-sm">
-                <CardHeader className="border-b bg-muted/30 px-6 py-4">
+            <Card className="gap-0 overflow-hidden py-0">
+                <CardHeader className="border-b px-6 py-5">
                     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                         <div className="flex items-center gap-3">
                             <div>
-                                <CardTitle className="text-xl font-bold">
-                                    {isEditing ? t('dashboard.posts.edit_post') : t('dashboard.posts.add_new')}
-                                </CardTitle>
+                                <CardTitle className="text-lg">{isEditing ? t('dashboard.posts.edit_post') : t('dashboard.posts.add_new')}</CardTitle>
                                 <p className="mt-1 text-sm text-muted-foreground">{t('dashboard.posts.form.description')}</p>
                             </div>
                             {hasMultipleLocales && (
@@ -152,24 +153,15 @@ export function PostForm({
 
                 <CardContent className="p-0">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <div className="border-b bg-muted/10 px-6">
-                            <TabsList className="h-12 gap-6 bg-transparent p-0">
-                                <TabsTrigger
-                                    value="content"
-                                    className="h-12 rounded-none border-b-2 border-transparent px-2 text-xs font-semibold tracking-wider uppercase data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                                >
+                        <div className="border-b px-6">
+                            <TabsList className="h-11 gap-5 rounded-none bg-transparent p-0">
+                                <TabsTrigger value="content" className={underlineTabClass}>
                                     {t('dashboard.posts.form.tabs.content')}
                                 </TabsTrigger>
-                                <TabsTrigger
-                                    value="metadata"
-                                    className="h-12 rounded-none border-b-2 border-transparent px-2 text-xs font-semibold tracking-wider uppercase data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                                >
+                                <TabsTrigger value="metadata" className={underlineTabClass}>
                                     {t('dashboard.posts.form.tabs.metadata')}
                                 </TabsTrigger>
-                                <TabsTrigger
-                                    value="advanced"
-                                    className="h-12 rounded-none border-b-2 border-transparent px-2 text-xs font-semibold tracking-wider uppercase data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                                >
+                                <TabsTrigger value="advanced" className={underlineTabClass}>
                                     {t('dashboard.posts.form.tabs.advanced')}
                                 </TabsTrigger>
                             </TabsList>

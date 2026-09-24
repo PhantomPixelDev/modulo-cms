@@ -33,32 +33,32 @@ const statusIcons: Record<string, LucideIcon> = {
 
 const STATUS_COLOR_TOKENS: Record<string, { text: string; indicator: string; badge: string; iconBg: string; border: string }> = {
     green: {
-        text: 'text-emerald-600 dark:text-emerald-400',
-        indicator: 'bg-emerald-500',
-        badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-        iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-        border: 'border-emerald-500/20',
+        text: 'text-foreground',
+        indicator: 'bg-success',
+        badge: 'bg-success/10 text-success',
+        iconBg: 'bg-success/10 text-success',
+        border: 'border-border',
     },
     blue: {
-        text: 'text-sky-600 dark:text-sky-400',
-        indicator: 'bg-sky-500',
-        badge: 'bg-sky-500/10 text-sky-700 dark:text-sky-300',
-        iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-        border: 'border-sky-500/20',
+        text: 'text-foreground',
+        indicator: 'bg-primary',
+        badge: 'bg-primary/10 text-primary',
+        iconBg: 'bg-primary/10 text-primary',
+        border: 'border-border',
     },
     yellow: {
-        text: 'text-amber-600 dark:text-amber-400',
-        indicator: 'bg-amber-500',
-        badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
-        iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-        border: 'border-amber-500/20',
+        text: 'text-foreground',
+        indicator: 'bg-warning',
+        badge: 'bg-warning/15 text-warning-foreground dark:text-warning',
+        iconBg: 'bg-warning/15 text-warning-foreground dark:text-warning',
+        border: 'border-warning/40',
     },
     red: {
-        text: 'text-rose-600 dark:text-rose-400',
-        indicator: 'bg-rose-500',
-        badge: 'bg-rose-500/10 text-rose-700 dark:text-rose-300',
-        iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
-        border: 'border-rose-500/20',
+        text: 'text-destructive',
+        indicator: 'bg-destructive',
+        badge: 'bg-destructive/10 text-destructive',
+        iconBg: 'bg-destructive/10 text-destructive',
+        border: 'border-destructive/40',
     },
     gray: {
         text: 'text-muted-foreground',
@@ -99,37 +99,37 @@ const quickActions = [
         labelKey: 'dashboard.home.quick_actions.new_post',
         icon: PenSquare,
         route: 'posts.create',
-        color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20',
+        color: 'text-blue-600 dark:text-blue-400',
     },
     {
         labelKey: 'dashboard.home.quick_actions.new_page',
         icon: FileText,
         route: 'pages.create',
-        color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 hover:bg-violet-500/20',
+        color: 'text-violet-600 dark:text-violet-400',
     },
     {
         labelKey: 'dashboard.home.quick_actions.add_user',
         icon: UserPlus,
         route: 'users.create',
-        color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20',
+        color: 'text-emerald-600 dark:text-emerald-400',
     },
     {
         labelKey: 'dashboard.home.quick_actions.media',
         icon: ImageIcon,
         route: 'media.index',
-        color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20',
+        color: 'text-amber-600 dark:text-amber-400',
     },
     {
         labelKey: 'dashboard.home.quick_actions.themes',
         icon: Palette,
         route: 'themes.index',
-        color: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 hover:bg-pink-500/20',
+        color: 'text-pink-600 dark:text-pink-400',
     },
     {
         labelKey: 'dashboard.home.quick_actions.settings',
         icon: Settings,
         route: 'settings.index',
-        color: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 hover:bg-slate-500/20',
+        color: 'text-muted-foreground',
     },
 ];
 
@@ -148,32 +148,27 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
     const greetingKey = getGreetingKey();
 
     return (
-        <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">
             {/* Welcome Header */}
-            <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 p-6 sm:p-8">
-                <div className="bg-grid-white/10 absolute inset-0 [mask-image:linear-gradient(0deg,transparent,black)]" />
-                <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <Sparkles className="h-5 w-5 text-primary" />
-                            <span className="text-sm font-medium text-primary">{t(`dashboard.home.greetings.${greetingKey}`)}</span>
-                        </div>
-                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('dashboard.home.welcome', { name: userName })}</h1>
-                        <p className="max-w-lg text-muted-foreground">{t('dashboard.home.hero_description')}</p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                        <Sparkles className="size-4 text-primary" />
+                        {t(`dashboard.home.greetings.${greetingKey}`)}
                     </div>
-                    <div className="flex gap-2">
-                        <Button onClick={() => router.visit(ROUTE.posts.create())} className="gap-2">
-                            <PenSquare className="h-4 w-4" />
-                            {t('dashboard.home.cta_create_post')}
-                        </Button>
-                    </div>
+                    <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('dashboard.home.welcome', { name: userName })}</h1>
+                    <p className="max-w-xl text-sm text-muted-foreground sm:text-base">{t('dashboard.home.hero_description')}</p>
                 </div>
+                <Button onClick={() => router.visit(ROUTE.posts.create())} className="self-start sm:self-auto">
+                    <PenSquare />
+                    {t('dashboard.home.cta_create_post')}
+                </Button>
             </div>
 
             {/* Quick Actions */}
             <div>
-                <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">{t('dashboard.home.quick_actions_header')}</h2>
+                <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-base font-semibold">{t('dashboard.home.quick_actions_header')}</h2>
                 </div>
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
                     {quickActions.map((action) => {
@@ -183,14 +178,10 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
                             <button
                                 key={action.labelKey}
                                 onClick={() => routeFn && router.visit(routeFn())}
-                                className={cn(
-                                    'flex flex-col items-center justify-center gap-2 rounded-xl p-4 transition-all',
-                                    'border border-transparent hover:border-border',
-                                    action.color,
-                                )}
+                                className="group flex flex-col items-center justify-center gap-2 rounded-xl border bg-card p-4 shadow-xs transition-colors outline-none hover:border-input hover:bg-accent/50 focus-visible:ring-[3px] focus-visible:ring-ring/40"
                             >
-                                <Icon className="h-5 w-5" />
-                                <span className="text-xs font-medium">{t(action.labelKey)}</span>
+                                <Icon className={cn('size-5 transition-transform group-hover:-translate-y-0.5', action.color)} />
+                                <span className="text-xs font-medium text-foreground">{t(action.labelKey)}</span>
                             </button>
                         );
                     })}
@@ -200,8 +191,8 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
             {/* Stats Grid */}
             {adminStats && (
                 <div>
-                    <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">{t('dashboard.home.overview')}</h2>
+                    <div className="mb-3 flex items-center justify-between">
+                        <h2 className="text-base font-semibold">{t('dashboard.home.overview')}</h2>
                     </div>
                     <DashboardStats
                         users={adminStats.users}
@@ -218,8 +209,8 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
 
             {/* System Status */}
             <div>
-                <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">{t('dashboard.home.system_health')}</h2>
+                <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-base font-semibold">{t('dashboard.home.system_health')}</h2>
                     <span className="text-xs text-muted-foreground">{t('dashboard.home.auto_refresh')}</span>
                 </div>
 
@@ -229,22 +220,22 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
                             const colors = getStatusColors(status.color);
                             const Icon = statusIcons[key] ?? RefreshCcw;
                             return (
-                                <Card key={key} className={cn('relative overflow-hidden transition-all hover:shadow-md', colors.border)}>
+                                <Card key={key} className={cn('gap-0 py-0 transition-colors hover:border-input', colors.border)}>
                                     <CardContent className="p-4">
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="flex items-center gap-3">
-                                                <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', colors.iconBg)}>
-                                                    <Icon className="h-5 w-5" />
+                                                <div className={cn('flex size-9 items-center justify-center rounded-lg', colors.iconBg)}>
+                                                    <Icon className="size-4" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-sm font-medium">{status.label}</h3>
-                                                    <p className={cn('text-lg font-bold', colors.text)}>{status.value}</p>
+                                                    <h3 className="text-sm text-muted-foreground">{status.label}</h3>
+                                                    <p className={cn('text-base font-semibold tabular-nums', colors.text)}>{status.value}</p>
                                                 </div>
                                             </div>
                                             <div className="flex flex-col items-end gap-1">
                                                 <div
                                                     className={cn(
-                                                        'inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium',
+                                                        'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium',
                                                         colors.badge,
                                                     )}
                                                 >
@@ -257,7 +248,7 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
                                                     />
                                                     {status.status}
                                                 </div>
-                                                <span className="text-[10px] text-muted-foreground">{formatLastChecked(status.last_checked_at)}</span>
+                                                <span className="text-[11px] text-muted-foreground">{formatLastChecked(status.last_checked_at)}</span>
                                             </div>
                                         </div>
 
@@ -266,7 +257,7 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
                                                 {Object.entries(status.meta).map(([metaKey, metaValue]: any) => (
                                                     <div key={`${key}-${metaKey}`} className="flex items-center justify-between text-xs">
                                                         <span className="text-muted-foreground">{metaKey}</span>
-                                                        <span className="font-medium">{metaValue ?? '—'}</span>
+                                                        <span className="font-medium tabular-nums">{metaValue ?? '—'}</span>
                                                     </div>
                                                 ))}
                                             </div>

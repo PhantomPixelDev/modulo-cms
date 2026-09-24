@@ -563,7 +563,7 @@ export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorPr
                 ) : (
                     <div className="min-h-40">
                         <textarea
-                            className="h-40 w-full rounded border border-gray-600 bg-gray-800 p-2 font-mono text-sm text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            className="h-40 w-full rounded-md border border-input bg-muted/40 p-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:outline-none"
                             value={previewText}
                             onChange={(e) => setPreviewText(e.target.value)}
                             onBlur={() => {
@@ -606,7 +606,7 @@ function Toolbar({
     onRequestImage: () => void;
 }) {
     return (
-        <div className="mb-2 flex flex-wrap gap-1">
+        <div className="mb-3 flex flex-wrap items-center gap-0.5 rounded-lg border bg-muted/40 p-1">
             <IconBtn title="Bold" onClick={() => toggleMark(editor, 'bold')}>
                 <Bold size={16} />
             </IconBtn>
@@ -682,7 +682,7 @@ function Toolbar({
                 <ImageIcon size={16} />
             </IconBtn>
 
-            <span className="mx-2 w-px bg-gray-300" />
+            <span className="mx-1.5 w-px self-stretch bg-border" />
             <IconBtn title="Editor" onClick={() => onChangeViewMode('editor')}>
                 <Eye size={16} />
             </IconBtn>
@@ -698,7 +698,12 @@ function Toolbar({
 
 function IconBtn({ onClick, children, title }: { onClick: () => void; children: React.ReactNode; title?: string }) {
     return (
-        <button type="button" title={title} onClick={onClick} className="inline-flex items-center gap-1 rounded border px-2 py-1 text-sm">
+        <button
+            type="button"
+            title={title}
+            onClick={onClick}
+            className="inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-background hover:text-foreground hover:shadow-xs"
+        >
             {children}
         </button>
     );

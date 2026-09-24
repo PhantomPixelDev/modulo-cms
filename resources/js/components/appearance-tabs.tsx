@@ -14,7 +14,7 @@ export default function AppearanceToggleTab({ className = '', ...props }: HTMLAt
     ];
 
     return (
-        <div className={cn('inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800', className)} {...props}>
+        <div className={cn('inline-flex gap-1 rounded-lg bg-muted p-1', className)} {...props}>
             {tabs.map(({ value, icon: Icon, label }) => {
                 const isActive = appearance === value;
                 return (
@@ -22,9 +22,9 @@ export default function AppearanceToggleTab({ className = '', ...props }: HTMLAt
                         key={value}
                         type="button"
                         size="sm"
-                        variant={isActive ? 'secondary' : 'ghost'}
+                        variant="ghost"
                         onClick={() => updateAppearance(value)}
-                        className={cn('px-3.5', isActive && 'shadow-xs')}
+                        className={cn('px-3.5 text-muted-foreground', isActive && 'bg-background text-foreground shadow-xs hover:bg-background')}
                     >
                         <Icon className="-ml-1 h-4 w-4" />
                         <span className="ml-1.5 text-sm">{label}</span>

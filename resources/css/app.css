@@ -8,9 +8,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
+    --radius-xl: calc(var(--radius) + 4px);
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
@@ -39,6 +39,12 @@
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
 
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -62,172 +68,220 @@
 }
 
 /*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+  Design tokens. Neutral zinc-like ramp with a single blue brand color.
+  Everything in the admin reads from these, so change the palette here.
 */
-@layer base {
-    *,
-    ::after,
-    ::before,
-    ::backdrop,
-    ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
-    }
-}
-
 :root {
-    --background: #f5f6f9;
-    --foreground: #50576b;
+    --radius: 0.625rem;
 
-    --card: #ffffff;
-    --card-foreground: #50576b;
-    --popover: #ffffff;
-    --popover-foreground: #50576b;
+    --background: oklch(0.985 0.001 286);
+    --foreground: oklch(0.21 0.006 286);
 
-    --primary: #0d6efd;
-    --primary-foreground: #ffffff;
+    --card: oklch(1 0 0);
+    --card-foreground: var(--foreground);
+    --popover: oklch(1 0 0);
+    --popover-foreground: var(--foreground);
 
-    --secondary: #353945;
-    --secondary-foreground: #f3f4f8;
+    --primary: oklch(0.55 0.2 262);
+    --primary-foreground: oklch(0.99 0 0);
 
-    --muted: #e2e5ec;
-    --muted-foreground: #60677a;
+    --secondary: oklch(0.96 0.002 286);
+    --secondary-foreground: oklch(0.25 0.006 286);
 
-    --accent: #ffcc00;
-    --accent-foreground: #2a1f00;
+    --muted: oklch(0.96 0.002 286);
+    --muted-foreground: oklch(0.52 0.014 286);
 
-    --destructive: #e54b4b;
-    --destructive-foreground: #fff8f6;
+    --accent: oklch(0.955 0.003 286);
+    --accent-foreground: oklch(0.21 0.006 286);
 
-    --border: #c9ced8;
-    --input: #d7dbe6;
-    --ring: #0d6efd;
+    --destructive: oklch(0.58 0.22 27);
+    --destructive-foreground: oklch(0.99 0 0);
 
-    --radius: 0.5rem;
+    --success: oklch(0.6 0.15 155);
+    --success-foreground: oklch(0.99 0 0);
 
-    --input-bg: #ffffff;
+    --warning: oklch(0.75 0.16 70);
+    --warning-foreground: oklch(0.25 0.06 60);
 
-    --sidebar: #ffffff;
-    --sidebar-foreground: #50576b;
+    --border: oklch(0.915 0.004 286);
+    --input: oklch(0.88 0.006 286);
+    --input-bg: oklch(1 0 0);
+    --ring: oklch(0.55 0.2 262);
+
+    --chart-1: oklch(0.55 0.2 262);
+    --chart-2: oklch(0.6 0.15 155);
+    --chart-3: oklch(0.75 0.16 70);
+    --chart-4: oklch(0.6 0.2 300);
+    --chart-5: oklch(0.62 0.2 20);
+
+    --sidebar: oklch(0.975 0.001 286);
+    --sidebar-foreground: oklch(0.3 0.006 286);
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: #edf0f7;
-    --sidebar-accent-foreground: #50576b;
-    --sidebar-border: #dfe2eb;
+    --sidebar-accent: oklch(0.935 0.003 286);
+    --sidebar-accent-foreground: oklch(0.18 0.006 286);
+    --sidebar-border: oklch(0.915 0.004 286);
     --sidebar-ring: var(--ring);
 }
 
 .dark {
-    --background: #0c0f16;
-    --foreground: #aeb6cd;
-    --foreground: #e9edf6;
+    --background: oklch(0.155 0.004 286);
+    --foreground: oklch(0.96 0.002 286);
 
-    --card: #151923;
-    --card-foreground: #e9edf6;
+    --card: oklch(0.195 0.005 286);
+    --card-foreground: var(--foreground);
+    --popover: oklch(0.21 0.006 286);
+    --popover-foreground: var(--foreground);
 
-    --popover: #151923;
-    --popover-foreground: #e9edf6;
+    --primary: oklch(0.6 0.19 262);
+    --primary-foreground: oklch(0.99 0 0);
 
-    --primary: #2f8bff;
-    --primary-foreground: #091120;
+    --secondary: oklch(0.26 0.006 286);
+    --secondary-foreground: var(--foreground);
 
-    --secondary: #1f2431;
-    --secondary-foreground: #e9edf6;
+    --muted: oklch(0.25 0.006 286);
+    --muted-foreground: oklch(0.7 0.012 286);
 
-    --muted: #232836;
-    --muted-foreground: #aeb6cd;
+    --accent: oklch(0.26 0.006 286);
+    --accent-foreground: var(--foreground);
 
-    --accent: #ffcc00;
-    --accent-foreground: #1c1200;
+    --destructive: oklch(0.65 0.2 25);
+    --destructive-foreground: oklch(0.99 0 0);
 
-    --destructive: #ff5c7a;
-    --destructive-foreground: #18060c;
+    --success: oklch(0.7 0.15 155);
+    --success-foreground: oklch(0.18 0.03 155);
 
-    --border: #292f3f;
-    --input: #242a3b;
-    --ring: #4d9dff;
+    --warning: oklch(0.8 0.15 75);
+    --warning-foreground: oklch(0.22 0.05 60);
 
-    --input-bg: #1a1f2e;
+    --border: oklch(1 0 0 / 9%);
+    --input: oklch(1 0 0 / 14%);
+    --input-bg: oklch(1 0 0 / 4%);
+    --ring: oklch(0.65 0.18 262);
 
-    --sidebar: #141925;
-    --sidebar-foreground: #e9edf6;
+    --chart-1: oklch(0.65 0.18 262);
+    --chart-2: oklch(0.7 0.15 155);
+    --chart-3: oklch(0.8 0.15 75);
+    --chart-4: oklch(0.68 0.18 300);
+    --chart-5: oklch(0.68 0.19 20);
+
+    --sidebar: oklch(0.175 0.004 286);
+    --sidebar-foreground: oklch(0.85 0.006 286);
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: #1d2332;
-    --sidebar-accent-foreground: #e9edf6;
-    --sidebar-border: #252b3b;
+    --sidebar-accent: oklch(0.25 0.006 286);
+    --sidebar-accent-foreground: oklch(0.97 0 0);
+    --sidebar-border: oklch(1 0 0 / 8%);
     --sidebar-ring: var(--ring);
 }
 
 @layer base {
     * {
-        @apply border-border;
+        @apply border-border outline-ring/50;
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-rendering: optimizeLegibility;
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground antialiased;
+        font-feature-settings:
+            'cv11' 1,
+            'ss01' 1;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        @apply tracking-tight;
+        text-wrap: balance;
+    }
+
+    ::selection {
+        background-color: color-mix(in oklab, var(--primary) 22%, transparent);
     }
 }
 
 @layer components {
+    /* Editor / preview typography (no @tailwindcss/typography dependency) */
     .rich-text {
-        /* Base typography without @tailwindcss/typography */
-        line-height: 1.7;
-        font-size: 0.95rem;
-        max-width: 100%;
+        @apply max-w-full text-[0.95rem] leading-7 text-foreground;
+    }
+
+    .rich-text > :first-child {
+        @apply mt-0;
     }
 
     .rich-text h1 {
-        @apply mt-4 mb-2 text-3xl font-bold;
+        @apply mt-8 mb-3 text-3xl font-semibold;
     }
     .rich-text h2 {
-        @apply mt-4 mb-2 text-2xl font-semibold;
+        @apply mt-8 mb-3 text-2xl font-semibold;
     }
     .rich-text h3 {
-        @apply mt-3 mb-2 text-xl font-semibold;
+        @apply mt-6 mb-2 text-xl font-semibold;
+    }
+    .rich-text h4 {
+        @apply mt-6 mb-2 text-lg font-semibold;
     }
 
     .rich-text p {
-        @apply my-2 leading-relaxed;
+        @apply my-3;
     }
 
     .rich-text a {
-        @apply text-primary underline underline-offset-2 hover:opacity-80;
+        @apply font-medium text-primary underline decoration-primary/40 underline-offset-4 transition-colors hover:decoration-primary;
+    }
+
+    .rich-text strong {
+        @apply font-semibold;
     }
 
     .rich-text blockquote {
-        @apply my-3 border-l-4 pl-4 text-muted-foreground italic;
+        @apply my-4 border-l-2 border-border pl-4 text-muted-foreground italic;
     }
 
     .rich-text code {
-        @apply rounded bg-muted px-1 py-0.5 font-mono text-sm;
+        @apply rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[0.85em];
     }
     .rich-text pre {
-        @apply my-3 overflow-x-auto rounded bg-muted p-3;
+        @apply my-4 overflow-x-auto rounded-lg border bg-muted/60 p-4 text-sm leading-6;
     }
     .rich-text pre code {
-        @apply bg-transparent p-0; /* avoid double background */
+        @apply bg-transparent p-0 text-inherit;
     }
 
     .rich-text ul {
-        @apply my-2 list-disc pl-6;
+        @apply my-3 list-disc pl-6 marker:text-muted-foreground;
     }
     .rich-text ol {
-        @apply my-2 list-decimal pl-6;
+        @apply my-3 list-decimal pl-6 marker:text-muted-foreground;
     }
     .rich-text li {
         @apply my-1;
     }
+    .rich-text li > p {
+        @apply my-0;
+    }
 
     .rich-text hr {
-        @apply my-4 border-border;
+        @apply my-8 border-border;
     }
 
     .rich-text img {
-        @apply my-2 h-auto max-w-full rounded;
+        @apply my-4 h-auto max-w-full rounded-lg;
+    }
+
+    .rich-text table {
+        @apply my-4 w-full border-collapse text-sm;
+    }
+    .rich-text th {
+        @apply border-b px-3 py-2 text-left font-semibold;
+    }
+    .rich-text td {
+        @apply border-b px-3 py-2 align-top;
     }
 }
