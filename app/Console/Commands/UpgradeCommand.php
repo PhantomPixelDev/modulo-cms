@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\UpgradePreflight;
 use App\Support\InstallChannel;
+use App\Support\SchemaVersion;
 use App\Support\Version;
 use Database\Seeders\BootstrapSeeder;
 use Illuminate\Console\Command;
@@ -138,6 +139,8 @@ class UpgradeCommand extends Command
 
             return self::FAILURE;
         }
+
+        SchemaVersion::recordCurrent();
 
         // From here on the schema matches the code, so the site comes back up
         // even if rebuilding the caches goes wrong -- a cold cache is only slow.

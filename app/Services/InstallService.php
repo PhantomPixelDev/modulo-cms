@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Support\InstallChannel;
+use App\Support\SchemaVersion;
 use Database\Seeders\BootstrapSeeder;
 use Database\Seeders\DemoContentSeeder;
 use Illuminate\Support\Facades\Artisan;
@@ -226,6 +227,7 @@ class InstallService
     {
         File::delete($this->progressPath());
         $this->writeLock();
+        SchemaVersion::recordCurrent();
 
         // Drop caches built while the site was half-configured.
         Artisan::call('optimize:clear');

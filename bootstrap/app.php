@@ -5,6 +5,7 @@ use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\EnsureNotInstalled;
+use App\Http\Middleware\EnsureSchemaIsCompatible;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LocaleFromUrl;
@@ -44,6 +45,8 @@ return Application::configure(basePath: dirname(__DIR__))
             // Before anything that reads site settings or sidebar data: on a
             // fresh install those tables do not exist yet.
             RedirectToInstaller::class,
+            // An older build must not serve a database a newer one migrated.
+            EnsureSchemaIsCompatible::class,
         ]);
 
         $middleware->web(append: [

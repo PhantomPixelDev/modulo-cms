@@ -136,8 +136,8 @@ Disable it entirely with `MODULO_UPDATE_CHECK=false`.
 
 ## What we test
 
-CI builds a real database at the newest earlier release, runs `modulo:upgrade` to the
-current commit on every push, asserts nothing is left pending and the site is not left
+CI builds a real database at each of the three newest earlier stable releases, runs
+`modulo:upgrade` to the current commit on every push, asserts nothing is left pending and the site is not left
 in maintenance mode, re-runs the bootstrap seeder to prove it is idempotent, and boots
 the application. Releases are gated on it, on the unit/feature suites, and on the
 browser test of the install wizard. `migrate:fresh` only ever proved that a new

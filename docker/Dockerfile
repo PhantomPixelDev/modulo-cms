@@ -50,15 +50,18 @@ COPY --chown=www-data:www-data . .
 COPY --chown=www-data:www-data --from=vendor /app/vendor ./vendor
 COPY --chown=www-data:www-data --from=assets /app/public/build ./public/build
 
-# Stamp the build. Passed by the release workflow from the git tag; without it
-# the committed VERSION file stands and the image reports itself as a dev build.
+# Stamp the build. Passed by the release workflow from the git tag. Without it
+# this is not a release, so it reports the committed VERSION with a -dev suffix
+# (e.g. 0.1.2-dev): update checks stay quiet and it is never mistaken for the
+# release it was merely built after.
 ARG MODULO_VERSION=""
 ARG MODULO_COMMIT=""
 ARG MODULO_BUILT_AT=""
 ENV MODULO_COMMIT=${MODULO_COMMIT}
 ENV MODULO_BUILT_AT=${MODULO_BUILT_AT}
 ENV MODULO_INSTALL_CHANNEL=docker
-RUN if [ -n "$MODULO_VERSION" ]; then echo "${MODULO_VERSION#v}" > VERSION; fi && cat VERSION
+RUN if [ -n "$MODULO_VERSION" ]; then echo "${MODULO_VERSION#v}" > VERSION; \
+    else echo "$(cat VERSION | tr -d '[:space:]' | sed 's/-dev$//')-dev" > VERSION; fi && cat VERSION
 
 # Keep a pristine copy of the bundled plugins. /var/www/html/plugins is a named
 # volume in production, and a named volume is seeded from the image exactly

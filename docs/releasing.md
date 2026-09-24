@@ -11,6 +11,8 @@ bare-metal installs equally:
 | `ghcr.io/phantompixeldev/modulo-cms-web` | nginx image serving `public/` |
 | `modulo-cms-<version>.tar.gz` | Full source **with `vendor/` and `public/build` prebuilt** |
 | `…​.tar.gz.sha256` | Checksum for the tarball |
+| `…​.tar.gz.sigstore.json` | Keyless Sigstore signature bundle for the tarball |
+| `release.json` (+ `.sigstore.json`) | Machine-readable manifest: version, channel, security/breaking flags, new migrations, requirements, artifact checksums and image digests |
 | `docker-compose.yml`, `env.prod.example` | So a Docker install needs no git clone (the env template is published without its leading dot; GitHub renames dotfile assets) |
 | `install.sh`, `install.ps1`, `modulo` | One-line installers, and the site helper they place next to `docker-compose.yml` (`./modulo update / backup / restore`) |
 
@@ -22,6 +24,51 @@ include files it does not track.
 Images are tagged `X.Y.Z`, `X.Y`, `X`, and `latest`. A prerelease (any version with a
 hyphen, such as `1.2.0-rc.1`) is published but deliberately **does not move `latest`**.
 
+Both images are signed with cosign (keyless, by digest) and carry SLSA provenance and
+an SPDX SBOM as build attestations.
+
+## release.json
+
+```json
+{
+  "schema": 1,
+  "version": "1.2.0",
+  "channel": "stable",
+  "previous_version": "1.1.3",
+  "security": false,
+  "breaking": false,
+  "requires_migrations": true,
+  "new_migrations": 2,
+  "requirements": { "php": "^8.4", "postgres": ">=16" },
+  "artifacts": {
+    "tarball": { "name": "modulo-cms-1.2.0.tar.gz", "sha256": "…", "signature": "modulo-cms-1.2.0.tar.gz.sigstore.json" },
+    "images": { "app": { "image": "ghcr.io/phantompixeldev/modulo-cms", "digest": "sha256:…" }, "web": { … } }
+  }
+}
+```
+
+`security` is set when a commit since the previous release is typed `fix(security): …`
+(or carries a `SECURITY:` footer); `breaking` when one has `!` or a `BREAKING CHANGE:`
+footer. Use those conventions — the updater will surface security releases prominently.
+
+## Verifying a release
+
+No keys are involved: each signature is a short-lived certificate tying the file to the
+`release` workflow in this repository, logged in the public Sigstore transparency log.
+
+```bash
+# An image (by tag or digest)
+cosign verify ghcr.io/phantompixeldev/modulo-cms:1.2.0 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp '^https://github.com/PhantomPixelDev/modulo-cms/\.github/workflows/release\.yml@'
+
+# The tarball (same for release.json)
+cosign verify-blob modulo-cms-1.2.0.tar.gz \
+  --bundle modulo-cms-1.2.0.tar.gz.sigstore.json \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp '^https://github.com/PhantomPixelDev/modulo-cms/\.github/workflows/release\.yml@'
+```
+
 ## Cutting one
 
 1. Merge work to `main` using [Conventional Commits](https://www.conventionalcommits.org).
@@ -31,7 +78,8 @@ hyphen, such as `1.2.0-rc.1`) is published but deliberately **does not move `lat
    tag, and creates the GitHub release.
 4. `release-please` then calls the `release` workflow directly (a tag pushed with
    `GITHUB_TOKEN` does not trigger other workflows). It runs the full test, lint and
-   browser (e2e) suites — including an upgrade from the previous release — then builds
+   browser (e2e) suites — including upgrades from each of the three previous stable
+   releases — then builds
    and pushes the images, builds and verifies the tarball, and attaches everything to
    the release.
 
@@ -93,5 +141,6 @@ MODULO_BUILD=1 ./modulo.sh up prod
 ```
 
 This layers `docker/docker-compose.build.yml` over the production stack. Locally built
-images carry no version stamp and report `0.0.0-dev`; pass `MODULO_VERSION` as a build
-argument if a local build needs to claim a specific one.
+images carry no version stamp and report the committed `VERSION` with a `-dev` suffix
+(e.g. `0.1.2-dev`); pass `MODULO_VERSION` as a build argument if a local build needs to
+claim a specific one.

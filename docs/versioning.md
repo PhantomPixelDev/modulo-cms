@@ -22,15 +22,27 @@ directly.
 Always through `App\Support\Version`, never `config('version.*')`:
 
 ```php
-Version::current();              // "1.4.2" or "0.0.0-dev"
-Version::isDev();                // true on an untagged working copy
+Version::current();              // "1.4.2", "1.4.2-dev" or "0.0.0-dev"
+Version::isDev();                // true for any "-dev" version: not a release
 Version::satisfiesMinimum('1.2.0');
 Version::compare('v1.5.0');      // -1, 0 or 1; a leading "v" is ignored
 ```
 
 `0.0.0-dev` is a sentinel meaning "unversioned working copy", not a real version. It
 is what `VERSION` holds until the first release; from then on `main` carries the most
-recently released version, and a checkout of `main` reports that.
+recently released version, and a checkout of `main` reports that. A Docker image built
+without the release workflow's `MODULO_VERSION` reports that version with `-dev`
+appended (`0.1.2-dev`), so a local build is never mistaken for the release it was
+built after. Any version ending in `-dev` counts as a development build.
+
+## Schema version
+
+`modulo:upgrade` and the installer record the version that last migrated the database
+(`App\Support\SchemaVersion`, stored in `modulo_meta`). If an older build then boots
+against it — an image or checkout rolled back without restoring the database — every
+web request gets a 503 explaining which version is needed, `/health` reports
+`"schema": false`, and `modulo:upgrade` refuses to run. Development builds neither
+record nor enforce it.
 **Anything that gates on a version must treat a development build as "unknown, allow
 with a warning"** — which `satisfiesMinimum()` already does by returning `true`. The
 alternative is that every plugin becomes uninstallable on a development checkout,
