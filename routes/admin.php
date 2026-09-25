@@ -19,10 +19,12 @@ use App\Http\Controllers\Content\PagesController;
 use App\Http\Controllers\Content\PostController;
 use App\Http\Controllers\Content\PostTranslationController;
 use App\Http\Controllers\Content\PostTypeController;
+use App\Http\Controllers\Content\RevisionController;
 use App\Http\Controllers\Content\TaxonomyController;
 use App\Http\Controllers\Content\TaxonomyTermController;
 use App\Http\Controllers\Content\TemplateController;
 use App\Http\Controllers\Content\ThemeController;
+use App\Http\Controllers\Content\TrashController;
 use Illuminate\Support\Facades\Route;
 
 // All admin routes are protected by auth, verified, and admin role check
@@ -37,6 +39,17 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
 
         // Resource routes with automatic permission checks
         Route::resource('pages', PagesController::class)->except(['show']);
+        // Trash (deleted posts and pages); before the posts resource
+        Route::get('trash', [TrashController::class, 'index'])->name('trash.index');
+        Route::post('trash/{id}/restore', [TrashController::class, 'restore'])->whereNumber('id')->name('trash.restore');
+        Route::delete('trash/{id}', [TrashController::class, 'destroy'])->whereNumber('id')->name('trash.destroy');
+        Route::delete('trash', [TrashController::class, 'empty'])->name('trash.empty');
+
+        // Revisions of a post or page (by id; pages are posts too)
+        Route::get('content/{postId}/revisions', [RevisionController::class, 'index'])->whereNumber('postId')->name('revisions.index');
+        Route::post('content/{postId}/revisions/{revisionId}/restore', [RevisionController::class, 'restore'])
+            ->whereNumber(['postId', 'revisionId'])->name('revisions.restore');
+
         Route::resource('posts', PostController::class)
             ->scoped(['post' => 'slug']);
         // Specific route for listing posts by post type

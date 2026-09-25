@@ -127,24 +127,6 @@ parameters:
 			path: app/Http/Controllers/Content/MenuItemController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Content/PagesController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Content/PagesController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\Post\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Content/PagesController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$content\.$#'
 			identifier: property.notFound
 			count: 1
@@ -159,13 +141,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 10
-			path: app/Http/Controllers/Content/PostController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$label\.$#'
-			identifier: property.notFound
-			count: 3
+			count: 4
 			path: app/Http/Controllers/Content/PostController.php
 
 		-
@@ -177,7 +153,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 9
+			count: 3
 			path: app/Http/Controllers/Content/PostController.php
 
 		-
@@ -311,18 +287,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/FeedController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Frontend/BaseFrontendController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$has_comments\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Frontend/CommentController.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>has_comments" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -871,25 +835,7 @@ parameters:
 			path: app/Models/User.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$has_comments\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Presenters/PostPresenter.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Presenters/PostPresenter.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$locale\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Presenters/PostPresenter.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Presenters/PostPresenter.php
@@ -967,22 +913,10 @@ parameters:
 			path: app/Services/MenuService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SearchEnginePingingService.php
-
-		-
 			message: '#^Offset 2 on array\{0\: non\-falsy\-string, 1\: non\-empty\-string, 2\: string, 3\?\: non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
 			path: app/Services/ShortcodeService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SiteSettingsService.php
 
 		-
 			message: '#^Parameter \#2 \$replace of function str_replace expects array\<string\>\|string, array\<int, int\<0, max\>\|string\> given\.$#'
@@ -1000,12 +934,6 @@ parameters:
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$locale\.$#'
 			identifier: property.notFound
 			count: 2
-			path: app/Services/SitemapBuilder.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$route_prefix\.$#'
-			identifier: property.notFound
-			count: 1
 			path: app/Services/SitemapBuilder.php
 
 		-
@@ -1345,18 +1273,6 @@ parameters:
 			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: plugins/ModuloShop/src/Http/Controllers/Admin/ProductController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: plugins/ModuloShop/src/Http/Controllers/Admin/ProductController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$taxonomy\.$#'
 			identifier: property.notFound
 			count: 2
@@ -1545,13 +1461,13 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 3
+			count: 2
 			path: plugins/ModuloShop/src/Http/Controllers/ShopController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 3
+			count: 2
 			path: plugins/ModuloShop/src/Http/Controllers/ShopController.php
 
 		-

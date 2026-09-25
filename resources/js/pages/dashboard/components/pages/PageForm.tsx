@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Image as ImageIcon, Loader2, X } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
+import { RevisionsDialog } from '../common/RevisionsDialog';
 
 import type { FeaturedImagePreview } from '../posts/types';
 
@@ -206,6 +207,7 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                     </ul>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                    {isEditing && page?.id && <RevisionsDialog postId={page.id} />}
                     <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
                         {t('dashboard.common.cancel')}
                     </Button>

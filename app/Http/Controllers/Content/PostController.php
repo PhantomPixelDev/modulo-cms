@@ -113,6 +113,8 @@ class PostController extends Controller
             'title' => $post->title,
             'slug' => $post->slug,
             'status' => $post->status,
+            // Published, but with a date still to come: goes live then.
+            'is_scheduled' => $post->status === 'published' && $post->published_at?->isFuture() === true,
             'author_id' => $post->author_id,
             'published_at' => $this->settings->formatDateTime($post->published_at),
             'created_at' => $this->settings->formatDateTime($post->created_at),
@@ -233,7 +235,7 @@ class PostController extends Controller
             'author_id' => $request->author_id ?: auth()->id(),
             'title' => $request->title,
             // Use provided slug if present; otherwise derive from title
-            'slug' => Str::slug($request->slug ?: $request->title),
+            'slug' => Post::uniqueSlug(Str::slug($request->slug ?: $request->title)),
             'excerpt' => $request->excerpt,
             'content' => $request->content,
             'featured_image' => $request->featured_image,
@@ -419,7 +421,7 @@ class PostController extends Controller
         if ($isDefaultLocale) {
             $baseUpdate = array_merge($baseUpdate, [
                 'title' => $request->title,
-                'slug' => Str::slug($request->slug ?: $request->title),
+                'slug' => Post::uniqueSlug(Str::slug($request->slug ?: $request->title), $post->id),
                 'excerpt' => $request->excerpt,
                 'content' => $request->content,
                 'meta_title' => $request->meta_title,
@@ -453,6 +455,6 @@ class PostController extends Controller
         $this->authorize('delete', $post);
         $post->delete();
 
-        return back()->with('success', 'Post deleted successfully.');
+        return back()->with('success', 'Post moved to the trash.');
     }
 }

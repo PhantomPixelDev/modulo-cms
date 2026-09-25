@@ -11,6 +11,7 @@ import { ChevronDown, Globe, Image as ImageIcon, Loader2, X } from 'lucide-react
 import { useMemo, useRef, useState } from 'react';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { RevisionsDialog } from '../common/RevisionsDialog';
 import MediaPickerDialog from '../media/MediaPickerDialog';
 import { MetaDataSection } from './MetaDataSection';
 import { PostTaxonomySection } from './PostTaxonomySection';
@@ -143,6 +144,7 @@ export function PostForm({
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {isEditing && post?.id && <RevisionsDialog postId={post.id} />}
                             <Button type="submit" disabled={isSubmitting} className="h-9 px-6">
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {isEditing ? t('dashboard.posts.form.buttons.update') : t('dashboard.posts.form.buttons.publish')}

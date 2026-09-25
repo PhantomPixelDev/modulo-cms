@@ -174,7 +174,14 @@ export function PostList({ posts, locales = [], canCreate = false, canEdit = fal
             key: 'status',
             label: t('dashboard.posts.post_status'),
             sortable: true,
-            render: (item: PostListItem) => <Badge variant={statusColors[item.status] || 'secondary'}>{t(`common.status.${item.status}`)}</Badge>,
+            render: (item: PostListItem) =>
+                item.is_scheduled ? (
+                    <Badge variant="warning" title={item.published_at ?? undefined}>
+                        Scheduled
+                    </Badge>
+                ) : (
+                    <Badge variant={statusColors[item.status] || 'secondary'}>{t(`common.status.${item.status}`)}</Badge>
+                ),
         },
         { key: 'author', label: t('dashboard.posts.post_author'), sortable: false, render: (item: PostListItem) => item.author?.name || '—' },
         {

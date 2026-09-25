@@ -22,6 +22,7 @@ import { getTaxonomyTermsSections } from './sections/taxonomy-terms/taxonomyTerm
 import { getTemplatesSections } from './sections/templates/templatesSections';
 import { getThemesSections } from './sections/themes/themesSections';
 import { getTranslationSections } from './sections/translations/translationSections';
+import { getTrashSections } from './sections/trash/trashSections';
 import { getUsersSections } from './sections/users/usersSections';
 import { DashboardProps, asArray, type User as DashboardUser } from './types';
 
@@ -87,6 +88,7 @@ export default function DashboardContent({
     updateCenter,
     backups,
     activity,
+    trash,
 }: DashboardProps & { globalCommentsEnabled: boolean }) {
     const { t } = useTranslation();
     const { success: showSuccess, error: showError } = useAdminToast();
@@ -161,6 +163,7 @@ export default function DashboardContent({
 
         const sectionsMap: Record<string, () => ReactNode> = {
             ...getSystemSections({ updateCenter, backups, activity }),
+            ...getTrashSections({ trash }),
             ...getMediaSections({
                 media,
                 folders,

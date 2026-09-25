@@ -14,7 +14,8 @@ class SearchEnginePingingService
      */
     public function ping(Post $post): void
     {
-        if ($post->status !== 'published') {
+        // A scheduled post is announced when it goes live (modulo:publish-scheduled), not when saved.
+        if ($post->status !== 'published' || $post->published_at?->isFuture() === true) {
             return;
         }
 

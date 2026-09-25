@@ -16,7 +16,7 @@ import { adminNav, mainNav } from '@/config/nav';
 import { useAcl } from '@/lib/acl';
 import { getIcon } from '@/lib/icons';
 import { Link, usePage } from '@inertiajs/react';
-import { Archive, Boxes, FileText, FolderTree, History, MessageSquare, RefreshCw } from 'lucide-react';
+import { Archive, Boxes, FileText, FolderTree, History, MessageSquare, RefreshCw, Trash2 } from 'lucide-react';
 import React from 'react';
 import AppLogo from './app-logo';
 
@@ -101,6 +101,16 @@ export function AppSidebar() {
                                         <Link href="/dashboard/admin/comments" prefetch>
                                             <MessageSquare className="h-4 w-4" />
                                             <span>Comments</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            )}
+                            {(isAdmin() || hasPermission('delete posts')) && (
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild isActive={url.startsWith('/dashboard/admin/trash')} tooltip={{ children: 'Trash' }}>
+                                        <Link href="/dashboard/admin/trash" prefetch>
+                                            <Trash2 className="h-4 w-4" />
+                                            <span>Trash</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>

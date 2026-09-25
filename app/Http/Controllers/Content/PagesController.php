@@ -133,9 +133,7 @@ class PagesController extends Controller
         }
 
         // Generate slug if not provided
-        if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['title']);
-        }
+        $data['slug'] = Post::uniqueSlug(Str::slug(empty($data['slug']) ? $data['title'] : $data['slug']));
 
         // Create the page/post
         $page = Post::create([
@@ -198,9 +196,7 @@ class PagesController extends Controller
         }
 
         // Generate slug if not provided
-        if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['title']);
-        }
+        $data['slug'] = Post::uniqueSlug(Str::slug(empty($data['slug']) ? $data['title'] : $data['slug']), $page->id);
 
         // Log the data before update for debugging
         \Log::info('Updating page content', [
@@ -243,6 +239,6 @@ class PagesController extends Controller
         $page->delete();
 
         return redirect()->route('dashboard.admin.pages.index')
-            ->with('success', 'Page deleted successfully.');
+            ->with('success', 'Page moved to the trash.');
     }
 }
