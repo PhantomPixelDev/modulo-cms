@@ -78,6 +78,7 @@
         "globals": "^15.14.0",
         "laravel-vite-plugin": "^2.0.1",
         "lucide-react": "^0.543.0",
+        "qrcode.react": "^4.2.0",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
         "slate": "^0.126.2",

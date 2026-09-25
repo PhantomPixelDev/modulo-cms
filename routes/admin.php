@@ -25,7 +25,7 @@ use App\Http\Controllers\Content\ThemeController;
 use Illuminate\Support\Facades\Route;
 
 // All admin routes are protected by auth, verified, and admin role check
-Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|access admin'])
+Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|access admin', 'two-factor.admin'])
     ->prefix('dashboard/admin')
     ->name('dashboard.admin.')
     ->group(function () {

@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -34,16 +36,24 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Check the credentials and log the user in, unless they have two-factor
+     * authentication: then nobody is logged in yet and the user is returned,
+     * for the challenge step to finish the login.
      *
      * @throws ValidationException
      */
-    public function authenticate(): void
+    public function authenticate(): ?User
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $credentials = $this->only('email', 'password');
+        $guard = Auth::guard('web');
+        $provider = Auth::createUserProvider(config('auth.guards.web.provider'));
+        $user = $provider?->retrieveByCredentials($credentials);
+
+        if ($user === null || ! $provider->validateCredentials($user, $credentials)) {
             RateLimiter::hit($this->throttleKey());
+            event(new Failed('web', $user, $credentials));
 
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
@@ -51,6 +61,15 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        $provider->rehashPasswordIfRequired($user, $credentials);
+
+        if ($user instanceof User && $user->hasTwoFactorEnabled()) {
+            return $user;
+        }
+
+        $guard->login($user, $this->boolean('remember'));
+
+        return null;
     }
 
     /**

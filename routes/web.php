@@ -35,7 +35,7 @@ Route::prefix('api/menus')->middleware('throttle:api')->group(function () {
 });
 
 // Auth/Dashboard/Admin routes must be registered before frontend catch-all routes
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'two-factor.admin'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 

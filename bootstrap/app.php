@@ -10,7 +10,9 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LocaleFromUrl;
 use App\Http\Middleware\RedirectToInstaller;
+use App\Http\Middleware\RequireTwoFactorForAdmins;
 use App\Http\Middleware\RoleOrPermission;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Application;
@@ -47,6 +49,8 @@ return Application::configure(basePath: dirname(__DIR__))
             RedirectToInstaller::class,
             // An older build must not serve a database a newer one migrated.
             EnsureSchemaIsCompatible::class,
+            // Early, so the CSP nonce exists before anything renders.
+            SecurityHeaders::class,
         ]);
 
         $middleware->web(append: [
@@ -72,6 +76,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'locale.url' => LocaleFromUrl::class,
             // 404s the installer once setup has completed
             'install.guard' => EnsureNotInstalled::class,
+            // Administrators must have 2FA when security.require_two_factor_for_admins is on
+            'two-factor.admin' => RequireTwoFactorForAdmins::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

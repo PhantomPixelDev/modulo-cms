@@ -61,3 +61,58 @@ npm audit --audit-level=high
 
 Dependabot raises updates weekly. Majors are grouped by toolchain, because
 packages with peer dependencies on each other cannot be upgraded one at a time.
+
+
+## Security headers
+
+The application sends these on every web response, so a bare-metal or tarball
+install is covered without web server configuration:
+
+| Header | Value |
+|---|---|
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `SAMEORIGIN` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | camera, microphone, geolocation off |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Strict-Transport-Security` | on HTTPS responses, 180 days (`MODULO_HSTS_MAX_AGE`, 0 = off) |
+
+**Content-Security-Policy** is nonce-based: every inline script the core emits (Ziggy
+routes, the plugin import map, Google Tag Manager/Analytics) carries a per-request
+nonce, and `'strict-dynamic'` trusts what those load (Vite chunks, plugin bundles).
+`MODULO_CSP` is `report` by default — violations only appear in the browser console —
+so you can check your site with your plugins and embeds, then set it to `enforce`.
+Add sources per directive with `MODULO_CSP_SCRIPT_SRC`, `MODULO_CSP_IMG_SRC`,
+`MODULO_CSP_CONNECT_SRC`, `MODULO_CSP_FRAME_SRC`, `MODULO_CSP_STYLE_SRC`,
+`MODULO_CSP_FONT_SRC` (space-separated). `MODULO_SECURITY_HEADERS=false` turns all of
+this off, for when a proxy in front sets them.
+
+## Passwords
+
+In production every password rule (registration, reset, change, installer, admin user
+form) requires at least 12 characters (`MODULO_PASSWORD_MIN_LENGTH`) with letters and
+numbers, and rejects passwords found in known breaches via the Have I Been Pwned range
+API (`MODULO_PASSWORD_UNCOMPROMISED=false` to skip; only the first five characters of
+the password's SHA-1 leave the server).
+
+## Two-factor authentication
+
+Every user can turn on authenticator-app codes under **Settings → Two-factor
+authentication**: scan the QR code, confirm with a code, save the eight recovery codes.
+Turning it on, off, or regenerating recovery codes asks for the password again.
+
+At login, a correct password for such an account does not sign in; the user is asked
+for a code (or a recovery code, each usable once). Codes are standard TOTP (RFC 6238,
+SHA-1, 6 digits, 30 s, one step of clock drift), a code is never accepted twice, and the
+challenge locks for a minute after five wrong codes. Secrets and recovery codes are
+stored encrypted with `APP_KEY`.
+
+`MODULO_REQUIRE_2FA_FOR_ADMINS=true` sends users with the `admin` or `super-admin` role
+to set it up before they can use the dashboard or admin area, and stops them turning it
+off.
+
+A user who has lost both their device and recovery codes can be reset by an operator:
+
+```bash
+php artisan tinker --execute="App\\Models\\User::where('email', 'someone@example.com')->first()->forceFill(['two_factor_secret' => null, 'two_factor_confirmed_at' => null, 'two_factor_recovery_codes' => null])->save();"
+```

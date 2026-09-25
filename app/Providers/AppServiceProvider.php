@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,6 +39,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Every password rule in the app uses Password::defaults(). Production
+        // asks for a real password; elsewhere (tests, local) the framework's
+        // 8-character minimum keeps fixtures simple.
+        Password::defaults(function () {
+            if (! $this->app->isProduction()) {
+                return Password::min(8);
+            }
+
+            $rule = Password::min(max(8, (int) config('security.password_min_length')))->letters()->numbers();
+
+            return config('security.password_uncompromised') ? $rule->uncompromised() : $rule;
+        });
+
         // Register PostObserver
         Post::observe(PostObserver::class);
 

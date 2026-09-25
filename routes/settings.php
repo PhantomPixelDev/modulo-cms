@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\TwoFactorController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\App;
@@ -33,6 +34,14 @@ Route::middleware('auth')->group(function () {
     if (App::environment('testing') && $csrfMiddleware) {
         $passwordUpdate->withoutMiddleware($csrfMiddleware);
     }
+
+    Route::get('settings/two-factor', [TwoFactorController::class, 'edit'])->name('two-factor.edit');
+    Route::post('settings/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
+    Route::middleware('password.confirm')->group(function () {
+        Route::post('settings/two-factor', [TwoFactorController::class, 'store'])->name('two-factor.enable');
+        Route::post('settings/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
+        Route::delete('settings/two-factor', [TwoFactorController::class, 'destroy'])->name('two-factor.disable');
+    });
 
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/appearance');
