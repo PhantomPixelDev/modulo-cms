@@ -89,6 +89,7 @@ export default function DashboardContent({
     backups,
     activity,
     trash,
+    redirects,
 }: DashboardProps & { globalCommentsEnabled: boolean }) {
     const { t } = useTranslation();
     const { success: showSuccess, error: showError } = useAdminToast();
@@ -162,7 +163,7 @@ export default function DashboardContent({
         }
 
         const sectionsMap: Record<string, () => ReactNode> = {
-            ...getSystemSections({ updateCenter, backups, activity }),
+            ...getSystemSections({ updateCenter, backups, activity, redirects }),
             ...getTrashSections({ trash }),
             ...getMediaSections({
                 media,

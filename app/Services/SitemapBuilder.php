@@ -148,6 +148,11 @@ class SitemapBuilder
 
         $posts = $postsQuery->get();
         foreach ($posts as $post) {
+            // "Hide from search engines" on the post's SEO tab
+            if (filter_var(($post->meta_data ?? [])['noindex'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                continue;
+            }
+
             $prefix = $post->postType?->route_prefix;
             $prefix = ($prefix === null || $prefix === '' || $prefix === '/') ? '' : '/'.ltrim($prefix, '/');
             $translation = $locale ? $post->translations->firstWhere('locale', $locale) : null;

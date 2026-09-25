@@ -178,7 +178,9 @@ class ReactTemplateRenderer
         return [
             'name' => SiteSetting::get('site_name', config('app.name', 'Modulo CMS')),
             'tagline' => SiteSetting::get('site_tagline', 'Modern Content Management System'),
-            'logo' => null, // TODO: Add site logo support
+            'logo' => SiteSetting::get('site_logo', '') ?: null,
+            // Default meta description for pages that have none of their own
+            'description' => SiteSetting::get('meta_description', '') ?: null,
         ];
     }
 

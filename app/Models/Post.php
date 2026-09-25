@@ -47,6 +47,17 @@ class Post extends Model
     }
 
     /**
+     * The public path of this post (its type's prefix, then the slug).
+     */
+    public function publicPath(?string $slug = null): string
+    {
+        $prefix = trim((string) $this->postType?->route_prefix, '/');
+        $slug = trim($slug ?? (string) $this->slug, '/');
+
+        return '/'.ltrim(($prefix !== '' ? $prefix.'/' : '').$slug, '/');
+    }
+
+    /**
      * A slug not used by any post, trashed ones included (the column is
      * unique): "hello", then "hello-2", "hello-3", ...
      */

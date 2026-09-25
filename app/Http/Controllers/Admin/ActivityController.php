@@ -15,7 +15,7 @@ use Inertia\Response;
 class ActivityController extends Controller
 {
     /** Event groups offered as filters (the prefix before the dot). */
-    public const GROUPS = ['auth', '2fa', 'user', 'role', 'post', 'page', 'settings', 'plugin', 'theme', 'backup', 'core'];
+    public const GROUPS = ['auth', '2fa', 'user', 'role', 'post', 'page', 'settings', 'redirect', 'plugin', 'theme', 'backup', 'core'];
 
     public function index(Request $request): Response
     {

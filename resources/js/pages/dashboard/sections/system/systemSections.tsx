@@ -7,6 +7,7 @@ import { AlertTriangle, CheckCircle2, Download, ExternalLink, Loader2, RefreshCw
 import { useState, type ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { ActivityPage, type ActivityProps } from './activitySection';
+import { RedirectsPage, type RedirectsProps } from './redirectsSection';
 
 declare const route: (name: string, params?: any) => string;
 
@@ -404,13 +405,16 @@ export function getSystemSections({
     updateCenter,
     backups,
     activity,
+    redirects,
 }: {
     updateCenter?: UpdateCenterProps;
     backups?: BackupsProps;
     activity?: ActivityProps;
+    redirects?: RedirectsProps;
 }): Record<string, () => ReactNode> {
     return {
         activity: () => (activity ? <ActivityPage data={activity} /> : null),
+        redirects: () => (redirects ? <RedirectsPage data={redirects} /> : null),
         updates: () => (updateCenter ? <UpdatesPage data={updateCenter} /> : null),
         backups: () => (backups ? <BackupsPage data={backups} /> : null),
     };

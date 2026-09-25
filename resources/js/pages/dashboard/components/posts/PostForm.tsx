@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -321,6 +322,44 @@ export function PostForm({
                                             />
                                             <p className="text-[11px] text-muted-foreground">{t('dashboard.posts.form.seo.description_hint')}</p>
                                         </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="ogImage" className="text-sm font-bold">
+                                                Social image
+                                            </Label>
+                                            <Input
+                                                id="ogImage"
+                                                value={metaData.og_image || ''}
+                                                onChange={(e) => handleMetaDataChange({ ...metaData, og_image: e.target.value })}
+                                                placeholder="https://… or /storage/… (defaults to the featured image)"
+                                            />
+                                            <p className="text-[11px] text-muted-foreground">Shown when the post is shared on social networks.</p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="canonicalUrl" className="text-sm font-bold">
+                                                Canonical URL
+                                            </Label>
+                                            <Input
+                                                id="canonicalUrl"
+                                                value={metaData.canonical_url || ''}
+                                                onChange={(e) => handleMetaDataChange({ ...metaData, canonical_url: e.target.value })}
+                                                placeholder="Only if this content first appeared elsewhere"
+                                            />
+                                        </div>
+
+                                        <label className="flex items-start gap-3 rounded-md border p-3">
+                                            <Checkbox
+                                                checked={metaData.noindex === true || metaData.noindex === 'true'}
+                                                onCheckedChange={(checked) => handleMetaDataChange({ ...metaData, noindex: checked === true })}
+                                            />
+                                            <span className="space-y-0.5">
+                                                <span className="block text-sm font-medium">Hide from search engines</span>
+                                                <span className="block text-[11px] text-muted-foreground">
+                                                    Adds noindex and leaves the post out of the sitemap. It stays visible to visitors.
+                                                </span>
+                                            </span>
+                                        </label>
                                     </div>
                                 </div>
                             </TabsContent>

@@ -260,6 +260,8 @@ class SiteSetting extends Model
                 'timezone' => ['value' => config('app.timezone', 'UTC'), 'type' => 'string'],
                 'date_format' => ['value' => 'F j, Y', 'type' => 'string'],
                 'time_format' => ['value' => 'g:i a', 'type' => 'string'],
+                'site_logo' => ['value' => '', 'type' => 'string'],
+                'site_favicon' => ['value' => '', 'type' => 'string'],
             ],
             'reading' => [
                 'posts_per_page' => ['value' => 10, 'type' => 'integer'],

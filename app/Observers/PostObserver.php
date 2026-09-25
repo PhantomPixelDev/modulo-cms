@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Post;
 use App\Models\PostRevision;
+use App\Models\Redirect;
 use App\Services\AdminStatsService;
 use App\Services\PostService;
 use App\Services\SearchEnginePingingService;
@@ -53,6 +54,23 @@ class PostObserver
 
         if ($stale !== []) {
             PostRevision::whereIn('id', $stale)->delete();
+        }
+    }
+
+    /**
+     * A live post whose slug changes keeps its old URL working.
+     */
+    public function updated(Post $post): void
+    {
+        if (! $post->wasChanged('slug') || ! schema_has_table('redirects')) {
+            return;
+        }
+
+        $wasLive = $post->getOriginal('status') === 'published'
+            && ($post->getOriginal('published_at') === null || $post->getOriginal('published_at') <= now());
+
+        if ($wasLive) {
+            Redirect::point($post->publicPath((string) $post->getOriginal('slug')), $post->publicPath(), automatic: true);
         }
     }
 

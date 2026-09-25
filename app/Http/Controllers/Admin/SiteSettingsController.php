@@ -121,6 +121,9 @@ class SiteSettingsController extends Controller
                 'timezone' => 'required|string|max:100',
                 'date_format' => 'required|string|max:50',
                 'time_format' => 'required|string|max:50',
+                // A media library URL or path; never javascript: and the like.
+                'site_logo' => ['nullable', 'string', 'max:1000', 'regex:#^(/|https?://)#i'],
+                'site_favicon' => ['nullable', 'string', 'max:1000', 'regex:#^(/|https?://)#i'],
             ],
             'reading' => [
                 'posts_per_page' => 'required|integer|min:1|max:100',

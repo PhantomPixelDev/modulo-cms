@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureNotInstalled;
 use App\Http\Middleware\EnsureSchemaIsCompatible;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\HandleRedirects;
 use App\Http\Middleware\LocaleFromUrl;
 use App\Http\Middleware\RedirectToInstaller;
 use App\Http\Middleware\RequireTwoFactorForAdmins;
@@ -51,6 +52,8 @@ return Application::configure(basePath: dirname(__DIR__))
             EnsureSchemaIsCompatible::class,
             // Early, so the CSP nonce exists before anything renders.
             SecurityHeaders::class,
+            // Old URLs on to new ones, before the front end looks for content.
+            HandleRedirects::class,
         ]);
 
         $middleware->web(append: [

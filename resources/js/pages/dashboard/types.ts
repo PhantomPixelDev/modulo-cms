@@ -1,4 +1,5 @@
 import type { ActivityProps } from './sections/system/activitySection';
+import type { RedirectsProps } from './sections/system/redirectsSection';
 import type { BackupsProps, UpdateCenterProps } from './sections/system/systemSections';
 import type { TrashProps } from './sections/trash/trashSections';
 // Define base interfaces to avoid dependency on @/types
@@ -296,6 +297,7 @@ export interface DashboardProps {
     backups?: BackupsProps;
     activity?: ActivityProps;
     trash?: TrashProps;
+    redirects?: RedirectsProps;
     // Plugins
     plugins?: any[];
     plugin?: any;

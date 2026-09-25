@@ -16,7 +16,7 @@ import { adminNav, mainNav } from '@/config/nav';
 import { useAcl } from '@/lib/acl';
 import { getIcon } from '@/lib/icons';
 import { Link, usePage } from '@inertiajs/react';
-import { Archive, Boxes, FileText, FolderTree, History, MessageSquare, RefreshCw, Trash2 } from 'lucide-react';
+import { Archive, Boxes, CornerDownRight, FileText, FolderTree, History, MessageSquare, RefreshCw, Trash2 } from 'lucide-react';
 import React from 'react';
 import AppLogo from './app-logo';
 
@@ -262,6 +262,18 @@ export function AppSidebar() {
                                         {updatesPending.count}
                                     </SidebarMenuBadge>
                                 )}
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={url.startsWith('/dashboard/admin/system/redirects')}
+                                    tooltip={{ children: 'Redirects' }}
+                                >
+                                    <Link href="/dashboard/admin/system/redirects" prefetch>
+                                        <CornerDownRight />
+                                        <span>Redirects</span>
+                                    </Link>
+                                </SidebarMenuButton>
                             </SidebarMenuItem>
                             {isAdmin() && (
                                 <SidebarMenuItem>

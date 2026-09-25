@@ -35,6 +35,8 @@ class PostPresenter
             'updated_at' => $settings->formatDateTime($post->updated_at),
             'meta_title' => $post->meta_title,
             'meta_description' => $post->meta_description,
+            // What the theme puts in <head>: search and social previews.
+            'seo' => $this->seo($post),
             // Never expose emails on public pages
             'author' => $post->author ? [
                 'id' => $post->author->id,
@@ -325,6 +327,23 @@ class PostPresenter
         }
 
         return array_filter($localizations, fn ($entry) => ! empty($entry['path']));
+    }
+
+    /**
+     * @return array{title: string, description: string, image: string|null, canonical: string|null, noindex: bool}
+     */
+    protected function seo(Post $post): array
+    {
+        $meta = is_array($post->meta_data) ? $post->meta_data : [];
+        $safeUrl = fn ($value) => is_string($value) && preg_match('#^(https?://|/)#i', $value) === 1 ? $value : null;
+
+        return [
+            'title' => (string) ($post->meta_title ?: $post->title),
+            'description' => (string) ($post->meta_description ?: $post->excerpt ?: ''),
+            'image' => $safeUrl($meta['og_image'] ?? null) ?? $post->featured_image,
+            'canonical' => $safeUrl($meta['canonical_url'] ?? null),
+            'noindex' => filter_var($meta['noindex'] ?? false, FILTER_VALIDATE_BOOLEAN),
+        ];
     }
 
     protected function buildContentPath(Post $post, ?string $slug): string

@@ -11,8 +11,8 @@
         $gtmId = $siteSettings['analytics']['gtm_container_id'] ?? null;
         $googleVerify = $siteSettings['seo']['google_site_verification'] ?? null;
         $bingVerify = $siteSettings['seo']['bing_site_verification'] ?? null;
-        $metaDescription = $siteSettings['seo']['meta_description'] ?? null;
         $titleSuffix = $siteSettings['seo']['meta_title_suffix'] ?? '';
+        $favicon = $siteSettings['site_favicon'] ?? null;
     @endphp
 
     @if($googleVerify)
@@ -21,8 +21,9 @@
     @if($bingVerify)
     <meta name="msvalidate.01" content="{{ $bingVerify }}" />
     @endif
-    @if($metaDescription)
-    <meta name="description" content="{{ $metaDescription }}" />
+    @if($favicon)
+    <link rel="icon" href="{{ $favicon }}">
+    <link rel="apple-touch-icon" href="{{ $favicon }}">
     @endif
 
     @if($gtmId)
@@ -37,7 +38,7 @@
 
     @if($gaId)
     <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag.js?id={{ $gaId }}" nonce="{{ Vite::cspNonce() }}"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}" nonce="{{ Vite::cspNonce() }}"></script>
     <script nonce="{{ Vite::cspNonce() }}">
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}

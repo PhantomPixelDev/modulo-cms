@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
 use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\RedirectController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SitemapController;
 use App\Http\Controllers\Admin\SiteSettingsController;
@@ -134,6 +135,11 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
             Route::post('/updates/themes/{slug}', [UpdateCenterController::class, 'updateTheme'])->name('updates.themes.update');
 
             Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
+
+            Route::get('/redirects', [RedirectController::class, 'index'])->name('redirects');
+            Route::post('/redirects', [RedirectController::class, 'store'])->name('redirects.store');
+            Route::put('/redirects/{redirect}', [RedirectController::class, 'update'])->name('redirects.update');
+            Route::delete('/redirects/{redirect}', [RedirectController::class, 'destroy'])->name('redirects.destroy');
 
             Route::get('/backups', [BackupController::class, 'index'])->name('backups');
             Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');
