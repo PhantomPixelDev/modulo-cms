@@ -1,3 +1,4 @@
+import type { BackupsProps, UpdateCenterProps } from './sections/system/systemSections';
 // Define base interfaces to avoid dependency on @/types
 export interface BaseEntity {
     id: number;
@@ -288,6 +289,9 @@ export interface DashboardProps {
     settingsGroup?: string;
     pages?: Array<{ id: number; title: string }>;
     timezones?: string[];
+    // System
+    updateCenter?: UpdateCenterProps;
+    backups?: BackupsProps;
     // Plugins
     plugins?: any[];
     plugin?: any;

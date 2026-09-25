@@ -36,4 +36,10 @@ return [
     */
     'include_prereleases' => env('MODULO_UPDATE_PRERELEASES', false),
 
+    /*
+    | The daily `modulo:check-updates` emails administrators (users with the
+    | admin or super-admin role) once for every new set of available updates.
+    */
+    'notify' => env('MODULO_UPDATE_NOTIFY', true),
+
 ];

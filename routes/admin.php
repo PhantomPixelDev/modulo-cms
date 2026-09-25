@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SitemapController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\TranslationController;
+use App\Http\Controllers\Admin\UpdateCenterController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Content\MenuController;
@@ -105,6 +107,19 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Updates: reports availability, never applies anything
         Route::get('/updates', [UpdateController::class, 'show'])->name('updates.show');
         Route::post('/updates/refresh', [UpdateController::class, 'refresh'])->name('updates.refresh');
+
+        // System: update center and full-site backups
+        Route::prefix('system')->name('system.')->group(function () {
+            Route::get('/updates', [UpdateCenterController::class, 'index'])->name('updates');
+            Route::post('/updates/check', [UpdateCenterController::class, 'check'])->name('updates.check');
+            Route::post('/updates/plugins', [UpdateCenterController::class, 'updateAllPlugins'])->name('updates.plugins.all');
+            Route::post('/updates/plugins/{slug}', [UpdateCenterController::class, 'updatePlugin'])->name('updates.plugins.update');
+
+            Route::get('/backups', [BackupController::class, 'index'])->name('backups');
+            Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');
+            Route::get('/backups/{backup}', [BackupController::class, 'download'])->name('backups.download');
+            Route::delete('/backups/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy');
+        });
 
         // Translations
         Route::get('/translations', [TranslationController::class, 'index'])->name('translations.index');

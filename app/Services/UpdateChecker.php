@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Support\InstallChannel;
 use App\Support\Version;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use PDO;
 use Throwable;
 
 /**
@@ -28,6 +30,12 @@ class UpdateChecker
      *     url: string|null,
      *     published_at: string|null,
      *     error: string|null,
+     *     security: bool,
+     *     breaking: bool,
+     *     requires_migrations: bool,
+     *     notes: string|null,
+     *     requirements: array<string, string>,
+     *     unmet_requirements: array<int, string>,
      * }
      */
     public function check(bool $force = false): array
@@ -70,7 +78,78 @@ class UpdateChecker
             $release['url'],
             $release['published_at'],
             null,
+            $release,
         );
+    }
+
+    /**
+     * The last check's result without making a request: null when nothing is
+     * cached. For places that run on every page load (the sidebar badge).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function cached(): ?array
+    {
+        if (! config('updates.enabled') || Version::isDev()) {
+            return null;
+        }
+
+        $release = Cache::get(self::CACHE_KEY);
+
+        if (! is_array($release) || ($release['error'] ?? null) !== null) {
+            return null;
+        }
+
+        return $this->result(Version::current(), $release['version'] ?? null, $release['url'] ?? null, $release['published_at'] ?? null, null, $release);
+    }
+
+    /**
+     * Requirements from a release manifest this server does not meet.
+     *
+     * Constraints are Composer-style (`^8.2`, `>=16`); the lowest version they
+     * name is treated as the minimum, which is all a release ever asks for.
+     *
+     * @param  array<string, mixed>  $requirements
+     * @return array<int, string>
+     */
+    public function unmetRequirements(array $requirements): array
+    {
+        $unmet = [];
+
+        $php = $requirements['php'] ?? null;
+        if (is_string($php) && ($minimum = $this->minimumOf($php)) !== null && version_compare(PHP_VERSION, $minimum, '<')) {
+            $unmet[] = "PHP {$minimum} or newer (this server runs ".PHP_VERSION.')';
+        }
+
+        $postgres = $requirements['postgres'] ?? null;
+        if (is_string($postgres) && ($minimum = $this->minimumOf($postgres)) !== null && ($running = $this->postgresVersion()) !== null
+            && version_compare($running, $minimum, '<')) {
+            $unmet[] = "PostgreSQL {$minimum} or newer (the database runs {$running})";
+        }
+
+        return $unmet;
+    }
+
+    protected function minimumOf(string $constraint): ?string
+    {
+        return preg_match('/(\d+(?:\.\d+){0,2})/', $constraint, $m) === 1 ? $m[1] : null;
+    }
+
+    protected function postgresVersion(): ?string
+    {
+        try {
+            $connection = DB::connection();
+
+            if ($connection->getDriverName() !== 'pgsql') {
+                return null;
+            }
+
+            $version = (string) $connection->getPdo()->getAttribute(PDO::ATTR_SERVER_VERSION);
+
+            return preg_match('/^(\d+(?:\.\d+)?)/', $version, $m) === 1 ? $m[1] : null;
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     /**
@@ -162,12 +241,52 @@ class UpdateChecker
             return $this->failure('Latest release is a prerelease.');
         }
 
+        $manifest = $this->fetchManifest($payload);
+
         return [
             'version' => Version::normalize((string) $payload['tag_name']),
             'url' => isset($payload['html_url']) ? (string) $payload['html_url'] : null,
             'published_at' => isset($payload['published_at']) ? (string) $payload['published_at'] : null,
             'error' => null,
+            'notes' => isset($payload['body']) && is_string($payload['body']) ? mb_substr($payload['body'], 0, 20000) : null,
+            'security' => (bool) ($manifest['security'] ?? false),
+            'breaking' => (bool) ($manifest['breaking'] ?? false),
+            'requires_migrations' => (bool) ($manifest['requires_migrations'] ?? false),
+            'requirements' => array_filter(
+                is_array($manifest['requirements'] ?? null) ? $manifest['requirements'] : [],
+                fn ($value, $key) => is_string($key) && is_string($value),
+                ARRAY_FILTER_USE_BOTH,
+            ),
         ];
+    }
+
+    /**
+     * The release.json published with every release since 1.x: security and
+     * breaking flags plus server requirements. Older releases have none, and
+     * a manifest that cannot be read only costs those extras.
+     *
+     * @param  array<string, mixed>  $release
+     * @return array<string, mixed>
+     */
+    protected function fetchManifest(array $release): array
+    {
+        $asset = collect(is_array($release['assets'] ?? null) ? $release['assets'] : [])
+            ->first(fn ($asset) => is_array($asset) && ($asset['name'] ?? null) === 'release.json');
+
+        $url = is_array($asset) ? ($asset['browser_download_url'] ?? null) : null;
+
+        if (! is_string($url) || ! str_starts_with($url, 'https://')) {
+            return [];
+        }
+
+        try {
+            $response = Http::timeout((int) config('updates.timeout'))->accept('application/json')->get($url);
+            $manifest = $response->successful() ? $response->json() : null;
+        } catch (Throwable) {
+            return [];
+        }
+
+        return is_array($manifest) ? $manifest : [];
     }
 
     /**
@@ -179,13 +298,17 @@ class UpdateChecker
     }
 
     /**
-     * @return array{checked: bool, current: string, latest: string|null, available: bool, url: string|null, published_at: string|null, error: string|null}
+     * @param  array<string, mixed>  $release
+     * @return array{checked: bool, current: string, latest: string|null, available: bool, url: string|null, published_at: string|null, error: string|null, security: bool, breaking: bool, requires_migrations: bool, notes: string|null, requirements: array<string, string>, unmet_requirements: array<int, string>}
      */
-    protected function result(string $current, ?string $latest, ?string $url, ?string $publishedAt, ?string $error): array
+    protected function result(string $current, ?string $latest, ?string $url, ?string $publishedAt, ?string $error, array $release = []): array
     {
         $available = $latest !== null
             && $latest !== ''
             && version_compare($latest, Version::normalize($current), '>');
+
+        /** @var array<string, string> $requirements */
+        $requirements = is_array($release['requirements'] ?? null) ? $release['requirements'] : [];
 
         return [
             'checked' => $error === null,
@@ -195,6 +318,12 @@ class UpdateChecker
             'url' => $url,
             'published_at' => $publishedAt,
             'error' => $error,
+            'security' => $available && (bool) ($release['security'] ?? false),
+            'breaking' => $available && (bool) ($release['breaking'] ?? false),
+            'requires_migrations' => $available && (bool) ($release['requires_migrations'] ?? false),
+            'notes' => $available && is_string($release['notes'] ?? null) ? $release['notes'] : null,
+            'requirements' => $requirements,
+            'unmet_requirements' => $available ? $this->unmetRequirements($requirements) : [],
         ];
     }
 }

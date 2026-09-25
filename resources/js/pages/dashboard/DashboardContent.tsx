@@ -16,6 +16,7 @@ import { getRolesSections } from './sections/roles/rolesSections';
 import { getShopSections } from './sections/shop/shopSections';
 import { getSiteSettingsSections } from './sections/site-settings/siteSettingsSections';
 import { getSitemapSections } from './sections/sitemap/sitemapSections';
+import { getSystemSections } from './sections/system/systemSections';
 import { getTaxonomiesSections } from './sections/taxonomies/taxonomiesSections';
 import { getTaxonomyTermsSections } from './sections/taxonomy-terms/taxonomyTermsSections';
 import { getTemplatesSections } from './sections/templates/templatesSections';
@@ -83,6 +84,8 @@ export default function DashboardContent({
     commentCounts,
     commentFilter,
     commentModeration,
+    updateCenter,
+    backups,
 }: DashboardProps & { globalCommentsEnabled: boolean }) {
     const { t } = useTranslation();
     const { success: showSuccess, error: showError } = useAdminToast();
@@ -156,6 +159,7 @@ export default function DashboardContent({
         }
 
         const sectionsMap: Record<string, () => ReactNode> = {
+            ...getSystemSections({ updateCenter, backups }),
             ...getMediaSections({
                 media,
                 folders,

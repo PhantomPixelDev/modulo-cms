@@ -9,6 +9,14 @@ use Illuminate\Support\Facades\Schedule;
 // Nightly database dump, pruned to the last week (the scheduler container runs it)
 Schedule::command('modulo:db-backup')->dailyAt('03:15')->onOneServer();
 
+// Weekly full backup (database, media, plugins), pruned to MODULO_BACKUP_KEEP
+Schedule::command('modulo:backup')->weeklyOn(0, '03:45')->onOneServer()
+    ->when(fn () => (bool) config('backups.schedule'));
+
+// Daily core + plugin update check; admins are mailed once per new set of updates
+Schedule::command('modulo:check-updates')->dailyAt('04:10')->onOneServer()
+    ->when(fn () => (bool) config('updates.enabled'));
+
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
