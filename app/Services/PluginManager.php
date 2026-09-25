@@ -807,7 +807,9 @@ class PluginManager
      */
     public function refreshRouteCache(): void
     {
-        if (! app()->routesAreCached()) {
+        // The file itself, not routesAreCached(): what matters is whether a
+        // stale table is on disk now for the next request to load.
+        if (! File::exists(app()->getCachedRoutesPath())) {
             return;
         }
 
