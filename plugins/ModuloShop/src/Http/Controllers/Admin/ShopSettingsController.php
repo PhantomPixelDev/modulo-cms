@@ -73,7 +73,7 @@ class ShopSettingsController
 
         // Merged: settings this form doesn't cover (tax rate, checkout switch,
         // gateways) must survive a save.
-        $settings = array_merge($plugin?->settings ?? [], $data);
+        $settings = array_merge($plugin->settings ?? [], $data);
 
         if ($plugin) {
             $plugin->settings = $settings;

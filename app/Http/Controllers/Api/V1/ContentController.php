@@ -177,7 +177,7 @@ class ContentController extends Controller
             'status' => ['sometimes', Rule::in(['draft', 'published', 'private', 'archived']), new CanPublish(
                 $request->user(),
                 $post,
-                isPage: ($post?->postType?->name ?? $request->input('type', 'post')) === 'page',
+                isPage: ($post?->postType->name ?? $request->input('type', 'post')) === 'page',
             )],
             'published_at' => ['sometimes', 'nullable', 'date'],
             'featured_image' => ['sometimes', 'nullable', 'string', 'max:1000', 'regex:#^(/|https?://)#i'],
