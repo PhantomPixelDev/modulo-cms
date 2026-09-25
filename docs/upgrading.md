@@ -123,9 +123,31 @@ npm ci && npm run build
 php artisan modulo:upgrade
 ```
 
-**Release tarball** — download and verify it, replace the directory keeping your
-`.env` and `storage/`, then run `modulo:upgrade`. The tarball ships `vendor/` and
-`public/build` prebuilt, so no Composer or Node is needed.
+**Release tarball** — one command, as the user that owns the files:
+
+```bash
+php artisan modulo:update          # latest release
+php artisan modulo:update 1.2.3    # a specific one
+php artisan modulo:update --rollback
+```
+
+It looks the release up on GitHub, refuses a downgrade or a release whose PHP
+requirement this server does not meet, and downloads `modulo-cms-<v>.tar.gz`. The
+download must match both the release's `.sha256` file and the checksum in its
+`release.json`, or nothing is changed. It unpacks and checks the release (VERSION,
+`vendor/`, `public/index.php`), puts the site into maintenance mode, and swaps the
+code in. `.env`, `storage/`, `plugins/` and the site's own folders under `public/`
+(`storage`, `themes`, `plugins`) are left alone; bundled plugins are synced from the
+release only where newer. Then the **new** code runs `modulo:upgrade` (backup,
+preflight, migrations) in a fresh PHP process.
+
+The replaced code is kept in `storage/app/updates/previous`. If the upgrade fails the
+site stays in maintenance mode; `modulo:update --rollback` puts the old code back
+(restore the backup `modulo:upgrade` took as well if migrations had run), and
+`php artisan up` brings the site back. It runs from the command line only: a web
+request replacing the code it is running from is not something that can be made
+safe. The tarball ships `vendor/` and `public/build` prebuilt, so no Composer or Node
+is needed.
 
 ## Is an upgrade available?
 
