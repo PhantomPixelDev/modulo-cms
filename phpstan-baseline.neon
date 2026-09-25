@@ -1075,12 +1075,6 @@ parameters:
 			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
 
 		-
-			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$coupon_code\.$#'
-			identifier: property.notFound
-			count: 1
-			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
-
-		-
 			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$created_at\.$#'
 			identifier: property.notFound
 			count: 1
@@ -1160,12 +1154,6 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping\.$#'
-			identifier: property.notFound
-			count: 1
-			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php
-
-		-
-			message: '#^Access to an undefined property Plugins\\ModuloShop\\src\\Models\\Order\:\:\$shipping_method\.$#'
 			identifier: property.notFound
 			count: 1
 			path: plugins/ModuloShop/src/Http/Controllers/Admin/OrderController.php

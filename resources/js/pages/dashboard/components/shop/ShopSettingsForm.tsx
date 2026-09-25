@@ -5,8 +5,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, Package, Save, Settings, Store } from 'lucide-react';
+import { CreditCard, Package, Plus, Save, Settings, Store, Trash2, Truck } from 'lucide-react';
 import React, { useState } from 'react';
+
+interface ShippingMethodRow {
+    name: string;
+    price: number | string;
+    free_over: number | string | null;
+}
 
 interface ShopSettingsFormProps {
     settings: Record<string, any>;
@@ -43,11 +49,22 @@ export function ShopSettingsForm({ settings, canEdit, onSave }: ShopSettingsForm
         cart_page_id: settings.cart_page_id || null,
         checkout_page_id: settings.checkout_page_id || null,
         terms_page_id: settings.terms_page_id || null,
+        enable_checkout: settings.enable_checkout ?? true,
+        tax_rate: settings.tax_rate ?? 0,
+        prices_include_tax: settings.prices_include_tax ?? false,
+        shipping_methods: (Array.isArray(settings.shipping_methods) ? settings.shipping_methods : []) as ShippingMethodRow[],
     });
     const [isSaving, setIsSaving] = useState(false);
 
     const handleChange = (key: string, value: any) => {
         setFormData((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const updateMethod = (index: number, patch: Partial<ShippingMethodRow>) => {
+        setFormData((prev) => ({
+            ...prev,
+            shipping_methods: prev.shipping_methods.map((m, i) => (i === index ? { ...m, ...patch } : m)),
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +73,17 @@ export function ShopSettingsForm({ settings, canEdit, onSave }: ShopSettingsForm
 
         setIsSaving(true);
         try {
-            await onSave(formData);
+            await onSave({
+                ...formData,
+                tax_rate: Number(formData.tax_rate) || 0,
+                shipping_methods: formData.shipping_methods
+                    .filter((m) => String(m.name).trim() !== '')
+                    .map((m) => ({
+                        name: String(m.name).trim(),
+                        price: Number(m.price) || 0,
+                        free_over: m.free_over === '' || m.free_over === null ? null : Number(m.free_over),
+                    })),
+            });
         } finally {
             setIsSaving(false);
         }
@@ -81,6 +108,13 @@ export function ShopSettingsForm({ settings, canEdit, onSave }: ShopSettingsForm
                             >
                                 <CreditCard className="mr-2 h-4 w-4" />
                                 Currency
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="checkout"
+                                className="rounded-lg px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                            >
+                                <Truck className="mr-2 h-4 w-4" />
+                                Tax &amp; Shipping
                             </TabsTrigger>
                             <TabsTrigger
                                 value="inventory"
@@ -221,10 +255,146 @@ export function ShopSettingsForm({ settings, canEdit, onSave }: ShopSettingsForm
                                         min={0}
                                         max={4}
                                         value={formData.decimals}
-                                        onChange={(e) => handleChange('decimals', parseInt(e.target.value) || 2)}
+                                        onChange={(e) =>
+                                            handleChange('decimals', Number.isNaN(parseInt(e.target.value)) ? 2 : parseInt(e.target.value))
+                                        }
                                         disabled={!canEdit}
                                     />
                                 </div>
+                            </div>
+                        </TabsContent>
+
+                        {/* Checkout, tax and shipping */}
+                        <TabsContent value="checkout" className="mt-0 space-y-6">
+                            <div className="grid gap-6 sm:grid-cols-2">
+                                <div className="flex items-center justify-between space-x-2 sm:col-span-2">
+                                    <div className="space-y-0.5">
+                                        <Label htmlFor="enable_checkout">Checkout open</Label>
+                                        <p className="text-xs text-muted-foreground">
+                                            Switch off to keep the catalogue and cart but stop taking orders
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        id="enable_checkout"
+                                        checked={formData.enable_checkout}
+                                        onCheckedChange={(checked) => handleChange('enable_checkout', checked)}
+                                        disabled={!canEdit}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="tax_rate">Tax rate (%)</Label>
+                                    <Input
+                                        id="tax_rate"
+                                        type="number"
+                                        min={0}
+                                        max={100}
+                                        step="0.01"
+                                        value={formData.tax_rate}
+                                        onChange={(e) => handleChange('tax_rate', e.target.value)}
+                                        disabled={!canEdit}
+                                    />
+                                    <p className="text-xs text-muted-foreground">Charged on products and shipping. 0 turns tax off.</p>
+                                </div>
+
+                                <div className="flex items-center justify-between space-x-2">
+                                    <div className="space-y-0.5">
+                                        <Label htmlFor="prices_include_tax">Prices include tax</Label>
+                                        <p className="text-xs text-muted-foreground">
+                                            On: the price you enter is what customers pay. Off: tax is added at checkout.
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        id="prices_include_tax"
+                                        checked={formData.prices_include_tax}
+                                        onCheckedChange={(checked) => handleChange('prices_include_tax', checked)}
+                                        disabled={!canEdit}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div>
+                                    <Label>Shipping methods</Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        Customers pick one at checkout. Leave &quot;Free over&quot; empty for no free-shipping threshold. No methods
+                                        means no shipping charge.
+                                    </p>
+                                </div>
+                                {formData.shipping_methods.map((method, index) => (
+                                    <div key={index} className="grid grid-cols-[1fr_7rem_7rem_auto] items-end gap-2">
+                                        <div className="space-y-1">
+                                            <Label htmlFor={`sm-name-${index}`} className="text-xs">
+                                                Name
+                                            </Label>
+                                            <Input
+                                                id={`sm-name-${index}`}
+                                                value={method.name}
+                                                onChange={(e) => updateMethod(index, { name: e.target.value })}
+                                                placeholder="Standard"
+                                                disabled={!canEdit}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label htmlFor={`sm-price-${index}`} className="text-xs">
+                                                Price
+                                            </Label>
+                                            <Input
+                                                id={`sm-price-${index}`}
+                                                type="number"
+                                                min={0}
+                                                step="0.01"
+                                                value={method.price}
+                                                onChange={(e) => updateMethod(index, { price: e.target.value })}
+                                                disabled={!canEdit}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label htmlFor={`sm-free-${index}`} className="text-xs">
+                                                Free over
+                                            </Label>
+                                            <Input
+                                                id={`sm-free-${index}`}
+                                                type="number"
+                                                min={0}
+                                                step="0.01"
+                                                value={method.free_over ?? ''}
+                                                onChange={(e) => updateMethod(index, { free_over: e.target.value })}
+                                                disabled={!canEdit}
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            aria-label={`Remove ${method.name || 'shipping method'}`}
+                                            onClick={() =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    shipping_methods: prev.shipping_methods.filter((_, i) => i !== index),
+                                                }))
+                                            }
+                                            disabled={!canEdit}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            shipping_methods: [...prev.shipping_methods, { name: '', price: 0, free_over: null }],
+                                        }))
+                                    }
+                                    disabled={!canEdit || formData.shipping_methods.length >= 20}
+                                >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add shipping method
+                                </Button>
                             </div>
                         </TabsContent>
 

@@ -168,6 +168,12 @@ export const ROUTE = {
             update: (id: number | string) => route('dashboard.admin.shop.orders.update', { order: id }),
             destroy: (id: number | string) => route('dashboard.admin.shop.orders.destroy', { order: id }),
         },
+        coupons: {
+            index: () => route('dashboard.admin.shop.coupons.index'),
+            store: () => route('dashboard.admin.shop.coupons.store'),
+            update: (id: number | string) => route('dashboard.admin.shop.coupons.update', { coupon: id }),
+            destroy: (id: number | string) => route('dashboard.admin.shop.coupons.destroy', { coupon: id }),
+        },
         settings: {
             index: () => route('dashboard.admin.shop.settings.index'),
         },

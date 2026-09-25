@@ -55,6 +55,7 @@ class CartController
                 'success' => true,
                 'message' => 'Product added to cart',
                 'cart' => $cart,
+                'totals' => $this->cartService->getTotals($cart),
             ]);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
@@ -81,6 +82,7 @@ class CartController
                 'success' => true,
                 'message' => 'Cart updated',
                 'cart' => $cart,
+                'totals' => $this->cartService->getTotals($cart),
             ]);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
@@ -102,6 +104,7 @@ class CartController
             'success' => true,
             'message' => 'Item removed from cart',
             'cart' => $cart,
+            'totals' => $this->cartService->getTotals($cart),
         ]);
     }
 
@@ -113,6 +116,51 @@ class CartController
             'success' => true,
             'message' => 'Cart cleared',
             'cart' => $this->cartService->getCartWithProducts(),
+        ]);
+    }
+
+    public function applyCoupon(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|max:64',
+        ]);
+
+        $error = $this->cartService->applyCoupon($validated['code']);
+        $cart = $this->cartService->getCartWithProducts();
+
+        return response()->json([
+            'success' => $error === null,
+            'message' => $error ?? 'Coupon applied',
+            'cart' => $cart,
+            'totals' => $this->cartService->getTotals($cart),
+        ], $error === null ? 200 : 422);
+    }
+
+    public function removeCoupon(): JsonResponse
+    {
+        $this->cartService->removeCoupon();
+        $cart = $this->cartService->getCartWithProducts();
+
+        return response()->json([
+            'success' => true,
+            'cart' => $cart,
+            'totals' => $this->cartService->getTotals($cart),
+        ]);
+    }
+
+    public function shipping(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'shipping_method' => 'required|string|max:100',
+        ]);
+
+        $this->cartService->setShippingMethod($validated['shipping_method']);
+        $cart = $this->cartService->getCartWithProducts();
+
+        return response()->json([
+            'success' => true,
+            'cart' => $cart,
+            'totals' => $this->cartService->getTotals($cart),
         ]);
     }
 

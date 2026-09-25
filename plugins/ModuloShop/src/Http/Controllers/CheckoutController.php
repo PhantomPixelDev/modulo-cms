@@ -14,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Plugins\ModuloShop\src\Mail\OrderPlacedAdmin;
 use Plugins\ModuloShop\src\Mail\OrderPlacedCustomer;
+use Plugins\ModuloShop\src\Models\Coupon;
 use Plugins\ModuloShop\src\Models\Order;
 use Plugins\ModuloShop\src\Models\OrderItem;
 use Plugins\ModuloShop\src\Services\CartService;
@@ -111,9 +112,22 @@ class CheckoutController
             'shipping_country' => 'required_if:ship_to_different,true|nullable|string|size:2',
             'customer_note' => 'nullable|string|max:1000',
             'payment_method' => 'required|string|in:cod,bank_transfer',
+            'shipping_method' => 'nullable|string|max:100',
         ]);
 
+        if (! empty($validated['shipping_method'])) {
+            $this->cartService->setShippingMethod($validated['shipping_method']);
+        }
+
         $totals = $this->cartService->getTotals($cart);
+
+        // A coupon that stopped applying since it was added (expired, used up,
+        // cart now below its minimum) must not be dropped silently at payment.
+        if (! empty($this->cartService->getCart()['coupon_code']) && $totals['coupon'] === null) {
+            throw ValidationException::withMessages([
+                'coupon' => $totals['coupon_error'] ?? 'Your coupon can no longer be used. Remove it to continue.',
+            ]);
+        }
         $quantities = collect($cart['items'])
             ->groupBy('product_id')
             ->map(fn ($items) => (int) $items->sum('quantity'))
@@ -123,6 +137,16 @@ class CheckoutController
             $order = DB::transaction(function () use ($validated, $cart, $totals, $request, $quantities) {
                 // Locks the product rows and re-checks stock; throws (and rolls back) when short
                 $this->stock->reserve($quantities);
+
+                // Same for the coupon: two orders racing for its last use get one each at most.
+                if ($totals['coupon'] !== null) {
+                    $coupon = Coupon::query()->where('code', $totals['coupon']['code'])->lockForUpdate()->first();
+                    $reason = $coupon ? $coupon->unusableReason((float) $totals['subtotal']) : 'This coupon is no longer available.';
+                    if ($reason !== null) {
+                        throw ValidationException::withMessages(['coupon' => $reason]);
+                    }
+                    $coupon->increment('used_count');
+                }
 
                 $order = Order::create([
                     'order_number' => Order::generateOrderNumber(),
@@ -153,6 +177,12 @@ class CheckoutController
                     'customer_note' => $validated['customer_note'] ?? null,
                     'payment_method' => $validated['payment_method'],
                     'payment_status' => Order::PAYMENT_PENDING,
+                    'shipping_method' => $totals['shipping_method_name'],
+                    'coupon_code' => $totals['coupon']['code'] ?? null,
+                    'meta_data' => [
+                        'tax_rate' => $totals['tax_rate'],
+                        'prices_include_tax' => $totals['prices_include_tax'],
+                    ],
                 ]);
 
                 foreach ($cart['items'] as $item) {
@@ -279,6 +309,9 @@ class CheckoutController
             ],
             'shipping_address' => $order->getShippingAddress(),
             'payment_method' => $order->payment_method,
+            'shipping_method' => $order->shipping_method,
+            'coupon_code' => $order->coupon_code,
+            'prices_include_tax' => (bool) ($order->meta_data['prices_include_tax'] ?? false),
             'customer_note' => $order->customer_note,
             'items' => $order->items->map(fn ($item) => [
                 'id' => $item->id,

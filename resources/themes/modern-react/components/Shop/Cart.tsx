@@ -1,8 +1,9 @@
 import SEOHead from '@/components/SEOHead';
 import { Link } from '@inertiajs/react';
 import { ArrowRight, Minus, Plus, ShoppingBag, ShoppingCart, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Layout from '../Layout';
+import { formatMoney, shopRequest, TotalsRows, type ShopTotals } from './totals';
 
 interface CartItem {
     product_id: number;
@@ -27,14 +28,7 @@ interface CartProps {
         currency: string;
         is_empty: boolean;
     };
-    totals?: {
-        subtotal: number;
-        discount: number;
-        shipping: number;
-        tax: number;
-        total: number;
-        currency: string;
-    };
+    totals?: ShopTotals;
     site?: any;
     theme?: any;
     menus?: any;
@@ -47,11 +41,40 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
 
     const [items, setItems] = useState<CartItem[]>(cart?.items ?? []);
     const [loading, setLoading] = useState<number | null>(null);
-    const [cartTotals, setCartTotals] = useState(totals);
+    const [cartTotals, setCartTotals] = useState<ShopTotals | undefined>(totals);
+    const [couponCode, setCouponCode] = useState('');
+    const [couponMessage, setCouponMessage] = useState<string | null>(totals?.coupon_error ?? null);
+    const [couponBusy, setCouponBusy] = useState(false);
 
-    const formatPrice = (price: number, currency = 'USD') => {
-        const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-        return `${symbols[currency] || '$'}${price.toFixed(2)}`;
+    const formatPrice = formatMoney;
+
+    const applyCoupon = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (couponCode.trim() === '') return;
+        setCouponBusy(true);
+        try {
+            const { data } = await shopRequest<{ success: boolean; message?: string; totals?: ShopTotals }>('/shop/cart/coupon', 'POST', {
+                code: couponCode,
+            });
+            if (data.totals) setCartTotals(data.totals);
+            setCouponMessage(data.success ? null : (data.message ?? 'That coupon code is not valid.'));
+            if (data.success) setCouponCode('');
+        } catch {
+            setCouponMessage('Could not apply the coupon. Please try again.');
+        }
+        setCouponBusy(false);
+    };
+
+    const removeCoupon = async () => {
+        setCouponBusy(true);
+        try {
+            const { data } = await shopRequest<{ totals?: ShopTotals }>('/shop/cart/coupon', 'DELETE');
+            if (data.totals) setCartTotals(data.totals);
+            setCouponMessage(null);
+        } catch {
+            setCouponMessage('Could not remove the coupon. Please try again.');
+        }
+        setCouponBusy(false);
     };
 
     const updateQuantity = async (productId: number, newQuantity: number) => {
@@ -68,11 +91,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
             const data = await response.json();
             if (data.success) {
                 setItems(data.cart.items);
-                setCartTotals({
-                    ...cartTotals!,
-                    subtotal: data.cart.subtotal,
-                    total: data.cart.subtotal,
-                });
+                setCartTotals(data.totals ?? cartTotals);
             }
         } catch (error) {
             console.error('Failed to update cart', error);
@@ -94,11 +113,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
             const data = await response.json();
             if (data.success) {
                 setItems(data.cart.items);
-                setCartTotals({
-                    ...cartTotals!,
-                    subtotal: data.cart.subtotal,
-                    total: data.cart.subtotal,
-                });
+                setCartTotals(data.totals ?? cartTotals);
             }
         } catch (error) {
             console.error('Failed to remove item', error);
@@ -229,30 +244,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                                     <h2 className="mb-6 text-lg font-semibold tracking-tight text-foreground">Order Summary</h2>
 
                                     <div className="space-y-4">
-                                        <div className="flex justify-between text-muted-foreground">
-                                            <span>Subtotal</span>
-                                            <span>{formatPrice(cartTotals?.subtotal ?? 0, cartTotals?.currency)}</span>
-                                        </div>
-                                        {(cartTotals?.discount ?? 0) > 0 && (
-                                            <div className="flex justify-between text-success">
-                                                <span>Discount</span>
-                                                <span>-{formatPrice(cartTotals?.discount ?? 0, cartTotals?.currency)}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex justify-between text-muted-foreground">
-                                            <span>Shipping</span>
-                                            <span>
-                                                {cartTotals?.shipping
-                                                    ? formatPrice(cartTotals.shipping, cartTotals.currency)
-                                                    : 'Calculated at checkout'}
-                                            </span>
-                                        </div>
-                                        {(cartTotals?.tax ?? 0) > 0 && (
-                                            <div className="flex justify-between text-muted-foreground">
-                                                <span>Tax</span>
-                                                <span>{formatPrice(cartTotals?.tax ?? 0, cartTotals?.currency)}</span>
-                                            </div>
-                                        )}
+                                        <TotalsRows totals={cartTotals} />
 
                                         <div className="border-t pt-4">
                                             <div className="flex justify-between text-xl font-semibold tracking-tight text-foreground">
@@ -260,6 +252,50 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                                                 <span>{formatPrice(cartTotals?.total ?? 0, cartTotals?.currency)}</span>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    {/* Coupon */}
+                                    <div className="mt-6 border-t pt-4">
+                                        {cartTotals?.coupon ? (
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-foreground">
+                                                    Coupon <span className="font-mono font-medium">{cartTotals.coupon.code}</span> applied
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={removeCoupon}
+                                                    disabled={couponBusy}
+                                                    className="text-muted-foreground underline hover:text-foreground"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <form onSubmit={applyCoupon} className="flex gap-2">
+                                                <label htmlFor="coupon-code" className="sr-only">
+                                                    Coupon code
+                                                </label>
+                                                <input
+                                                    id="coupon-code"
+                                                    value={couponCode}
+                                                    onChange={(e) => setCouponCode(e.target.value)}
+                                                    placeholder="Coupon code"
+                                                    className="h-10 min-w-0 flex-1 rounded-md border border-input bg-input-bg px-3 text-sm text-foreground uppercase shadow-xs outline-none placeholder:text-muted-foreground placeholder:normal-case focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    disabled={couponBusy || couponCode.trim() === ''}
+                                                    className="rounded-md border px-4 text-sm font-medium text-foreground/80 transition-colors hover:bg-accent disabled:opacity-50"
+                                                >
+                                                    Apply
+                                                </button>
+                                            </form>
+                                        )}
+                                        {couponMessage && (
+                                            <p role="alert" className="mt-2 text-sm text-destructive">
+                                                {couponMessage}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <Link

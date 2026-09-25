@@ -11,10 +11,13 @@ We have received your order **{{ $order->order_number }}**. We'll notify you whe
 @endforeach
 @endcomponent
 
-**Subtotal:** {{ number_format($order->subtotal, 2) }}  
-**Shipping:** {{ number_format($order->shipping, 2) }}  
-**Tax:** {{ number_format($order->tax, 2) }}  
-**Total:** {{ number_format($order->total, 2) }}
+**Subtotal:** {{ number_format($order->subtotal, 2) }}
+@if ((float) $order->discount > 0)
+**Discount{{ $order->coupon_code ? ' ('.$order->coupon_code.')' : '' }}:** -{{ number_format($order->discount, 2) }}
+@endif
+**Shipping{{ $order->shipping_method ? ' ('.$order->shipping_method.')' : '' }}:** {{ number_format($order->shipping, 2) }}
+**Tax{{ ($order->meta_data['prices_include_tax'] ?? false) ? ' (included)' : '' }}:** {{ number_format($order->tax, 2) }}
+**Total:** {{ number_format($order->total, 2) }} {{ $order->currency }}
 
 Thanks,  
 {{ config('app.name') }}

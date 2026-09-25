@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Plugins\ModuloShop\src\Services\ModuloShopSettings;
 
 class ShopSettingsController
 {
@@ -33,9 +34,18 @@ class ShopSettingsController
             'cart_page_id' => null,
             'checkout_page_id' => null,
             'terms_page_id' => null,
+            'enable_checkout' => true,
+            'tax_rate' => 0,
+            'prices_include_tax' => false,
+            'shipping_methods' => [],
         ];
 
         $settings = array_merge($defaults, $settings);
+        // Normalized rows (older installs stored a "Standard, Express" string)
+        $settings['shipping_methods'] = array_map(
+            fn (array $m) => ['name' => $m['name'], 'price' => $m['price'], 'free_over' => $m['free_over']],
+            app(ModuloShopSettings::class)->shippingMethods(),
+        );
 
         if ($request->wantsJson()) {
             return response()->json($settings);
@@ -67,6 +77,12 @@ class ShopSettingsController
             'checkout_page_id' => 'nullable|integer',
             'terms_page_id' => 'nullable|integer',
             'enable_checkout' => 'sometimes|boolean',
+            'tax_rate' => 'sometimes|numeric|min:0|max:100',
+            'prices_include_tax' => 'sometimes|boolean',
+            'shipping_methods' => 'sometimes|array|max:20',
+            'shipping_methods.*.name' => 'required|string|max:100|distinct',
+            'shipping_methods.*.price' => 'required|numeric|min:0',
+            'shipping_methods.*.free_over' => 'nullable|numeric|min:0',
         ]);
 
         $plugin = Plugin::where('slug', 'modulo-shop')->first();
