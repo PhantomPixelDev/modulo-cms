@@ -31,6 +31,35 @@ abstract class BasePluginServiceProvider extends ServiceProvider
         // Intentionally empty
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Lifecycle hooks
+    |--------------------------------------------------------------------------
+    |
+    | Called by the plugin manager on a fresh instance of the provider, which
+    | has not been registered or booted: use $this->app, not state set up in
+    | boot(). An exception aborts the action where it can (activation is
+    | undone) and is reported otherwise.
+    |
+    */
+
+    /** After the plugin's migrations and seeder ran, when it is switched on. */
+    public function onActivate(): void {}
+
+    /** When the plugin is switched off. Its data stays. */
+    public function onDeactivate(): void {}
+
+    /**
+     * Before the plugin is removed. With $deleteData the operator asked for
+     * its data to go too: the plugin's migrations are rolled back after this
+     * returns, so only clean up what they do not cover (files, settings rows
+     * in core tables, ...).
+     */
+    public function onUninstall(bool $deleteData): void {}
+
+    /** After a newer version's migrations ran. */
+    public function onUpgrade(string $from, string $to): void {}
+
     protected function bootPluginResources(): void
     {
         if (! isset($this->pluginBasePath) || ! is_dir($this->pluginBasePath)) {

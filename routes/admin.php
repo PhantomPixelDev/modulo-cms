@@ -129,6 +129,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Plugins
         Route::get('plugins', [PluginController::class, 'index'])->name('plugins.index');
         Route::post('plugins/discover', [PluginController::class, 'discover'])->name('plugins.discover');
+        Route::get('plugins/registry', [PluginController::class, 'registry'])->name('plugins.registry');
+        Route::post('plugins/install', [PluginController::class, 'install'])->name('plugins.install');
         Route::post('plugins/{slug}/activate', [PluginController::class, 'activate'])->name('plugins.activate');
         Route::post('plugins/{slug}/deactivate', [PluginController::class, 'deactivate'])->name('plugins.deactivate');
         Route::get('plugins/{slug}/settings', [PluginController::class, 'settings'])->name('plugins.settings');

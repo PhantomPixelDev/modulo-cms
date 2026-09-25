@@ -6,7 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdatePluginSettingsRequest;
 use App\Models\Plugin;
 use App\Services\PluginManager;
+use App\Services\Plugins\PluginInstaller;
+use App\Services\Plugins\PluginRegistry;
+use App\Services\Plugins\PluginRequirements;
+use App\Services\UpdateCenter;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Throwable;
 
 class PluginController extends Controller
 {
@@ -24,10 +32,80 @@ class PluginController extends Controller
     {
         $this->authorizePermission('view plugins');
 
+        $requirements = app(PluginRequirements::class);
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'plugins',
-            'plugins' => Plugin::orderBy('name')->get(),
+            'plugins' => Plugin::orderBy('name')->get()->map(fn (Plugin $plugin) => $plugin->toArray() + [
+                // What stops an inactive plugin from being switched on.
+                'unmet' => $plugin->is_active ? [] : $requirements->unmet([
+                    'requires' => $plugin->requires,
+                    'min_core_version' => $plugin->min_core_version,
+                ]),
+                'dependents' => $plugin->is_active ? $requirements->dependents($plugin->slug) : [],
+            ]),
         ]);
+    }
+
+    /**
+     * The registry's plugins, for the Browse tab. JSON so the page itself
+     * never waits on the network.
+     */
+    public function registry(PluginRegistry $registry, PluginRequirements $requirements): JsonResponse
+    {
+        $this->authorizePermission('view plugins');
+
+        try {
+            $entries = $registry->all(force: request()->boolean('refresh'));
+        } catch (Throwable $e) {
+            return response()->json(['plugins' => [], 'error' => $e->getMessage()]);
+        }
+
+        $installed = Plugin::pluck('version', 'slug');
+
+        return response()->json([
+            'error' => null,
+            'plugins' => collect($entries)->map(function (array $entry) use ($installed, $requirements) {
+                $latest = is_array($entry['latest'] ?? null) ? $entry['latest'] : [];
+
+                return [
+                    'slug' => $entry['slug'],
+                    'name' => (string) ($entry['name'] ?? $entry['slug']),
+                    'description' => is_string($entry['description'] ?? null) ? $entry['description'] : null,
+                    'author' => is_string($entry['author'] ?? null) ? $entry['author'] : null,
+                    'homepage' => is_string($entry['homepage'] ?? null) && str_starts_with($entry['homepage'], 'https://') ? $entry['homepage'] : null,
+                    'version' => (string) ($latest['version'] ?? ''),
+                    'installed_version' => $installed[$entry['slug']] ?? null,
+                    'unmet' => $requirements->unmet($latest, needActive: false),
+                ];
+            })->values(),
+        ]);
+    }
+
+    /**
+     * Install (or update) a plugin from the registry. It arrives inactive.
+     */
+    public function install(Request $request, PluginInstaller $installer): RedirectResponse
+    {
+        $this->authorizePermission('install plugins');
+
+        $slug = (string) $request->validate(['slug' => ['required', 'string', 'regex:/^[a-z0-9-]+$/']])['slug'];
+
+        try {
+            $result = $installer->install($slug);
+        } catch (Throwable $e) {
+            return back()->with('error', 'Could not install "'.$slug.'": '.$e->getMessage());
+        }
+
+        app(UpdateCenter::class)->forgetPending();
+
+        return back()->with('success', sprintf(
+            '%s %s %s. %s',
+            Plugin::where('slug', $slug)->value('name') ?? $slug,
+            $result['version'],
+            $result['updated'] ? 'updated' : 'installed',
+            $result['updated'] ? '' : 'Activate it to start using it.',
+        ));
     }
 
     /**
@@ -103,11 +181,11 @@ class PluginController extends Controller
     /**
      * Uninstall the specified plugin.
      */
-    public function destroy(string $slug)
+    public function destroy(Request $request, string $slug)
     {
         $this->authorizePermission('delete plugins');
 
-        if ($this->pluginManager->uninstall($slug)) {
+        if ($this->pluginManager->uninstall($slug, deleteData: $request->boolean('delete_data'))) {
             return redirect()->route('dashboard.admin.plugins.index')
                 ->with('success', 'Plugin uninstalled successfully.');
         }

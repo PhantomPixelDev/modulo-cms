@@ -38,6 +38,8 @@ class PluginInstaller
     {
         $release = $this->resolveRelease($slug, $version);
 
+        // The registry entry declares the same requirements as the package's
+        // plugin.json; refusing here saves downloading something unusable.
         if (! $this->registry->isCompatible($release)) {
             throw new RuntimeException(sprintf(
                 'Plugin "%s" %s requires Modulo %s or newer; this is %s.',
@@ -46,6 +48,11 @@ class PluginInstaller
                 $release['min_core_version'] ?? '?',
                 Version::current(),
             ));
+        }
+
+        $unmet = app(PluginRequirements::class)->unmet($release, needActive: false);
+        if ($unmet !== []) {
+            throw new RuntimeException(sprintf('Plugin "%s" %s requires %s.', $slug, $release['version'], implode(', ', $unmet)));
         }
 
         $existing = Plugin::where('slug', $slug)->first();
@@ -79,6 +86,13 @@ class PluginInstaller
             $manifest = $this->readManifest($package);
 
             $this->assertManifestMatches($manifest, $slug, (string) $release['version']);
+
+            // Required plugins only need to be installed here; activation
+            // checks that they are switched on.
+            $unmet = app(PluginRequirements::class)->unmet($manifest, needActive: false);
+            if ($unmet !== []) {
+                throw new RuntimeException(sprintf('"%s" %s needs %s.', $slug, $release['version'], implode(', ', $unmet)));
+            }
 
             $target = $this->targetDirectory($manifest);
 

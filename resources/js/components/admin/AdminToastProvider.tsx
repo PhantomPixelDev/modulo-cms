@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
+import { router } from '@inertiajs/react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Toaster, toast } from 'sonner';
 
 type AdminToastVariant = 'default' | 'success' | 'error' | 'info' | 'warning';
@@ -36,7 +37,13 @@ const normalizeMessage = (message: AdminToastMessage) =>
               duration: message.duration,
           };
 
+type FlashBag = Partial<Record<'success' | 'error' | 'warning' | 'info' | 'message', string | null>>;
+
 export function AdminToastProvider({ children }: { children: ReactNode }) {
+    // When a page already toasted its own success message for a visit, the
+    // server's flash for the same action would only repeat it.
+    const lastClientSuccess = useRef(0);
+
     const notify = useCallback((variant: AdminToastVariant, message: AdminToastMessage, options?: ToastConfig) => {
         const normalized = normalizeMessage(message);
         const finalTitle = normalized.title || normalized.description || 'Notification';
@@ -60,7 +67,32 @@ export function AdminToastProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const success = useCallback((message: AdminToastMessage, options?: ToastConfig) => notify('success', message, options), [notify]);
+    const success = useCallback(
+        (message: AdminToastMessage, options?: ToastConfig) => {
+            lastClientSuccess.current = Date.now();
+            return notify('success', message, options);
+        },
+        [notify],
+    );
+
+    // Server-side flash messages (back()->with('error', ...)) as toasts.
+    useEffect(
+        () =>
+            router.on('success', (event) => {
+                const flash = (event.detail.page.props as { flash?: FlashBag }).flash;
+                if (!flash) return;
+
+                // Deferred so a visit's own onSuccess toast runs first.
+                window.setTimeout(() => {
+                    if (flash.error) notify('error', flash.error);
+                    if (flash.warning) notify('warning', flash.warning);
+                    if (flash.info) notify('info', flash.info);
+                    if (flash.message) notify('default', flash.message);
+                    if (flash.success && Date.now() - lastClientSuccess.current > 1500) notify('success', flash.success);
+                }, 0);
+            }),
+        [notify],
+    );
     const error = useCallback((message: AdminToastMessage, options?: ToastConfig) => notify('error', message, options), [notify]);
     const info = useCallback((message: AdminToastMessage, options?: ToastConfig) => notify('info', message, options), [notify]);
     const warning = useCallback((message: AdminToastMessage, options?: ToastConfig) => notify('warning', message, options), [notify]);

@@ -10,6 +10,10 @@ php artisan plugin:list --updates            # what has a newer release
 php artisan plugin:update --all
 ```
 
+Or from the admin: **Plugins → Browse registry** searches the registry and installs
+with one click (the plugin arrives inactive), and **System → Updates** lists and
+applies plugin updates. A daily check emails administrators when updates appear.
+
 **A plugin is not sandboxed.** It runs as part of the application, with the same
 database and filesystem access. Installing one is equivalent to deploying code, and
 the `install plugins` permission should be held only by people you would trust with
@@ -104,10 +108,54 @@ bundled plugin over the volume **only when it is strictly newer** than what is t
 plugin you updated from the registry is never rolled back to the image's older copy,
 and plugins installed at runtime have their own directories and are untouched.
 
+## Requirements
+
+A plugin declares what it needs in `plugin.json`:
+
+```json
+{
+  "requires": {
+    "core": ">=1.2",
+    "php": ">=8.2",
+    "plugins": { "modulo-shop": ">=1.1" }
+  }
+}
+```
+
+Each constraint names a minimum (`>=1.2`, `^1.2` and `1.2` all mean 1.2 or newer). The
+older top-level `min_core_version` still works. They are enforced:
+
+- **on install and update** — a registry release whose `latest` block declares
+  `requires` (or `min_core_version`) the site does not meet is refused before anything
+  is downloaded; the package's own `plugin.json` is checked again before it is moved
+  into place.
+- **on activation** — a plugin whose requirements are not met, including required
+  plugins that are missing, too old or switched off, cannot be activated. The admin
+  shows what is missing and disables the switch.
+- **on deactivation and uninstall** — a plugin that an active plugin requires cannot be
+  switched off or removed until its dependents are.
+
+## Lifecycle hooks
+
+A plugin's service provider (extending `App\Plugins\BasePluginServiceProvider`) can
+override:
+
+| Hook | When |
+|---|---|
+| `onActivate()` | After migrations and seeder ran on activation. Throwing undoes the activation and shows the message. |
+| `onDeactivate()` | When switched off. Data stays. |
+| `onUpgrade(string $from, string $to)` | After a newer version's migrations ran. |
+| `onUninstall(bool $deleteData)` | Before removal. With `$deleteData`, the plugin's migrations are rolled back afterwards. |
+
+Hooks run on a fresh, unbooted instance of the provider: use `$this->app`, not state
+set up in `boot()`. Seeders still run on every activation and must be idempotent.
+
 ## Uninstalling
 
 `plugin:activate <slug> --off` deactivates; uninstalling from the admin removes the
-database row and records the decision in `storage/app/plugins/uninstalled/`.
+database row and records the decision in `storage/app/plugins/uninstalled/`. The
+uninstall dialog offers **Also delete its data**, which rolls back every migration the
+plugin shipped (`migrate:reset` on its `migrations_path`), dropping its tables.
 
 That record is deliberately **outside** the plugin's directory. A marker written
 inside the package is destroyed the moment those files are replaced by an update,
@@ -124,9 +172,13 @@ automatically.
       "slug": "contact-form",
       "namespace": "ContactForm",
       "name": "Contact Form",
+      "description": "Shown in Browse registry",
+      "author": "Modulo CMS",
+      "homepage": "https://github.com/owner/repo",
       "latest": {
         "version": "1.2.0",
         "min_core_version": "1.0.0",
+        "requires": { "plugins": { "modulo-shop": ">=1.1" } },
         "asset_url": "https://github.com/owner/repo/releases/download/v1.2.0/contact-form-1.2.0.zip",
         "sha256": "..."
       }

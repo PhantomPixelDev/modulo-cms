@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Plugin;
+use App\Plugins\BasePluginServiceProvider;
+use App\Services\Plugins\PluginRequirements;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
@@ -354,6 +356,10 @@ class PluginManager
             'description' => $manifest['description'] ?? null,
             'author' => $manifest['author'] ?? null,
             'service_provider' => $manifest['service_provider'] ?? null,
+            'requires' => PluginRequirements::fromManifest($manifest),
+            'min_core_version' => is_string($manifest['requires']['core'] ?? null)
+                ? PluginRequirements::minimumOf($manifest['requires']['core'])
+                : ($manifest['min_core_version'] ?? null),
         ];
 
         if (! $plugin) {
@@ -389,6 +395,8 @@ class PluginManager
 
             $data['version'] = $onDisk;
             Log::info("Plugin '{$manifest['slug']}' updated from {$recorded} to {$onDisk}.");
+
+            $this->callLifecycle($data['service_provider'], 'onUpgrade', [$recorded, $onDisk]);
         } elseif ($comparison < 0) {
             // Older files than the database expects. Rolling back a plugin's
             // schema is not something this can do safely, so record the
@@ -483,6 +491,16 @@ class PluginManager
             return false;
         }
 
+        // Checked against the manifest on disk: that is the code about to run.
+        $manifest = $this->manifestFor($slug) ?? ['requires' => $plugin->requires, 'min_core_version' => $plugin->min_core_version];
+        $unmet = app(PluginRequirements::class)->unmet($manifest);
+
+        if ($unmet !== []) {
+            $this->lastError = "{$plugin->name} needs ".implode(', ', $unmet).'.';
+
+            return false;
+        }
+
         // Migrations and seeder run whenever the plugin goes from inactive to
         // active, not only the first time -- a plugin updated while switched
         // off catches up here. Plugin seeders must therefore be idempotent
@@ -500,7 +518,73 @@ class PluginManager
 
                 return false;
             }
+
+            try {
+                $this->callLifecycle($plugin->service_provider, 'onActivate', [], rethrow: true);
+            } catch (\Throwable $e) {
+                $plugin->update(['is_active' => false]);
+                $this->lastError = "{$plugin->name} could not be activated: ".$e->getMessage();
+
+                return false;
+            }
         }
+
+        return true;
+    }
+
+    /**
+     * The plugin.json on disk for an installed plugin.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function manifestFor(string $slug): ?array
+    {
+        $directory = $this->findPluginDirectoryBySlug($slug);
+
+        if ($directory === null || ! File::exists($directory.'/plugin.json')) {
+            return null;
+        }
+
+        $manifest = json_decode((string) File::get($directory.'/plugin.json'), true);
+
+        return is_array($manifest) ? $manifest : null;
+    }
+
+    /**
+     * Run a lifecycle hook on a fresh instance of the plugin's provider.
+     *
+     * @param  array<int, mixed>  $arguments
+     */
+    protected function callLifecycle(?string $providerClass, string $hook, array $arguments = [], bool $rethrow = false): void
+    {
+        if ($providerClass === null || ! class_exists($providerClass) || ! is_subclass_of($providerClass, BasePluginServiceProvider::class)) {
+            return;
+        }
+
+        try {
+            (new $providerClass(app()))->{$hook}(...$arguments);
+        } catch (\Throwable $e) {
+            Log::error("Plugin lifecycle hook {$providerClass}::{$hook}() failed: ".$e->getMessage());
+
+            if ($rethrow) {
+                throw $e;
+            }
+        }
+    }
+
+    /**
+     * Refuse to take away a plugin other active plugins declare they need.
+     */
+    protected function blockedByDependents(Plugin $plugin): bool
+    {
+        $dependents = app(PluginRequirements::class)->dependents($plugin->slug);
+
+        if ($dependents === []) {
+            return false;
+        }
+
+        $this->lastError = sprintf('%s is needed by %s. Deactivate %s first.',
+            $plugin->name, implode(', ', $dependents), count($dependents) === 1 ? 'it' : 'them');
 
         return true;
     }
@@ -571,7 +655,12 @@ class PluginManager
             return false;
         }
 
+        if ($plugin->is_active && $this->blockedByDependents($plugin)) {
+            return false;
+        }
+
         $plugin->update(['is_active' => false]);
+        $this->callLifecycle($plugin->service_provider, 'onDeactivate');
 
         return true;
     }
@@ -598,7 +687,7 @@ class PluginManager
     /**
      * Delete/Uninstall a plugin.
      */
-    public function uninstall(string $slug): bool
+    public function uninstall(string $slug, bool $deleteData = false): bool
     {
         $this->lastError = null;
 
@@ -606,6 +695,16 @@ class PluginManager
         if (! $plugin) {
             $this->lastError = 'Plugin not found.';
 
+            return false;
+        }
+
+        if ($this->blockedByDependents($plugin)) {
+            return false;
+        }
+
+        $this->callLifecycle($plugin->service_provider, 'onUninstall', [$deleteData]);
+
+        if ($deleteData && ! $this->dropPluginData($slug)) {
             return false;
         }
 
@@ -641,6 +740,45 @@ class PluginManager
 
         // Note: We don't delete the files automatically for safety,
         // just remove from DB and deactivate.
+
+        return true;
+    }
+
+    /**
+     * Roll back every migration the plugin shipped, dropping its tables.
+     */
+    protected function dropPluginData(string $slug): bool
+    {
+        $manifest = $this->manifestFor($slug);
+        $directory = $this->findPluginDirectoryBySlug($slug);
+
+        if ($manifest === null || $directory === null || empty($manifest['migrations_path'])) {
+            return true;
+        }
+
+        $path = $directory.'/'.ltrim((string) $manifest['migrations_path'], '/');
+
+        if (! File::isDirectory($path)) {
+            return true;
+        }
+
+        try {
+            $exitCode = Artisan::call('migrate:reset', [
+                '--path' => $this->relativeMigrationPath($path),
+                '--realpath' => ! Str::startsWith($path, base_path()),
+                '--force' => true,
+            ]);
+        } catch (\Throwable $e) {
+            $this->lastError = "Could not remove the plugin's data: ".$e->getMessage();
+
+            return false;
+        }
+
+        if ($exitCode !== 0) {
+            $this->lastError = "Could not remove the plugin's data: ".trim(Artisan::output());
+
+            return false;
+        }
 
         return true;
     }
