@@ -47,9 +47,9 @@ test('contact form submission stores data and sends email', function () {
 
 test('an empty recipient setting falls back to the admin address and subject is optional', function () {
     Mail::fake();
-    Plugin::forceCreate([
+    // Discovery may already have registered the bundled plugin (it does on PostgreSQL runs).
+    Plugin::query()->updateOrCreate(['slug' => 'contact-form'], [
         'name' => 'Contact Form',
-        'slug' => 'contact-form',
         'version' => '1.0.1',
         'service_provider' => ContactFormServiceProvider::class,
         'is_active' => true,
