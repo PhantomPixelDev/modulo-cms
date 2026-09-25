@@ -32,7 +32,7 @@ class ContactFormController
         ]);
 
         $settings = $this->getSettings();
-        $subject = $validated['subject'] ?: ($settings['default_subject'] ?? null);
+        $subject = ($validated['subject'] ?? null) ?: ($settings['default_subject'] ?? null);
 
         $submission = ContactSubmission::create([
             'name' => $validated['name'],
@@ -43,8 +43,9 @@ class ContactFormController
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
         ]);
 
-        $recipient = $settings['recipient_email']
-            ?? SiteSetting::get('admin_email', config('mail.admin_address'))
+        // The setting ships as "" (not null), so fall through on empty, not just missing.
+        $recipient = ($settings['recipient_email'] ?? null)
+            ?: SiteSetting::get('admin_email', config('mail.admin_address'))
             ?: config('mail.admin_address');
 
         if ($recipient) {

@@ -2,7 +2,7 @@
   "name": "Contact Form",
   "slug": "contact-form",
   "namespace": "ContactForm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple contact form with shortcode, email notification, and DB storage.",
   "author": "Modulo CMS",
   "service_provider": "Plugins\\ContactForm\\ContactFormServiceProvider",
