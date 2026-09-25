@@ -5,9 +5,12 @@ namespace Plugins\ModuloShop;
 use App\Models\PostType;
 use App\Plugins\BasePluginServiceProvider;
 use App\Services\ShortcodeService;
+use Illuminate\Console\Scheduling\Schedule;
 use Plugins\ModuloShop\database\seeders\ShopSeeder;
+use Plugins\ModuloShop\src\Console\ExpireUnpaidOrders;
 use Plugins\ModuloShop\src\Services\CartService;
 use Plugins\ModuloShop\src\Services\ModuloShopSettings;
+use Plugins\ModuloShop\src\Services\PaymentService;
 use Plugins\ModuloShop\src\Services\ShopShortcodeService;
 
 class ModuloShopServiceProvider extends BasePluginServiceProvider
@@ -25,6 +28,9 @@ class ModuloShopServiceProvider extends BasePluginServiceProvider
         // Register cart service as singleton (session-based)
         $this->app->singleton(CartService::class);
 
+        // Per request/job: gateway settings are re-read by a long-running worker
+        $this->app->scoped(PaymentService::class);
+
         // Core owns the shortcode registry; only bind it on a core too old to.
         // Re-binding it would drop every shortcode other plugins registered.
         if (! $this->app->bound(ShortcodeService::class)) {
@@ -34,6 +40,15 @@ class ModuloShopServiceProvider extends BasePluginServiceProvider
 
     protected function bootPlugin(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([ExpireUnpaidOrders::class]);
+        }
+
+        // Abandoned online payments give their stock back
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
+            $schedule->command('shop:expire-unpaid')->everyTenMinutes()->withoutOverlapping();
+        });
+
         // Register shop shortcodes
         $this->app->singleton(ShopShortcodeService::class, function ($app) {
             return new ShopShortcodeService($app->make(ShortcodeService::class));

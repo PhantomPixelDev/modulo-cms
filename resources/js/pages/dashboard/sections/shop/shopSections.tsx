@@ -5,15 +5,17 @@ import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { ShopCouponsManager } from '../../components/shop/ShopCouponsManager';
 import { ShopOrdersManager } from '../../components/shop/ShopOrdersManager';
 import { ShopOrderView } from '../../components/shop/ShopOrderView';
+import { ShopPaymentsManager } from '../../components/shop/ShopPaymentsManager';
 import { ShopProductsManager } from '../../components/shop/ShopProductsManager';
 import { ShopSettingsForm } from '../../components/shop/ShopSettingsForm';
-import type { Paginated, ShopCoupon, ShopOrder, ShopProduct } from '../../types';
+import type { Paginated, ShopCoupon, ShopGateway, ShopOrder, ShopProduct } from '../../types';
 
 export function getShopSections({
     shopProducts,
     editProduct,
     shopOrders,
     shopCoupons,
+    shopGateways,
     shopOrder,
     shopSettings,
     can,
@@ -25,6 +27,7 @@ export function getShopSections({
     editProduct?: ShopProduct | null;
     shopOrders: Paginated<ShopOrder> | undefined;
     shopCoupons?: Paginated<ShopCoupon>;
+    shopGateways?: ShopGateway[];
     shopOrder: ShopOrder | undefined;
     shopSettings?: Record<string, any>;
     can: (perm: string) => boolean;
@@ -79,6 +82,20 @@ export function getShopSections({
         </SectionWrapper>
     );
 
+    const renderShopPayments = () => (
+        <SectionWrapper
+            title="Payments"
+            description="Choose how customers can pay. Online methods send them to the provider's secure page."
+            actions={
+                <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.shop.settings.index())}>
+                    Shop Settings
+                </Button>
+            }
+        >
+            <ShopPaymentsManager gateways={shopGateways ?? []} canManage={can('manage shop settings')} />
+        </SectionWrapper>
+    );
+
     const renderShopSettings = () => (
         <SectionWrapper title="Shop Settings" description="Configure your store settings and preferences.">
             <ShopSettingsForm
@@ -105,6 +122,7 @@ export function getShopSections({
         'shop-orders': renderShopOrders,
         'shop-orders-view': renderShopOrderView,
         'shop-coupons': renderShopCoupons,
+        'shop-payments': renderShopPayments,
         'shop-settings': renderShopSettings,
     };
 }

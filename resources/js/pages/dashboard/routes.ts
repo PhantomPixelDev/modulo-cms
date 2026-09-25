@@ -167,6 +167,11 @@ export const ROUTE = {
             show: (id: number | string) => route('dashboard.admin.shop.orders.show', { order: id }),
             update: (id: number | string) => route('dashboard.admin.shop.orders.update', { order: id }),
             destroy: (id: number | string) => route('dashboard.admin.shop.orders.destroy', { order: id }),
+            refund: (id: number | string) => route('dashboard.admin.shop.orders.refund', { order: id }),
+        },
+        payments: {
+            index: () => route('dashboard.admin.shop.payments.index'),
+            update: (gateway: string) => route('dashboard.admin.shop.payments.update', { gateway }),
         },
         coupons: {
             index: () => route('dashboard.admin.shop.coupons.index'),

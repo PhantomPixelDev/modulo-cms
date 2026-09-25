@@ -2,23 +2,24 @@
 
 namespace Plugins\ModuloShop\src\Http\Controllers;
 
-use App\Models\SiteSetting;
 use App\Services\PostService;
 use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Response;
-use Plugins\ModuloShop\src\Mail\OrderPlacedAdmin;
-use Plugins\ModuloShop\src\Mail\OrderPlacedCustomer;
 use Plugins\ModuloShop\src\Models\Coupon;
 use Plugins\ModuloShop\src\Models\Order;
 use Plugins\ModuloShop\src\Models\OrderItem;
+use Plugins\ModuloShop\src\Payments\Gateways\BankTransferGateway;
+use Plugins\ModuloShop\src\Payments\PaymentException;
+use Plugins\ModuloShop\src\Payments\PaymentGateway;
 use Plugins\ModuloShop\src\Services\CartService;
 use Plugins\ModuloShop\src\Services\ModuloShopSettings;
+use Plugins\ModuloShop\src\Services\PaymentService;
 use Plugins\ModuloShop\src\Services\StockService;
 
 class CheckoutController
@@ -31,6 +32,7 @@ class CheckoutController
         CartService $cartService,
         ReactTemplateRenderer $reactRenderer,
         protected StockService $stock,
+        protected PaymentService $payments,
     ) {
         $this->cartService = $cartService;
         $this->reactRenderer = $reactRenderer;
@@ -74,7 +76,21 @@ class CheckoutController
                 'email' => $user->email,
             ] : null,
             'countries' => $this->getCountries(),
+            'payment_methods' => $this->paymentMethods(),
         ]);
+    }
+
+    /**
+     * @return list<array{id: string, label: string, description: string, online: bool}>
+     */
+    protected function paymentMethods(): array
+    {
+        return array_values(array_map(fn (PaymentGateway $g) => [
+            'id' => $g->id(),
+            'label' => $g->label(),
+            'description' => $g->description(),
+            'online' => $g->isOnline(),
+        ], $this->payments->available()));
     }
 
     public function store(Request $request): JsonResponse|RedirectResponse
@@ -111,7 +127,7 @@ class CheckoutController
             'shipping_postcode' => 'required_if:ship_to_different,true|nullable|string|max:20',
             'shipping_country' => 'required_if:ship_to_different,true|nullable|string|size:2',
             'customer_note' => 'nullable|string|max:1000',
-            'payment_method' => 'required|string|in:cod,bank_transfer',
+            'payment_method' => ['required', 'string', Rule::in(array_keys($this->payments->available()))],
             'shipping_method' => 'nullable|string|max:100',
         ]);
 
@@ -220,12 +236,35 @@ class CheckoutController
             return back()->withErrors(['checkout' => 'Failed to process order. Please try again.']);
         }
 
-        // The order is committed from here on; nothing below may turn it into an error response.
-        $this->cartService->clear();
         app(PostService::class)->flushCache(); // stock changed
+        $gateway = $this->payments->gateway($order->payment_method);
 
-        $order->loadMissing('items');
-        $this->sendOrderPlacedEmails($order);
+        // Online: off to the provider's page. If the provider refuses, the
+        // order is undone (stock and coupon back) and the cart kept, so the
+        // customer can pick another method straight away.
+        if ($gateway?->isOnline()) {
+            try {
+                $paymentUrl = $this->payments->start($order, $gateway);
+            } catch (PaymentException $e) {
+                $this->payments->cancelUnpaid($order, 'the payment provider refused to start the payment');
+
+                // 422, not 5xx: a proxy such as Cloudflare replaces 5xx bodies,
+                // and the customer needs this message to choose another method.
+                return $request->wantsJson()
+                    ? response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => ['payment_method' => [$e->getMessage()]]], 422)
+                    : back()->withErrors(['payment_method' => $e->getMessage()]);
+            }
+
+            $this->cartService->clear();
+
+            return $request->wantsJson()
+                ? response()->json(['success' => true, 'order' => ['id' => $order->id, 'order_number' => $order->order_number, 'total' => $order->total, 'currency' => $order->currency], 'redirect' => $paymentUrl])
+                : redirect()->away($paymentUrl);
+        }
+
+        // Offline: the order is committed from here on; nothing below may turn it into an error response.
+        $this->cartService->clear();
+        $this->payments->sendPlacedEmails($order);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -279,7 +318,36 @@ class CheckoutController
 
         return $this->reactRenderer->render('Shop/OrderConfirmation', [
             'order' => $this->transformOrder($order),
+            'payment' => $this->paymentState($order, $request->query('key')),
+            'flash' => [
+                'success' => session('success'),
+                'info' => session('info'),
+                'warning' => session('warning'),
+                'error' => session('error'),
+            ],
         ]);
+    }
+
+    /**
+     * What the confirmation page can offer: pay (again) for an unpaid online
+     * order, or the bank details for a transfer.
+     *
+     * @return array<string, mixed>
+     */
+    protected function paymentState(Order $order, mixed $key): array
+    {
+        $gateway = $this->payments->gateway($order->payment_method);
+        $unpaid = ! $order->isPaid() && $order->status === Order::STATUS_PENDING;
+        $online = array_values(array_filter($this->paymentMethods(), fn ($m) => $m['online']));
+
+        return [
+            'method_label' => $gateway?->label() ?? $order->payment_method,
+            'can_pay' => $unpaid && $online !== [],
+            'pay_url' => route('shop.order.pay', ['orderNumber' => $order->order_number, 'key' => is_string($key) ? $key : null]),
+            'online_methods' => $unpaid ? $online : [],
+            'current_online' => (bool) $gateway?->isOnline(),
+            'instructions' => $unpaid && $gateway instanceof BankTransferGateway ? $gateway->instructions() : null,
+        ];
     }
 
     protected function transformOrder(Order $order): array
@@ -361,27 +429,5 @@ class CheckoutController
             'SG' => 'Singapore',
             'HK' => 'Hong Kong',
         ];
-    }
-
-    protected function sendOrderPlacedEmails(Order $order): void
-    {
-        if ($order->customer_email) {
-            try {
-                Mail::to($order->customer_email)->send(new OrderPlacedCustomer($order));
-            } catch (\Throwable $e) {
-                logger()->error('Failed to send order placed customer email: '.$e->getMessage());
-            }
-        }
-
-        $adminEmail = SiteSetting::get('admin_email', config('mail.admin_address'))
-            ?: config('mail.admin_address');
-
-        if ($adminEmail) {
-            try {
-                Mail::to($adminEmail)->send(new OrderPlacedAdmin($order));
-            } catch (\Throwable $e) {
-                logger()->error('Failed to send order placed admin email: '.$e->getMessage());
-            }
-        }
     }
 }

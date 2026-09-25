@@ -220,6 +220,9 @@ export function ShopProductsManager({
                         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.shop.coupons.index())}>
                             Coupons
                         </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.shop.payments.index())}>
+                            Payments
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.shop.settings.index())}>
                             Shop Settings
                         </Button>
@@ -318,6 +321,9 @@ export function ShopProductsManager({
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.shop.coupons.index())}>
                             Coupons
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.shop.payments.index())}>
+                            Payments
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.shop.settings.index())}>
                             Shop Settings

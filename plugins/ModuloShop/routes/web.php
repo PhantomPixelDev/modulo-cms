@@ -1,12 +1,15 @@
 <?php
 
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\CouponController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\OrderController;
+use Plugins\ModuloShop\src\Http\Controllers\Admin\PaymentSettingsController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\ShopSettingsController;
 use Plugins\ModuloShop\src\Http\Controllers\CartController;
 use Plugins\ModuloShop\src\Http\Controllers\CheckoutController;
+use Plugins\ModuloShop\src\Http\Controllers\PaymentController;
 use Plugins\ModuloShop\src\Http\Controllers\ShopController;
 
 /*
@@ -59,6 +62,22 @@ Route::prefix('shop')->group(function () {
     Route::get('/order/{orderNumber}', [CheckoutController::class, 'confirmation'])
         ->middleware('throttle:30,1')
         ->name('shop.order.confirmation');
+    Route::post('/order/{orderNumber}/pay', [PaymentController::class, 'pay'])
+        ->middleware('throttle:10,1')
+        ->name('shop.order.pay');
+
+    // Online payments: back from the provider's page, and its server notifications
+    Route::get('/payment/{gateway}/return/{orderNumber}', [PaymentController::class, 'return'])
+        ->middleware('throttle:30,1')
+        ->name('shop.payment.return');
+    Route::get('/payment/{gateway}/cancel/{orderNumber}', [PaymentController::class, 'cancel'])
+        ->middleware('throttle:30,1')
+        ->name('shop.payment.cancel');
+    // Called by the provider, not the browser: no CSRF token; each gateway verifies the sender
+    Route::post('/payment/{gateway}/webhook', [PaymentController::class, 'webhook'])
+        ->withoutMiddleware([ValidateCsrfToken::class])
+        ->middleware('throttle:120,1')
+        ->name('shop.payment.webhook');
 
     // Product single page (must be last due to catch-all slug)
     Route::get('/{slug}', [ShopController::class, 'show'])
@@ -111,6 +130,13 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
             ->name('orders.destroy');
 
         // Shop settings
+        Route::get('/payments', [PaymentSettingsController::class, 'index'])
+            ->name('payments.index');
+        Route::put('/payments/{gateway}', [PaymentSettingsController::class, 'update'])
+            ->name('payments.update');
+        Route::post('/orders/{order}/refund', [OrderController::class, 'refund'])
+            ->name('orders.refund');
+
         Route::get('/coupons', [CouponController::class, 'index'])
             ->name('coupons.index');
         Route::post('/coupons', [CouponController::class, 'store'])

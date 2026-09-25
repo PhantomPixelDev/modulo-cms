@@ -1,7 +1,9 @@
 import SEOHead from '@/components/SEOHead';
 import { Link } from '@inertiajs/react';
-import { CheckCircle, CreditCard, Mail, MapPin, Package, ShoppingBag } from 'lucide-react';
+import { CheckCircle, Clock, CreditCard, Landmark, Mail, MapPin, Package, ShoppingBag, XCircle } from 'lucide-react';
+import { useState } from 'react';
 import Layout from '../Layout';
+import { formatMoney } from './totals';
 
 interface OrderItem {
     id: number;
@@ -49,27 +51,50 @@ interface Order {
         country: string;
     };
     payment_method: string;
+    shipping_method?: string | null;
+    coupon_code?: string | null;
+    prices_include_tax?: boolean;
     customer_note?: string;
     items: OrderItem[];
     created_at: string;
 }
 
+interface PaymentState {
+    method_label: string;
+    can_pay: boolean;
+    pay_url: string;
+    online_methods: { id: string; label: string; description: string }[];
+    current_online: boolean;
+    instructions: string | null;
+}
+
 interface OrderConfirmationProps {
     order?: Order;
+    payment?: PaymentState;
+    flash?: { success?: string | null; info?: string | null; warning?: string | null; error?: string | null };
     site?: any;
     theme?: any;
     menus?: any;
 }
 
-export default function OrderConfirmation({ order, site, theme, menus }: OrderConfirmationProps) {
+export default function OrderConfirmation({ order, payment, flash, site, theme, menus }: OrderConfirmationProps) {
     const safeSite = site && typeof site === 'object' ? site : { name: 'Shop' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
 
-    const formatPrice = (price: number, currency = 'USD') => {
-        const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-        return `${symbols[currency] || '$'}${price.toFixed(2)}`;
-    };
+    const formatPrice = formatMoney;
+    const csrf = typeof document !== 'undefined' ? (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '') : '';
+    const [payWith, setPayWith] = useState(
+        payment?.online_methods.find((m) => payment.current_online && m.id === order?.payment_method)?.id ?? payment?.online_methods[0]?.id ?? '',
+    );
+    const paid = order?.payment_status === 'paid';
+    const cancelled = order?.status === 'cancelled' || order?.status === 'refunded';
+    const flashes = [
+        { tone: 'success', text: flash?.success },
+        { tone: 'info', text: flash?.info },
+        { tone: 'warning', text: flash?.warning },
+        { tone: 'error', text: flash?.error },
+    ].filter((f) => f.text);
 
     const formatAddress = (address: Order['billing_address']) => {
         const parts = [
@@ -81,14 +106,7 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
         return parts;
     };
 
-    const getPaymentMethodLabel = (method: string) => {
-        const labels: Record<string, string> = {
-            cod: 'Cash on Delivery',
-            bank_transfer: 'Bank Transfer',
-            stripe: 'Credit Card',
-        };
-        return labels[method] || method;
-    };
+    const getPaymentMethodLabel = (method: string) => payment?.method_label ?? method;
 
     if (!order) {
         return (
@@ -112,18 +130,109 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
 
             <div>
                 <div className="mx-auto max-w-4xl">
-                    {/* Success Message */}
-                    <div className="mb-8 rounded-xl border bg-card p-8 text-center shadow-xs">
-                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
-                            <CheckCircle className="h-12 w-12 text-success" />
+                    {flashes.map((f) => (
+                        <div
+                            key={f.tone}
+                            role={f.tone === 'error' ? 'alert' : 'status'}
+                            className={`mb-4 rounded-xl border p-4 ${
+                                f.tone === 'success'
+                                    ? 'border-success/30 bg-success/10 text-success'
+                                    : f.tone === 'error'
+                                      ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                                      : 'border-warning/30 bg-warning/10 text-foreground'
+                            }`}
+                        >
+                            {f.text}
                         </div>
-                        <h1 className="mb-2 text-3xl font-semibold tracking-tight text-foreground">Thank you for your order!</h1>
-                        <p className="mb-4 text-muted-foreground">Your order has been received and is being processed.</p>
+                    ))}
+
+                    {/* Status Message */}
+                    <div className="mb-8 rounded-xl border bg-card p-8 text-center shadow-xs">
+                        <div
+                            className={`mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full ${
+                                cancelled ? 'bg-destructive/10' : payment?.can_pay ? 'bg-warning/15' : 'bg-success/10'
+                            }`}
+                        >
+                            {cancelled ? (
+                                <XCircle className="h-12 w-12 text-destructive" />
+                            ) : payment?.can_pay ? (
+                                <Clock className="h-12 w-12 text-warning-foreground" />
+                            ) : (
+                                <CheckCircle className="h-12 w-12 text-success" />
+                            )}
+                        </div>
+                        <h1 className="mb-2 text-3xl font-semibold tracking-tight text-foreground">
+                            {cancelled
+                                ? 'This order was cancelled'
+                                : payment?.can_pay
+                                  ? 'Your order is waiting for payment'
+                                  : 'Thank you for your order!'}
+                        </h1>
+                        <p className="mb-4 text-muted-foreground">
+                            {cancelled
+                                ? 'Nothing is owed for it. Place a new order if you still want the items.'
+                                : paid
+                                  ? 'Your payment has been received and your order is being processed.'
+                                  : payment?.can_pay
+                                    ? 'Complete the payment below and we will start on your order.'
+                                    : 'Your order has been received and is being processed.'}
+                        </p>
                         <div className="inline-flex items-center gap-2 rounded-lg bg-muted px-4 py-2">
                             <span className="text-muted-foreground">Order Number:</span>
                             <span className="font-bold text-foreground">{order.order_number}</span>
                         </div>
                     </div>
+
+                    {payment?.instructions && (
+                        <div className="mb-8 rounded-xl border bg-card p-6 shadow-xs">
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                <Landmark className="h-5 w-5 text-primary" />
+                                How to pay
+                            </h2>
+                            <p className="mb-3 text-sm text-muted-foreground">
+                                Transfer {formatPrice(order.total, order.currency)} with{' '}
+                                <strong className="text-foreground">{order.order_number}</strong> as the reference. We ship once it arrives.
+                            </p>
+                            <p className="text-sm whitespace-pre-line text-foreground">{payment.instructions}</p>
+                        </div>
+                    )}
+
+                    {payment?.can_pay && payment.online_methods.length > 0 && (
+                        <form method="POST" action={payment.pay_url} className="mb-8 rounded-xl border bg-card p-6 shadow-xs">
+                            <input type="hidden" name="_token" value={csrf} />
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                <CreditCard className="h-5 w-5 text-primary" />
+                                Pay for this order
+                            </h2>
+                            <div className="space-y-3">
+                                {payment.online_methods.map((method) => (
+                                    <label
+                                        key={method.id}
+                                        className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent"
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="payment_method"
+                                            value={method.id}
+                                            checked={payWith === method.id}
+                                            onChange={() => setPayWith(method.id)}
+                                            className="size-4 accent-primary"
+                                        />
+                                        <div>
+                                            <span className="font-medium text-foreground">{method.label}</span>
+                                            {method.description && <p className="text-sm text-muted-foreground">{method.description}</p>}
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                            <button
+                                type="submit"
+                                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 font-semibold text-white transition-colors hover:bg-primary/90"
+                            >
+                                Pay {formatPrice(order.total, order.currency)}
+                            </button>
+                        </form>
+                    )}
 
                     <div className="grid gap-8 md:grid-cols-2">
                         {/* Order Details */}
@@ -235,17 +344,17 @@ export default function OrderConfirmation({ order, site, theme, menus }: OrderCo
                             </div>
                             {order.discount > 0 && (
                                 <div className="flex justify-between text-success">
-                                    <span>Discount</span>
+                                    <span>Discount{order.coupon_code ? ` (${order.coupon_code})` : ''}</span>
                                     <span>-{formatPrice(order.discount, order.currency)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between text-muted-foreground">
-                                <span>Shipping</span>
+                                <span>Shipping{order.shipping_method ? ` (${order.shipping_method})` : ''}</span>
                                 <span>{order.shipping > 0 ? formatPrice(order.shipping, order.currency) : 'Free'}</span>
                             </div>
                             {order.tax > 0 && (
                                 <div className="flex justify-between text-muted-foreground">
-                                    <span>Tax</span>
+                                    <span>{order.prices_include_tax ? 'Includes tax' : 'Tax'}</span>
                                     <span>{formatPrice(order.tax, order.currency)}</span>
                                 </div>
                             )}

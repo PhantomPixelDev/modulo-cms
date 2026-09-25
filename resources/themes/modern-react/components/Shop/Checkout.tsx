@@ -28,12 +28,13 @@ interface CheckoutProps {
         email: string;
     } | null;
     countries?: Record<string, string>;
+    payment_methods?: { id: string; label: string; description: string; online: boolean }[];
     site?: any;
     theme?: any;
     menus?: any;
 }
 
-export default function Checkout({ cart, totals, user, countries, site, theme, menus }: CheckoutProps) {
+export default function Checkout({ cart, totals, user, countries, payment_methods, site, theme, menus }: CheckoutProps) {
     const safeSite = site && typeof site === 'object' ? site : { name: 'Shop' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -42,6 +43,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [shipToDifferent, setShipToDifferent] = useState(false);
+    const methods = payment_methods ?? [];
     const [liveTotals, setLiveTotals] = useState<ShopTotals | undefined>(totals);
     const [shippingBusy, setShippingBusy] = useState(false);
     const shippingMethods = liveTotals?.shipping_methods ?? [];
@@ -75,7 +77,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
         shipping_postcode: '',
         shipping_country: 'US',
         customer_note: '',
-        payment_method: 'cod',
+        payment_method: payment_methods?.[0]?.id ?? '',
     });
 
     const formatPrice = formatMoney;
@@ -451,34 +453,31 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                         Payment Method
                                     </h2>
                                     <div className="space-y-3">
-                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent">
-                                            <input
-                                                type="radio"
-                                                name="payment_method"
-                                                value="cod"
-                                                checked={form.payment_method === 'cod'}
-                                                onChange={handleChange}
-                                                className="size-4 accent-primary"
-                                            />
-                                            <div>
-                                                <span className="font-medium text-foreground">Cash on Delivery</span>
-                                                <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
-                                            </div>
-                                        </label>
-                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent">
-                                            <input
-                                                type="radio"
-                                                name="payment_method"
-                                                value="bank_transfer"
-                                                checked={form.payment_method === 'bank_transfer'}
-                                                onChange={handleChange}
-                                                className="size-4 accent-primary"
-                                            />
-                                            <div>
-                                                <span className="font-medium text-foreground">Bank Transfer</span>
-                                                <p className="text-sm text-muted-foreground">Make payment directly to our bank account</p>
-                                            </div>
-                                        </label>
+                                        {methods.length === 0 && (
+                                            <p className="text-sm text-muted-foreground">
+                                                No payment methods are available right now. Please contact us.
+                                            </p>
+                                        )}
+                                        {methods.map((method) => (
+                                            <label
+                                                key={method.id}
+                                                className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="payment_method"
+                                                    value={method.id}
+                                                    checked={form.payment_method === method.id}
+                                                    onChange={handleChange}
+                                                    className="size-4 accent-primary"
+                                                />
+                                                <div>
+                                                    <span className="font-medium text-foreground">{method.label}</span>
+                                                    {method.description && <p className="text-sm text-muted-foreground">{method.description}</p>}
+                                                </div>
+                                            </label>
+                                        ))}
+                                        {errors.payment_method && <p className="text-sm text-destructive">{errors.payment_method}</p>}
                                     </div>
                                 </div>
 
@@ -536,7 +535,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
 
                                     <button
                                         type="submit"
-                                        disabled={submitting}
+                                        disabled={submitting || methods.length === 0}
                                         className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-primary px-6 py-4 font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         {submitting ? (
@@ -546,7 +545,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                             </>
                                         ) : (
                                             <>
-                                                Place Order
+                                                {methods.find((m) => m.id === form.payment_method)?.online ? 'Continue to payment' : 'Place Order'}
                                                 <ChevronRight className="h-5 w-5" />
                                             </>
                                         )}
