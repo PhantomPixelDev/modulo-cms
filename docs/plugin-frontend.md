@@ -15,12 +15,13 @@ So a plugin brings its own bundle and registers what it provides at runtime.
 
 ## The contract
 
-The core publishes `window.Modulo` before any plugin loads:
+The core publishes `window.Modulo` before any plugin loads (runtime contract
+`1.1.0`):
 
 ```ts
 window.Modulo = {
-  version: '1.0.0',
-  vendor: { react, reactDOM, inertia },
+  version: '1.1.0',
+  vendor: { react, reactDOM, jsxRuntime, inertia },
   registerComponents(slug, components),
   getComponent(slug, name),
   registered(),
@@ -29,40 +30,32 @@ window.Modulo = {
 
 **Your plugin must not bundle its own React.** Two copies of React means two
 independent hook dispatchers, and your components will crash the moment they call a
-hook. Mark them external and map them onto the instances the core exposes — that is
-what `vendor` is for.
+hook. A plugin bundle therefore leaves `react`, `react-dom`, `react/jsx-runtime` and
+`@inertiajs/react` as bare imports, and every page carries an **import map** that
+points those names at shims in `public/modulo-sdk/`, which re-export the core's own
+instances from `window.Modulo.vendor`.
+
+(An earlier version of this page mapped them with Rollup `output.globals`. That option
+only applies to IIFE/UMD builds; an ES bundle kept `import 'react'`, which a browser
+cannot resolve, so that recipe never worked.)
 
 ## Building a plugin bundle
 
-`vite.config.ts` in your plugin:
+Use the preset in `packages/plugin-sdk` (`@modulo/plugin-sdk`):
 
-```ts
-import { defineConfig } from 'vite';
+```js
+// vite.config.js in your plugin
 import react from '@vitejs/plugin-react';
+import { moduloPlugin } from '@modulo/plugin-sdk';
 
-export default defineConfig({
-    plugins: [react()],
-    build: {
-        lib: {
-            entry: 'resources/js/index.tsx',
-            formats: ['es'],
-            fileName: () => 'plugin.js',
-        },
-        outDir: 'resources/dist',
-        rollupOptions: {
-            // Never bundle these; use the core's instances.
-            external: ['react', 'react-dom', 'react/jsx-runtime', '@inertiajs/react'],
-            output: {
-                globals: {
-                    react: 'window.Modulo.vendor.react',
-                    'react-dom': 'window.Modulo.vendor.reactDOM',
-                    '@inertiajs/react': 'window.Modulo.vendor.inertia',
-                },
-            },
-        },
-    },
-});
+export default moduloPlugin({ plugins: [react()] });
+// options: entry (default resources/js/index.tsx), outDir (default resources/dist)
 ```
+
+It builds `resources/dist/plugin.js` as an ES module with the shared imports left
+external. Until the package is published, depend on it by path
+(`"@modulo/plugin-sdk": "file:../../packages/plugin-sdk"` from a plugin inside the
+repository). Its `runtime.d.ts` types `window.Modulo`.
 
 `resources/js/index.tsx`:
 
@@ -70,7 +63,7 @@ export default defineConfig({
 import Orders from './screens/Orders';
 import Settings from './screens/Settings';
 
-window.Modulo.registerComponents('my-plugin', {
+window.Modulo!.registerComponents('my-plugin', {
     Orders,
     // Lazy entries are declared as { load }, not as a bare function. A function
     // component and a thunk returning one are both `typeof 'function'` and
@@ -109,6 +102,18 @@ itself on `window`; the SSR renderer has neither. SSR renders nothing for them a
 client fills them in on hydration, rather than failing the whole page.
 
 If a page must be server-rendered, keep it in the theme or the core.
+
+## Keeping the shims current
+
+The shims are generated from the installed packages' real export lists:
+
+```bash
+npm run build:shims
+```
+
+Run it after upgrading React, ReactDOM or Inertia. `resources/js/plugin-sdk.test.ts`
+fails when a shim is missing an export, so a dependency bump cannot silently break
+plugins that import a new API.
 
 ## Styling
 

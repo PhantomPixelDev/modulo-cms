@@ -2,6 +2,7 @@ import * as Inertia from '@inertiajs/react';
 import type { ComponentType } from 'react';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import * as JsxRuntime from 'react/jsx-runtime';
 
 /**
  * The contract between the core bundle and a plugin's own bundle.
@@ -30,6 +31,7 @@ interface ModuloRuntime {
     vendor: {
         react: typeof React;
         reactDOM: typeof ReactDOM;
+        jsxRuntime: typeof JsxRuntime;
         inertia: typeof Inertia;
     };
     registerComponents(slug: string, components: ComponentMap): void;
@@ -40,11 +42,12 @@ interface ModuloRuntime {
 const registry = new Map<string, ComponentMap>();
 
 const runtime: ModuloRuntime = {
-    version: '1.0.0',
+    version: '1.1.0',
 
     vendor: {
         react: React,
         reactDOM: ReactDOM,
+        jsxRuntime: JsxRuntime,
         inertia: Inertia,
     },
 

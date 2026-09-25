@@ -53,6 +53,17 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
     <!-- Scripts -->
+    {{-- Plugin bundles import react, react-dom, react/jsx-runtime and
+         @inertiajs/react as bare specifiers; these shims hand them the core's
+         own instances (window.Modulo.vendor). Must precede every module script. --}}
+    <script type="importmap">
+    {"imports": {
+        "react": "{{ asset('modulo-sdk/react.js') }}",
+        "react-dom": "{{ asset('modulo-sdk/react-dom.js') }}",
+        "react/jsx-runtime": "{{ asset('modulo-sdk/react-jsx-runtime.js') }}",
+        "@inertiajs/react": "{{ asset('modulo-sdk/inertia-react.js') }}"
+    }}
+    </script>
     @routes
     @php
         $hasViteAssets = file_exists(public_path('hot')) || file_exists(public_path('build/manifest.json'));
