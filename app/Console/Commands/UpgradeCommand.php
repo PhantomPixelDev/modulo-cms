@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\UpgradePreflight;
+use App\Support\ActivityLog;
 use App\Support\InstallChannel;
 use App\Support\SchemaVersion;
 use App\Support\Version;
@@ -45,6 +46,7 @@ class UpgradeCommand extends Command
         }
 
         $pending = $this->pendingMigrations();
+        $from = SchemaVersion::recorded();
 
         if ($pending === []) {
             $this->info('No pending migrations.');
@@ -141,6 +143,11 @@ class UpgradeCommand extends Command
         }
 
         SchemaVersion::recordCurrent();
+        ActivityLog::record('core.upgraded', 'Upgraded Modulo to '.Version::current(), null, [
+            'from' => $from,
+            'to' => Version::current(),
+            'migrations' => count($pending),
+        ]);
 
         // From here on the schema matches the code, so the site comes back up
         // even if rebuilding the caches goes wrong -- a cold cache is only slow.

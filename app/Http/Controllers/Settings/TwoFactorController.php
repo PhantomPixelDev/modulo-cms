@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Support\ActivityLog;
 use App\Support\Totp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -61,6 +62,7 @@ class TwoFactorController extends Controller
 
         $user->forceFill(['two_factor_confirmed_at' => now()])->save();
         $codes = $user->regenerateRecoveryCodes();
+        ActivityLog::record('2fa.enabled', 'Turned on two-factor authentication', $user);
 
         return back()
             ->with('two_factor_recovery_codes', $codes)
@@ -70,6 +72,8 @@ class TwoFactorController extends Controller
     public function regenerateRecoveryCodes(Request $request): RedirectResponse
     {
         abort_unless($request->user()->hasTwoFactorEnabled(), 404);
+
+        ActivityLog::record('2fa.recovery_codes', 'Generated new two-factor recovery codes', $request->user());
 
         return back()->with('two_factor_recovery_codes', $request->user()->regenerateRecoveryCodes());
     }
@@ -88,6 +92,8 @@ class TwoFactorController extends Controller
             'two_factor_confirmed_at' => null,
             'two_factor_last_step' => null,
         ])->save();
+
+        ActivityLog::record('2fa.disabled', 'Turned off two-factor authentication', $user);
 
         return back()->with('success', 'Two-factor authentication is off.');
     }

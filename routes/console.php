@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Activity;
 use App\Models\SiteSetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -12,6 +13,9 @@ Schedule::command('modulo:db-backup')->dailyAt('03:15')->onOneServer();
 // Weekly full backup (database, media, plugins), pruned to MODULO_BACKUP_KEEP
 Schedule::command('modulo:backup')->weeklyOn(0, '03:45')->onOneServer()
     ->when(fn () => (bool) config('backups.schedule'));
+
+// Activity log retention (security.activity_retention_days)
+Schedule::command('model:prune', ['--model' => [Activity::class]])->dailyAt('04:30')->onOneServer();
 
 // Daily core + plugin update check; admins are mailed once per new set of updates
 Schedule::command('modulo:check-updates')->dailyAt('04:10')->onOneServer()

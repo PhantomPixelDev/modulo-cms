@@ -1,3 +1,4 @@
+import type { ActivityProps } from './sections/system/activitySection';
 import type { BackupsProps, UpdateCenterProps } from './sections/system/systemSections';
 // Define base interfaces to avoid dependency on @/types
 export interface BaseEntity {
@@ -292,6 +293,7 @@ export interface DashboardProps {
     // System
     updateCenter?: UpdateCenterProps;
     backups?: BackupsProps;
+    activity?: ActivityProps;
     // Plugins
     plugins?: any[];
     plugin?: any;

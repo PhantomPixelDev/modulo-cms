@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SiteSetting;
 use App\Services\SiteSettingsService;
+use App\Support\ActivityLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -89,6 +90,7 @@ class SiteSettingsController extends Controller
         $data = $request->validate($rules);
 
         $this->settings->updateGroup($group, $data, $currentLocale);
+        ActivityLog::record('settings.updated', 'Updated '.$group.' settings', null, ['group' => $group, 'keys' => array_keys($data)]);
 
         return back()->with('success', ucfirst($group).' settings updated successfully');
     }

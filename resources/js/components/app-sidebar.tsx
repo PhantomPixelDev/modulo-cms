@@ -16,7 +16,7 @@ import { adminNav, mainNav } from '@/config/nav';
 import { useAcl } from '@/lib/acl';
 import { getIcon } from '@/lib/icons';
 import { Link, usePage } from '@inertiajs/react';
-import { Archive, Boxes, FileText, FolderTree, MessageSquare, RefreshCw } from 'lucide-react';
+import { Archive, Boxes, FileText, FolderTree, History, MessageSquare, RefreshCw } from 'lucide-react';
 import React from 'react';
 import AppLogo from './app-logo';
 
@@ -253,6 +253,20 @@ export function AppSidebar() {
                                     </SidebarMenuBadge>
                                 )}
                             </SidebarMenuItem>
+                            {isAdmin() && (
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={url.startsWith('/dashboard/admin/system/activity')}
+                                        tooltip={{ children: 'Activity' }}
+                                    >
+                                        <Link href="/dashboard/admin/system/activity" prefetch>
+                                            <History />
+                                            <span>Activity</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            )}
                             {isAdmin() && (
                                 <SidebarMenuItem>
                                     <SidebarMenuButton

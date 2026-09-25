@@ -6,6 +6,7 @@ import { router } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, Download, ExternalLink, Loader2, RefreshCw, ShieldAlert, Trash2 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
+import { ActivityPage, type ActivityProps } from './activitySection';
 
 declare const route: (name: string, params?: any) => string;
 
@@ -402,11 +403,14 @@ function BackupsPage({ data }: { data: BackupsProps }) {
 export function getSystemSections({
     updateCenter,
     backups,
+    activity,
 }: {
     updateCenter?: UpdateCenterProps;
     backups?: BackupsProps;
+    activity?: ActivityProps;
 }): Record<string, () => ReactNode> {
     return {
+        activity: () => (activity ? <ActivityPage data={activity} /> : null),
         updates: () => (updateCenter ? <UpdatesPage data={updateCenter} /> : null),
         backups: () => (backups ? <BackupsPage data={backups} /> : null),
     };

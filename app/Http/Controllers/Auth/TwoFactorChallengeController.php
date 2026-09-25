@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\ActivityLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,7 @@ class TwoFactorChallengeController extends Controller
 
         if (! $valid) {
             RateLimiter::hit($key);
+            ActivityLog::record('auth.2fa_failed', 'Wrong two-factor code', $user, [], $user->getKey());
 
             throw ValidationException::withMessages([
                 filled($data['recovery_code'] ?? null) ? 'recovery_code' : 'code' => 'That code is not valid.',

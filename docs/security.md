@@ -116,3 +116,22 @@ A user who has lost both their device and recovery codes can be reset by an oper
 ```bash
 php artisan tinker --execute="App\\Models\\User::where('email', 'someone@example.com')->first()->forceFill(['two_factor_secret' => null, 'two_factor_confirmed_at' => null, 'two_factor_recovery_codes' => null])->save();"
 ```
+
+## Activity log
+
+**System → Activity** (administrators only) is the audit trail: sign-ins, failed and
+locked-out sign-ins, wrong two-factor codes, password resets; creating, changing and
+deleting posts, pages, users, roles, post types, taxonomies and menus; role and
+permission assignments; settings saved; plugins and themes installed, activated,
+updated and removed; two-factor turned on or off; backups created, downloaded, deleted
+and restored; and core upgrades. Each entry records who, when, the IP address and user
+agent, and what changed (attribute names, never values of passwords, tokens or 2FA
+secrets). Filter by area, by user, or search descriptions.
+
+Entries older than `MODULO_ACTIVITY_RETENTION_DAYS` (180) are pruned daily at 04:30
+(`php artisan model:prune --model="App\Models\Activity"`); `0` keeps everything.
+Plugins can add their own entries:
+
+```php
+App\Support\ActivityLog::record('my-plugin.exported', 'Exported 120 orders', $model, ['format' => 'csv']);
+```

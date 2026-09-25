@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\BackupManager;
+use App\Support\ActivityLog;
 use App\Support\SchemaVersion;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -53,6 +54,7 @@ class RestoreCommand extends Command
 
         try {
             $restored = $backups->restore($archive, $parts);
+            ActivityLog::record('backup.restored', 'Restored '.implode(', ', $restored).' from '.basename($archive));
             $this->info('Restored: '.(implode(', ', $restored) ?: 'nothing'));
 
             if (in_array('database', $restored, true) && ! $this->option('no-migrate')) {

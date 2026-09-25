@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
@@ -118,6 +119,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
             Route::post('/updates/plugins', [UpdateCenterController::class, 'updateAllPlugins'])->name('updates.plugins.all');
             Route::post('/updates/plugins/{slug}', [UpdateCenterController::class, 'updatePlugin'])->name('updates.plugins.update');
             Route::post('/updates/themes/{slug}', [UpdateCenterController::class, 'updateTheme'])->name('updates.themes.update');
+
+            Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
 
             Route::get('/backups', [BackupController::class, 'index'])->name('backups');
             Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');

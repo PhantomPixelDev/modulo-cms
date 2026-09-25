@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Policies\RolePolicy;
+use App\Support\ActivityLog;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -67,6 +69,7 @@ class RoleController extends Controller
         ]);
 
         $role->syncPermissions($permissions);
+        ActivityLog::record('role.permissions', 'Set the permissions of role "'.$role->name.'"', $role instanceof Model ? $role : null, ['permissions' => array_values((array) $permissions)]);
 
         return redirect()->route('dashboard.admin.roles.index')
             ->with('success', 'Role created successfully.');
@@ -113,6 +116,7 @@ class RoleController extends Controller
 
         if ($permissions !== null) {
             $role->syncPermissions($permissions);
+            ActivityLog::record('role.permissions', 'Set the permissions of role "'.$role->name.'"', $role, ['permissions' => array_values((array) $permissions)]);
         }
 
         return redirect()->route('dashboard.admin.roles.index')

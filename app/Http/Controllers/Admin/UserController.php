@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
@@ -85,6 +86,7 @@ class UserController extends Controller
 
         if ($roleNames) {
             $user->assignRole($roleNames);
+            ActivityLog::record('user.roles', 'Set the roles of "'.$user->email.'"', $user, ['roles' => array_values((array) $roleNames)]);
         }
 
         return redirect()->route('dashboard.admin.users.index')
@@ -140,6 +142,7 @@ class UserController extends Controller
 
         if ($roleNames !== null) {
             $user->syncRoles($roleNames);
+            ActivityLog::record('user.roles', 'Set the roles of "'.$user->email.'"', $user, ['roles' => array_values((array) $roleNames)]);
         }
 
         return redirect()->route('dashboard.admin.users.index')
