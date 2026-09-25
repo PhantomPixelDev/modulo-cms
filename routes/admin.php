@@ -52,6 +52,9 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Specific route for listing taxonomy terms by taxonomy slug
         Route::get('taxonomies/{taxonomy}/terms', [TaxonomyTermController::class, 'indexByTaxonomy'])->name('taxonomy-terms.byTaxonomy');
         Route::resource('templates', TemplateController::class);
+        // Before the resource: "registry" would otherwise be taken for a {theme} id.
+        Route::get('/themes/registry', [ThemeController::class, 'registry'])->name('themes.registry');
+        Route::post('/themes/registry/install', [ThemeController::class, 'installFromRegistry'])->name('themes.registry.install');
         Route::resource('themes', ThemeController::class)->only(['index', 'show', 'update', 'destroy']);
 
         // Theme-specific routes
@@ -114,6 +117,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
             Route::post('/updates/check', [UpdateCenterController::class, 'check'])->name('updates.check');
             Route::post('/updates/plugins', [UpdateCenterController::class, 'updateAllPlugins'])->name('updates.plugins.all');
             Route::post('/updates/plugins/{slug}', [UpdateCenterController::class, 'updatePlugin'])->name('updates.plugins.update');
+            Route::post('/updates/themes/{slug}', [UpdateCenterController::class, 'updateTheme'])->name('updates.themes.update');
 
             Route::get('/backups', [BackupController::class, 'index'])->name('backups');
             Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');

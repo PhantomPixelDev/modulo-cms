@@ -58,19 +58,82 @@ So: **after adding or changing a theme, rebuild.**
 npm run build
 ```
 
-This is also why themes ship with the core rather than being installed at
-runtime the way plugins are. The production image contains no Node, so it
-cannot rebuild, and a theme dropped onto a running server would not work. If
-you need a genuinely runtime-loadable frontend, that is what the plugin runtime
-is for — see [plugin-frontend.md](plugin-frontend.md).
+This is also why themes *with their own components* ship with the core. The
+production image contains no Node, so it cannot rebuild. What can be installed
+at runtime is a **child theme** (below).
+
+## Child themes
+
+A child theme names a `parent` and restyles it: its own stylesheets, colours,
+screenshots, fonts and strings, over the parent's components.
+
+```
+my-child/
+  theme.json
+  assets/css/style.css
+  assets/screenshot.png
+  lang/en.json          # only the strings it changes
+```
+
+```json
+{
+  "name": "Ocean",
+  "slug": "ocean",
+  "version": "1.0.0",
+  "parent": "modern-react",
+  "styles": ["assets/css/style.css"],
+  "colors": { "primary": "oklch(0.55 0.15 230)" }
+}
+```
+
+- **Components** come from the child when it ships the file (a bundled child theme
+  under `resources/themes`, built with the site), otherwise from the parent, up the
+  chain. `templates` may be omitted.
+- **Styles** listed in `styles` (only `assets/…*.css`) are published and linked after
+  the parent's, so the child's rules win. The design tokens in the parent's
+  `theme.css` (`--primary`, `--radius`, `--background`, …) are the intended hooks.
+- **`colors.primary`** overrides the brand colour without any CSS.
+- **Strings** from the child's `lang/<locale>.json` override the parent's key by key.
+
+The parent must be installed first, and cannot be uninstalled while a child builds on
+it.
+
+### Installing from the registry
+
+**Themes → Browse registry** lists the registry's `themes` (same index as plugins, see
+[plugins.md](plugins.md#registry-format)) and installs one with a click. The package
+is downloaded over HTTPS from an allowlisted host and checked against the registry's
+sha256, like a plugin. Then:
+
+- only child themes are accepted;
+- only `json`, `css`, `map`, images, fonts, `md`/`txt` and `LICENSE`/`README` files
+  may be in it — PHP, JavaScript and React components are refused, so a theme can
+  never run code on the server;
+- it is unpacked into `storage/app/themes/<slug>` (`MODULO_THEME_INSTALL_PATH`), which
+  lives on the persistent storage volume, and its assets are published to
+  `public/themes/<slug>` (the shared `theme_assets` volume in Docker).
+
+Registry theme updates show on **System → Updates**. Uninstalling a runtime theme
+removes its files.
 
 ## Styling
 
 Tailwind is compiled from the core's own sources, and its scan covers
 `resources/`, so classes used in a theme under `resources/themes` are picked
-up. Theme CSS declared in `theme.json` under `assets` is published to
-`public/themes/<slug>/` but **nothing currently emits a link tag for it**, so
-prefer Tailwind classes until that is wired up.
+up. A stylesheet listed in `theme.json` under `styles` (a path under `assets/`)
+is published to `public/themes/<slug>/` and linked by the Layout. A registry
+entry for a theme looks like a plugin's, plus `parent` and an optional
+`screenshot` URL:
+
+```json
+{
+  "themes": [{
+    "slug": "ocean", "name": "Ocean", "parent": "modern-react",
+    "screenshot": "https://…/ocean.png",
+    "latest": { "version": "1.0.0", "asset_url": "https://github.com/…/ocean.zip", "sha256": "…" }
+  }]
+}
+```
 
 ## Activating
 

@@ -21,6 +21,8 @@ interface LayoutProps {
     ogImage?: string;
     canonicalUrl?: string;
     theme?: {
+        /** Stylesheets from theme.json "styles" (child themes restyle this one with these). */
+        styles?: string[];
         colors?: {
             primary?: string;
             secondary?: string;
@@ -80,14 +82,16 @@ export default function Layout({
     keywords,
     ogImage,
     canonicalUrl,
-    theme,
+    theme: themeProp,
     site,
     menus,
     widgets = [],
     post,
     page,
 }: LayoutProps) {
-    const { auth } = usePage().props as any;
+    const { auth, theme: pageTheme } = usePage().props as any;
+    // Some templates do not pass the theme down; the page props always carry it.
+    const theme: LayoutProps['theme'] = themeProp ?? pageTheme;
     // Safe defaults with proper null checks - use more defensive approach
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS', tagline: '' };
     const safeMenus = menus && typeof menus === 'object' ? menus : { header: [], footer: [] };
@@ -118,6 +122,9 @@ export default function Layout({
         <>
             <Head>
                 <title>{pageTitle}</title>
+                {(theme?.styles ?? []).map((href) => (
+                    <link key={href} rel="stylesheet" href={href} />
+                ))}
                 {contentDescription && <meta name="description" content={contentDescription} />}
                 {keywords && <meta name="keywords" content={keywords} />}
                 <meta name="viewport" content="width=device-width, initial-scale=1" />

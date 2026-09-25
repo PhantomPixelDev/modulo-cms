@@ -6,9 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\InstallThemeRequest;
 use App\Http\Requests\UpdateThemeRequest;
 use App\Models\Theme;
+use App\Services\Plugins\PluginRegistry;
+use App\Services\Plugins\PluginRequirements;
+use App\Services\ThemeInstaller;
 use App\Services\ThemeManager;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Throwable;
 
 class ThemeController extends Controller
 {
@@ -60,6 +67,66 @@ class ThemeController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['theme' => 'Failed to install theme: '.$e->getMessage()]);
         }
+    }
+
+    /**
+     * Themes in the registry, for the Browse section. JSON, fetched by the
+     * page, so the themes screen never waits on the network.
+     */
+    public function registry(PluginRegistry $registry, PluginRequirements $requirements): JsonResponse
+    {
+        $this->authorize('viewAny', Theme::class);
+
+        try {
+            $entries = $registry->themes(force: request()->boolean('refresh'));
+        } catch (Throwable $e) {
+            return response()->json(['themes' => [], 'error' => $e->getMessage()]);
+        }
+
+        $installed = Theme::pluck('version', 'slug');
+
+        return response()->json([
+            'error' => null,
+            'themes' => collect($entries)->map(function (array $entry) use ($installed, $requirements) {
+                $latest = is_array($entry['latest'] ?? null) ? $entry['latest'] : [];
+                $parent = is_string($entry['parent'] ?? null) ? $entry['parent'] : null;
+                $unmet = $requirements->unmet($latest, needActive: false);
+
+                if ($parent !== null && ! Theme::where('slug', $parent)->where('is_installed', true)->exists()) {
+                    $unmet[] = "the {$parent} theme";
+                }
+
+                return [
+                    'slug' => $entry['slug'],
+                    'name' => (string) ($entry['name'] ?? $entry['slug']),
+                    'description' => is_string($entry['description'] ?? null) ? $entry['description'] : null,
+                    'author' => is_string($entry['author'] ?? null) ? $entry['author'] : null,
+                    'screenshot' => is_string($entry['screenshot'] ?? null) && str_starts_with($entry['screenshot'], 'https://') ? $entry['screenshot'] : null,
+                    'parent' => $parent,
+                    'version' => (string) ($latest['version'] ?? ''),
+                    'installed_version' => $installed[$entry['slug']] ?? null,
+                    'unmet' => $unmet,
+                ];
+            })->values(),
+        ]);
+    }
+
+    /**
+     * Install (or update) a child theme from the registry.
+     */
+    public function installFromRegistry(Request $request, ThemeInstaller $installer): RedirectResponse
+    {
+        $this->authorize('install', Theme::class);
+
+        $slug = (string) $request->validate(['slug' => ['required', 'string', 'regex:/^[a-z0-9-]+$/']])['slug'];
+
+        try {
+            $result = $installer->install($slug);
+        } catch (Throwable $e) {
+            return back()->with('error', 'Could not install "'.$slug.'": '.$e->getMessage());
+        }
+
+        return back()->with('success', sprintf('Theme "%s" %s %s.', $slug, $result['version'], $result['updated'] ? 'updated' : 'installed'));
     }
 
     /**
@@ -132,6 +199,10 @@ class ThemeController extends Controller
 
         if ($theme->is_active) {
             return back()->withErrors(['theme' => 'Cannot uninstall active theme']);
+        }
+
+        if (Theme::where('parent_theme_id', $theme->id)->exists()) {
+            return back()->with('error', "Other installed themes build on '{$theme->name}'; uninstall them first.");
         }
 
         try {

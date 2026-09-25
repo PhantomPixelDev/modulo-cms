@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Plugin;
+use App\Models\Theme;
 use App\Services\Plugins\PluginRegistry;
 use App\Support\SystemMeta;
 use App\Support\Version;
@@ -25,6 +26,9 @@ class UpdateCenter
 
     public const LAST_CHECKED_KEY = 'updates_last_checked_at';
 
+    /** Registry versions of runtime-installed themes, as JSON {slug: version}. */
+    public const THEME_VERSIONS_KEY = 'updates_theme_versions';
+
     public function __construct(
         protected UpdateChecker $checker,
         protected PluginRegistry $registry,
@@ -39,6 +43,7 @@ class UpdateCenter
     {
         $core = $this->checker->check(force: true);
         $pluginError = $this->refreshPlugins();
+        $pluginError ??= $this->refreshThemes();
 
         SystemMeta::put(self::LAST_CHECKED_KEY, now()->toIso8601String());
         Cache::forget(self::PENDING_CACHE_KEY);
@@ -62,8 +67,9 @@ class UpdateCenter
             'commands' => $this->checker->upgradeCommands($core['latest'] ?? null),
             'plugins' => $plugins,
             'installedPlugins' => $this->installedPlugins(),
+            'themes' => $themes = $this->themeUpdates(),
             'lastCheckedAt' => SystemMeta::get(self::LAST_CHECKED_KEY),
-            'pending' => ($core['available'] ? 1 : 0) + count($plugins),
+            'pending' => ($core['available'] ? 1 : 0) + count($plugins) + count($themes),
             'enabled' => (bool) config('updates.enabled'),
             'isDev' => Version::isDev(),
         ];
@@ -81,7 +87,7 @@ class UpdateCenter
             $core = $this->checker->cached();
 
             return [
-                'count' => (($core['available'] ?? false) ? 1 : 0) + count($this->pluginUpdates()),
+                'count' => (($core['available'] ?? false) ? 1 : 0) + count($this->pluginUpdates()) + count($this->themeUpdates()),
                 'security' => (bool) ($core['security'] ?? false),
             ];
         });
@@ -123,6 +129,54 @@ class UpdateCenter
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Runtime-installed themes with a newer registry release, as stored by the
+     * last check. Bundled themes are updated with Modulo itself.
+     *
+     * @return array<int, array{slug: string, name: string, installed: string, available: string, active: bool}>
+     */
+    public function themeUpdates(): array
+    {
+        $available = json_decode((string) SystemMeta::get(self::THEME_VERSIONS_KEY), true);
+
+        if (! is_array($available) || $available === [] || ! schema_has_table('themes')) {
+            return [];
+        }
+
+        return Theme::query()->whereIn('slug', array_keys($available))->orderBy('name')->get()
+            ->filter(fn (Theme $theme) => $theme->isRuntimeInstalled()
+                && is_string($available[$theme->slug] ?? null)
+                && version_compare(Version::normalize($available[$theme->slug]), Version::normalize((string) $theme->version), '>'))
+            ->map(fn (Theme $theme) => [
+                'slug' => $theme->slug,
+                'name' => $theme->name,
+                'installed' => (string) $theme->version,
+                'available' => (string) $available[$theme->slug],
+                'active' => (bool) $theme->is_active,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return string|null The error, when the registry could not be read
+     */
+    protected function refreshThemes(): ?string
+    {
+        try {
+            $versions = collect($this->registry->themes())
+                ->mapWithKeys(fn (array $entry) => [$entry['slug'] => (string) ($entry['latest']['version'] ?? '')])
+                ->filter()
+                ->all();
+        } catch (Throwable $e) {
+            return $e->getMessage();
+        }
+
+        SystemMeta::put(self::THEME_VERSIONS_KEY, (string) json_encode($versions));
+
+        return null;
     }
 
     /**
