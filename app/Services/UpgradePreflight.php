@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Support\SchemaVersion;
+use App\Support\Version;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
@@ -34,6 +36,21 @@ class UpgradePreflight
     public function run(array $pendingMigrations): array
     {
         $results = [];
+
+        // Not tied to a migration: running an older build's upgrade against a
+        // schema a newer one already migrated is wrong whatever is pending.
+        if (SchemaVersion::isAheadOfCode()) {
+            $results[] = [
+                'status' => self::BLOCKER,
+                'title' => 'This database was upgraded by a newer Modulo',
+                'detail' => sprintf(
+                    'The schema was last upgraded by %s; this is %s. Deploy %s or newer, or restore the backup taken before that upgrade.',
+                    SchemaVersion::recorded(),
+                    Version::current(),
+                    SchemaVersion::recorded(),
+                ),
+            ];
+        }
 
         foreach ($this->checks() as $migration => $check) {
             foreach ($pendingMigrations as $pending) {

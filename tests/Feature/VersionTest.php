@@ -58,8 +58,8 @@ it('honours an explicitly configured install channel', function () {
 });
 
 it('reports that a docker install cannot update itself in place', function () {
-    // The image is immutable, opcache runs with validate_timestamps off, and
-    // public/ is baked into the nginx image at build time.
+    // The image is immutable and public/ is baked into the nginx image at
+    // build time.
     config(['version.channel' => InstallChannel::DOCKER]);
 
     expect(InstallChannel::isDocker())->toBeTrue()

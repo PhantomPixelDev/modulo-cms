@@ -6,9 +6,9 @@
 #
 #   MODULO_BUILD=1 ./modulo.sh up prod
 #
-# Images built this way are not stamped with a version, so they report
-# themselves as 0.0.0-dev. Pass MODULO_VERSION as a build argument if you need
-# a local build to claim a specific one.
+# Images built this way are not stamped with a version, so they report the
+# committed VERSION with a -dev suffix (e.g. 0.1.2-dev). Pass MODULO_VERSION as
+# a build argument if you need a local build to claim a specific one.
 
 services:
   app:

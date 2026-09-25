@@ -1,7 +1,9 @@
 import { router } from '@inertiajs/react';
+import { SearchIcon, SearchX } from 'lucide-react';
 import React, { useState } from 'react';
 import Layout from './Layout';
 import PostCard from './partials/PostCard';
+import { buttonClass, EmptyState, PageHeader, Pagination, useThemeT } from './partials/ui';
 
 interface SearchProps {
     posts?: {
@@ -20,6 +22,7 @@ interface SearchProps {
 }
 
 const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...props }) => {
+    const tt = useThemeT();
     const [query, setQuery] = useState(searchQuery || '');
 
     // Normalize results to an array
@@ -32,117 +35,80 @@ const Search: React.FC<SearchProps> = ({ posts, pagination, searchQuery, ...prop
         }
     };
 
+    const pageUrl = (page: number) => `/search?q=${encodeURIComponent(searchQuery || '')}&page=${page}`;
+    const current = pagination?.current_page ?? 1;
+    const last = pagination?.last_page ?? 1;
+    const title = searchQuery ? tt('search.results_for', 'Results for “:query”', { query: searchQuery }) : tt('search.title', 'Search');
+    const total = pagination?.total ?? results.length;
+
     return (
         <Layout
             theme={props.theme}
             site={props.site}
             menus={props.menus}
-            title={`Search Results${searchQuery ? ` for "${searchQuery}"` : ''}`}
-            description={searchQuery ? `Search results for "${searchQuery}"` : 'Search'}
+            title={title}
+            description={searchQuery ? title : tt('search.title', 'Search')}
         >
-            <div className="space-y-8">
-                <header className="rounded-lg bg-indigo-700 py-12 text-center text-white">
-                    <h1 className="mb-4 text-4xl font-bold md:text-5xl">{searchQuery ? `Search Results for "${searchQuery}"` : 'Search'}</h1>
-                    <p className="text-lg opacity-80">
-                        {pagination
-                            ? `${pagination.total} ${pagination.total === 1 ? 'result' : 'results'} found`
-                            : 'Enter search terms to find content'}
-                    </p>
-                </header>
+            <div className="mx-auto max-w-4xl">
+                <PageHeader
+                    title={title}
+                    description={
+                        searchQuery
+                            ? total === 1
+                                ? tt('search.count_one', '1 result found')
+                                : tt('search.count_other', ':count results found', { count: total })
+                            : tt('search.prompt', 'Enter search terms to find content')
+                    }
+                />
 
-                <div className="mx-auto max-w-2xl">
-                    <form onSubmit={handleSubmit} className="relative">
+                <form onSubmit={handleSubmit} role="search" className="mb-10 flex gap-2">
+                    <div className="relative flex-1">
+                        <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
                         <input
-                            type="text"
+                            type="search"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search posts, pages, and content..."
-                            className="w-full rounded-xl border border-gray-200 bg-white px-6 py-4 pr-16 text-lg shadow-lg transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 focus:outline-none"
+                            aria-label={tt('search.title', 'Search')}
+                            placeholder={tt('search.placeholder', 'Search posts, pages, and content…')}
+                            className="h-11 w-full rounded-md border border-input bg-input-bg pr-4 pl-10 text-base text-foreground shadow-xs transition-[border-color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                         />
-                        <button
-                            type="submit"
-                            disabled={!query.trim()}
-                            className="absolute top-1/2 right-2 -translate-y-1/2 transform rounded-lg bg-indigo-600 p-3 text-white transition-all duration-300 hover:scale-105 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </button>
-                    </form>
-                </div>
+                    </div>
+                    <button type="submit" disabled={!query.trim()} className={buttonClass('primary', 'lg')}>
+                        {tt('search.submit', 'Search')}
+                    </button>
+                </form>
 
                 {results.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-6 sm:grid-cols-2">
                         {results.map((post) => (
                             <PostCard key={post.id} post={post} />
                         ))}
                     </div>
                 ) : searchQuery ? (
-                    <div className="py-16 text-center">
-                        <div className="mx-auto max-w-md">
-                            <div className="mb-6">
-                                <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={1}
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <h3 className="mb-2 text-xl font-medium text-gray-900">No results found</h3>
-                            <p className="text-gray-600">
-                                No posts match your search for "{searchQuery}". Try different keywords or check your spelling.
-                            </p>
-                        </div>
-                    </div>
+                    <EmptyState
+                        icon={SearchX}
+                        title={tt('search.empty_title', 'No results found')}
+                        description={tt('search.empty_description', 'Nothing matches “:query”. Try different keywords or check your spelling.', {
+                            query: searchQuery,
+                        })}
+                    />
                 ) : (
-                    <div className="py-16 text-center">
-                        <div className="mx-auto max-w-md">
-                            <div className="mb-6">
-                                <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={1}
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <h3 className="mb-2 text-xl font-medium text-gray-900">Start searching</h3>
-                            <p className="text-gray-600">Enter keywords above to search through our posts and pages.</p>
-                        </div>
-                    </div>
+                    <EmptyState
+                        icon={SearchIcon}
+                        title={tt('search.start_title', 'Start searching')}
+                        description={tt('search.start_description', 'Enter keywords above to search through our posts and pages.')}
+                    />
                 )}
 
-                {pagination && pagination.last_page > 1 && results.length > 0 && (
-                    <div className="mt-12 flex items-center justify-center space-x-4">
-                        {pagination.current_page > 1 ? (
-                            <a
-                                href={`/search?q=${encodeURIComponent(searchQuery || '')}&page=${pagination.current_page - 1}`}
-                                className="rounded-lg border border-gray-200 bg-white px-6 py-3 transition-colors duration-300 hover:bg-gray-50"
-                            >
-                                ← Previous
-                            </a>
-                        ) : (
-                            <span className="px-6 py-3 text-gray-400">← Previous</span>
-                        )}
-
-                        <span className="px-4 py-2 text-sm text-gray-600">
-                            Page {pagination.current_page} of {pagination.last_page}
-                        </span>
-
-                        {pagination.current_page < pagination.last_page ? (
-                            <a
-                                href={`/search?q=${encodeURIComponent(searchQuery || '')}&page=${pagination.current_page + 1}`}
-                                className="rounded-lg border border-gray-200 bg-white px-6 py-3 transition-colors duration-300 hover:bg-gray-50"
-                            >
-                                Next →
-                            </a>
-                        ) : (
-                            <span className="px-6 py-3 text-gray-400">Next →</span>
-                        )}
-                    </div>
+                {results.length > 0 && (
+                    <Pagination
+                        pagination={{
+                            current_page: current,
+                            last_page: last,
+                            prev_page_url: current > 1 ? pageUrl(current - 1) : null,
+                            next_page_url: current < last ? pageUrl(current + 1) : null,
+                        }}
+                    />
                 )}
             </div>
         </Layout>

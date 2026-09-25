@@ -1,13 +1,20 @@
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { cn } from '@/lib/utils';
 import { Head, usePage } from '@inertiajs/react';
 import React from 'react';
+import '../assets/css/theme.css';
 import Footer from './Footer';
 import Navigation from './partials/Navigation';
 import Sidebar from './partials/Sidebar';
+import { Container, normalizeMenuItems } from './partials/ui';
 import ErrorBoundary from './util/ErrorBoundary';
 
 interface LayoutProps {
     children: React.ReactNode;
+    /** Show the search / categories / tags column (listings and single posts). */
+    sidebar?: boolean;
+    /** Drop the default page padding, e.g. for a full-bleed home hero. */
+    bare?: boolean;
     title?: string;
     description?: string;
     keywords?: string;
@@ -59,32 +66,15 @@ interface LayoutProps {
     };
 }
 
-const normalizeMenuItems = (menuData: any): Array<Record<string, any>> => {
-    try {
-        if (!menuData) return [];
-        if (Array.isArray(menuData)) {
-            return menuData.filter((item: any) => item && typeof item === 'object') as Array<Record<string, any>>;
-        }
-
-        if (typeof menuData === 'object' && menuData !== null) {
-            if (Array.isArray((menuData as any).items)) {
-                return (menuData as any).items.filter((item: any) => item && typeof item === 'object') as Array<Record<string, any>>;
-            }
-
-            if (Array.isArray((menuData as any).data)) {
-                return (menuData as any).data.filter((item: any) => item && typeof item === 'object') as Array<Record<string, any>>;
-            }
-        }
-
-        return [];
-    } catch (error) {
-        console.error('normalizeMenuItems error:', error, menuData);
-        return [];
-    }
+const FONT_STACKS: Record<string, string> = {
+    roboto: 'Roboto, system-ui, sans-serif',
+    'open-sans': '"Open Sans", system-ui, sans-serif',
 };
 
 export default function Layout({
     children,
+    sidebar = false,
+    bare = false,
     title,
     description,
     keywords,
@@ -100,20 +90,16 @@ export default function Layout({
     const { auth } = usePage().props as any;
     // Safe defaults with proper null checks - use more defensive approach
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS', tagline: '' };
-    const safeTheme =
-        theme && typeof theme === 'object'
-            ? theme
-            : {
-                  colors: { primary: '#3b82f6', secondary: '#64748b' },
-                  typography: { font_family: 'inter' },
-                  layout: { container_width: 'container' },
-              };
     const safeMenus = menus && typeof menus === 'object' ? menus : { header: [], footer: [] };
     const safeAuth = auth && typeof auth === 'object' ? auth : { user: null };
     const pageTitle = title ? `${title} | ${safeSite.name}` : safeSite.name;
-    const containerWidth = safeTheme.layout?.container_width || 'container';
-    const primaryColor = safeTheme.colors?.primary || '#3b82f6';
-    const fontFamily = safeTheme.typography?.font_family || 'inter';
+
+    // Only override the design tokens when the theme actually configures them.
+    const customPrimary = theme?.colors?.primary;
+    const customFont = FONT_STACKS[theme?.typography?.font_family ?? ''];
+    const themeOverrides = [customPrimary && `--primary: ${customPrimary}; --ring: ${customPrimary};`, customFont && `font-family: ${customFont};`]
+        .filter(Boolean)
+        .join(' ');
 
     useDocumentTitle(pageTitle);
 
@@ -126,19 +112,7 @@ export default function Layout({
     const contentDescription = post?.excerpt || page?.excerpt || description || safeSite.description;
     const contentPublishedDate = post?.published_at || page?.updated_at;
 
-    let footerMenuItems: Array<Record<string, any>> = [];
-    try {
-        const footerData = safeMenus && safeMenus.footer ? safeMenus.footer : [];
-        footerMenuItems = normalizeMenuItems(footerData);
-    } catch (e) {
-        console.error('Error normalizing footer menu:', e);
-        footerMenuItems = [];
-    }
-
-    // Ensure footerMenuItems is always an array
-    if (!Array.isArray(footerMenuItems)) {
-        footerMenuItems = [];
-    }
+    const footerMenuItems = normalizeMenuItems(safeMenus.footer);
 
     return (
         <>
@@ -201,50 +175,33 @@ export default function Layout({
                     })}
                 </script>
 
-                <style>{`
-          :root {
-            --color-primary: ${primaryColor};
-            --color-secondary: ${safeTheme.colors?.secondary || '#64748b'};
-          }
-          
-          body {
-            font-family: ${
-                fontFamily === 'inter'
-                    ? 'Inter, system-ui, sans-serif'
-                    : fontFamily === 'roboto'
-                      ? 'Roboto, system-ui, sans-serif'
-                      : fontFamily === 'open-sans'
-                        ? '"Open Sans", system-ui, sans-serif'
-                        : 'system-ui, sans-serif'
-            };
-            background: #eef2ff;
-            min-height: 100vh;
-          }
-        `}</style>
+                {themeOverrides && <style>{`:root { ${themeOverrides} }`}</style>}
             </Head>
 
-            <div className="flex min-h-screen flex-col">
+            <div className="flex min-h-screen flex-col bg-background text-foreground">
                 <ErrorBoundary name="Navigation">
                     <Navigation site={safeSite} menus={safeMenus} auth={safeAuth} />
                 </ErrorBoundary>
-                <main className="flex-1 pt-20">
-                    <div className="container mx-auto px-6 py-8">
-                        <div className="flex flex-col gap-8 xl:flex-row">
-                            <div className="xl:w-4/5">
-                                <div className="rounded-2xl border border-gray-100 bg-white p-8 text-gray-900 shadow-lg">
-                                    <ErrorBoundary name="PageContent">{children}</ErrorBoundary>
-                                </div>
+                <main id="main" className={cn('flex-1', !bare && 'py-10 sm:py-14')}>
+                    {bare ? (
+                        <ErrorBoundary name="PageContent">{children}</ErrorBoundary>
+                    ) : (
+                        <Container className={cn(sidebar && 'grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem]')}>
+                            <div className="min-w-0">
+                                <ErrorBoundary name="PageContent">{children}</ErrorBoundary>
                             </div>
-                            <aside className="xl:w-1/5">
-                                <ErrorBoundary name="Sidebar">
-                                    <Sidebar />
-                                </ErrorBoundary>
-                            </aside>
-                        </div>
-                    </div>
+                            {sidebar && (
+                                <aside className="lg:sticky lg:top-24 lg:self-start">
+                                    <ErrorBoundary name="Sidebar">
+                                        <Sidebar />
+                                    </ErrorBoundary>
+                                </aside>
+                            )}
+                        </Container>
+                    )}
                 </main>
                 <ErrorBoundary name="Footer">
-                    <Footer site={safeSite} menu={footerMenuItems} theme={safeTheme} />
+                    <Footer site={safeSite} menu={footerMenuItems} />
                 </ErrorBoundary>
             </div>
         </>

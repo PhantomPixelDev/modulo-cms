@@ -1,5 +1,7 @@
 import { Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 import Layout from './Layout';
+import { Badge, formatDate, useThemeT } from './partials/ui';
 
 interface InfoProps {
     post: {
@@ -39,126 +41,52 @@ interface InfoProps {
 }
 
 export default function Info({ post, site, theme, menus }: InfoProps) {
-    const safeTheme = theme && typeof theme === 'object' ? theme : {};
-    const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
-    const safeMenus = menus && typeof menus === 'object' ? menus : {};
-    const themeColors = safeTheme.colors || {};
-    const primary = themeColors.primary || '#3b82f6';
-    const accent = themeColors.accent || primary;
-    const cardBg = themeColors.card || '#ffffff';
-    const background = themeColors.background || '#f8fafc';
-    const textPrimary = themeColors.text_primary || '#0f172a';
-    const textMuted = themeColors.text_muted || '#475569';
-    const borderColor = themeColors.border || '#e2e8f0';
-    const buttonText = themeColors.button_text || '#ffffff';
+    const tt = useThemeT();
+    const listUrl = `/${post.post_type?.route_prefix || 'infos'}`;
+    const listLabel = post.post_type?.label || tt('info.label', 'Information');
 
     return (
-        <Layout theme={safeTheme} site={safeSite} menus={safeMenus} title={post.title} description={post.excerpt}>
-            <div className="py-10" style={{ backgroundColor: background }}>
-                <article
-                    className="prose prose-lg max-w-none"
-                    style={{
-                        color: textMuted,
-                        ['--tw-prose-body' as any]: textMuted,
-                        ['--tw-prose-headings' as any]: textPrimary,
-                        ['--tw-prose-bold' as any]: textPrimary,
-                        ['--tw-prose-links' as any]: primary,
-                    }}
+        <Layout theme={theme} site={site} menus={menus} title={post.title} description={post.excerpt} post={post} sidebar>
+            <article className="mx-auto max-w-3xl">
+                <Link
+                    href={listUrl}
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                    {/* Header */}
-                    <header className="mb-8 pb-8" style={{ borderBottom: `1px solid ${borderColor}` }}>
-                        <div className="mb-4 flex items-center gap-2">
-                            <span className="rounded-full px-3 py-1 text-sm font-semibold" style={{ backgroundColor: `${accent}15`, color: accent }}>
-                                Information
-                            </span>
-                            {post.published_at && (
-                                <span className="text-sm" style={{ color: textMuted }}>
-                                    {new Date(post.published_at).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                    })}
-                                </span>
-                            )}
-                        </div>
+                    <ArrowLeft className="size-4" />
+                    {tt('post.back_to', 'Back to :label', { label: listLabel })}
+                </Link>
 
-                        <h1 className="mb-4 text-4xl font-bold md:text-5xl" style={{ color: textPrimary }}>
-                            {post.title}
-                        </h1>
-
-                        {post.excerpt && (
-                            <p className="text-xl leading-relaxed" style={{ color: textMuted }}>
-                                {post.excerpt}
-                            </p>
-                        )}
-
-                        <div className="mt-6 flex items-center gap-4 text-sm" style={{ color: textMuted }}>
-                            <div className="flex items-center gap-2">
-                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                    />
-                                </svg>
-                                <span>{post.author.name}</span>
-                            </div>
-                        </div>
-                    </header>
-
-                    {/* Featured Image */}
-                    {post.featured_image && (
-                        <div
-                            className="mb-8 overflow-hidden rounded-2xl shadow-lg"
-                            style={{ backgroundColor: cardBg, border: `1px solid ${borderColor}` }}
-                        >
-                            <img src={post.featured_image} alt={post.title} className="h-auto w-full" />
-                        </div>
-                    )}
-
-                    {/* Content */}
-                    <div
-                        className="prose-headings:font-bold prose-a:no-underline hover:prose-a:underline"
-                        style={{
-                            ['--tw-prose-links' as any]: primary,
-                            ['--tw-prose-invert-links' as any]: primary,
-                        }}
-                        dangerouslySetInnerHTML={{ __html: post.content }}
-                    />
-
-                    {/* Tags/Terms */}
-                    {post.terms && post.terms.length > 0 && (
-                        <div className="mt-8 pt-8" style={{ borderTop: `1px solid ${borderColor}` }}>
-                            <h3 className="mb-3 text-sm font-semibold" style={{ color: textPrimary }}>
-                                Topics:
-                            </h3>
-                            <div className="flex flex-wrap gap-2">
-                                {post.terms.map((term) => (
-                                    <Link
-                                        key={term.id}
-                                        href={`/${term.taxonomy.name}/${term.slug}`}
-                                        className="rounded-full px-3 py-1 text-sm transition-colors"
-                                        style={{ backgroundColor: `${borderColor}40`, color: textPrimary }}
-                                    >
-                                        {term.name}
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Back Link */}
-                    <div className="mt-12 pt-8" style={{ borderTop: `1px solid ${borderColor}` }}>
-                        <Link href="/infos" className="inline-flex items-center font-medium" style={{ color: primary }}>
-                            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                            Back to all information
-                        </Link>
+                <header className="mt-6 mb-8 border-b pb-8">
+                    <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                        <Badge variant="primary">{listLabel}</Badge>
+                        {post.published_at && <time dateTime={post.published_at}>{formatDate(post.published_at, { dateStyle: 'long' })}</time>}
+                        {post.author?.name && <span>· {post.author.name}</span>}
                     </div>
-                </article>
-            </div>
+                    <h1 className="text-3xl leading-tight font-semibold tracking-tight text-foreground sm:text-4xl">{post.title}</h1>
+                    {post.excerpt && <p className="mt-4 text-lg leading-relaxed text-muted-foreground">{post.excerpt}</p>}
+                </header>
+
+                {post.featured_image && (
+                    <figure className="mb-10 overflow-hidden rounded-xl border bg-muted">
+                        <img src={post.featured_image} alt={post.title} className="h-auto w-full" />
+                    </figure>
+                )}
+
+                <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
+
+                {post.terms && post.terms.length > 0 && (
+                    <div className="mt-10 flex flex-wrap items-center gap-2 border-t pt-8">
+                        <span className="mr-1 text-sm font-medium text-foreground">{tt('info.topics', 'Topics')}</span>
+                        {post.terms.map((term) => (
+                            <Link key={term.id} href={`/${term.taxonomy?.name}/${term.slug}`}>
+                                <Badge variant="outline" className="transition-colors hover:bg-accent">
+                                    {term.name}
+                                </Badge>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+            </article>
         </Layout>
     );
 }

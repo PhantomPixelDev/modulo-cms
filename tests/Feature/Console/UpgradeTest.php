@@ -1,9 +1,12 @@
 <?php
 
+use App\Console\Commands\BackupDatabaseCommand;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\User;
 use App\Services\UpgradePreflight;
+use Illuminate\Database\Console\Migrations\MigrateCommand;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -133,4 +136,69 @@ it('proceeds past a blocker when forced', function () {
     });
 
     $this->artisan('modulo:upgrade', ['--dry-run' => true, '--force' => true])->assertSuccessful();
+});
+
+/**
+ * Swap modulo:db-backup for one that succeeds or fails on demand, so the
+ * upgrade's decisions can be tested without pg_dump or a file-based database.
+ */
+function fakeBackup(bool $succeeds): void
+{
+    app()->bind(BackupDatabaseCommand::class, fn () => new class($succeeds) extends BackupDatabaseCommand
+    {
+        public function __construct(private bool $succeeds)
+        {
+            parent::__construct();
+        }
+
+        public function handle(): int
+        {
+            if (! $this->succeeds) {
+                $this->error('Simulated: disk full');
+
+                return self::FAILURE;
+            }
+
+            $this->info('Backup written to /tmp/simulated-backup.sql (1 KB)');
+
+            return self::SUCCESS;
+        }
+    });
+}
+
+it('stops before touching anything when the backup fails', function () {
+    fakeBackup(false);
+
+    $this->artisan('modulo:upgrade')
+        ->expectsOutputToContain('the database backup failed')
+        ->assertFailed();
+
+    // No maintenance window was opened for an upgrade that never started.
+    expect(app()->isDownForMaintenance())->toBeFalse();
+});
+
+it('leaves the site in maintenance mode when a migration fails', function () {
+    fakeBackup(true);
+
+    app()->bind(MigrateCommand::class, fn ($app) => new class($app['migrator'], $app['events']) extends MigrateCommand
+    {
+        public function handle()
+        {
+            $this->error('Simulated: column already exists');
+
+            return self::FAILURE;
+        }
+    });
+
+    try {
+        $this->artisan('modulo:upgrade')
+            ->expectsOutputToContain('left in maintenance mode')
+            ->expectsOutputToContain('/tmp/simulated-backup.sql')
+            ->assertFailed();
+
+        expect(app()->isDownForMaintenance())->toBeTrue();
+    } finally {
+        // The file-based maintenance flag outlives the test otherwise.
+        Artisan::call('up');
+    }
 });

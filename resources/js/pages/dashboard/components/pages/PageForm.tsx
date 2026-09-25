@@ -147,12 +147,6 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                 author_id: form.author_id ? parseInt(form.author_id, 10) : null,
             };
 
-            // Log the data being submitted for debugging
-            console.log('Submitting form data:', {
-                ...formData,
-                content: formData.content.substring(0, 100) + '...', // Truncate content for logging
-            });
-
             await onSubmit(formData);
         } catch (error) {
             console.error('Error submitting form:', error);

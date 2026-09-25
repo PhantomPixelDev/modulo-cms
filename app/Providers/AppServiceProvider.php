@@ -10,6 +10,7 @@ use App\Services\AdminStatsService;
 use App\Services\HookRegistry;
 use App\Services\MenuService;
 use App\Services\PostService;
+use App\Services\ShortcodeService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -26,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Plugin action/filter hooks (add_action, apply_filters, ...)
         $this->app->singleton(HookRegistry::class);
+
+        // One registry every plugin adds its shortcodes to. Owned by core so a
+        // plugin re-binding it cannot wipe out another plugin's shortcodes.
+        $this->app->singleton(ShortcodeService::class);
     }
 
     /**

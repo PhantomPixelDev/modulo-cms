@@ -1,4 +1,6 @@
-import { Facebook, Linkedin, Link as LinkIcon, Share2, Twitter } from 'lucide-react';
+import { Check, Facebook, Linkedin, Link as LinkIcon, Twitter } from 'lucide-react';
+import { useState } from 'react';
+import { buttonClass, formatDate, useThemeT } from './ui';
 
 interface Post {
     id: number;
@@ -21,136 +23,80 @@ interface Post {
 
 interface PostMetaProps {
     post: Post;
-    theme?: {
-        colors?: {
-            primary?: string;
-            secondary?: string;
-        };
-    };
+    /** Kept for backwards compatibility with templates that still pass it. */
+    theme?: unknown;
 }
 
-export default function PostMeta({ post, theme }: PostMetaProps) {
+export default function PostMeta({ post }: PostMetaProps) {
+    const tt = useThemeT();
+    const [copied, setCopied] = useState(false);
     const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
     const encodedTitle = encodeURIComponent(post.title);
     const encodedUrl = encodeURIComponent(currentUrl);
 
-    const shareLinks = {
-        twitter: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-    };
+    const shareLinks = [
+        { label: 'X / Twitter', icon: Twitter, href: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}` },
+        { label: 'Facebook', icon: Facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
+        { label: 'LinkedIn', icon: Linkedin, href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+    ];
 
     const copyToClipboard = async () => {
-        if (navigator.clipboard) {
-            try {
-                await navigator.clipboard.writeText(currentUrl);
-                // You could add a toast notification here
-                console.log('URL copied to clipboard');
-            } catch (err) {
-                console.error('Failed to copy URL');
-            }
+        try {
+            await navigator.clipboard?.writeText(currentUrl);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Clipboard unavailable (e.g. insecure context) – nothing to do.
         }
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
+    const updated = post.updated_at && post.updated_at !== post.published_at ? formatDate(post.updated_at, { dateStyle: 'long' }) : '';
 
     return (
-        <div className="space-y-6">
-            {/* Author Info */}
-            {post.author && (
-                <div className="flex items-center space-x-4 rounded-lg bg-gray-50 p-4">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            {post.author ? (
+                <div className="flex items-center gap-3">
                     {post.author.avatar ? (
-                        <img src={post.author.avatar} alt={post.author.name} className="h-12 w-12 rounded-full" />
+                        <img src={post.author.avatar} alt="" className="size-10 rounded-full object-cover" />
                     ) : (
-                        <div
-                            className="flex h-12 w-12 items-center justify-center rounded-full font-semibold text-white"
-                            style={{ backgroundColor: theme?.colors?.primary || '#3b82f6' }}
+                        <span
+                            className="flex size-10 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary"
+                            aria-hidden="true"
                         >
                             {post.author.name.charAt(0).toUpperCase()}
-                        </div>
+                        </span>
                     )}
-                    <div>
-                        <h4 className="font-semibold text-gray-900">{post.author.name}</h4>
-                        <p className="text-sm text-gray-600">Author</p>
+                    <div className="text-sm">
+                        <p className="font-medium text-foreground">{post.author.name}</p>
+                        {updated && <p className="text-muted-foreground">{tt('post.updated', 'Updated :date', { date: updated })}</p>}
                     </div>
                 </div>
+            ) : (
+                <span />
             )}
 
-            {/* Share Section */}
-            <div className="border-t border-gray-200 pt-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                        <Share2 className="h-5 w-5 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-900">Share this post</span>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                        {/* Twitter */}
-                        <a
-                            href={shareLinks.twitter}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 text-gray-600 transition-colors duration-200 hover:text-blue-400"
-                            aria-label="Share on Twitter"
-                        >
-                            <Twitter className="h-5 w-5" />
-                        </a>
-
-                        {/* Facebook */}
-                        <a
-                            href={shareLinks.facebook}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 text-gray-600 transition-colors duration-200 hover:text-blue-600"
-                            aria-label="Share on Facebook"
-                        >
-                            <Facebook className="h-5 w-5" />
-                        </a>
-
-                        {/* LinkedIn */}
-                        <a
-                            href={shareLinks.linkedin}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 text-gray-600 transition-colors duration-200 hover:text-blue-700"
-                            aria-label="Share on LinkedIn"
-                        >
-                            <Linkedin className="h-5 w-5" />
-                        </a>
-
-                        {/* Copy Link */}
-                        <button
-                            onClick={copyToClipboard}
-                            className="p-2 text-gray-600 transition-colors duration-200 hover:text-gray-900"
-                            aria-label="Copy link"
-                        >
-                            <LinkIcon className="h-5 w-5" />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Post Metadata */}
-            <div className="space-y-1 border-t border-gray-200 pt-6 text-xs text-gray-500">
-                <div>
-                    <strong>Published:</strong> {formatDate(post.published_at)}
-                </div>
-                {post.updated_at !== post.published_at && (
-                    <div>
-                        <strong>Updated:</strong> {formatDate(post.updated_at)}
-                    </div>
-                )}
-                <div>
-                    <strong>Post ID:</strong> #{post.id}
-                </div>
+            <div className="flex items-center gap-1">
+                <span className="mr-2 text-sm text-muted-foreground">{tt('post.share', 'Share')}</span>
+                {shareLinks.map(({ label, icon: Icon, href }) => (
+                    <a
+                        key={label}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={label}
+                        className={buttonClass('ghost', 'sm', 'size-8 px-0')}
+                    >
+                        <Icon />
+                    </a>
+                ))}
+                <button
+                    type="button"
+                    onClick={copyToClipboard}
+                    aria-label={tt('post.copy_link', 'Copy link')}
+                    className={buttonClass('ghost', 'sm', 'size-8 px-0')}
+                >
+                    {copied ? <Check className="text-success" /> : <LinkIcon />}
+                </button>
             </div>
         </div>
     );

@@ -113,6 +113,13 @@ try {
 } catch {
     Stop-WithError "Could not download the deployment files for $ref."
 }
+# The site helper is a POSIX shell script (usable from WSL or Git Bash);
+# optional, so a failed download only warns.
+try {
+    Invoke-WebRequest -Uri "$base/docker/modulo" -OutFile 'modulo' -UseBasicParsing
+} catch {
+    Write-Warn 'Could not download the ./modulo helper; updates can still be run by hand.'
+}
 Write-Ok 'Downloaded deployment files'
 
 # --- Configuration ----------------------------------------------------------
@@ -194,4 +201,6 @@ Write-Host "`n  Ready. Open this to finish setup:`n" -ForegroundColor Green
 Write-Host "    http://localhost:$WebPort/install`n"
 Write-Info "Your secrets are in $Directory\.env - keep it, and do not commit it."
 Write-Info "Stop the site with:  cd $Directory; $runtime compose down"
+Write-Info "To update later: set MODULO_TAG in .env to the new version, then run"
+Write-Info "                 $runtime compose pull; $runtime compose up -d   (or ./modulo update from WSL/Git Bash)"
 Write-Host ''

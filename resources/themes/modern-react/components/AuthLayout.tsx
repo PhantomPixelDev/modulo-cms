@@ -1,5 +1,5 @@
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import React from 'react';
 
 interface AuthLayoutProps {
@@ -9,18 +9,9 @@ interface AuthLayoutProps {
 }
 
 export default function AuthLayout({ children, title, description }: AuthLayoutProps) {
-    const pageProps = usePage().props as any;
-    const theme = pageProps?.theme;
-    const site = pageProps?.site;
-
-    // Extract theme colors with fallbacks
-    const backgroundColor = theme?.colors?.background || '#ffffff';
-    const surfaceColor = theme?.colors?.surface || '#f8fafc';
-    const textPrimary = theme?.colors?.text_primary || '#1a202c';
-    const textMuted = theme?.colors?.text_muted || '#64748b';
-    const primaryColor = theme?.colors?.primary || '#3b82f6';
-
-    const pageTitle = title ? `${title} | ${site?.name || 'Modulo CMS'}` : site?.name || 'Modulo CMS';
+    const { site } = usePage().props as { site?: { name?: string } };
+    const siteName = site?.name || 'Modulo CMS';
+    const pageTitle = title ? `${title} | ${siteName}` : siteName;
 
     useDocumentTitle(pageTitle);
 
@@ -30,31 +21,16 @@ export default function AuthLayout({ children, title, description }: AuthLayoutP
                 <title>{pageTitle}</title>
                 {description && <meta name="description" content={description} />}
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <style>{`
-          body {
-            background-color: ${backgroundColor};
-            color: ${textPrimary};
-          }
-          .auth-container {
-            background-color: ${surfaceColor};
-            color: ${textPrimary};
-          }
-          .text-muted-foreground {
-            color: ${textMuted} !important;
-          }
-          .btn-primary {
-            background-color: ${primaryColor} !important;
-            border-color: ${primaryColor} !important;
-          }
-        `}</style>
             </Head>
 
-            <div className="auth-container min-h-screen" style={{ backgroundColor, color: textPrimary }}>
-                <div className="flex min-h-screen items-center justify-center px-4">
-                    <div className="w-full max-w-md rounded-lg border p-8 shadow-lg" style={{ backgroundColor: surfaceColor }}>
-                        {children}
-                    </div>
-                </div>
+            <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-4 py-12 text-foreground">
+                <Link href="/" className="mb-8 inline-flex items-center gap-2.5 text-lg font-semibold tracking-tight">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+                        {siteName.charAt(0).toUpperCase()}
+                    </span>
+                    {siteName}
+                </Link>
+                <div className="w-full max-w-sm rounded-xl border bg-card p-6 shadow-sm sm:p-8">{children}</div>
             </div>
         </>
     );

@@ -9,6 +9,7 @@ use App\Models\TaxonomyTerm;
 use App\Services\AdminStatsService;
 use App\Services\SiteSettingsService;
 use App\Services\TranslationService;
+use App\Services\UpdateCenter;
 use App\Support\InstallChannel;
 use App\Support\Version;
 use Illuminate\Foundation\Inspiring;
@@ -174,6 +175,11 @@ class HandleInertiaRequests extends Middleware
             ],
             'adminStats' => fn () => $request->user()?->hasRole(['admin', 'super-admin'])
                 ? app(AdminStatsService::class)->get()
+                : null,
+            // Sidebar badge on "Updates": read from stored check results, never the network
+            'updatesPending' => fn () => $request->user() !== null
+                && ($request->user()->can('edit settings') || $request->user()->hasRole(['admin', 'super-admin']))
+                ? app(UpdateCenter::class)->pending()
                 : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'activePlugins' => fn () => schema_has_table('plugins')

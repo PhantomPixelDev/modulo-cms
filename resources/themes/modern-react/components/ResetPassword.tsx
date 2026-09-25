@@ -29,12 +29,12 @@ export default function ResetPassword({ email, token }: Props) {
         <AuthLayout title="Reset password">
             <Head title="Reset password" />
 
-            <div className="py-6">
-                <div className="">
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight">Set a new password</h1>
-                    <p className="mb-8 text-muted-foreground">Enter a new password for your account.</p>
+            <div>
+                <div>
+                    <h1 className="mb-1.5 text-2xl font-semibold tracking-tight">Set a new password</h1>
+                    <p className="mb-8 text-sm text-muted-foreground">Enter a new password for your account.</p>
 
-                    <form className="space-y-6" onSubmit={submit}>
+                    <form className="space-y-5" onSubmit={submit}>
                         <input type="hidden" name="token" value={data.token} />
 
                         <div className="space-y-2">

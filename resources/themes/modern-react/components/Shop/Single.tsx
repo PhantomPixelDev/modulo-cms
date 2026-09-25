@@ -60,10 +60,10 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
         return (
             <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Product Not Found">
                 <div className="py-20 text-center">
-                    <ShoppingCart className="mx-auto mb-6 h-20 w-20 text-gray-200" />
-                    <h1 className="mb-4 text-2xl font-bold text-gray-900">Product Not Found</h1>
-                    <p className="mb-6 text-gray-500">The product you're looking for doesn't exist.</p>
-                    <Link href="/shop" className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white hover:bg-indigo-700">
+                    <ShoppingCart className="mx-auto mb-6 h-20 w-20 text-muted-foreground/40" />
+                    <h1 className="mb-4 text-2xl font-semibold tracking-tight text-foreground">Product Not Found</h1>
+                    <p className="mb-6 text-muted-foreground">The product you're looking for doesn't exist.</p>
+                    <Link href="/shop" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-white hover:bg-primary/90">
                         ← Back to Shop
                     </Link>
                 </div>
@@ -124,12 +124,12 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
         >
             <SEOHead title={`${product.title} | ${safeSite.name}`} description={product.excerpt} />
 
-            <div className="py-8">
+            <div>
                 {/* Breadcrumb */}
                 <nav className="mb-8">
-                    <ol className="flex items-center gap-2 text-sm text-gray-500">
+                    <ol className="flex items-center gap-2 text-sm text-muted-foreground">
                         <li>
-                            <Link href="/" className="transition-colors hover:text-indigo-600">
+                            <Link href="/" className="transition-colors hover:text-primary">
                                 Home
                             </Link>
                         </li>
@@ -137,7 +137,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                             <ChevronRight className="h-4 w-4" />
                         </li>
                         <li>
-                            <Link href="/shop" className="transition-colors hover:text-indigo-600">
+                            <Link href="/shop" className="transition-colors hover:text-primary">
                                 Shop
                             </Link>
                         </li>
@@ -147,10 +147,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                     <ChevronRight className="h-4 w-4" />
                                 </li>
                                 <li>
-                                    <Link
-                                        href={`/product-category/${product.categories[0].slug}`}
-                                        className="transition-colors hover:text-indigo-600"
-                                    >
+                                    <Link href={`/product-category/${product.categories[0].slug}`} className="transition-colors hover:text-primary">
                                         {product.categories[0].name}
                                     </Link>
                                 </li>
@@ -159,29 +156,29 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                         <li>
                             <ChevronRight className="h-4 w-4" />
                         </li>
-                        <li className="max-w-[200px] truncate font-medium text-gray-900">{product.title}</li>
+                        <li className="max-w-[200px] truncate font-medium text-foreground">{product.title}</li>
                     </ol>
                 </nav>
 
                 <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
                     {/* Product Images */}
                     <div className="space-y-4">
-                        <div className="relative aspect-square overflow-hidden rounded-3xl border border-gray-100 bg-gray-50">
+                        <div className="relative aspect-square overflow-hidden rounded-3xl border bg-muted/50">
                             {selectedImage ? (
                                 <img src={selectedImage} alt={product.title} className="h-full w-full object-cover" />
                             ) : (
-                                <div className="flex h-full w-full items-center justify-center text-gray-300">
+                                <div className="flex h-full w-full items-center justify-center text-muted-foreground/60">
                                     <ShoppingCart className="h-24 w-24" />
                                 </div>
                             )}
                             {discount && (
-                                <span className="absolute top-4 left-4 rounded-full bg-red-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
+                                <span className="absolute top-4 left-4 rounded-full bg-destructive px-4 py-2 text-sm font-bold text-white shadow-lg">
                                     -{discount}% OFF
                                 </span>
                             )}
                             {!inStock && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                                    <span className="rounded-2xl bg-white px-8 py-4 text-lg font-semibold text-gray-900 shadow-xl">Out of Stock</span>
+                                    <span className="rounded-xl bg-card px-8 py-4 text-lg font-semibold text-foreground shadow-xl">Out of Stock</span>
                                 </div>
                             )}
                         </div>
@@ -194,9 +191,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                         key={i}
                                         onClick={() => setSelectedImage(img)}
                                         className={`h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
-                                            selectedImage === img
-                                                ? 'border-indigo-600 ring-2 ring-indigo-200'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            selectedImage === img ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-input'
                                         }`}
                                     >
                                         <img src={img} alt={`${product.title} ${i + 1}`} className="h-full w-full object-cover" />
@@ -215,7 +210,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                     <Link
                                         key={cat.id}
                                         href={`/product-category/${cat.slug}`}
-                                        className="text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                        className="text-sm font-medium text-primary transition-colors hover:text-primary"
                                     >
                                         {cat.name}
                                     </Link>
@@ -223,30 +218,32 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                             </div>
                         )}
 
-                        <h1 className="text-3xl leading-tight font-bold text-gray-900 md:text-4xl">{product.title}</h1>
+                        <h1 className="text-3xl leading-tight font-bold text-foreground md:text-4xl">{product.title}</h1>
 
                         {/* Rating Placeholder */}
                         <div className="flex items-center gap-2">
                             <div className="flex">
                                 {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star key={star} className="h-5 w-5 fill-current text-yellow-400" />
+                                    <Star key={star} className="h-5 w-5 fill-current text-warning" />
                                 ))}
                             </div>
-                            <span className="text-sm text-gray-500">(0 reviews)</span>
+                            <span className="text-sm text-muted-foreground">(0 reviews)</span>
                         </div>
 
                         {/* Price */}
-                        <div className="flex items-center gap-4 border-y border-gray-100 py-4">
+                        <div className="flex items-center gap-4 border-y border-border py-4">
                             {product.sale_price && product.sale_price < (product.price || 0) && (
-                                <span className="text-2xl text-gray-400 line-through">{formatPrice(product.price, product.currency)}</span>
+                                <span className="text-2xl text-muted-foreground/80 line-through">{formatPrice(product.price, product.currency)}</span>
                             )}
                             <span
-                                className={`text-4xl font-bold ${product.sale_price && product.sale_price < (product.price || 0) ? 'text-red-600' : 'text-gray-900'}`}
+                                className={`text-4xl font-semibold tracking-tight ${product.sale_price && product.sale_price < (product.price || 0) ? 'text-destructive' : 'text-foreground'}`}
                             >
                                 {formatPrice(displayPrice, product.currency)}
                             </span>
                             {discount && (
-                                <span className="rounded-full bg-red-100 px-4 py-1.5 text-sm font-semibold text-red-700">Save {discount}%</span>
+                                <span className="rounded-full bg-destructive/10 px-4 py-1.5 text-sm font-semibold text-destructive">
+                                    Save {discount}%
+                                </span>
                             )}
                         </div>
 
@@ -254,29 +251,29 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                         <div className="flex items-center gap-3">
                             {inStock ? (
                                 <>
-                                    <div className="h-3 w-3 animate-pulse rounded-full bg-green-500"></div>
-                                    <span className="font-medium text-green-600">
+                                    <div className="h-3 w-3 animate-pulse rounded-full bg-success"></div>
+                                    <span className="font-medium text-success">
                                         {product.stock ? `In Stock (${product.stock} available)` : 'In Stock'}
                                     </span>
                                 </>
                             ) : (
                                 <>
-                                    <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                                    <span className="font-medium text-red-600">Out of Stock</span>
+                                    <div className="h-3 w-3 rounded-full bg-destructive"></div>
+                                    <span className="font-medium text-destructive">Out of Stock</span>
                                 </>
                             )}
                         </div>
 
                         {/* Short Description */}
-                        {product.excerpt && <p className="text-lg leading-relaxed text-gray-600">{product.excerpt}</p>}
+                        {product.excerpt && <p className="text-lg leading-relaxed text-muted-foreground">{product.excerpt}</p>}
 
                         {/* Attributes */}
                         {product.attributes && Object.keys(product.attributes).length > 0 && (
-                            <div className="space-y-3 rounded-2xl bg-gray-50 p-4">
+                            <div className="space-y-3 rounded-xl bg-muted/50 p-4">
                                 {Object.entries(product.attributes).map(([key, value]) => (
                                     <div key={key} className="flex items-center gap-3">
-                                        <span className="min-w-[100px] text-gray-500 capitalize">{key}:</span>
-                                        <span className="font-medium text-gray-900">{value}</span>
+                                        <span className="min-w-[100px] text-muted-foreground capitalize">{key}:</span>
+                                        <span className="font-medium text-foreground">{value}</span>
                                     </div>
                                 ))}
                             </div>
@@ -285,7 +282,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                         {/* Cart Message */}
                         {cartMessage && (
                             <div
-                                className={`flex items-center gap-3 rounded-xl p-4 ${cartMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}
+                                className={`flex items-center gap-3 rounded-xl p-4 ${cartMessage.type === 'success' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}
                             >
                                 {cartMessage.type === 'success' ? <Check className="h-5 w-5" /> : null}
                                 {cartMessage.text}
@@ -300,10 +297,10 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                         {/* Quantity & Add to Cart */}
                         {inStock && (
                             <div className="flex flex-wrap items-center gap-4">
-                                <div className="flex items-center rounded-xl border border-gray-200 bg-white">
+                                <div className="flex items-center rounded-xl border bg-card">
                                     <button
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                        className="rounded-l-xl p-4 transition-colors hover:bg-gray-50"
+                                        className="rounded-l-xl p-4 transition-colors hover:bg-accent"
                                         disabled={quantity <= 1}
                                     >
                                         <Minus className="h-4 w-4" />
@@ -312,13 +309,13 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                         type="number"
                                         value={quantity}
                                         onChange={(e) => setQuantity(Math.min(maxQuantity, Math.max(1, parseInt(e.target.value) || 1)))}
-                                        className="w-16 border-x border-gray-200 py-3 text-center font-medium focus:outline-none"
+                                        className="w-16 border-x border-border py-3 text-center font-medium focus:outline-none"
                                         min="1"
                                         max={maxQuantity}
                                     />
                                     <button
                                         onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}
-                                        className="rounded-r-xl p-4 transition-colors hover:bg-gray-50"
+                                        className="rounded-r-xl p-4 transition-colors hover:bg-accent"
                                         disabled={quantity >= maxQuantity}
                                     >
                                         <Plus className="h-4 w-4" />
@@ -327,7 +324,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                 <button
                                     onClick={addToCart}
                                     disabled={addingToCart}
-                                    className="flex flex-1 items-center justify-center gap-3 rounded-xl bg-indigo-600 px-8 py-4 font-semibold text-white shadow-lg shadow-indigo-200 transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="flex flex-1 items-center justify-center gap-3 rounded-md bg-primary px-8 py-4 font-semibold text-white shadow-lg shadow-primary/20 transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <ShoppingCart className="h-5 w-5" />
                                     {addingToCart ? 'Adding...' : 'Add to Cart'}
@@ -336,8 +333,8 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                     onClick={() => setIsWishlisted(!isWishlisted)}
                                     className={`rounded-xl border-2 p-4 transition-all ${
                                         isWishlisted
-                                            ? 'border-red-200 bg-red-50 text-red-600'
-                                            : 'border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600'
+                                            ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                                            : 'border-border text-muted-foreground/80 hover:border-input hover:text-foreground'
                                     }`}
                                 >
                                     <Heart className={`h-6 w-6 ${isWishlisted ? 'fill-current' : ''}`} />
@@ -347,20 +344,20 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
 
                         {/* SKU */}
                         {product.sku && (
-                            <p className="text-sm text-gray-500">
-                                SKU: <span className="font-mono font-medium text-gray-700">{product.sku}</span>
+                            <p className="text-sm text-muted-foreground">
+                                SKU: <span className="font-mono font-medium text-foreground/80">{product.sku}</span>
                             </p>
                         )}
 
                         {/* Tags */}
                         {product.tags && product.tags.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-sm text-gray-500">Tags:</span>
+                                <span className="text-sm text-muted-foreground">Tags:</span>
                                 {product.tags.map((tag) => (
                                     <Link
                                         key={tag.id}
                                         href={`/shop?tag=${tag.slug}`}
-                                        className="rounded-full bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200"
+                                        className="rounded-full bg-muted px-3 py-1.5 text-sm text-foreground/80 transition-colors hover:bg-accent"
                                     >
                                         {tag.name}
                                     </Link>
@@ -369,26 +366,26 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                         )}
 
                         {/* Trust Badges */}
-                        <div className="mt-6 grid grid-cols-3 gap-4 border-t border-gray-100 pt-6">
-                            <div className="flex flex-col items-center gap-3 rounded-xl bg-gray-50 p-4 text-center">
-                                <Truck className="h-8 w-8 text-indigo-600" />
+                        <div className="mt-6 grid grid-cols-3 gap-4 border-t border-border pt-6">
+                            <div className="flex flex-col items-center gap-3 rounded-xl bg-muted/50 p-4 text-center">
+                                <Truck className="h-8 w-8 text-primary" />
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Free Shipping</p>
-                                    <p className="text-xs text-gray-500">On orders over $50</p>
+                                    <p className="text-sm font-medium text-foreground">Free Shipping</p>
+                                    <p className="text-xs text-muted-foreground">On orders over $50</p>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-center gap-3 rounded-xl bg-gray-50 p-4 text-center">
-                                <Shield className="h-8 w-8 text-indigo-600" />
+                            <div className="flex flex-col items-center gap-3 rounded-xl bg-muted/50 p-4 text-center">
+                                <Shield className="h-8 w-8 text-primary" />
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Secure Payment</p>
-                                    <p className="text-xs text-gray-500">100% protected</p>
+                                    <p className="text-sm font-medium text-foreground">Secure Payment</p>
+                                    <p className="text-xs text-muted-foreground">100% protected</p>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-center gap-3 rounded-xl bg-gray-50 p-4 text-center">
-                                <RotateCcw className="h-8 w-8 text-indigo-600" />
+                            <div className="flex flex-col items-center gap-3 rounded-xl bg-muted/50 p-4 text-center">
+                                <RotateCcw className="h-8 w-8 text-primary" />
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Easy Returns</p>
-                                    <p className="text-xs text-gray-500">30 day returns</p>
+                                    <p className="text-sm font-medium text-foreground">Easy Returns</p>
+                                    <p className="text-xs text-muted-foreground">30 day returns</p>
                                 </div>
                             </div>
                         </div>
@@ -397,12 +394,9 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
 
                 {/* Product Description */}
                 {product.content && (
-                    <div className="mt-16 rounded-3xl border border-gray-100 bg-white p-8 md:p-12">
-                        <h2 className="mb-6 text-2xl font-bold text-gray-900">Product Description</h2>
-                        <div
-                            className="prose prose-lg prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-indigo-600 max-w-none"
-                            dangerouslySetInnerHTML={{ __html: product.content }}
-                        />
+                    <div className="mt-16 rounded-3xl border bg-card p-8 md:p-12">
+                        <h2 className="mb-6 text-2xl font-semibold tracking-tight text-foreground">Product Description</h2>
+                        <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: product.content }} />
                     </div>
                 )}
 
@@ -410,8 +404,8 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                 {relatedProducts && relatedProducts.length > 0 && (
                     <div className="mt-16">
                         <div className="mb-8 flex items-center justify-between">
-                            <h2 className="text-2xl font-bold text-gray-900">You May Also Like</h2>
-                            <Link href="/shop" className="font-medium text-indigo-600 hover:text-indigo-700">
+                            <h2 className="text-2xl font-semibold tracking-tight text-foreground">You May Also Like</h2>
+                            <Link href="/shop" className="font-medium text-primary hover:text-primary">
                                 View all →
                             </Link>
                         </div>
@@ -424,9 +418,9 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                     <Link
                                         key={p.id}
                                         href={p.url || `/shop/${p.slug}`}
-                                        className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:border-indigo-100 hover:shadow-xl"
+                                        className="group overflow-hidden rounded-xl border bg-card shadow-xs transition-all hover:border-primary/30 hover:shadow-xl"
                                     >
-                                        <div className="relative aspect-square overflow-hidden bg-gray-50">
+                                        <div className="relative aspect-square overflow-hidden bg-muted/50">
                                             {p.featured_image ? (
                                                 <img
                                                     src={p.featured_image}
@@ -434,25 +428,27 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                 />
                                             ) : (
-                                                <div className="flex h-full w-full items-center justify-center text-gray-300">
+                                                <div className="flex h-full w-full items-center justify-center text-muted-foreground/60">
                                                     <ShoppingCart className="h-10 w-10" />
                                                 </div>
                                             )}
                                             {relatedDiscount && (
-                                                <span className="absolute top-2 right-2 rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white">
+                                                <span className="absolute top-2 right-2 rounded-full bg-destructive px-2 py-1 text-xs font-bold text-white">
                                                     -{relatedDiscount}%
                                                 </span>
                                             )}
                                         </div>
                                         <div className="p-4">
-                                            <h3 className="mb-2 line-clamp-2 font-medium text-gray-900 transition-colors group-hover:text-indigo-600">
+                                            <h3 className="mb-2 line-clamp-2 font-medium text-foreground transition-colors group-hover:text-primary">
                                                 {p.title}
                                             </h3>
                                             <div className="flex items-center gap-2">
                                                 {p.sale_price && p.sale_price < (p.price || 0) && (
-                                                    <span className="text-sm text-gray-400 line-through">{formatPrice(p.price, p.currency)}</span>
+                                                    <span className="text-sm text-muted-foreground/80 line-through">
+                                                        {formatPrice(p.price, p.currency)}
+                                                    </span>
                                                 )}
-                                                <span className="font-bold text-gray-900">{formatPrice(p.sale_price || p.price, p.currency)}</span>
+                                                <span className="font-bold text-foreground">{formatPrice(p.sale_price || p.price, p.currency)}</span>
                                             </div>
                                         </div>
                                     </Link>

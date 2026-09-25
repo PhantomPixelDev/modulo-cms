@@ -5,16 +5,19 @@ use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\EnsureNotInstalled;
+use App\Http\Middleware\EnsureSchemaIsCompatible;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LocaleFromUrl;
 use App\Http\Middleware\RedirectToInstaller;
 use App\Http\Middleware\RoleOrPermission;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Middleware\TrustProxies as BaseTrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
@@ -35,10 +38,15 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // Real client IP and scheme behind the Docker nginx / a TLS proxy; see config/app.php.
+        $middleware->replace(BaseTrustProxies::class, TrustProxies::class);
+
         $middleware->web(prepend: [
             // Before anything that reads site settings or sidebar data: on a
             // fresh install those tables do not exist yet.
             RedirectToInstaller::class,
+            // An older build must not serve a database a newer one migrated.
+            EnsureSchemaIsCompatible::class,
         ]);
 
         $middleware->web(append: [

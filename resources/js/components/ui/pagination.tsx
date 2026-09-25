@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 
 interface PaginationProps {
@@ -52,31 +53,23 @@ export function Pagination({
   };
 
   return (
-    <nav
-      className={`flex items-center justify-between border-t border-gray-200 px-4 sm:px-0 ${className}`}
-      aria-label="Pagination"
-    >
-      <div className="-mt-px flex w-0 flex-1">
-        <Button
-          variant="ghost"
-          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-          disabled={currentPage === 1}
-          className="inline-flex items-center border-t-2 border-transparent pr-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:opacity-50"
-        >
-          <ChevronLeft className="mr-3 h-5 w-5" aria-hidden="true" />
-          Previous
-        </Button>
-      </div>
+    <nav className={cn('flex items-center justify-between gap-2 pt-4', className)} aria-label="Pagination">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+      >
+        <ChevronLeft aria-hidden="true" />
+        Previous
+      </Button>
 
-      <div className="hidden md:-mt-px md:flex">
+      <div className="hidden items-center gap-1 md:flex">
         {getPageNumbers().map((page, i) => {
           if (page === 'ellipsis-start' || page === 'ellipsis-end') {
             return (
-              <span
-                key={`ellipsis-${i}`}
-                className="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500"
-              >
-                <MoreHorizontal className="h-5 w-5" />
+              <span key={`ellipsis-${i}`} className="inline-flex size-8 items-center justify-center text-muted-foreground">
+                <MoreHorizontal className="size-4" />
               </span>
             );
           }
@@ -85,33 +78,29 @@ export function Pagination({
           const isCurrent = pageNum === currentPage;
 
           return (
-            <button
+            <Button
               key={pageNum}
+              variant={isCurrent ? 'outline' : 'ghost'}
+              size="sm"
               onClick={() => onPageChange(pageNum)}
-              className={`inline-flex items-center border-t-2 px-4 pt-4 text-sm font-medium ${
-                isCurrent
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
+              className={cn('size-8 px-0 tabular-nums', !isCurrent && 'text-muted-foreground')}
               aria-current={isCurrent ? 'page' : undefined}
             >
               {pageNum}
-            </button>
+            </Button>
           );
         })}
       </div>
 
-      <div className="-mt-px flex w-0 flex-1 justify-end">
-        <Button
-          variant="ghost"
-          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage === totalPages}
-          className="inline-flex items-center border-t-2 border-transparent pl-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:opacity-50"
-        >
-          Next
-          <ChevronRight className="ml-3 h-5 w-5" aria-hidden="true" />
-        </Button>
-      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+      >
+        Next
+        <ChevronRight aria-hidden="true" />
+      </Button>
     </nav>
   );
 }

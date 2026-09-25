@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\InstallChannel;
+use App\Support\SchemaVersion;
 use App\Support\Version;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -27,6 +28,7 @@ class HealthController extends Controller
 
                 return Cache::get('health:ping') === $token;
             }),
+            'schema' => ! SchemaVersion::isAheadOfCode(),
         ];
 
         $healthy = ! in_array(false, $checks, true);
@@ -37,6 +39,9 @@ class HealthController extends Controller
             // shelling into the container.
             'version' => Version::current(),
             'channel' => InstallChannel::detect(),
+            // The version the database was last upgraded by; ahead of `version`
+            // means an image or checkout was rolled back without the database.
+            'schema_version' => SchemaVersion::recorded(),
             'checks' => $checks,
         ], $healthy ? 200 : 503);
     }

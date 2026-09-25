@@ -22,22 +22,25 @@ class UpdateController extends Controller
     {
         abort_unless($this->authorized(), 403);
 
-        return response()->json([
-            'update' => $this->checker->check(),
-            'channel' => InstallChannel::detect(),
-            'commands' => $this->checker->upgradeCommands(),
-            'canSelfUpdate' => InstallChannel::canSelfUpdate(),
-        ]);
+        return $this->respond($this->checker->check());
     }
 
     public function refresh(): JsonResponse
     {
         abort_unless($this->authorized(), 403);
 
+        return $this->respond($this->checker->check(force: true));
+    }
+
+    /**
+     * @param  array<string, mixed>  $update
+     */
+    protected function respond(array $update): JsonResponse
+    {
         return response()->json([
-            'update' => $this->checker->check(force: true),
+            'update' => $update,
             'channel' => InstallChannel::detect(),
-            'commands' => $this->checker->upgradeCommands(),
+            'commands' => $this->checker->upgradeCommands($update['latest'] ?? null),
             'canSelfUpdate' => InstallChannel::canSelfUpdate(),
         ]);
     }

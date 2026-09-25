@@ -23,11 +23,13 @@ class Version
     }
 
     /**
-     * True when this is an untagged working copy rather than a release.
+     * True when this is not a released build: an untagged working copy
+     * (0.0.0-dev) or an image built from a checkout without a release version
+     * stamped in (X.Y.Z-dev).
      */
     public static function isDev(): bool
     {
-        return self::current() === self::DEV;
+        return str_ends_with(self::current(), '-dev');
     }
 
     public static function commit(): ?string

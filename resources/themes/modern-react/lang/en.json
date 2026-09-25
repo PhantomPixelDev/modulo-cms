@@ -82,6 +82,68 @@
         "back_to": "Back to :label",
         "by_author": "By :name",
         "reading_time": ":minutes min read",
-        "related": "Related Posts"
+        "related": "Related Posts",
+        "share": "Share",
+        "copy_link": "Copy link",
+        "updated": "Updated :date"
+    },
+    "comments": {
+        "leave": "Leave a comment",
+        "name": "Your name",
+        "email": "Your email",
+        "placeholder": "Write your comment…",
+        "reply_placeholder": "Write your reply…",
+        "reply": "Reply",
+        "cancel": "Cancel",
+        "post_comment": "Post comment",
+        "post_reply": "Post reply",
+        "posting": "Posting…",
+        "guest_hint": "Please enter your name and email to comment, or",
+        "log_in": "log in",
+        "empty": "No comments yet. Be the first to comment!",
+        "count_one": "1 comment",
+        "count_other": ":count comments"
+    },
+    "info": {
+        "title": "Information & Announcements",
+        "description": "Stay updated with our latest news and announcements.",
+        "empty": "No information items found.",
+        "label": "Information",
+        "topics": "Topics"
+    },
+    "not_found": {
+        "title": "Page not found",
+        "description": "Sorry, we couldn't find the page you're looking for.",
+        "home": "Go back home",
+        "search": "Search the site"
+    },
+    "page": {
+        "last_updated": "Last updated :date"
+    },
+    "search": {
+        "title": "Search",
+        "results_for": "Results for “:query”",
+        "placeholder": "Search posts, pages, and content…",
+        "submit": "Search",
+        "prompt": "Enter search terms to find content",
+        "count_one": "1 result found",
+        "count_other": ":count results found",
+        "empty_title": "No results found",
+        "empty_description": "Nothing matches “:query”. Try different keywords or check your spelling.",
+        "start_title": "Start searching",
+        "start_description": "Enter keywords above to search through our posts and pages."
+    },
+    "sidebar": {
+        "search": "Search",
+        "search_placeholder": "Search articles…",
+        "categories": "Categories",
+        "tags": "Tags"
+    },
+    "taxonomy": {
+        "browse": "Browse posts in :name",
+        "count_one": "1 post",
+        "count_other": ":count posts",
+        "empty_title": "No posts in “:name” yet",
+        "empty_description": "There are no published posts here at the moment."
     }
 }

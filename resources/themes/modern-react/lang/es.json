@@ -82,6 +82,68 @@
         "back_to": "Volver a :label",
         "by_author": "Por :name",
         "reading_time": ":minutes min de lectura",
-        "related": "Entradas relacionadas"
+        "related": "Entradas relacionadas",
+        "share": "Compartir",
+        "copy_link": "Copiar enlace",
+        "updated": "Actualizado el :date"
+    },
+    "comments": {
+        "leave": "Deja un comentario",
+        "name": "Tu nombre",
+        "email": "Tu correo electrónico",
+        "placeholder": "Escribe tu comentario…",
+        "reply_placeholder": "Escribe tu respuesta…",
+        "reply": "Responder",
+        "cancel": "Cancelar",
+        "post_comment": "Publicar comentario",
+        "post_reply": "Publicar respuesta",
+        "posting": "Publicando…",
+        "guest_hint": "Introduce tu nombre y correo para comentar, o",
+        "log_in": "inicia sesión",
+        "empty": "Aún no hay comentarios. ¡Sé el primero en comentar!",
+        "count_one": "1 comentario",
+        "count_other": ":count comentarios"
+    },
+    "info": {
+        "title": "Información y avisos",
+        "description": "Mantente al día con nuestras últimas noticias y avisos.",
+        "empty": "No se encontraron elementos de información.",
+        "label": "Información",
+        "topics": "Temas"
+    },
+    "not_found": {
+        "title": "Página no encontrada",
+        "description": "Lo sentimos, no pudimos encontrar la página que buscas.",
+        "home": "Volver al inicio",
+        "search": "Buscar en el sitio"
+    },
+    "page": {
+        "last_updated": "Última actualización: :date"
+    },
+    "search": {
+        "title": "Buscar",
+        "results_for": "Resultados para «:query»",
+        "placeholder": "Buscar entradas, páginas y contenido…",
+        "submit": "Buscar",
+        "prompt": "Introduce términos de búsqueda para encontrar contenido",
+        "count_one": "1 resultado encontrado",
+        "count_other": ":count resultados encontrados",
+        "empty_title": "Sin resultados",
+        "empty_description": "Nada coincide con «:query». Prueba con otras palabras o revisa la ortografía.",
+        "start_title": "Empieza a buscar",
+        "start_description": "Introduce palabras clave arriba para buscar en nuestras entradas y páginas."
+    },
+    "sidebar": {
+        "search": "Buscar",
+        "search_placeholder": "Buscar artículos…",
+        "categories": "Categorías",
+        "tags": "Etiquetas"
+    },
+    "taxonomy": {
+        "browse": "Explora las entradas de :name",
+        "count_one": "1 entrada",
+        "count_other": ":count entradas",
+        "empty_title": "Todavía no hay entradas en «:name»",
+        "empty_description": "No hay entradas publicadas aquí por el momento."
     }
 }

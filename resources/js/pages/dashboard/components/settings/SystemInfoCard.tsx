@@ -33,6 +33,7 @@ interface UpdateState {
 export function SystemInfoCard({ title = 'System', description }: { title?: string; description?: string }) {
     const build = usePage<SharedData>().props.modulo;
     const [state, setState] = useState<UpdateState | null>(null);
+    const [requestError, setRequestError] = useState<string | null>(null);
     const [checking, setChecking] = useState(false);
 
     const load = (refresh = false) => {
@@ -48,10 +49,18 @@ export function SystemInfoCard({ title = 'System', description }: { title?: stri
             : fetch('/dashboard/admin/updates', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
 
         request
-            .then((response) => (response.ok ? response.json() : null))
-            .then((data: UpdateState | null) => setState(data))
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error(`Could not check for updates (HTTP ${response.status}).`);
+                }
+                setState((await response.json()) as UpdateState);
+                setRequestError(null);
+            })
             // A failed update check must never break the settings page.
-            .catch(() => setState(null))
+            .catch((error: unknown) => {
+                setState(null);
+                setRequestError(error instanceof Error ? error.message : 'Could not check for updates.');
+            })
             .finally(() => setChecking(false));
     };
 
@@ -104,18 +113,20 @@ export function SystemInfoCard({ title = 'System', description }: { title?: stri
                             <p className="text-xs text-muted-foreground">
                                 {state.canSelfUpdate
                                     ? 'Run these from the site directory:'
-                                    : 'This install runs from a container image, so it is replaced rather than updated in place. Run these on the host:'}
+                                    : 'This install runs from a container image, so the image is replaced rather than updated in place. Run this on the host:'}
                             </p>
                             <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs">{state.commands.join('\n')}</pre>
                         </div>
                     ) : (
                         <p className="text-sm text-muted-foreground">
-                            {state?.update.error ? state.update.error : state ? 'Running the latest release.' : 'Checking for updates...'}
+                            {requestError ??
+                                state?.update.error ??
+                                (state ? 'Running the latest release.' : checking ? 'Checking for updates…' : 'Update status unavailable.')}
                         </p>
                     )}
 
                     <Button variant="outline" size="sm" className="mt-3" disabled={checking} onClick={() => load(true)}>
-                        {checking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        {checking ? <Loader2 className="animate-spin" /> : null}
                         Check for updates
                     </Button>
                 </div>

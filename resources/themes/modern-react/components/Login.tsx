@@ -33,14 +33,14 @@ export default function Login({ canResetPassword = true, status }: Props) {
         <AuthLayout title="Log in">
             <Head title="Log in" />
 
-            <div className="py-6">
-                <div className="">
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight">Welcome back</h1>
-                    <p className="mb-8 text-muted-foreground">Enter your email and password to sign in</p>
+            <div>
+                <div>
+                    <h1 className="mb-1.5 text-2xl font-semibold tracking-tight">Welcome back</h1>
+                    <p className="mb-8 text-sm text-muted-foreground">Enter your email and password to sign in</p>
 
-                    {status && <div className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">{status}</div>}
+                    {status && <div className="mb-4 rounded-md bg-success/10 p-3 text-sm text-success">{status}</div>}
 
-                    <form className="space-y-6" onSubmit={submit}>
+                    <form className="space-y-5" onSubmit={submit}>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email address</Label>
                             <Input
@@ -83,7 +83,7 @@ export default function Login({ canResetPassword = true, status }: Props) {
                         </div>
 
                         <Button type="submit" className="w-full" disabled={processing}>
-                            {processing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                            {processing && <LoaderCircle className="animate-spin" />}
                             Log in
                         </Button>
 

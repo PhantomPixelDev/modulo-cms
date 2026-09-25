@@ -325,8 +325,8 @@ case "${1:-}" in
         detect_env
         # Deliberately two steps. Fetching new code is channel-specific and, on
         # Docker, cannot happen from inside the container at all: the image is
-        # immutable and opcache runs with validate_timestamps off. So pull the
-        # new image first, then migrate what is now on disk.
+        # immutable and public/ is baked into the web image. So pull the new
+        # image first, then migrate what is now on disk.
         if [[ "$ENV" == "prod" && -z "${MODULO_BUILD:-}" ]]; then
             echo "Pulling the published images..."
             run_compose pull
@@ -357,11 +357,26 @@ case "${1:-}" in
         detect_runtime
         # Stop everything that writes, so nothing lands mid-restore.
         run_compose stop app queue scheduler >/dev/null 2>&1 || true
-        echo "Restoring..."
-        if "$RUNTIME" compose $( [[ "$ENV" == "prod" ]] && echo "--env-file $SCRIPT_DIR/.env.prod" ) -f "$(get_compose_file)" exec -T db psql -U "${DB_USERNAME:-modulo}" -d "${DB_DATABASE:-modulo}" < "$DUMP"; then
+        # Credentials come from the env file the stack actually uses, not from
+        # whatever happens to be exported in this shell.
+        ENV_FILE="$SCRIPT_DIR/.env.dev"
+        [[ "$ENV" == "prod" ]] && ENV_FILE="$SCRIPT_DIR/.env.prod"
+        env_value() { [[ -f "$ENV_FILE" ]] && sed -n "s/^$1=//p" "$ENV_FILE" | tail -n1 | sed -e 's/^"//' -e 's/"$//'; }
+        RESTORE_DB="$(env_value DB_DATABASE)"
+        RESTORE_USER="$(env_value DB_USERNAME)"
+        [[ -n "$RESTORE_DB" ]] || RESTORE_DB=$([[ "$ENV" == "prod" ]] && echo modulo_prod || echo modulo)
+        [[ -n "$RESTORE_USER" ]] || RESTORE_USER=modulo
+        echo "Restoring into '$RESTORE_DB'..."
+        # A plain pg_dump has no DROP statements, so loading it over existing
+        # tables fails half-way while psql still exits 0. Start from an empty
+        # schema, stop at the first error, and do it all in one transaction so
+        # a failure leaves the old data untouched.
+        if { printf 'DROP SCHEMA IF EXISTS public CASCADE;\nCREATE SCHEMA public;\n'; cat "$DUMP"; } \
+            | "$RUNTIME" compose $( [[ "$ENV" == "prod" ]] && echo "--env-file $ENV_FILE" ) -f "$(get_compose_file)" \
+                exec -T db psql -v ON_ERROR_STOP=1 --single-transaction --quiet -U "$RESTORE_USER" -d "$RESTORE_DB" >/dev/null; then
             echo "✅ Restored"
         else
-            echo "❌ Restore failed; the writers are still stopped so you can retry." >&2
+            echo "❌ Restore failed and was rolled back; the database is unchanged. The writers are still stopped so you can retry." >&2
             exit 1
         fi
         run_compose start app queue scheduler >/dev/null 2>&1 || true

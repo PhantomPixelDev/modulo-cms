@@ -144,3 +144,58 @@ it('reports availability and the channel-specific commands to an administrator',
         ->assertJsonPath('canSelfUpdate', false)
         ->assertJsonStructure(['update', 'channel', 'commands', 'canSelfUpdate']);
 });
+
+it('retries a failed check after a short while instead of hiding updates for hours', function () {
+    config(['version.version' => '1.0.0', 'updates.error_cache_ttl' => 600]);
+    Http::fakeSequence('api.github.com/*')
+        ->push('', 503)
+        ->push(releaseResponse('v1.4.0'));
+
+    $checker = app(UpdateChecker::class);
+
+    expect($checker->check()['error'])->not->toBeNull();
+
+    // Within the error window the failure is reused, so a rate limit is not
+    // made worse by every admin page load...
+    $checker->check();
+    Http::assertSentCount(1);
+
+    // ...but once it passes, the check runs again and finds the release.
+    $this->travel(11)->minutes();
+
+    expect($checker->check()['available'])->toBeTrue();
+    Http::assertSentCount(2);
+});
+
+it('explains a GitHub rate limit rather than reporting a bare 403', function () {
+    config(['version.version' => '1.0.0']);
+    Http::fake(['api.github.com/*' => Http::response(['message' => 'API rate limit exceeded'], 403, ['X-RateLimit-Remaining' => '0'])]);
+
+    expect(app(UpdateChecker::class)->check()['error'])->toContain('rate limit');
+});
+
+it('offers a prerelease when the site opts in to them', function () {
+    config(['version.version' => '1.0.0', 'updates.include_prereleases' => true]);
+    Http::fake(['api.github.com/*' => Http::response([
+        ['tag_name' => 'v2.0.0-rc.2', 'draft' => true, 'prerelease' => true],
+        releaseResponse('v2.0.0-rc.1', prerelease: true),
+        releaseResponse('v1.4.0'),
+    ])]);
+
+    $result = app(UpdateChecker::class)->check();
+
+    // The draft is skipped; the newest published prerelease is offered.
+    expect($result['available'])->toBeTrue()
+        ->and($result['latest'])->toBe('2.0.0-rc.1');
+});
+
+it('names the release to install in the upgrade commands', function () {
+    config(['version.channel' => InstallChannel::DOCKER]);
+    expect(implode("\n", app(UpdateChecker::class)->upgradeCommands('v1.5.0')))
+        ->toContain('./modulo update 1.5.0')
+        ->toContain('MODULO_TAG=1.5.0');
+
+    config(['version.channel' => InstallChannel::GIT]);
+    expect(implode("\n", app(UpdateChecker::class)->upgradeCommands('1.5.0')))
+        ->toContain('git checkout v1.5.0');
+});

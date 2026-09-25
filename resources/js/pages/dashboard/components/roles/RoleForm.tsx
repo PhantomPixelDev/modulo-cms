@@ -55,9 +55,9 @@ export function RoleForm({ role, allPermissions, isEditing, onSubmit, onCancel }
                                         : data.permissions.filter((id: number) => id !== permission.id);
                                     setData('permissions', newPermissions);
                                 }}
-                                className="text-primary-600 focus:ring-primary-500 h-4 w-4 rounded border-gray-300"
+                                className="size-4 rounded border-input accent-primary"
                             />
-                            <label htmlFor={`permission-${permission.id}`} className="text-sm text-gray-700">
+                            <label htmlFor={`permission-${permission.id}`} className="text-sm text-foreground">
                                 {permission.name}
                             </label>
                         </div>

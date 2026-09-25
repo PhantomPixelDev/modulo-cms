@@ -122,14 +122,11 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
     if (cart?.is_empty) {
         return (
             <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Checkout">
-                <div className="min-h-screen bg-gray-50 py-12">
-                    <div className="mx-auto max-w-2xl px-4 text-center">
-                        <ShoppingBag className="mx-auto mb-6 h-20 w-20 text-gray-200" />
-                        <h1 className="mb-4 text-2xl font-bold text-gray-900">Your cart is empty</h1>
-                        <Link
-                            href="/shop"
-                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white hover:bg-indigo-700"
-                        >
+                <div>
+                    <div className="mx-auto max-w-2xl py-12 text-center">
+                        <ShoppingBag className="mx-auto mb-6 h-20 w-20 text-muted-foreground/40" />
+                        <h1 className="mb-4 text-2xl font-semibold tracking-tight text-foreground">Your cart is empty</h1>
+                        <Link href="/shop" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-white hover:bg-primary/90">
                             Continue Shopping
                         </Link>
                     </div>
@@ -142,86 +139,88 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
         <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Checkout">
             <SEOHead title="Checkout" description="Complete your order" />
 
-            <div className="min-h-screen bg-gray-50 py-12">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div>
+                <div>
                     {/* Breadcrumb */}
-                    <nav className="mb-8 flex items-center gap-2 text-sm text-gray-500">
-                        <Link href="/" className="hover:text-indigo-600">
+                    <nav className="mb-8 flex items-center gap-2 text-sm text-muted-foreground">
+                        <Link href="/" className="hover:text-primary">
                             Home
                         </Link>
                         <span>/</span>
-                        <Link href="/shop" className="hover:text-indigo-600">
+                        <Link href="/shop" className="hover:text-primary">
                             Shop
                         </Link>
                         <span>/</span>
-                        <Link href="/shop/cart" className="hover:text-indigo-600">
+                        <Link href="/shop/cart" className="hover:text-primary">
                             Cart
                         </Link>
                         <span>/</span>
-                        <span className="text-gray-900">Checkout</span>
+                        <span className="text-foreground">Checkout</span>
                     </nav>
 
-                    <h1 className="mb-8 text-3xl font-bold text-gray-900">Checkout</h1>
+                    <h1 className="mb-8 text-3xl font-semibold tracking-tight text-foreground">Checkout</h1>
 
-                    {errors.general && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-600">{errors.general}</div>}
+                    {errors.general && (
+                        <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">{errors.general}</div>
+                    )}
 
                     <form onSubmit={handleSubmit}>
                         <div className="grid gap-8 lg:grid-cols-3">
                             {/* Checkout Form */}
                             <div className="space-y-8 lg:col-span-2">
                                 {/* Contact Information */}
-                                <div className="rounded-xl bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                        <MapPin className="h-5 w-5 text-indigo-600" />
+                                <div className="rounded-xl border bg-card p-6 shadow-xs">
+                                    <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                        <MapPin className="h-5 w-5 text-primary" />
                                         Contact Information
                                     </h2>
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         <div className="sm:col-span-2">
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">Full Name *</label>
+                                            <label className="mb-1 block text-sm font-medium text-foreground/80">Full Name *</label>
                                             <input
                                                 type="text"
                                                 name="customer_name"
                                                 value={form.customer_name}
                                                 onChange={handleChange}
                                                 required
-                                                className={`w-full rounded-lg border px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${errors.customer_name ? 'border-red-500' : 'border-gray-200'}`}
+                                                className={`h-10 w-full rounded-md border bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 ${errors.customer_name ? 'border-destructive' : 'border-input'}`}
                                             />
-                                            {errors.customer_name && <p className="mt-1 text-sm text-red-500">{errors.customer_name}</p>}
+                                            {errors.customer_name && <p className="mt-1 text-sm text-destructive">{errors.customer_name}</p>}
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">Email *</label>
+                                            <label className="mb-1 block text-sm font-medium text-foreground/80">Email *</label>
                                             <input
                                                 type="email"
                                                 name="customer_email"
                                                 value={form.customer_email}
                                                 onChange={handleChange}
                                                 required
-                                                className={`w-full rounded-lg border px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${errors.customer_email ? 'border-red-500' : 'border-gray-200'}`}
+                                                className={`h-10 w-full rounded-md border bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 ${errors.customer_email ? 'border-destructive' : 'border-input'}`}
                                             />
-                                            {errors.customer_email && <p className="mt-1 text-sm text-red-500">{errors.customer_email}</p>}
+                                            {errors.customer_email && <p className="mt-1 text-sm text-destructive">{errors.customer_email}</p>}
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">Phone</label>
+                                            <label className="mb-1 block text-sm font-medium text-foreground/80">Phone</label>
                                             <input
                                                 type="tel"
                                                 name="customer_phone"
                                                 value={form.customer_phone}
                                                 onChange={handleChange}
-                                                className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Billing Address */}
-                                <div className="rounded-xl bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                        <MapPin className="h-5 w-5 text-indigo-600" />
+                                <div className="rounded-xl border bg-card p-6 shadow-xs">
+                                    <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                        <MapPin className="h-5 w-5 text-primary" />
                                         Billing Address
                                     </h2>
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         <div className="sm:col-span-2">
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">Address *</label>
+                                            <label className="mb-1 block text-sm font-medium text-foreground/80">Address *</label>
                                             <input
                                                 type="text"
                                                 name="billing_address_1"
@@ -229,7 +228,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                                 onChange={handleChange}
                                                 required
                                                 placeholder="Street address"
-                                                className={`w-full rounded-lg border px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${errors.billing_address_1 ? 'border-red-500' : 'border-gray-200'}`}
+                                                className={`h-10 w-full rounded-md border bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 ${errors.billing_address_1 ? 'border-destructive' : 'border-input'}`}
                                             />
                                         </div>
                                         <div className="sm:col-span-2">
@@ -239,49 +238,49 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                                 value={form.billing_address_2}
                                                 onChange={handleChange}
                                                 placeholder="Apartment, suite, etc. (optional)"
-                                                className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                             />
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">City *</label>
+                                            <label className="mb-1 block text-sm font-medium text-foreground/80">City *</label>
                                             <input
                                                 type="text"
                                                 name="billing_city"
                                                 value={form.billing_city}
                                                 onChange={handleChange}
                                                 required
-                                                className={`w-full rounded-lg border px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${errors.billing_city ? 'border-red-500' : 'border-gray-200'}`}
+                                                className={`h-10 w-full rounded-md border bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 ${errors.billing_city ? 'border-destructive' : 'border-input'}`}
                                             />
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">State/Province</label>
+                                            <label className="mb-1 block text-sm font-medium text-foreground/80">State/Province</label>
                                             <input
                                                 type="text"
                                                 name="billing_state"
                                                 value={form.billing_state}
                                                 onChange={handleChange}
-                                                className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                             />
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">Postal Code *</label>
+                                            <label className="mb-1 block text-sm font-medium text-foreground/80">Postal Code *</label>
                                             <input
                                                 type="text"
                                                 name="billing_postcode"
                                                 value={form.billing_postcode}
                                                 onChange={handleChange}
                                                 required
-                                                className={`w-full rounded-lg border px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${errors.billing_postcode ? 'border-red-500' : 'border-gray-200'}`}
+                                                className={`h-10 w-full rounded-md border bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 ${errors.billing_postcode ? 'border-destructive' : 'border-input'}`}
                                             />
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-sm font-medium text-gray-700">Country *</label>
+                                            <label className="mb-1 block text-sm font-medium text-foreground/80">Country *</label>
                                             <select
                                                 name="billing_country"
                                                 value={form.billing_country}
                                                 onChange={handleChange}
                                                 required
-                                                className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                             >
                                                 {Object.entries(countryList).map(([code, name]) => (
                                                     <option key={code} value={code}>
@@ -299,30 +298,30 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                                 name="ship_to_different"
                                                 checked={shipToDifferent}
                                                 onChange={handleChange}
-                                                className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                className="size-4 rounded accent-primary"
                                             />
-                                            <span className="text-gray-700">Ship to a different address?</span>
+                                            <span className="text-foreground/80">Ship to a different address?</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 {/* Shipping Address (conditional) */}
                                 {shipToDifferent && (
-                                    <div className="rounded-xl bg-white p-6 shadow-sm">
-                                        <h2 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                            <Truck className="h-5 w-5 text-indigo-600" />
+                                    <div className="rounded-xl border bg-card p-6 shadow-xs">
+                                        <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                            <Truck className="h-5 w-5 text-primary" />
                                             Shipping Address
                                         </h2>
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="sm:col-span-2">
-                                                <label className="mb-1 block text-sm font-medium text-gray-700">Address *</label>
+                                                <label className="mb-1 block text-sm font-medium text-foreground/80">Address *</label>
                                                 <input
                                                     type="text"
                                                     name="shipping_address_1"
                                                     value={form.shipping_address_1}
                                                     onChange={handleChange}
                                                     required={shipToDifferent}
-                                                    className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                    className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                                 />
                                             </div>
                                             <div className="sm:col-span-2">
@@ -332,49 +331,49 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                                     value={form.shipping_address_2}
                                                     onChange={handleChange}
                                                     placeholder="Apartment, suite, etc. (optional)"
-                                                    className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                    className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="mb-1 block text-sm font-medium text-gray-700">City *</label>
+                                                <label className="mb-1 block text-sm font-medium text-foreground/80">City *</label>
                                                 <input
                                                     type="text"
                                                     name="shipping_city"
                                                     value={form.shipping_city}
                                                     onChange={handleChange}
                                                     required={shipToDifferent}
-                                                    className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                    className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="mb-1 block text-sm font-medium text-gray-700">State/Province</label>
+                                                <label className="mb-1 block text-sm font-medium text-foreground/80">State/Province</label>
                                                 <input
                                                     type="text"
                                                     name="shipping_state"
                                                     value={form.shipping_state}
                                                     onChange={handleChange}
-                                                    className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                    className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="mb-1 block text-sm font-medium text-gray-700">Postal Code *</label>
+                                                <label className="mb-1 block text-sm font-medium text-foreground/80">Postal Code *</label>
                                                 <input
                                                     type="text"
                                                     name="shipping_postcode"
                                                     value={form.shipping_postcode}
                                                     onChange={handleChange}
                                                     required={shipToDifferent}
-                                                    className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                    className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="mb-1 block text-sm font-medium text-gray-700">Country *</label>
+                                                <label className="mb-1 block text-sm font-medium text-foreground/80">Country *</label>
                                                 <select
                                                     name="shipping_country"
                                                     value={form.shipping_country}
                                                     onChange={handleChange}
                                                     required={shipToDifferent}
-                                                    className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                                    className="h-10 w-full rounded-md border border-input bg-input-bg px-3 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                                 >
                                                     {Object.entries(countryList).map(([code, name]) => (
                                                         <option key={code} value={code}>
@@ -388,61 +387,61 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                 )}
 
                                 {/* Payment Method */}
-                                <div className="rounded-xl bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                        <CreditCard className="h-5 w-5 text-indigo-600" />
+                                <div className="rounded-xl border bg-card p-6 shadow-xs">
+                                    <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                        <CreditCard className="h-5 w-5 text-primary" />
                                         Payment Method
                                     </h2>
                                     <div className="space-y-3">
-                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent">
                                             <input
                                                 type="radio"
                                                 name="payment_method"
                                                 value="cod"
                                                 checked={form.payment_method === 'cod'}
                                                 onChange={handleChange}
-                                                className="h-5 w-5 text-indigo-600 focus:ring-indigo-500"
+                                                className="size-4 accent-primary"
                                             />
                                             <div>
-                                                <span className="font-medium text-gray-900">Cash on Delivery</span>
-                                                <p className="text-sm text-gray-500">Pay when you receive your order</p>
+                                                <span className="font-medium text-foreground">Cash on Delivery</span>
+                                                <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
                                             </div>
                                         </label>
-                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent">
                                             <input
                                                 type="radio"
                                                 name="payment_method"
                                                 value="bank_transfer"
                                                 checked={form.payment_method === 'bank_transfer'}
                                                 onChange={handleChange}
-                                                className="h-5 w-5 text-indigo-600 focus:ring-indigo-500"
+                                                className="size-4 accent-primary"
                                             />
                                             <div>
-                                                <span className="font-medium text-gray-900">Bank Transfer</span>
-                                                <p className="text-sm text-gray-500">Make payment directly to our bank account</p>
+                                                <span className="font-medium text-foreground">Bank Transfer</span>
+                                                <p className="text-sm text-muted-foreground">Make payment directly to our bank account</p>
                                             </div>
                                         </label>
                                     </div>
                                 </div>
 
                                 {/* Order Notes */}
-                                <div className="rounded-xl bg-white p-6 shadow-sm">
-                                    <h2 className="mb-4 text-lg font-bold text-gray-900">Order Notes (optional)</h2>
+                                <div className="rounded-xl border bg-card p-6 shadow-xs">
+                                    <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">Order Notes (optional)</h2>
                                     <textarea
                                         name="customer_note"
                                         value={form.customer_note}
                                         onChange={handleChange}
                                         rows={3}
                                         placeholder="Notes about your order, e.g. special delivery instructions"
-                                        className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+                                        className="min-h-24 w-full rounded-md border border-input bg-input-bg px-3 py-2 text-sm text-foreground shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                                     />
                                 </div>
                             </div>
 
                             {/* Order Summary */}
                             <div className="lg:col-span-1">
-                                <div className="sticky top-24 rounded-xl bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 text-lg font-bold text-gray-900">Your Order</h2>
+                                <div className="sticky top-24 rounded-xl border bg-card p-6 shadow-xs">
+                                    <h2 className="mb-6 text-lg font-semibold tracking-tight text-foreground">Your Order</h2>
 
                                     <div className="mb-6 space-y-4">
                                         {cart?.items.map((item) => (
@@ -454,42 +453,42 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                                         className="h-16 w-16 rounded-lg object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100">
-                                                        <ShoppingBag className="h-6 w-6 text-gray-300" />
+                                                    <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
+                                                        <ShoppingBag className="h-6 w-6 text-muted-foreground/60" />
                                                     </div>
                                                 )}
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="truncate font-medium text-gray-900">{item.product_name}</p>
-                                                    <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                                                    <p className="truncate font-medium text-foreground">{item.product_name}</p>
+                                                    <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                                 </div>
-                                                <p className="font-medium text-gray-900">{formatPrice(item.subtotal, totals?.currency)}</p>
+                                                <p className="font-medium text-foreground">{formatPrice(item.subtotal, totals?.currency)}</p>
                                             </div>
                                         ))}
                                     </div>
 
                                     <div className="space-y-3 border-t pt-4">
-                                        <div className="flex justify-between text-gray-600">
+                                        <div className="flex justify-between text-muted-foreground">
                                             <span>Subtotal</span>
                                             <span>{formatPrice(totals?.subtotal ?? 0, totals?.currency)}</span>
                                         </div>
                                         {(totals?.discount ?? 0) > 0 && (
-                                            <div className="flex justify-between text-green-600">
+                                            <div className="flex justify-between text-success">
                                                 <span>Discount</span>
                                                 <span>-{formatPrice(totals?.discount ?? 0, totals?.currency)}</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between text-gray-600">
+                                        <div className="flex justify-between text-muted-foreground">
                                             <span>Shipping</span>
                                             <span>{totals?.shipping ? formatPrice(totals.shipping, totals.currency) : 'Free'}</span>
                                         </div>
                                         {(totals?.tax ?? 0) > 0 && (
-                                            <div className="flex justify-between text-gray-600">
+                                            <div className="flex justify-between text-muted-foreground">
                                                 <span>Tax</span>
                                                 <span>{formatPrice(totals?.tax ?? 0, totals?.currency)}</span>
                                             </div>
                                         )}
                                         <div className="border-t pt-3">
-                                            <div className="flex justify-between text-xl font-bold text-gray-900">
+                                            <div className="flex justify-between text-xl font-semibold tracking-tight text-foreground">
                                                 <span>Total</span>
                                                 <span>{formatPrice(totals?.total ?? 0, totals?.currency)}</span>
                                             </div>
@@ -499,7 +498,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-primary px-6 py-4 font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         {submitting ? (
                                             <>
@@ -514,7 +513,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                         )}
                                     </button>
 
-                                    <p className="mt-4 text-center text-xs text-gray-500">
+                                    <p className="mt-4 text-center text-xs text-muted-foreground">
                                         By placing your order, you agree to our Terms of Service and Privacy Policy.
                                     </p>
                                 </div>

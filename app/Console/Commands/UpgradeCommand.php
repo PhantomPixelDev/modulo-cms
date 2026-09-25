@@ -4,11 +4,13 @@ namespace App\Console\Commands;
 
 use App\Services\UpgradePreflight;
 use App\Support\InstallChannel;
+use App\Support\SchemaVersion;
 use App\Support\Version;
 use Database\Seeders\BootstrapSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -16,8 +18,7 @@ use Throwable;
  *
  * This command does not fetch code. Delivering new code differs per install
  * channel, and on Docker it is impossible from inside the container: the image
- * is immutable, opcache runs with validate_timestamps off, and public/ is baked
- * into a separate nginx image at build time. So the sequence here is the part
+ * is immutable and public/ is baked into a separate nginx image at build time. So the sequence here is the part
  * that is the same everywhere -- back up, take the site down, migrate, seed
  * bootstrap data, rebuild caches, bring it back.
  */
@@ -75,12 +76,29 @@ class UpgradeCommand extends Command
             return self::SUCCESS;
         }
 
+        $backupPath = null;
+
         if (! $this->option('skip-backup')) {
             // Reuse the scheduled backup command rather than growing a second
             // implementation that could drift from it.
-            $this->components->task('Backing up the database', function () {
-                return Artisan::call('modulo:db-backup') === self::SUCCESS;
+            $backedUp = false;
+            $this->components->task('Backing up the database', function () use (&$backedUp, &$backupPath) {
+                $backedUp = Artisan::call('modulo:db-backup') === self::SUCCESS;
+                $backupPath = $this->backupPathFrom(Artisan::output());
+
+                return $backedUp;
             });
+
+            // Migrating without a restore point is exactly the situation the
+            // backup exists to prevent, so a failed backup stops the upgrade.
+            if (! $backedUp) {
+                $this->newLine();
+                $this->error('Upgrade stopped: the database backup failed, and nothing was changed.');
+                $this->line(trim(Artisan::output()));
+                $this->line('Fix the backup (see above), or pass --skip-backup if you have taken one yourself.');
+
+                return self::FAILURE;
+            }
         } else {
             $this->warn('Skipping the database backup.');
         }
@@ -94,52 +112,83 @@ class UpgradeCommand extends Command
             return true;
         });
 
-        $failed = null;
-
         try {
             $this->components->task('Running migrations', function () {
-                Artisan::call('migrate', ['--force' => true]);
+                $this->callOrFail('migrate', ['--force' => true]);
 
                 return true;
             });
 
             $this->components->task('Applying bootstrap data', function () {
                 // Idempotent and non-destructive by construction; see BootstrapSeeder.
-                Artisan::call('db:seed', ['--class' => BootstrapSeeder::class, '--force' => true]);
-
-                return true;
-            });
-
-            $this->components->task('Rebuilding caches', function () {
-                Artisan::call('optimize:clear');
-                Artisan::call('optimize');
+                $this->callOrFail('db:seed', ['--class' => BootstrapSeeder::class, '--force' => true]);
 
                 return true;
             });
         } catch (Throwable $e) {
-            $failed = $e;
-        } finally {
-            // Always lift maintenance mode, even on failure: leaving the site
-            // dark is worse than leaving it on the old schema.
-            $this->components->task('Disabling maintenance mode', function () {
-                Artisan::call('up');
-
-                return true;
-            });
-        }
-
-        if ($failed !== null) {
+            // The schema may be half-way between versions. Serving traffic from
+            // it risks writing data the old *and* the new code misread, so the
+            // site stays in maintenance mode until someone has looked.
             $this->newLine();
-            $this->error('Upgrade failed: '.$failed->getMessage());
-            $this->line('The database backup is in storage/app/backups.');
+            $this->error('Upgrade failed: '.$e->getMessage());
+            $this->line('The site has been left in maintenance mode so no data is written to a partly migrated database.');
+            $this->line($backupPath !== null
+                ? "Restore point: {$backupPath}"
+                : 'No backup was taken by this run (--skip-backup).');
+            $this->line('Fix the problem and run `php artisan modulo:upgrade` again, or restore the backup, then run `php artisan up`.');
 
             return self::FAILURE;
         }
+
+        SchemaVersion::recordCurrent();
+
+        // From here on the schema matches the code, so the site comes back up
+        // even if rebuilding the caches goes wrong -- a cold cache is only slow.
+        try {
+            $this->components->task('Rebuilding caches', function () {
+                $this->callOrFail('optimize:clear');
+                $this->callOrFail('optimize');
+
+                return true;
+            });
+        } catch (Throwable $e) {
+            $this->warn('Could not rebuild the caches: '.$e->getMessage());
+            $this->warn('The site will work, but run `php artisan optimize` once the problem is fixed.');
+        }
+
+        $this->components->task('Disabling maintenance mode', function () {
+            Artisan::call('up');
+
+            return true;
+        });
 
         $this->newLine();
         $this->info('Upgraded to '.Version::current().'.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Run an Artisan command and turn a non-zero exit code into an exception,
+     * so a failed step can never be mistaken for a finished one.
+     *
+     * @param  array<string, mixed>  $parameters
+     */
+    protected function callOrFail(string $command, array $parameters = []): void
+    {
+        if (Artisan::call($command, $parameters) !== self::SUCCESS) {
+            $output = trim(Artisan::output());
+
+            throw new RuntimeException("`{$command}` failed".($output !== '' ? ": {$output}" : '.'));
+        }
+    }
+
+    /**
+     * The backup command reports "Backup written to <path> (<size>)".
+     */
+    protected function backupPathFrom(string $output): ?string
+    {
+        return preg_match('/Backup written to (.+?) \(/', $output, $matches) === 1 ? $matches[1] : null;
     }
 
     /**

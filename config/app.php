@@ -69,6 +69,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Which reverse proxies may tell the application the visitor's real IP and
+    | scheme (X-Forwarded-For / -Proto). Rate limiting, logs and generated
+    | https:// URLs all depend on it. The default trusts private networks only:
+    | the Docker network and a TLS proxy on the same host, never the internet.
+    | Comma-separated IPs/CIDRs, or "*" to trust whatever connects directly.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES', '127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

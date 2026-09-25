@@ -14,11 +14,11 @@ export default function LoadingSpinner({ size = 'md', color = 'blue', className 
     };
 
     const colorClasses = {
-        blue: 'text-blue-600',
-        gray: 'text-gray-600',
+        blue: 'text-primary',
+        gray: 'text-muted-foreground',
         white: 'text-white',
-        green: 'text-green-600',
-        red: 'text-red-600',
+        green: 'text-success',
+        red: 'text-destructive',
     };
 
     return (

@@ -25,8 +25,11 @@ class ModuloShopServiceProvider extends BasePluginServiceProvider
         // Register cart service as singleton (session-based)
         $this->app->singleton(CartService::class);
 
-        // Register shortcode service as singleton
-        $this->app->singleton(ShortcodeService::class);
+        // Core owns the shortcode registry; only bind it on a core too old to.
+        // Re-binding it would drop every shortcode other plugins registered.
+        if (! $this->app->bound(ShortcodeService::class)) {
+            $this->app->singleton(ShortcodeService::class);
+        }
     }
 
     protected function bootPlugin(): void
