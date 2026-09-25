@@ -74,7 +74,7 @@ scheduler, which would otherwise keep writing during the migration.
 ## Getting the new code there
 
 That part is channel-specific, and the admin shows the right commands for your
-install under **Settings → System**.
+install under **System → Updates**.
 
 **Docker** — the image is replaced, not updated. The installer puts a `modulo` helper
 next to `docker-compose.yml`; from that folder:
@@ -85,7 +85,10 @@ next to `docker-compose.yml`; from that folder:
 ```
 
 It backs up the database, sets `MODULO_TAG` in `.env`, pulls the new images, restarts,
-and waits for `/health`. With `RUN_MIGRATIONS=true` (the default) the new `app`
+and waits for `/health`. If the site does not become healthy, it **rolls back on its
+own**: `MODULO_TAG` goes back to the previous version, the pre-update dump is restored
+and the old containers are started again. Pass `--no-rollback` to leave the failed
+version running for inspection instead. With `RUN_MIGRATIONS=true` (the default) the new `app`
 container runs `modulo:upgrade` itself on boot — the guarded path above, not a bare
 `migrate`. If that upgrade cannot finish, the container keeps the site in maintenance
 mode instead of serving new code against the old schema.
@@ -106,7 +109,7 @@ A container cannot update itself in place: the `web` image bakes `public/` in at
 time, so PHP would serve new markup against stale assets, and `compose up` replaces
 the container filesystem anyway.
 
-**Rolling back** — `./modulo update <previous version>`, then, if the schema changed,
+**Rolling back by hand** — `./modulo update <previous version>`, then, if the schema changed,
 `./modulo restore storage/app/backups/<dump>.sql`. The restore starts from an empty
 schema and runs in a single transaction, so a failed restore leaves the database as
 it was.
@@ -126,13 +129,27 @@ php artisan modulo:upgrade
 
 ## Is an upgrade available?
 
-**Settings → System** shows the running version, the install channel, and whether a
-newer release exists, with the exact commands for that release. The check asks the
-GitHub releases API at most twice a day and caches the answer; a failed check is
-retried after ten minutes rather than hiding updates for hours. A development build
-never checks. Prereleases are ignored unless `MODULO_UPDATE_PRERELEASES=true`.
+**System → Updates** in the admin shows the running version, whether a newer release
+exists (flagged when it is a security release or has breaking changes), any PHP or
+PostgreSQL requirement of the new release this server does not meet, and the exact
+commands for that release on this install. The same page lists plugin updates from
+the registry with one-click **Update** / **Update all**. A badge on the sidebar entry
+counts pending updates, red for a security release.
 
-Disable it entirely with `MODULO_UPDATE_CHECK=false`.
+The scheduler runs `php artisan modulo:check-updates` every day at 04:10. It records
+core and plugin results for the page, and emails administrators (users with the
+`admin` or `super-admin` role, else the site's admin email) once for each new set of
+updates, not every day until they are applied. **Check now** on the page does the same
+on demand. Turn the email off with `MODULO_UPDATE_NOTIFY=false`.
+
+The release details come from the `release.json` published with each release (see
+[releasing.md](releasing.md)); older releases without one still show as updates, just
+without the flags. The check asks the GitHub releases API and caches the answer for 12
+hours; a failed check is retried after ten minutes rather than hiding updates for
+hours. A development build never checks. Prereleases are ignored unless
+`MODULO_UPDATE_PRERELEASES=true`.
+
+Disable checks entirely with `MODULO_UPDATE_CHECK=false`.
 
 ## What we test
 

@@ -210,8 +210,11 @@ MODULO_ENV=prod ./modulo.sh artisan modulo:upgrade
 
 It backs up, takes the site down, migrates, applies bootstrap data and lifts
 maintenance mode — and refuses to start if a preflight check finds data that would
-break a migration partway through. **Settings → System** shows whether a newer
-release exists and the exact commands for your install channel.
+break a migration partway through. **System → Updates** in the admin shows whether a
+newer release exists (and whether it is a security release), plugin updates with
+one-click install, and the exact commands for your install channel. A daily check
+emails administrators when something new is available. **System → Backups** takes
+full backups (database, media, plugins); see [docs/backup-restore.md](docs/backup-restore.md).
 
 See [docs/upgrading.md](docs/upgrading.md).
 

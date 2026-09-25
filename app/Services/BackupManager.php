@@ -39,6 +39,12 @@ class BackupManager
         return rtrim((string) config('backups.path'), '/');
     }
 
+    /** Uploaded media: the public disk's root. */
+    public function mediaPath(): string
+    {
+        return rtrim((string) config('filesystems.disks.public.root', storage_path('app/public')), '/');
+    }
+
     /**
      * @param  array{media?: bool, plugins?: bool, env?: bool}  $options
      * @return string The archive's path
@@ -74,7 +80,7 @@ class BackupManager
             $contents = ['database'];
             $zip->addFile($dumps[0]->getPathname(), 'database/'.$dumps[0]->getFilename());
 
-            if ($options['media'] && File::isDirectory($media = storage_path('app/public'))) {
+            if ($options['media'] && File::isDirectory($media = $this->mediaPath())) {
                 $this->addDirectory($zip, $media, 'media');
                 $contents[] = 'media';
             }
@@ -256,8 +262,8 @@ class BackupManager
             }
 
             if (in_array('media', $parts, true) && File::isDirectory($scratch.'/media')) {
-                File::ensureDirectoryExists(storage_path('app/public'));
-                File::copyDirectory($scratch.'/media', storage_path('app/public'));
+                File::ensureDirectoryExists($this->mediaPath());
+                File::copyDirectory($scratch.'/media', $this->mediaPath());
             }
 
             if (in_array('plugins', $parts, true) && File::isDirectory($scratch.'/plugins')) {

@@ -77,7 +77,7 @@ class UpdateCenter
      */
     public function pending(): array
     {
-        $value = Cache::remember(self::PENDING_CACHE_KEY, 300, function () {
+        return Cache::remember(self::PENDING_CACHE_KEY, 300, function () {
             $core = $this->checker->cached();
 
             return [
@@ -85,8 +85,6 @@ class UpdateCenter
                 'security' => (bool) ($core['security'] ?? false),
             ];
         });
-
-        return is_array($value) ? $value : ['count' => 0, 'security' => false];
     }
 
     public function forgetPending(): void

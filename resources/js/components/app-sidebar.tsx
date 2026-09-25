@@ -8,6 +8,7 @@ import {
     SidebarGroupLabel,
     SidebarHeader,
     SidebarMenu,
+    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
@@ -15,7 +16,7 @@ import { adminNav, mainNav } from '@/config/nav';
 import { useAcl } from '@/lib/acl';
 import { getIcon } from '@/lib/icons';
 import { Link, usePage } from '@inertiajs/react';
-import { Boxes, FileText, FolderTree, MessageSquare } from 'lucide-react';
+import { Archive, Boxes, FileText, FolderTree, MessageSquare, RefreshCw } from 'lucide-react';
 import React from 'react';
 import AppLogo from './app-logo';
 
@@ -31,13 +32,14 @@ interface SidebarEntry {
 interface SidebarSharedProps {
     dynamicMenu?: { postTypes?: SidebarEntry[]; taxonomies?: SidebarEntry[] };
     activePlugins?: string[];
+    updatesPending?: { count: number; security: boolean } | null;
 }
 
 const byMenuPosition = (a: SidebarEntry, b: SidebarEntry) => (a.menu_position || 999) - (b.menu_position || 999);
 
 export function AppSidebar() {
     const { url, props } = usePage();
-    const { dynamicMenu, activePlugins } = props as unknown as SidebarSharedProps;
+    const { dynamicMenu, activePlugins, updatesPending } = props as unknown as SidebarSharedProps;
     const { isAdmin, hasPermission, canAny } = useAcl();
 
     // Filter core adminNav to avoid duplicates if they are now dynamic
@@ -224,6 +226,49 @@ export function AppSidebar() {
                             </SidebarMenu>
                         </SidebarGroup>
                     </>
+                )}
+
+                {/* System: updates and backups (administrators only) */}
+                {(isAdmin() || hasPermission('edit settings')) && (
+                    <SidebarGroup className="px-2 py-0">
+                        <SidebarGroupLabel>System</SidebarGroupLabel>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={url.startsWith('/dashboard/admin/system/updates')}
+                                    tooltip={{ children: 'Updates' }}
+                                >
+                                    <Link href="/dashboard/admin/system/updates" prefetch>
+                                        <RefreshCw />
+                                        <span>Updates</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                                {updatesPending && updatesPending.count > 0 && (
+                                    <SidebarMenuBadge
+                                        className={updatesPending.security ? 'bg-destructive text-white' : 'bg-primary text-primary-foreground'}
+                                        aria-label={`${updatesPending.count} updates available`}
+                                    >
+                                        {updatesPending.count}
+                                    </SidebarMenuBadge>
+                                )}
+                            </SidebarMenuItem>
+                            {isAdmin() && (
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={url.startsWith('/dashboard/admin/system/backups')}
+                                        tooltip={{ children: 'Backups' }}
+                                    >
+                                        <Link href="/dashboard/admin/system/backups" prefetch>
+                                            <Archive />
+                                            <span>Backups</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            )}
+                        </SidebarMenu>
+                    </SidebarGroup>
                 )}
             </SidebarContent>
 
