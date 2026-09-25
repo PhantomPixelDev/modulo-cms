@@ -31,6 +31,9 @@ class TaxonomyTerm extends Model
         'meta_data' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<Taxonomy, $this>
+     */
     public function taxonomy(): BelongsTo
     {
         return $this->belongsTo(Taxonomy::class);

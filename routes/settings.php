@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\ApiTokenController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\TwoFactorController;
@@ -42,6 +43,10 @@ Route::middleware('auth')->group(function () {
         Route::post('settings/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
         Route::delete('settings/two-factor', [TwoFactorController::class, 'destroy'])->name('two-factor.disable');
     });
+
+    Route::get('settings/api-tokens', [ApiTokenController::class, 'index'])->name('api-tokens.index');
+    Route::post('settings/api-tokens', [ApiTokenController::class, 'store'])->middleware('password.confirm')->name('api-tokens.store');
+    Route::delete('settings/api-tokens/{id}', [ApiTokenController::class, 'destroy'])->whereNumber('id')->name('api-tokens.destroy');
 
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/appearance');

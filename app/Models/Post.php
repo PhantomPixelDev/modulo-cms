@@ -131,6 +131,9 @@ class Post extends Model
             ->orderBy('created_at');
     }
 
+    /**
+     * @return BelongsToMany<TaxonomyTerm, $this>
+     */
     public function taxonomyTerms(): BelongsToMany
     {
         return $this->belongsToMany(TaxonomyTerm::class, 'post_taxonomy_terms')

@@ -98,6 +98,14 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // Headless API: per token, or per IP for anonymous reads
+        RateLimiter::for('api-v1', function (Request $request) {
+            $token = $request->attributes->get('api_token');
+
+            return Limit::perMinute(max(1, (int) config('api.rate_limit')))
+                ->by($token !== null ? 'token:'.$token->id : 'ip:'.$request->ip());
+        });
+
         // Stricter limits for auth-related endpoints to mitigate brute force
         RateLimiter::for('auth', function (Request $request) {
             $key = strtolower((string) $request->input('email')).'|'.$request->ip();

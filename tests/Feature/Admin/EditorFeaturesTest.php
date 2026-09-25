@@ -4,6 +4,9 @@ use App\Console\Commands\PublishScheduledCommand;
 use App\Models\Activity;
 use App\Models\Post;
 use App\Models\PostRevision;
+use App\Models\PostType;
+use App\Models\Taxonomy;
+use App\Models\TaxonomyTerm;
 use App\Support\SystemMeta;
 
 it('moves deleted posts to the trash and restores them', function () {
@@ -129,4 +132,21 @@ it('flags scheduled posts in the admin list', function () {
     $this->actingAs(makeAdminUserWithPermissions(['view posts']))
         ->get(route('dashboard.admin.posts.index'))
         ->assertInertia(fn ($page) => $page->where('posts.data.0.is_scheduled', true));
+});
+
+it('accepts terms of a taxonomy that applies to the post type, and refuses others', function () {
+    $type = PostType::factory()->create(['name' => 'article', 'slug' => 'article', 'has_taxonomies' => true]);
+    $topics = Taxonomy::create(['name' => 'topics', 'label' => 'Topics', 'plural_label' => 'Topics', 'slug' => 'topics', 'post_types' => ['article']]);
+    $colours = Taxonomy::create(['name' => 'colours', 'label' => 'Colours', 'plural_label' => 'Colours', 'slug' => 'colours', 'post_types' => ['product']]);
+    $topic = TaxonomyTerm::create(['taxonomy_id' => $topics->id, 'name' => 'News', 'slug' => 'news']);
+    $colour = TaxonomyTerm::create(['taxonomy_id' => $colours->id, 'name' => 'Red', 'slug' => 'red']);
+    $this->actingAs(makeAdminUserWithPermissions(['create posts']));
+
+    // Before the fix every term was refused: the check read a column taxonomies do not have.
+    $this->post(route('dashboard.admin.posts.store'), ['post_type_id' => $type->id, 'title' => 'Tagged', 'content' => 'x', 'status' => 'draft', 'taxonomy_terms' => [$topic->id]])
+        ->assertSessionHasNoErrors();
+    expect(Post::where('title', 'Tagged')->sole()->taxonomyTerms->pluck('id')->all())->toBe([$topic->id]);
+
+    $this->post(route('dashboard.admin.posts.store'), ['post_type_id' => $type->id, 'title' => 'Wrong', 'content' => 'x', 'status' => 'draft', 'taxonomy_terms' => [$colour->id]])
+        ->assertSessionHasErrors('taxonomy_terms.0');
 });

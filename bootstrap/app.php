@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Middleware\AuthenticateApiToken;
 use App\Http\Middleware\CacheResponseHeaders;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\EnsureApiTokenAbility;
 use App\Http\Middleware\EnsureNotInstalled;
 use App\Http\Middleware\EnsureSchemaIsCompatible;
 use App\Http\Middleware\HandleAppearance;
@@ -81,6 +83,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'install.guard' => EnsureNotInstalled::class,
             // Administrators must have 2FA when security.require_two_factor_for_admins is on
             'two-factor.admin' => RequireTwoFactorForAdmins::class,
+            // Headless API bearer tokens (routes/api.php)
+            'api.token' => AuthenticateApiToken::class,
+            'api.ability' => EnsureApiTokenAbility::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
