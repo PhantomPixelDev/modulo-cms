@@ -63,9 +63,19 @@ it('writes one archive with the database, media, plugins and a manifest', functi
 });
 
 it('only includes .env when asked', function () {
+    // A fixture, not the project's own .env (CI has none).
+    File::put($this->work.'/'.app()->environmentFile(), 'APP_KEY=fixture');
+    app()->useEnvironmentPath($this->work);
+
     $this->artisan('modulo:backup', ['--with-env' => true])->assertSuccessful();
 
-    expect(app(BackupManager::class)->all()[0]['contents'])->toContain('env');
+    $backup = app(BackupManager::class)->all()[0];
+    expect($backup['contents'])->toContain('env');
+
+    $zip = new ZipArchive;
+    $zip->open(app(BackupManager::class)->path($backup['name']));
+    expect($zip->getFromName('env/.env'))->toBe('APP_KEY=fixture');
+    $zip->close();
 });
 
 it('keeps only the newest backups', function () {

@@ -90,7 +90,7 @@ class BackupManager
                 $contents[] = 'plugins';
             }
 
-            if ($options['env'] && File::exists($env = base_path('.env'))) {
+            if ($options['env'] && File::exists($env = app()->environmentFilePath())) {
                 $zip->addFile($env, 'env/.env');
                 $contents[] = 'env';
             }
