@@ -57,6 +57,24 @@ jobs:
       - name: TypeScript
         run: npm run types
 
+      # `any` is only a warning, so it creeps in unnoticed. Its count may only go down.
+      - name: TypeScript `any` must not grow
+        run: |
+          set -euo pipefail
+          recorded=$(node -p "require('./.github/quality-baseline.json').eslint_no_explicit_any")
+          current=$(npx eslint . --format json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{let n=0;for(const f of JSON.parse(s))for(const m of f.messages)if(m.ruleId==="@typescript-eslint/no-explicit-any")n++;console.log(n)})')
+          echo "no-explicit-any: ${current} (recorded ${recorded})"
+          if [ "${current}" -gt "${recorded}" ]; then
+            echo "::error::TypeScript \`any\` grew from ${recorded} to ${current}. Type the new code instead."
+            exit 1
+          fi
+          if [ "${current}" -lt "${recorded}" ]; then
+            echo "::notice::\`any\` is down to ${current}. Lower eslint_no_explicit_any in .github/quality-baseline.json."
+          fi
+
+      - name: Frontend unit tests with coverage
+        run: npm run test:js:coverage
+
       - name: Static analysis baseline must not grow
         run: |
           set -euo pipefail

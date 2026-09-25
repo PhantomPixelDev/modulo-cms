@@ -8,8 +8,6 @@ import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 
-declare const route: (name: string, params?: any) => string;
-
 export interface ActivityEntry {
     id: number;
     event: string;

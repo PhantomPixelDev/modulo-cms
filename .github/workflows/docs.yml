@@ -1,0 +1,60 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', '.github/workflows/docs.yml']
+  pull_request:
+    branches: [main]
+    paths: ['docs/**', '.github/workflows/docs.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build the documentation site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Dead links fail the build.
+      - name: Build
+        env:
+          # A project site is served from /<repository>/.
+          DOCS_BASE: /${{ github.event.repository.name }}/
+        run: npm run docs:build
+
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name != 'pull_request' && vars.DOCS_PAGES == 'true'
+        with:
+          path: docs/.vitepress/dist
+
+  # Publishing needs GitHub Pages switched on (Settings -> Pages -> Source: GitHub
+  # Actions) and the repository variable DOCS_PAGES=true.
+  deploy:
+    name: publish to GitHub Pages
+    needs: build
+    if: github.event_name != 'pull_request' && vars.DOCS_PAGES == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

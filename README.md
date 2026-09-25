@@ -218,6 +218,8 @@ full backups (database, media, plugins); see [docs/backup-restore.md](docs/backu
 
 See [docs/upgrading.md](docs/upgrading.md).
 
+All documentation is in [docs/](docs/) (start with [docs/architecture.md](docs/architecture.md)); `npm run docs:dev` serves it as a searchable site.
+
 ## Operations
 
 ```bash

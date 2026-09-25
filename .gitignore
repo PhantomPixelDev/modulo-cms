@@ -42,3 +42,11 @@ cookies.txt
 /playwright/.cache
 /storage/installed*
 /storage/installing*
+
+# VitePress
+docs/.vitepress/dist
+docs/.vitepress/cache
+
+# Test coverage output
+/coverage
+coverage.xml

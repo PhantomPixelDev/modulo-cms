@@ -5,8 +5,6 @@ import { router } from '@inertiajs/react';
 import { History, Loader2, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
-declare const route: (name: string, params?: any) => string;
-
 interface Revision {
     id: number;
     title: string;

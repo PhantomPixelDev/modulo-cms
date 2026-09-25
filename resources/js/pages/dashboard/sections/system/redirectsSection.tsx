@@ -9,8 +9,6 @@ import { ArrowRight, Search, Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 
-declare const route: (name: string, params?: any) => string;
-
 interface RedirectItem {
     id: number;
     from_path: string;

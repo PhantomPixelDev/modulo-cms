@@ -6,8 +6,6 @@ import { RotateCcw, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 
-declare const route: (name: string, params?: any) => string;
-
 export interface TrashProps {
     items: {
         data: Array<{

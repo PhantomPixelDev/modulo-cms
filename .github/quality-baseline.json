@@ -1,0 +1,5 @@
+{
+  "_comment": "Ratchets checked in CI (lint.yml, tests.yml). Lower eslint_no_explicit_any and raise php_line_coverage as the code improves; CI fails if they get worse.",
+  "eslint_no_explicit_any": 397,
+  "php_line_coverage": null
+}

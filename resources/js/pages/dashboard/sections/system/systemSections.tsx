@@ -9,8 +9,6 @@ import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { ActivityPage, type ActivityProps } from './activitySection';
 import { RedirectsPage, type RedirectsProps } from './redirectsSection';
 
-declare const route: (name: string, params?: any) => string;
-
 export interface CoreUpdate {
     checked: boolean;
     current: string;

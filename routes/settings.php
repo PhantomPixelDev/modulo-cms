@@ -36,7 +36,8 @@ Route::middleware('auth')->group(function () {
         $passwordUpdate->withoutMiddleware($csrfMiddleware);
     }
 
-    Route::get('settings/two-factor', [TwoFactorController::class, 'edit'])->name('two-factor.edit');
+    // Password first, then the page: it shows the secret while setting up.
+    Route::get('settings/two-factor', [TwoFactorController::class, 'edit'])->middleware('password.confirm')->name('two-factor.edit');
     Route::post('settings/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
     Route::middleware('password.confirm')->group(function () {
         Route::post('settings/two-factor', [TwoFactorController::class, 'store'])->name('two-factor.enable');
@@ -44,7 +45,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('settings/two-factor', [TwoFactorController::class, 'destroy'])->name('two-factor.disable');
     });
 
-    Route::get('settings/api-tokens', [ApiTokenController::class, 'index'])->name('api-tokens.index');
+    // Asked when the page opens, so creating a token does not bounce through it.
+    Route::get('settings/api-tokens', [ApiTokenController::class, 'index'])->middleware('password.confirm')->name('api-tokens.index');
     Route::post('settings/api-tokens', [ApiTokenController::class, 'store'])->middleware('password.confirm')->name('api-tokens.store');
     Route::delete('settings/api-tokens/{id}', [ApiTokenController::class, 'destroy'])->whereNumber('id')->name('api-tokens.destroy');
 
