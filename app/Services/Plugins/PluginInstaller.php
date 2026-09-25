@@ -6,10 +6,8 @@ use App\Models\Plugin;
 use App\Services\PluginManager;
 use App\Support\Version;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
-use Throwable;
 
 /**
  * Installs and updates plugins from the registry.
@@ -38,6 +36,8 @@ class PluginInstaller
     {
         $release = $this->resolveRelease($slug, $version);
 
+        // The registry entry declares the same requirements as the package's
+        // plugin.json; refusing here saves downloading something unusable.
         if (! $this->registry->isCompatible($release)) {
             throw new RuntimeException(sprintf(
                 'Plugin "%s" %s requires Modulo %s or newer; this is %s.',
@@ -46,6 +46,11 @@ class PluginInstaller
                 $release['min_core_version'] ?? '?',
                 Version::current(),
             ));
+        }
+
+        $unmet = app(PluginRequirements::class)->unmet($release, needActive: false);
+        if ($unmet !== []) {
+            throw new RuntimeException(sprintf('Plugin "%s" %s requires %s.', $slug, $release['version'], implode(', ', $unmet)));
         }
 
         $existing = Plugin::where('slug', $slug)->first();
@@ -79,6 +84,13 @@ class PluginInstaller
             $manifest = $this->readManifest($package);
 
             $this->assertManifestMatches($manifest, $slug, (string) $release['version']);
+
+            // Required plugins only need to be installed here; activation
+            // checks that they are switched on.
+            $unmet = app(PluginRequirements::class)->unmet($manifest, needActive: false);
+            if ($unmet !== []) {
+                throw new RuntimeException(sprintf('"%s" %s needs %s.', $slug, $release['version'], implode(', ', $unmet)));
+            }
 
             $target = $this->targetDirectory($manifest);
 
@@ -141,27 +153,7 @@ class PluginInstaller
      */
     protected function download(string $url, string $destination): void
     {
-        try {
-            $response = Http::timeout((int) config('plugins.timeout'))
-                // GitHub answers release downloads with a redirect to its asset
-                // CDN. Follow it, but never down to plain HTTP; the checksum
-                // is what guarantees the bytes either way.
-                ->withOptions([
-                    'sink' => $destination,
-                    'allow_redirects' => ['max' => 5, 'protocols' => ['https'], 'strict' => true],
-                ])
-                ->get($url);
-        } catch (Throwable $e) {
-            throw new RuntimeException('Could not download the package: '.$e->getMessage());
-        }
-
-        if (! $response->successful()) {
-            throw new RuntimeException('Downloading the package returned '.$response->status().'.');
-        }
-
-        if (! File::exists($destination) || File::size($destination) === 0) {
-            throw new RuntimeException('The downloaded package is empty.');
-        }
+        app(PackageDownloader::class)->download($url, $destination);
     }
 
     /**
@@ -169,13 +161,7 @@ class PluginInstaller
      */
     protected function verifyChecksum(string $archive, string $expected): void
     {
-        $actual = hash_file('sha256', $archive);
-
-        // hash_equals rather than !==: this is the only thing standing between
-        // the registry's promise and arbitrary code on the server.
-        if ($actual === false || ! hash_equals(strtolower($expected), strtolower($actual))) {
-            throw new RuntimeException('The package checksum does not match the registry. Refusing to install.');
-        }
+        app(PackageDownloader::class)->verifyChecksum($archive, $expected);
     }
 
     /**

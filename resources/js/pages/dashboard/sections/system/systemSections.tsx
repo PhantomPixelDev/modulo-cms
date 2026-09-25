@@ -6,8 +6,8 @@ import { router } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, Download, ExternalLink, Loader2, RefreshCw, ShieldAlert, Trash2 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
-
-declare const route: (name: string, params?: any) => string;
+import { ActivityPage, type ActivityProps } from './activitySection';
+import { RedirectsPage, type RedirectsProps } from './redirectsSection';
 
 export interface CoreUpdate {
     checked: boolean;
@@ -37,6 +37,7 @@ export interface UpdateCenterProps {
     commands: string[];
     plugins: PluginUpdate[];
     installedPlugins: Array<{ slug: string; name: string; version: string; source: string | null; active: boolean }>;
+    themes: PluginUpdate[];
     lastCheckedAt: string | null;
     pending: number;
     enabled: boolean;
@@ -256,6 +257,51 @@ function UpdatesPage({ data }: { data: UpdateCenterProps }) {
                         </Table>
                     </CardContent>
                 </Card>
+                {data.themes.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Themes</CardTitle>
+                            <CardDescription>Themes installed from the registry with a newer release.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Theme</TableHead>
+                                        <TableHead>Installed</TableHead>
+                                        <TableHead>Available</TableHead>
+                                        <TableHead className="text-right" />
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {data.themes.map((theme) => (
+                                        <TableRow key={theme.slug}>
+                                            <TableCell className="font-medium">
+                                                {theme.name}
+                                                {theme.active && <span className="ml-2 text-xs text-muted-foreground">active</span>}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs">{theme.installed}</TableCell>
+                                            <TableCell className="font-mono text-xs">{theme.available}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    disabled={busy !== null}
+                                                    onClick={() =>
+                                                        post(`theme:${theme.slug}`, route('dashboard.admin.system.updates.themes.update', theme.slug))
+                                                    }
+                                                >
+                                                    {busy === `theme:${theme.slug}` && <Loader2 className="animate-spin" />}
+                                                    Update
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </SectionWrapper>
     );
@@ -356,11 +402,17 @@ function BackupsPage({ data }: { data: BackupsProps }) {
 export function getSystemSections({
     updateCenter,
     backups,
+    activity,
+    redirects,
 }: {
     updateCenter?: UpdateCenterProps;
     backups?: BackupsProps;
+    activity?: ActivityProps;
+    redirects?: RedirectsProps;
 }): Record<string, () => ReactNode> {
     return {
+        activity: () => (activity ? <ActivityPage data={activity} /> : null),
+        redirects: () => (redirects ? <RedirectsPage data={redirects} /> : null),
         updates: () => (updateCenter ? <UpdatesPage data={updateCenter} /> : null),
         backups: () => (backups ? <BackupsPage data={backups} /> : null),
     };

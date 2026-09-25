@@ -1,16 +1,21 @@
 <?php
 
+use App\Http\Middleware\AuthenticateApiToken;
 use App\Http\Middleware\CacheResponseHeaders;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\EnsureApiTokenAbility;
 use App\Http\Middleware\EnsureNotInstalled;
 use App\Http\Middleware\EnsureSchemaIsCompatible;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\HandleRedirects;
 use App\Http\Middleware\LocaleFromUrl;
 use App\Http\Middleware\RedirectToInstaller;
+use App\Http\Middleware\RequireTwoFactorForAdmins;
 use App\Http\Middleware\RoleOrPermission;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Application;
@@ -47,6 +52,10 @@ return Application::configure(basePath: dirname(__DIR__))
             RedirectToInstaller::class,
             // An older build must not serve a database a newer one migrated.
             EnsureSchemaIsCompatible::class,
+            // Early, so the CSP nonce exists before anything renders.
+            SecurityHeaders::class,
+            // Old URLs on to new ones, before the front end looks for content.
+            HandleRedirects::class,
         ]);
 
         $middleware->web(append: [
@@ -72,6 +81,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'locale.url' => LocaleFromUrl::class,
             // 404s the installer once setup has completed
             'install.guard' => EnsureNotInstalled::class,
+            // Administrators must have 2FA when security.require_two_factor_for_admins is on
+            'two-factor.admin' => RequireTwoFactorForAdmins::class,
+            // Headless API bearer tokens (routes/api.php)
+            'api.token' => AuthenticateApiToken::class,
+            'api.ability' => EnsureApiTokenAbility::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

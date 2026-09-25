@@ -11,8 +11,8 @@
         $gtmId = $siteSettings['analytics']['gtm_container_id'] ?? null;
         $googleVerify = $siteSettings['seo']['google_site_verification'] ?? null;
         $bingVerify = $siteSettings['seo']['bing_site_verification'] ?? null;
-        $metaDescription = $siteSettings['seo']['meta_description'] ?? null;
         $titleSuffix = $siteSettings['seo']['meta_title_suffix'] ?? '';
+        $favicon = $siteSettings['site_favicon'] ?? null;
     @endphp
 
     @if($googleVerify)
@@ -21,13 +21,14 @@
     @if($bingVerify)
     <meta name="msvalidate.01" content="{{ $bingVerify }}" />
     @endif
-    @if($metaDescription)
-    <meta name="description" content="{{ $metaDescription }}" />
+    @if($favicon)
+    <link rel="icon" href="{{ $favicon }}">
+    <link rel="apple-touch-icon" href="{{ $favicon }}">
     @endif
 
     @if($gtmId)
     <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    <script nonce="{{ Vite::cspNonce() }}">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
@@ -37,8 +38,8 @@
 
     @if($gaId)
     <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag.js?id={{ $gaId }}"></script>
-    <script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}" nonce="{{ Vite::cspNonce() }}"></script>
+    <script nonce="{{ Vite::cspNonce() }}">
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
@@ -53,7 +54,18 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
     <!-- Scripts -->
-    @routes
+    {{-- Plugin bundles import react, react-dom, react/jsx-runtime and
+         @inertiajs/react as bare specifiers; these shims hand them the core's
+         own instances (window.Modulo.vendor). Must precede every module script. --}}
+    <script type="importmap" nonce="{{ Vite::cspNonce() }}">
+    {"imports": {
+        "react": "{{ asset('modulo-sdk/react.js') }}",
+        "react-dom": "{{ asset('modulo-sdk/react-dom.js') }}",
+        "react/jsx-runtime": "{{ asset('modulo-sdk/react-jsx-runtime.js') }}",
+        "@inertiajs/react": "{{ asset('modulo-sdk/inertia-react.js') }}"
+    }}
+    </script>
+    @routes(null, Vite::cspNonce())
     @php
         $hasViteAssets = file_exists(public_path('hot')) || file_exists(public_path('build/manifest.json'));
     @endphp

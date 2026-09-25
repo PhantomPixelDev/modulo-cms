@@ -16,5 +16,11 @@ export default defineConfig({
         setupFiles: ['./resources/js/test/setup.ts'],
         include: ['resources/**/*.test.{ts,tsx}'],
         restoreMocks: true,
+        coverage: {
+            provider: 'v8',
+            reporter: ['text-summary', 'lcov'],
+            // Measured over the modules the tests load; thresholds keep them from slipping.
+            thresholds: { lines: 70, statements: 70, functions: 70, branches: 65 },
+        },
     },
 });

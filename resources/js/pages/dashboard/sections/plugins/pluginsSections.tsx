@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { router } from '@inertiajs/react';
 import { RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
+import { PluginBrowser } from '../../components/plugins/PluginBrowser';
 import { PluginSettingsForm } from '../../components/plugins/PluginSettingsForm';
 import { PluginsList } from '../../components/plugins/PluginsList';
 
@@ -34,7 +36,18 @@ export function getPluginsSections({
                 ) : undefined
             }
         >
-            <PluginsList plugins={plugins || []} canEdit={canManagePlugins} />
+            <Tabs defaultValue="installed">
+                <TabsList className="mb-6">
+                    <TabsTrigger value="installed">Installed</TabsTrigger>
+                    <TabsTrigger value="browse">Browse registry</TabsTrigger>
+                </TabsList>
+                <TabsContent value="installed">
+                    <PluginsList plugins={plugins || []} canEdit={canManagePlugins} />
+                </TabsContent>
+                <TabsContent value="browse">
+                    <PluginBrowser canInstall={can('install plugins')} />
+                </TabsContent>
+            </Tabs>
         </SectionWrapper>
     );
 

@@ -67,6 +67,8 @@ export const ROUTE = {
         activate: (slug: string) => route('dashboard.admin.themes.activate', slug),
         publishAssets: (id: number | string) => route('dashboard.admin.themes.publish-assets', id),
         discover: () => route('dashboard.admin.themes.discover'),
+        registry: () => route('dashboard.admin.themes.registry'),
+        registryInstall: () => route('dashboard.admin.themes.registry.install'),
         clearCache: () => route('dashboard.admin.themes.clear-cache'),
         update: (id: number | string) => route('dashboard.admin.themes.update', id),
         destroy: (id: number | string) => route('dashboard.admin.themes.destroy', id),
@@ -115,6 +117,8 @@ export const ROUTE = {
     plugins: {
         index: () => route('dashboard.admin.plugins.index'),
         discover: () => route('dashboard.admin.plugins.discover'),
+        registry: () => route('dashboard.admin.plugins.registry'),
+        install: () => route('dashboard.admin.plugins.install'),
         activate: (slug: string) => route('dashboard.admin.plugins.activate', { slug }),
         deactivate: (slug: string) => route('dashboard.admin.plugins.deactivate', { slug }),
         settings: (slug: string) => route('dashboard.admin.plugins.settings', { slug }),

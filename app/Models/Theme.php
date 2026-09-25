@@ -90,7 +90,30 @@ class Theme extends Model
      */
     public function getFullPathAttribute(): string
     {
-        return resource_path('themes/'.$this->directory_path);
+        return self::pathFor((string) $this->directory_path);
+    }
+
+    /**
+     * Where a theme's files are: bundled with the code (resources/themes), or
+     * installed at runtime into the persistent install path.
+     */
+    public static function pathFor(string $directory): string
+    {
+        $bundled = resource_path('themes/'.$directory);
+
+        if (File::isDirectory($bundled)) {
+            return $bundled;
+        }
+
+        return rtrim((string) config('theme.install_path'), '/').'/'.$directory;
+    }
+
+    /**
+     * Whether this theme was installed at runtime rather than bundled.
+     */
+    public function isRuntimeInstalled(): bool
+    {
+        return ! File::isDirectory(resource_path('themes/'.$this->directory_path));
     }
 
     /**

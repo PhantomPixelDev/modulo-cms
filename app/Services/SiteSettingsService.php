@@ -66,10 +66,24 @@ class SiteSettingsService
             'timezone' => $this->get('timezone', config('app.timezone')),
             'date_format' => $this->get('date_format', 'F j, Y'),
             'time_format' => $this->get('time_format', 'g:i a'),
+            'site_logo' => $this->get('site_logo', '') ?: null,
+            'site_favicon' => $this->get('site_favicon', '') ?: null,
             'posts_per_page' => $this->get('posts_per_page', 10),
             'maintenance_mode' => $this->isMaintenanceMode(),
             'maintenance_message' => $this->getMaintenanceMessage($locale),
             'registration_enabled' => (bool) $this->get('registration_enabled', false),
+            // Read by the page layout (verification tags, analytics snippets):
+            // all of it ends up in public HTML anyway.
+            'seo' => [
+                'meta_title_suffix' => $this->get('meta_title_suffix', '', $locale),
+                'meta_description' => $this->get('meta_description', '', $locale),
+                'google_site_verification' => $this->get('google_site_verification', ''),
+                'bing_site_verification' => $this->get('bing_site_verification', ''),
+            ],
+            'analytics' => [
+                'google_analytics_id' => $this->get('google_analytics_id', ''),
+                'gtm_container_id' => $this->get('gtm_container_id', ''),
+            ],
             'social' => [
                 'facebook' => $this->get('facebook_url', ''),
                 'twitter' => $this->get('twitter_url', ''),

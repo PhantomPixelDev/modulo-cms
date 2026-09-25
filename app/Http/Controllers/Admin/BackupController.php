@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\BackupManager;
+use App\Support\ActivityLog;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,6 +48,7 @@ class BackupController extends Controller
         try {
             $path = $this->backups->create();
             $this->backups->prune((int) config('backups.keep'));
+            ActivityLog::record('backup.created', 'Created backup '.basename($path));
         } catch (Throwable $e) {
             return back()->with('error', 'Backup failed: '.$e->getMessage());
         }
@@ -60,6 +62,7 @@ class BackupController extends Controller
 
         $path = $this->backups->path($backup);
         abort_if($path === null, 404);
+        ActivityLog::record('backup.downloaded', 'Downloaded backup '.$backup);
 
         return response()->download($path, $backup, ['Content-Type' => 'application/zip']);
     }
@@ -69,6 +72,7 @@ class BackupController extends Controller
         $this->authorizeAdmin();
 
         abort_unless($this->backups->delete($backup), 404);
+        ActivityLog::record('backup.deleted', 'Deleted backup '.$backup);
 
         return back()->with('success', 'Backup deleted.');
     }

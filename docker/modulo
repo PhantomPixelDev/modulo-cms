@@ -4,9 +4,11 @@
 # The installer puts this next to docker-compose.yml and .env. Run it from
 # that folder:
 #
-#   ./modulo update [version]   Update to the latest release (or a given one)
-#   ./modulo backup             Dump the database into the storage volume
-#   ./modulo restore <dump>     Replace the database with a dump (destructive)
+#   ./modulo update [version]   Update to the latest release (or a given one);
+#                               rolls back if the new version is not healthy
+#                               (add --no-rollback to leave it for inspection)
+#   ./modulo backup [--full]    Dump the database (--full: + media and plugins)
+#   ./modulo restore <file>     Replace the database with a dump or full backup
 #   ./modulo version            Show the running version
 #   ./modulo status | logs      Container status / follow the logs
 #
@@ -77,11 +79,42 @@ app_is_running() {
 
 cmd_backup() {
     app_is_running || die "The app container is not running; start it with: $RUNTIME compose up -d"
-    compose exec -T app php artisan modulo:db-backup
+    if [ "${1:-}" = "--full" ]; then
+        compose exec -T app php artisan modulo:backup
+    else
+        compose exec -T app php artisan modulo:db-backup
+    fi
+}
+
+# Load a plain SQL dump into the database: empty schema first (a pg_dump has
+# no DROP statements), stop at the first error, all in one transaction so a
+# failure leaves the current data in place. $1 = local file, or a path inside
+# the app volume when $2 = container.
+load_dump() {
+    db_name="$(env_value DB_DATABASE)"
+    db_user="$(env_value DB_USERNAME)"
+    db_name="${db_name:-modulo_prod}"
+    db_user="${db_user:-modulo}"
+
+    {
+        printf 'DROP SCHEMA IF EXISTS public CASCADE;\nCREATE SCHEMA public;\n'
+        if [ "${2:-}" = "container" ]; then
+            compose run --rm --no-deps -T --entrypoint cat app "$1"
+        else
+            cat "$1"
+        fi
+    } | compose exec -T db psql -v ON_ERROR_STOP=1 --single-transaction --quiet -U "$db_user" -d "$db_name" >/dev/null
 }
 
 cmd_update() {
-    target="${1:-}"
+    target=""
+    rollback=true
+    for arg in "$@"; do
+        case "$arg" in
+            --no-rollback) rollback=false ;;
+            *) target="$arg" ;;
+        esac
+    done
     if [ -z "$target" ]; then
         say "Looking up the latest release..."
         target="$(latest_release)"
@@ -99,9 +132,12 @@ cmd_update() {
 
     # A restore point taken by the *current* version, before anything changes.
     # The new container takes its own backup too, but only once it has booted.
+    dump=""
     if app_is_running; then
         say "Backing up the database..."
-        compose exec -T app php artisan modulo:db-backup || die "Backup failed; nothing was changed."
+        out="$(compose exec -T app php artisan modulo:db-backup)" || die "Backup failed; nothing was changed."
+        printf '%s\n' "$out"
+        dump="$(printf '%s\n' "$out" | sed -n 's/.*Backup written to \(.*\) (.*/\1/p' | tr -d '\r' | tail -n1)"
     else
         warn "The app is not running, so no backup was taken first."
     fi
@@ -130,23 +166,56 @@ cmd_update() {
     if wait_for_health; then
         ok "Now running Modulo CMS $(running_version)"
     else
-        warn "The site did not become healthy. It may be in maintenance mode after a failed upgrade."
-        warn "Inspect:      $RUNTIME compose logs app"
-        warn "Roll back:    ./modulo update ${current}   (then ./modulo restore <backup> if the schema changed)"
+        warn "The site did not become healthy on ${target}."
+        compose logs --tail=40 app >&2 || true
+
+        if [ "$rollback" != true ] || [ -z "$current" ]; then
+            warn "Inspect:      $RUNTIME compose logs app"
+            warn "Roll back:    ./modulo update ${current:-<previous version>}   (then ./modulo restore ${dump:-<backup>} if the schema changed)"
+            exit 1
+        fi
+
+        say "Rolling back to ${current}..."
+        set_env_value MODULO_TAG "$current"
+        export MODULO_TAG="$current"
+        compose stop app queue scheduler >/dev/null 2>&1 || true
+
+        if [ -n "$dump" ]; then
+            say "Restoring the database from ${dump}..."
+            load_dump "$dump" container || die "Could not restore ${dump}. MODULO_TAG is back on ${current}; restore by hand: ./modulo restore ${dump}"
+        fi
+
+        compose up -d
+        if wait_for_health; then
+            compose exec -T app php artisan up >/dev/null 2>&1 || true
+            warn "Update to ${target} failed and was rolled back; still running ${current}."
+        else
+            warn "Rolled back to ${current}, but the site is still not healthy. Inspect: $RUNTIME compose logs app"
+        fi
         exit 1
     fi
 }
 
 cmd_restore() {
     dump="${1:-}"
-    [ -n "$dump" ] || die "Usage: ./modulo restore <dump-file>   (a path on this machine, or storage/app/backups/<file> inside the app volume)"
+    [ -n "$dump" ] || die "Usage: ./modulo restore <file>   (a .sql dump or modulo-backup-*.zip; a path on this machine, or storage/app/backups/<file> inside the app volume)"
 
-    db_name="$(env_value DB_DATABASE)"
-    db_user="$(env_value DB_USERNAME)"
-    db_name="${db_name:-modulo_prod}"
-    db_user="${db_user:-modulo}"
+    # Full backups (database + media + plugins) are restored by the app itself.
+    case "$dump" in
+        *.zip)
+            app_is_running || die "The app container must be running to restore a full backup."
+            # A file on this machine is copied into the backups folder first;
+            # anything else is taken to already be there.
+            if [ -f "$dump" ]; then
+                compose cp "$dump" "app:/var/www/html/storage/app/backups/$(basename "$dump")" \
+                    || die "Could not copy the backup into the app container."
+            fi
+            compose exec app php artisan modulo:restore "$(basename "$dump")"
+            return
+            ;;
+    esac
 
-    printf 'This replaces the "%s" database with %s. Type "restore" to continue: ' "$db_name" "$dump"
+    printf 'This replaces the "%s" database with %s. Type "restore" to continue: ' "$(env_value DB_DATABASE)" "$dump"
     read -r answer
     [ "$answer" = "restore" ] || die "Cancelled."
 
@@ -165,14 +234,7 @@ cmd_restore() {
     compose stop app queue scheduler >/dev/null 2>&1 || true
 
     say "Restoring..."
-    # Start from an empty schema (a plain pg_dump has no DROP statements, so
-    # loading it over existing tables fails half-way), stop at the first error,
-    # and do it in one transaction so a failure leaves the old data in place.
-    stream() {
-        printf 'DROP SCHEMA IF EXISTS public CASCADE;\nCREATE SCHEMA public;\n'
-        if [ "$source_cmd" = "cat" ]; then cat "$source_arg"; else compose run --rm --no-deps -T --entrypoint cat app "$source_arg"; fi
-    }
-    if stream | compose exec -T db psql -v ON_ERROR_STOP=1 --single-transaction --quiet -U "$db_user" -d "$db_name" >/dev/null; then
+    if load_dump "$source_arg" "$([ "$source_cmd" = cat ] && echo local || echo container)"; then
         ok "Restored ${dump}"
     else
         compose start app queue scheduler >/dev/null 2>&1 || true
@@ -184,14 +246,14 @@ cmd_restore() {
 }
 
 case "${1:-help}" in
-    update) shift; cmd_update "${1:-}" ;;
-    backup) cmd_backup ;;
+    update) shift; cmd_update "$@" ;;
+    backup) shift; cmd_backup "${1:-}" ;;
     restore) shift; cmd_restore "${1:-}" ;;
     version) running_version ;;
     status) compose ps ;;
     logs) shift; compose logs -f "$@" ;;
     help|-h|--help)
-        sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
         ;;
     *) die "Unknown command '$1'. Try: ./modulo help" ;;
 esac

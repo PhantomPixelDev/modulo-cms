@@ -38,6 +38,42 @@ jobs:
       - name: Tests
         run: ./vendor/bin/pest
 
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          tools: composer:v2
+          coverage: pcov
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Tests with coverage
+        run: php artisan test --coverage-clover=coverage.xml
+
+      # A ratchet: coverage may rise, never fall below what was recorded.
+      - name: Line coverage must not drop
+        run: |
+          set -euo pipefail
+          current=$(php -r '$x = simplexml_load_file("coverage.xml"); $m = $x->project->metrics; printf("%.2f", 100 * (int) $m["coveredstatements"] / max(1, (int) $m["statements"]));')
+          recorded=$(php -r '$b = json_decode(file_get_contents(".github/quality-baseline.json"), true); echo $b["php_line_coverage"] ?? "";')
+          echo "### PHP line coverage: ${current}%" >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "${recorded}" ]; then
+            echo "::notice::PHP line coverage is ${current}%. Record it as php_line_coverage in .github/quality-baseline.json to enforce it."
+            exit 0
+          fi
+          if php -r "exit((float) '${current}' + 0.5 < (float) '${recorded}' ? 0 : 1);"; then
+            echo "::error::PHP line coverage fell to ${current}% (recorded ${recorded}%). Add tests for the new code."
+            exit 1
+          fi
+
   pgsql:
     name: tests (postgres)
     runs-on: ubuntu-latest

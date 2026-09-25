@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\RecordActivity;
 use App\Models\Post;
 use App\Models\PostTranslation;
 use App\Models\User;
@@ -13,9 +14,11 @@ use App\Services\PostService;
 use App\Services\ShortcodeService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,6 +41,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Every password rule in the app uses Password::defaults(). Production
+        // asks for a real password; elsewhere (tests, local) the framework's
+        // 8-character minimum keeps fixtures simple.
+        Password::defaults(function () {
+            if (! $this->app->isProduction()) {
+                return Password::min(8);
+            }
+
+            $rule = Password::min(max(8, (int) config('security.password_min_length')))->letters()->numbers();
+
+            return config('security.password_uncompromised') ? $rule->uncompromised() : $rule;
+        });
+
+        // Audit trail: sign-ins and changes to content, users, roles, extensions
+        Event::subscribe(RecordActivity::class);
+
         // Register PostObserver
         Post::observe(PostObserver::class);
 
@@ -77,6 +96,14 @@ class AppServiceProvider extends ServiceProvider
             return [
                 Limit::perMinute(60)->by($key),
             ];
+        });
+
+        // Headless API: per token, or per IP for anonymous reads
+        RateLimiter::for('api-v1', function (Request $request) {
+            $token = $request->attributes->get('api_token');
+
+            return Limit::perMinute(max(1, (int) config('api.rate_limit')))
+                ->by($token !== null ? 'token:'.$token->id : 'ip:'.$request->ip());
         });
 
         // Stricter limits for auth-related endpoints to mitigate brute force

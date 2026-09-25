@@ -53,11 +53,15 @@ class ThemeManager
 
         if (! File::exists($this->themesPath)) {
             File::makeDirectory($this->themesPath, 0755, true);
-
-            return $discovered;
         }
 
-        $directories = File::directories($this->themesPath);
+        // Bundled themes first, then those installed at runtime; a slug is
+        // only taken once.
+        $installPath = (string) config('theme.install_path');
+        $directories = array_merge(
+            File::directories($this->themesPath),
+            $installPath !== '' && File::isDirectory($installPath) ? File::directories($installPath) : [],
+        );
 
         foreach ($directories as $directory) {
             $themeJsonPath = $directory.'/theme.json';
@@ -66,7 +70,7 @@ class ThemeManager
                 try {
                     $config = json_decode(File::get($themeJsonPath), true);
 
-                    if ($config && isset($config['slug'])) {
+                    if ($config && isset($config['slug']) && ! $discovered->contains(fn ($theme) => $theme['config']['slug'] === $config['slug'])) {
                         $discovered->push([
                             'directory' => basename($directory),
                             'config' => $config,
@@ -102,12 +106,23 @@ class ThemeManager
             );
         }
 
-        // Security check
+        // A theme is markup and styles. PHP in one is refused outright: themes
+        // are installable by people who are not trusted with server code.
         if (! $this->validator->validateSecurity($themeData['path'])) {
-            \Log::warning('Theme security validation issues', [
-                'slug' => $config['slug'],
-                'errors' => $this->validator->getErrors(),
-            ]);
+            throw new \InvalidArgumentException('Theme contains files that are not allowed: '.$this->validator->getErrorsAsString());
+        }
+
+        // A child theme borrows every component it does not override from
+        // its parent, which must therefore be installed first.
+        $parentId = null;
+        if (isset($config['parent'])) {
+            $parent = is_string($config['parent']) ? Theme::where('slug', $config['parent'])->where('is_installed', true)->first() : null;
+
+            if ($parent === null || $parent->slug === $config['slug']) {
+                throw new \InvalidArgumentException('Theme "'.$config['slug'].'" needs its parent theme "'.(is_string($config['parent']) ? $config['parent'] : '?').'" installed first.');
+            }
+
+            $parentId = $parent->id;
         }
 
         $theme = Theme::updateOrCreate(
@@ -128,6 +143,7 @@ class ThemeManager
                 'menus' => $config['menus'] ?? [],
                 'widget_areas' => $config['widget_areas'] ?? [],
                 'directory_path' => $themeData['directory'],
+                'parent_theme_id' => $parentId,
                 'is_installed' => true,
                 'installed_at' => now(),
                 'installed_by' => $userId,
@@ -390,9 +406,20 @@ class ThemeManager
      */
     public function getTranslations(Theme $theme, ?string $locale = null): array
     {
+        // A child theme's strings override its parent's, key by key.
+        $parent = $theme->parent_theme_id !== null ? Theme::find($theme->parent_theme_id) : null;
+        $inherited = $parent !== null && $parent->id !== $theme->id ? $this->getTranslations($parent, $locale) : [];
+
+        return array_replace_recursive($inherited, $this->ownTranslations($theme, $locale));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function ownTranslations(Theme $theme, ?string $locale = null): array
+    {
         $locale = $locale ?? app()->getLocale();
-        $directory = $theme->directory_path ?? $theme->slug;
-        $basePath = resource_path('themes/'.$directory.'/lang');
+        $basePath = $theme->full_path.'/lang';
 
         $paths = [
             $basePath.'/'.$locale.'.json',
@@ -416,12 +443,56 @@ class ThemeManager
     }
 
     /**
+     * Stylesheets a theme declares in theme.json ("styles"), as public URLs.
+     * A child theme's come after its parent's, so its rules win.
+     *
+     * @return array<int, string>
+     */
+    public function stylesheetUrls(Theme $theme): array
+    {
+        $parent = $theme->parent_theme_id !== null ? Theme::find($theme->parent_theme_id) : null;
+        $urls = $parent !== null && $parent->id !== $theme->id ? $this->stylesheetUrls($parent) : [];
+
+        foreach ((array) ($theme->config['styles'] ?? []) as $path) {
+            // Only published assets, only CSS, never a path out of the folder.
+            if (is_string($path) && str_starts_with($path, 'assets/') && str_ends_with($path, '.css') && ! str_contains($path, '..')) {
+                $urls[] = asset('themes/'.$theme->directory_path.'/'.$path).'?v='.urlencode((string) $theme->version);
+            }
+        }
+
+        return $urls;
+    }
+
+    /**
+     * The theme whose React component renders a template: the theme itself
+     * when it ships that component, otherwise the nearest ancestor that does.
+     */
+    public function componentThemeFor(Theme $theme, string $componentFile): Theme
+    {
+        $current = $theme;
+        $seen = [];
+
+        while (! File::exists($current->full_path.'/'.$componentFile) && $current->parent_theme_id !== null && ! in_array($current->id, $seen, true)) {
+            $seen[] = $current->id;
+            $parent = Theme::find($current->parent_theme_id);
+
+            if ($parent === null) {
+                break;
+            }
+
+            $current = $parent;
+        }
+
+        return $current;
+    }
+
+    /**
      * Copy theme assets to public directory with hash checking
      */
     public function publishAssets(Theme $theme): bool
     {
-        // Source is inside resources/themes/<directory>/assets
-        $sourcePath = resource_path('themes/'.$theme->directory_path.'/assets');
+        // Source is the theme's own assets folder, bundled or runtime-installed
+        $sourcePath = $theme->full_path.'/assets';
         // Target must match URLs generated by Theme model (uses directory_path)
         $targetPath = public_path('themes/'.$theme->directory_path.'/assets');
 
@@ -615,9 +686,15 @@ class ThemeManager
             return false;
         }
 
-        // Cannot uninstall active theme
-        if ($theme->is_active) {
+        // Cannot uninstall active theme, nor one a child theme builds on
+        if ($theme->is_active || Theme::where('parent_theme_id', $theme->id)->exists()) {
             return false;
+        }
+
+        // A theme installed at runtime is removed from disk too; bundled
+        // themes ship with the code and stay.
+        if ($theme->isRuntimeInstalled() && $theme->directory_path !== '') {
+            File::deleteDirectory($theme->full_path);
         }
 
         // Remove published assets

@@ -32,7 +32,8 @@ it('stops serving the old slug after a rename', function () {
 
     $page->update(['slug' => 'new-slug']);
 
-    $this->get('/old-slug')->assertNotFound();
+    // Not the cached old page: a permanent redirect to where it lives now.
+    $this->get('/old-slug')->assertStatus(301)->assertRedirect(url('/new-slug'));
     $this->get('/new-slug')->assertOk();
 });
 

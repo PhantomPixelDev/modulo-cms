@@ -39,6 +39,9 @@ class ReactTemplateRenderer
 
         // Prepare theme data using the standardized resource
         $themeData = (new ThemeResource($theme))->toArray(request());
+        // Stylesheets and colours from theme.json; a child theme's win over its parent's.
+        $themeData['styles'] = $this->themeManager->stylesheetUrls($theme);
+        $themeData['colors'] = $this->themeColors($theme);
 
         // Merge with template data - ensure all data is properly structured
         $siteData = $this->getSiteData();
@@ -82,38 +85,70 @@ class ReactTemplateRenderer
     }
 
     /**
-     * Resolve the component path for a template
+     * Resolve the component path for a template.
+     *
+     * A child theme renders with its own component when it ships one and
+     * falls back to its parent's (and so on up) when it does not.
      */
     protected function resolveComponentPath(Theme $theme, string $templateName): ?string
     {
-        $templates = $theme->templates ?? [];
+        $componentFile = $this->componentFileFor($theme, $templateName);
 
-        if (! isset($templates[$templateName])) {
-            // Fallback: try to find a component based on template name
-            $componentName = ucfirst($templateName);
-
-            return $this->convertToInertiaPath($theme->slug, "components/{$componentName}");
+        if ($componentFile === null) {
+            return null;
         }
 
-        $templateConfig = $templates[$templateName];
+        $owner = $this->themeManager->componentThemeFor($theme, $componentFile);
 
-        // Handle both old string format and new object format
-        if (is_string($templateConfig)) {
-            // For React themes, convert string template names to component paths automatically
-            // e.g., "posts" -> "components/Posts", "home" -> "components/Home"
-            $componentName = ucfirst($templateName);
+        return $this->convertToInertiaPath($owner->slug, $componentFile);
+    }
 
-            return $this->convertToInertiaPath($theme->slug, "components/{$componentName}");
+    /**
+     * The component file for a template, from the nearest theme in the
+     * parent chain that configures it; by convention otherwise
+     * ("posts" -> components/Posts.tsx).
+     */
+    protected function componentFileFor(Theme $theme, string $templateName): ?string
+    {
+        $seen = [];
+
+        for ($current = $theme; $current !== null && ! in_array($current->id, $seen, true); $current = $current->parent) {
+            $seen[] = $current->id;
+            $templateConfig = ($current->templates ?? [])[$templateName] ?? null;
+
+            if ($templateConfig === null) {
+                continue;
+            }
+
+            if (is_array($templateConfig)) {
+                // theme.json commonly stores { "component": "components/Index.tsx" }
+                return isset($templateConfig['component']) && is_string($templateConfig['component']) ? $templateConfig['component'] : null;
+            }
+
+            break;
         }
 
-        if (is_array($templateConfig) && isset($templateConfig['component'])) {
-            // theme.json commonly stores templates as { "component": "components/Index.tsx" }
-            // Convert theme component path to Inertia component path
-            // components/Layout.tsx -> Themes/ModernReact/Layout
-            return $this->convertToInertiaPath($theme->slug, $templateConfig['component']);
+        return 'components/'.ucfirst($templateName).'.tsx';
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function themeColors(Theme $theme): array
+    {
+        $colors = [];
+        $seen = [];
+
+        for ($current = $theme; $current !== null && ! in_array($current->id, $seen, true); $current = $current->parent) {
+            $seen[] = $current->id;
+            $own = $current->config['colors'] ?? [];
+
+            if (is_array($own)) {
+                $colors += array_filter($own, fn ($value, $key) => is_string($key) && is_string($value), ARRAY_FILTER_USE_BOTH);
+            }
         }
 
-        return null;
+        return $colors;
     }
 
     /**
@@ -143,7 +178,9 @@ class ReactTemplateRenderer
         return [
             'name' => SiteSetting::get('site_name', config('app.name', 'Modulo CMS')),
             'tagline' => SiteSetting::get('site_tagline', 'Modern Content Management System'),
-            'logo' => null, // TODO: Add site logo support
+            'logo' => SiteSetting::get('site_logo', '') ?: null,
+            // Default meta description for pages that have none of their own
+            'description' => SiteSetting::get('meta_description', '') ?: null,
         ];
     }
 

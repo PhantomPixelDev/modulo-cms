@@ -51,7 +51,7 @@ export default [
         },
     },
     {
-        ignores: ['vendor', 'public', 'bootstrap/ssr', 'tailwind.config.js'],
+        ignores: ['vendor', 'public', 'bootstrap/ssr', 'tailwind.config.js', 'docs/.vitepress/dist', 'docs/.vitepress/cache', 'coverage'],
     },
     prettier, // Turn off all rules that might conflict with Prettier
 ];

@@ -187,9 +187,11 @@ class UpdateChecker
                 'php artisan modulo:upgrade',
             ],
             default => [
-                "# Download modulo-cms-{$target}.tar.gz and its .sha256 from the release page,",
-                '# verify it (sha256sum -c), and unpack it over the site keeping .env, storage/ and plugins/.',
-                'php artisan modulo:upgrade',
+                '# Downloads and verifies the release, backs up, swaps the code and migrates:',
+                'php artisan modulo:update'.($version !== null ? ' '.$version : ''),
+                '',
+                '# Undo the code swap if needed (restore the backup too if it migrated):',
+                'php artisan modulo:update --rollback',
             ],
         };
     }

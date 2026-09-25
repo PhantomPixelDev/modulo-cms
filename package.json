@@ -16,6 +16,7 @@
     "scripts": {
         "build": "vite build",
         "build:ssr": "vite build && vite build --ssr",
+        "build:shims": "node scripts/build-plugin-shims.mjs",
         "dev": "vite",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
@@ -25,8 +26,11 @@
         "clean:php": "bash -lc 'php artisan optimize:clear && php artisan cache:clear && php artisan view:clear || true'",
         "clean:frontend": "bash -lc 'rm -rf .vite public/build tsconfig.tsbuildinfo resources/js/*.tsbuildinfo .eslintcache'",
         "test:js": "vitest run",
+        "test:js:coverage": "vitest run --coverage",
         "test:js:watch": "vitest",
-        "test:e2e": "playwright test"
+        "test:e2e": "playwright test",
+        "docs:dev": "vitepress dev docs",
+        "docs:build": "vitepress build docs"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
@@ -46,6 +50,7 @@
         "prettier-plugin-tailwindcss": "^0.8.1",
         "sass": "^1.104.1",
         "typescript-eslint": "^8.70.0",
+        "vitepress": "^2.0.0-alpha.20",
         "vitest": "^5.0.1"
     },
     "dependencies": {
@@ -77,6 +82,7 @@
         "globals": "^15.14.0",
         "laravel-vite-plugin": "^2.0.1",
         "lucide-react": "^0.543.0",
+        "qrcode.react": "^4.2.0",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
         "slate": "^0.126.2",

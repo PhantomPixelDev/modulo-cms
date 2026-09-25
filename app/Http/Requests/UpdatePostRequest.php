@@ -59,8 +59,11 @@ class UpdatePostRequest extends FormRequest
                 $rules['taxonomy_terms.*'] = [
                     'exists:taxonomy_terms,id',
                     function ($attribute, $value, $fail) use ($postType) {
-                        $term = TaxonomyTerm::find($value);
-                        if ($term && $term->taxonomy->post_type_id !== $postType->id) {
+                        // taxonomies.post_types lists the types a taxonomy applies to
+                        // (by name; slugs and ids accepted too). Empty means all.
+                        $term = TaxonomyTerm::with('taxonomy')->find($value);
+                        $allowed = array_map('strval', (array) ($term?->taxonomy->post_types ?? []));
+                        if ($term && $allowed !== [] && array_intersect($allowed, [$postType->name, $postType->slug, (string) $postType->id]) === []) {
                             $fail('The selected taxonomy term is invalid for this post type.');
                         }
                     },

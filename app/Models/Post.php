@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Post extends Model
 {
-    use HasFactory;
+    use HasFactory, Prunable, SoftDeletes;
 
     protected $fillable = [
         'post_type_id',
@@ -35,11 +38,59 @@ class Post extends Model
         'meta_data' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<PostType, $this>
+     */
     public function postType(): BelongsTo
     {
         return $this->belongsTo(PostType::class);
     }
 
+    /**
+     * The public path of this post (its type's prefix, then the slug).
+     */
+    public function publicPath(?string $slug = null): string
+    {
+        $prefix = trim((string) $this->postType?->route_prefix, '/');
+        $slug = trim($slug ?? (string) $this->slug, '/');
+
+        return '/'.ltrim(($prefix !== '' ? $prefix.'/' : '').$slug, '/');
+    }
+
+    /**
+     * A slug not used by any post, trashed ones included (the column is
+     * unique): "hello", then "hello-2", "hello-3", ...
+     */
+    public static function uniqueSlug(string $slug, ?int $ignoreId = null): string
+    {
+        $base = $slug !== '' ? $slug : 'untitled';
+        $candidate = $base;
+        $suffix = 2;
+
+        while (static::withTrashed()->where('slug', $candidate)->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))->exists()) {
+            $candidate = $base.'-'.$suffix++;
+        }
+
+        return $candidate;
+    }
+
+    /**
+     * Trashed posts past content.trash_days are purged by model:prune.
+     *
+     * @return Builder<static>
+     */
+    public function prunable(): Builder
+    {
+        $days = (int) config('content.trash_days');
+
+        return $days > 0
+            ? static::onlyTrashed()->where('deleted_at', '<', now()->subDays($days))
+            : static::query()->whereRaw('1 = 0');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
@@ -53,6 +104,16 @@ class Post extends Model
     public function children(): HasMany
     {
         return $this->hasMany(Post::class, 'parent_id');
+    }
+
+    /**
+     * Earlier versions, newest first.
+     *
+     * @return HasMany<PostRevision, $this>
+     */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(PostRevision::class)->orderByDesc('id');
     }
 
     public function comments(): HasMany
@@ -70,6 +131,9 @@ class Post extends Model
             ->orderBy('created_at');
     }
 
+    /**
+     * @return BelongsToMany<TaxonomyTerm, $this>
+     */
     public function taxonomyTerms(): BelongsToMany
     {
         return $this->belongsToMany(TaxonomyTerm::class, 'post_taxonomy_terms')

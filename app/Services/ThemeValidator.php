@@ -25,7 +25,11 @@ class ThemeValidator
         $this->validateRequiredFields($config);
         $this->validateSlug($config);
         $this->validateVersion($config);
-        $this->validateReactTemplates($config, $themePath);
+
+        // A child theme may list no templates at all: its parent renders them.
+        if (! isset($config['parent']) || isset($config['templates'])) {
+            $this->validateReactTemplates($config, $themePath);
+        }
 
         return empty($this->errors);
     }
@@ -168,7 +172,7 @@ class ThemeValidator
     {
         $this->errors = [];
 
-        $suspiciousExtensions = ['php', 'phar', 'exe'];
+        $suspiciousExtensions = ['php', 'phtml', 'phar', 'exe', 'sh', 'so'];
 
         try {
             $allFiles = File::allFiles($themePath);

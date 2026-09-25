@@ -21,6 +21,8 @@ interface LayoutProps {
     ogImage?: string;
     canonicalUrl?: string;
     theme?: {
+        /** Stylesheets from theme.json "styles" (child themes restyle this one with these). */
+        styles?: string[];
         colors?: {
             primary?: string;
             secondary?: string;
@@ -53,6 +55,14 @@ interface LayoutProps {
         post_type?: {
             name?: string;
         };
+        /** From the post's SEO tab: search and social previews. */
+        seo?: {
+            title?: string;
+            description?: string;
+            image?: string | null;
+            canonical?: string | null;
+            noindex?: boolean;
+        };
     };
     page?: {
         id?: number;
@@ -80,19 +90,22 @@ export default function Layout({
     keywords,
     ogImage,
     canonicalUrl,
-    theme,
+    theme: themeProp,
     site,
     menus,
     widgets = [],
     post,
     page,
 }: LayoutProps) {
-    const { auth } = usePage().props as any;
+    const { auth, theme: pageTheme } = usePage().props as any;
+    // Some templates do not pass the theme down; the page props always carry it.
+    const theme: LayoutProps['theme'] = themeProp ?? pageTheme;
     // Safe defaults with proper null checks - use more defensive approach
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS', tagline: '' };
     const safeMenus = menus && typeof menus === 'object' ? menus : { header: [], footer: [] };
     const safeAuth = auth && typeof auth === 'object' ? auth : { user: null };
-    const pageTitle = title ? `${title} | ${safeSite.name}` : safeSite.name;
+    const seo = post?.seo;
+    const pageTitle = (seo?.title ?? title) ? `${seo?.title ?? title} | ${safeSite.name}` : safeSite.name;
 
     // Only override the design tokens when the theme actually configures them.
     const customPrimary = theme?.colors?.primary;
@@ -107,9 +120,9 @@ export default function Layout({
     const isArticle = post && post.id;
     const isPage = page && page.id;
     const contentAuthor = post?.author?.name || page?.author?.name || safeSite.name;
-    const contentImage = post?.featured_image || page?.featured_image || ogImage;
-    const canonicalUrlValue = typeof window !== 'undefined' ? window.location.href : '';
-    const contentDescription = post?.excerpt || page?.excerpt || description || safeSite.description;
+    const contentImage = seo?.image || post?.featured_image || page?.featured_image || ogImage;
+    const canonicalUrlValue = seo?.canonical || canonicalUrl || (typeof window !== 'undefined' ? window.location.href.split('?')[0] : '');
+    const contentDescription = seo?.description || post?.excerpt || page?.excerpt || description || safeSite.description;
     const contentPublishedDate = post?.published_at || page?.updated_at;
 
     const footerMenuItems = normalizeMenuItems(safeMenus.footer);
@@ -118,6 +131,9 @@ export default function Layout({
         <>
             <Head>
                 <title>{pageTitle}</title>
+                {(theme?.styles ?? []).map((href) => (
+                    <link key={href} rel="stylesheet" href={href} />
+                ))}
                 {contentDescription && <meta name="description" content={contentDescription} />}
                 {keywords && <meta name="keywords" content={keywords} />}
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -141,7 +157,10 @@ export default function Layout({
                 <meta name="twitter:site" content={safeSite.name} />
 
                 {/* Additional SEO meta tags */}
-                <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+                <meta
+                    name="robots"
+                    content={seo?.noindex ? 'noindex, follow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'}
+                />
                 <meta name="language" content="en-US" />
                 {canonicalUrlValue && <link rel="canonical" href={canonicalUrlValue} />}
 

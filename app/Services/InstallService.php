@@ -183,9 +183,13 @@ class InstallService
             'name' => $name,
             'email' => $email,
             'password' => Hash::make($password),
-            'email_verified_at' => now(),
             'is_admin' => true,
         ]);
+
+        // Not mass-assignable, so create() silently dropped it and the new
+        // administrator landed on "verify your email" -- on a site whose mail
+        // may not be configured yet.
+        $user->forceFill(['email_verified_at' => now()])->save();
 
         $user->assignRole('super-admin');
 

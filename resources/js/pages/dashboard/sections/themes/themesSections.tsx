@@ -5,6 +5,7 @@ import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { ActiveThemeCard } from '../../components/themes/ActiveThemeCard';
 import { DiscoveredThemesList } from '../../components/themes/DiscoveredThemesList';
 import { InstalledThemesGrid } from '../../components/themes/InstalledThemesGrid';
+import { ThemeBrowser } from '../../components/themes/ThemeBrowser';
 import { ThemeDetails } from '../../components/themes/ThemeDetails';
 import { asArray } from '../../types';
 
@@ -158,6 +159,8 @@ export function getThemesSections({
                                 config: t?.config,
                             }))}
                     />
+
+                    <ThemeBrowser canInstall={can('install themes')} />
                 </div>
             </SectionWrapper>
         );

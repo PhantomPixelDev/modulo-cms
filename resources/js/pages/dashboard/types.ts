@@ -1,4 +1,7 @@
+import type { ActivityProps } from './sections/system/activitySection';
+import type { RedirectsProps } from './sections/system/redirectsSection';
 import type { BackupsProps, UpdateCenterProps } from './sections/system/systemSections';
+import type { TrashProps } from './sections/trash/trashSections';
 // Define base interfaces to avoid dependency on @/types
 export interface BaseEntity {
     id: number;
@@ -292,6 +295,9 @@ export interface DashboardProps {
     // System
     updateCenter?: UpdateCenterProps;
     backups?: BackupsProps;
+    activity?: ActivityProps;
+    trash?: TrashProps;
+    redirects?: RedirectsProps;
     // Plugins
     plugins?: any[];
     plugin?: any;
@@ -412,6 +418,9 @@ export interface PostListItem {
     post_type?: { id: number; label: string; name: string };
     author?: { id: number; name: string };
     created_at: string;
+    published_at?: string | null;
+    /** Published with a future date: goes live then. */
+    is_scheduled?: boolean;
 }
 
 // Normalize paginated objects or arrays to arrays

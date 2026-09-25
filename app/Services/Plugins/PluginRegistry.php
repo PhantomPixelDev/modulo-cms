@@ -39,6 +39,38 @@ class PluginRegistry
     }
 
     /**
+     * Themes in the registry.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function themes(bool $force = false): array
+    {
+        if ($force) {
+            Cache::forget(self::CACHE_KEY);
+        }
+
+        $index = Cache::remember(self::CACHE_KEY, (int) config('plugins.registry_cache_ttl'), fn () => $this->fetch());
+
+        return $index['themes'] ?? [];
+    }
+
+    /**
+     * The newest release of a registry theme.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function latestTheme(string $slug, bool $force = false): ?array
+    {
+        foreach ($this->themes($force) as $entry) {
+            if (($entry['slug'] ?? null) === $slug && is_array($entry['latest'] ?? null)) {
+                return $entry['latest'] + ['slug' => $slug, 'parent' => $entry['parent'] ?? null];
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
     public function find(string $slug, bool $force = false): ?array
@@ -157,6 +189,12 @@ class PluginRegistry
 
         $payload['plugins'] = array_values(array_filter(
             $payload['plugins'],
+            fn ($entry) => is_array($entry) && $this->isUsableEntry($entry),
+        ));
+
+        // Themes share the index (same shape, their own list). Optional.
+        $payload['themes'] = array_values(array_filter(
+            is_array($payload['themes'] ?? null) ? $payload['themes'] : [],
             fn ($entry) => is_array($entry) && $this->isUsableEntry($entry),
         ));
 

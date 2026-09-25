@@ -12,6 +12,7 @@ import { router } from '@inertiajs/react';
 import { BarChart3, FileText, Globe, Image, Link2, Search, Settings, Share2, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Locale } from '../../types';
+import MediaPickerDialog from '../media/MediaPickerDialog';
 
 type SettingsGroup = 'general' | 'reading' | 'writing' | 'permalinks' | 'seo' | 'social' | 'analytics' | 'media' | 'advanced';
 
@@ -82,6 +83,7 @@ export function SiteSettingsForm({
     const [formData, setFormData] = useState<Record<string, Record<string, any>>>(settings);
     const [selectedLocale, setSelectedLocale] = useState<string>(resolveLocale(locales, currentLocale));
     const [saving, setSaving] = useState(false);
+    const [pickerFor, setPickerFor] = useState<'site_logo' | 'site_favicon' | null>(null);
 
     useEffect(() => {
         setFormData(settings);
@@ -191,6 +193,43 @@ export function SiteSettingsForm({
                     />
                 </div>
             </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+                {(['site_logo', 'site_favicon'] as const).map((key) => (
+                    <div key={key} className="space-y-2">
+                        <Label htmlFor={key} className="text-sm font-bold">
+                            {key === 'site_logo' ? 'Logo' : 'Favicon'}
+                        </Label>
+                        <div className="flex items-center gap-3">
+                            <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+                                {formData.general?.[key] ? (
+                                    <img src={formData.general[key]} alt="" className="max-h-full max-w-full object-contain" />
+                                ) : (
+                                    <Image className="size-5 text-muted-foreground" />
+                                )}
+                            </div>
+                            <Input
+                                id={key}
+                                value={formData.general?.[key] || ''}
+                                onChange={(e) => updateField('general', key, e.target.value)}
+                                disabled={!canEdit}
+                                placeholder={key === 'site_logo' ? 'Shown in the site header' : 'Browser tab icon (square PNG or ICO)'}
+                            />
+                            <Button type="button" variant="outline" size="sm" disabled={!canEdit} onClick={() => setPickerFor(key)}>
+                                Choose
+                            </Button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <MediaPickerDialog
+                open={pickerFor !== null}
+                onOpenChange={(open) => !open && setPickerFor(null)}
+                onSelect={(item: { url?: string }) => {
+                    if (pickerFor && item?.url) updateField('general', pickerFor, item.url);
+                    setPickerFor(null);
+                }}
+            />
 
             <div className="space-y-2">
                 <Label htmlFor="site_tagline" className="text-sm font-bold">

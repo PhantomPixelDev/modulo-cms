@@ -25,9 +25,26 @@ are the templates; copy, do not edit in place.
 
 | Variable | Default | Notes |
 |---|---|---|
-| `MODULO_UPDATE_CHECK` | `true` | Asks GitHub for the newest release at most twice a day. |
+| `MODULO_UPDATE_CHECK` | `true` | Daily check for core and plugin updates (System → Updates). |
+| `MODULO_UPDATE_NOTIFY` | `true` | Email administrators once per new set of available updates. |
+| `MODULO_UPDATE_PRERELEASES` | `false` | Offer release candidates as updates. |
+| `MODULO_BACKUP_PATH` | `storage/app/backups` | Where full backups (`modulo:backup`) are written. |
+| `MODULO_BACKUP_KEEP` | `5` | Full backups kept; older ones are deleted after each run. |
+| `MODULO_BACKUP_SCHEDULE` | `true` | Take a full backup every Sunday at 03:45. |
 | `MODULO_PLUGIN_REGISTRY` | the project registry | Point at your own index to run a private one. |
 | `MODULO_PLUGIN_ALLOW_URL_INSTALL` | `false` | Installing from an arbitrary URL bypasses the registry checksum. |
+
+## Security
+
+| Variable | Default | Notes |
+|---|---|---|
+| `MODULO_SECURITY_HEADERS` | `true` | Security headers from the app (see [security.md](security.md)). |
+| `MODULO_CSP` | `report` | `off`, `report` or `enforce`. |
+| `MODULO_HSTS_MAX_AGE` | `15552000` | Seconds; sent on HTTPS only. `0` disables. |
+| `MODULO_PASSWORD_MIN_LENGTH` | `12` | Production only. |
+| `MODULO_PASSWORD_UNCOMPROMISED` | `true` | Reject breached passwords (production only). |
+| `MODULO_REQUIRE_2FA_FOR_ADMINS` | `false` | Administrators must use two-factor authentication. |
+| `MODULO_ACTIVITY_RETENTION_DAYS` | `180` | Activity log retention; `0` keeps everything. |
 
 ## Build identity
 

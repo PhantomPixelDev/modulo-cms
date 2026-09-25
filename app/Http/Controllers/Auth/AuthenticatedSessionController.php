@@ -44,7 +44,18 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): SymfonyResponse
     {
-        $request->authenticate();
+        $pending = $request->authenticate();
+
+        // Password was right; the authenticator code comes next.
+        if ($pending !== null) {
+            $request->session()->regenerate();
+            $request->session()->put([
+                'login.id' => $pending->getKey(),
+                'login.remember' => $request->boolean('remember'),
+            ]);
+
+            return Inertia::location(route('two-factor.login'));
+        }
 
         $request->session()->regenerate();
         // Force a full page reload so the Inertia root view switches from

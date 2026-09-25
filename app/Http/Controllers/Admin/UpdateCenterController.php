@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Plugin;
 use App\Services\Plugins\PluginInstaller;
+use App\Services\ThemeInstaller;
 use App\Services\UpdateCenter;
 use App\Support\InstallChannel;
 use Illuminate\Http\RedirectResponse;
@@ -90,6 +91,22 @@ class UpdateCenterController extends Controller
         }
 
         return back()->with('success', $updated === [] ? 'Every plugin is up to date.' : 'Updated '.implode(', ', $updated).'.');
+    }
+
+    public function updateTheme(string $slug, ThemeInstaller $installer): RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user !== null && ($user->can('install themes') || $user->hasRole(['admin', 'super-admin'])), 403);
+
+        try {
+            $result = $installer->install($slug);
+        } catch (Throwable $e) {
+            return back()->with('error', "Could not update the {$slug} theme: ".$e->getMessage());
+        }
+
+        $this->center->forgetPending();
+
+        return back()->with('success', "Theme {$slug} updated to {$result['version']}.");
     }
 
     protected function authorizeView(): void
