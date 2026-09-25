@@ -286,7 +286,7 @@ class DashboardController extends Controller
     private function getServerUptime(): string
     {
         $startTime = defined('LARAVEL_START') ? LARAVEL_START : time();
-        $uptimeSeconds = time() - $startTime;
+        $uptimeSeconds = (int) (time() - $startTime);
 
         $days = floor($uptimeSeconds / 86400);
         $hours = floor(($uptimeSeconds % 86400) / 3600);

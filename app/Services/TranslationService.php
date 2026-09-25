@@ -22,6 +22,23 @@ class TranslationService
     protected array $adminDomains = ['common', 'dashboard', 'auth', 'validation'];
 
     /**
+     * Bumped whenever translations change, so browsers holding them know to re-fetch.
+     */
+    protected const REVISION_KEY = 'translations:revision';
+
+    /**
+     * Identifies one version of the admin translations for a locale. The admin
+     * keeps translations across page visits and only asks for them again when
+     * this changes (locale switch or an edit).
+     */
+    public function adminTranslationsVersion(?string $locale = null): string
+    {
+        $locale = $locale ?? App::getLocale();
+
+        return $locale.'.'.Cache::get(self::REVISION_KEY, '0');
+    }
+
+    /**
      * Get all translations for the current locale
      */
     public function getTranslations(?string $locale = null): array
@@ -161,6 +178,8 @@ class TranslationService
      */
     public function clearCache(?string $locale = null): void
     {
+        Cache::forever(self::REVISION_KEY, (string) now()->getTimestampMs());
+
         if ($locale) {
             Cache::forget("translations:{$locale}");
             Cache::forget("translations:admin:{$locale}");

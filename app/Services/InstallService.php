@@ -233,8 +233,17 @@ class InstallService
         $this->writeLock();
         SchemaVersion::recordCurrent();
 
-        // Drop caches built while the site was half-configured.
+        // Drop caches built while the site was half-configured, then rebuild them
+        // in production: without them every request re-reads config and routes.
         Artisan::call('optimize:clear');
+
+        if (app()->isProduction()) {
+            try {
+                Artisan::call('optimize');
+            } catch (Throwable) {
+                // A cold cache is only slower; the install itself succeeded.
+            }
+        }
     }
 
     /**
