@@ -45,6 +45,6 @@ export const adminNav: NavItem[] = [
 ];
 
 export const externalNavRight: NavItem[] = [
-    { title: 'Repository', href: 'https://github.com/laravel/react-starter-kit', icon: Github },
-    { title: 'Documentation', href: 'https://laravel.com/docs/starter-kits#react', icon: BookOpen },
+    { title: 'Repository', href: 'https://github.com/PhantomPixelDev/modulo-cms', icon: Github },
+    { title: 'Documentation', href: 'https://github.com/PhantomPixelDev/modulo-cms/tree/main/docs', icon: BookOpen },
 ];

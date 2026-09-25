@@ -761,36 +761,9 @@ export function SiteSettingsForm({
 
     const renderPermalinksSettings = () => (
         <div className="space-y-6">
+            {/* Post URLs are /{post type prefix}/{slug}, set per post type; a
+                global %year%-style structure was never routed, so it is not offered. */}
             <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                    <div className="h-8 w-1 rounded-full bg-primary" />
-                    <h3 className="text-lg font-bold">{t('dashboard.settings.permalinks.structure_title')}</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">{t('dashboard.settings.permalinks.structure_description')}</p>
-                <div className="grid gap-4 rounded-lg border bg-muted/5 p-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="permalink_structure" className="text-sm font-bold">
-                            {t('dashboard.settings.permalinks.custom_structure')}
-                        </Label>
-                        <div className="flex gap-2">
-                            <span className="flex items-center rounded-md border bg-muted px-3 font-mono text-xs text-muted-foreground">
-                                {formData.general?.site_url || t('dashboard.settings.placeholders.site_url_sample')}
-                            </span>
-                            <Input
-                                id="permalink_structure"
-                                value={formData.permalinks?.permalink_structure || '/%postname%/'}
-                                onChange={(e) => updateField('permalinks', 'permalink_structure', e.target.value)}
-                                disabled={!canEdit}
-                                placeholder="/%postname%/"
-                                className="font-mono text-xs"
-                            />
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">{t('dashboard.settings.permalinks.available_tags')}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="space-y-4 border-t pt-6">
                 <div className="flex items-center gap-2">
                     <div className="h-8 w-1 rounded-full bg-primary" />
                     <h3 className="text-lg font-bold">{t('dashboard.settings.permalinks.optional_bases')}</h3>

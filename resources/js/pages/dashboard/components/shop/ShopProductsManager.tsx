@@ -9,18 +9,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { router, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ROUTE } from '../../routes';
 import type { Paginated, ShopProduct } from '../../types';
 
 export function ShopProductsManager({
     products,
+    initialEdit = null,
     canView,
     canCreate,
     canEdit,
     canDelete,
 }: {
     products?: Paginated<ShopProduct>;
+    /** Opened in the edit dialog on arrival (from /shop/products/{id}/edit). */
+    initialEdit?: ShopProduct | null;
     canView: boolean;
     canCreate: boolean;
     canEdit: boolean;
@@ -84,6 +87,14 @@ export function ShopProductsManager({
         setErrors({});
         setEditOpen(true);
     };
+
+    useEffect(() => {
+        if (initialEdit) {
+            openEdit(initialEdit);
+        }
+        // Only on arrival; closing the dialog must not reopen it.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialEdit?.id]);
 
     const gotoPage = (nextPage: number) => {
         router.visit(`${ROUTE.shop.products.index()}?page=${nextPage}`, {

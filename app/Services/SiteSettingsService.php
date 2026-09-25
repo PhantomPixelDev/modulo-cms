@@ -198,22 +198,10 @@ class SiteSettingsService
      */
     public function formatPostUrl(Post $post): string
     {
-        $structure = $this->get('permalink_structure', '/%postname%/');
-        $slug = (string) $post->slug;
-        $date = $post->published_at ?? $post->created_at;
-
-        $replacements = [
-            '%year%' => $date->format('Y'),
-            '%monthnum%' => $date->format('m'),
-            '%day%' => $date->format('d'),
-            '%postname%' => $slug,
-            '%post_id%' => $post->id,
-        ];
-
-        $path = str_replace(array_keys($replacements), array_values($replacements), $structure);
-
-        // Ensure path starts with a slash and is clean
-        $path = '/'.ltrim($path, '/');
+        // The router serves /{type prefix}/{slug} and nothing else (same as the
+        // sitemap). The old permalink_structure setting (%year% etc.) was never
+        // routed, so honouring it here produced feed links that 404.
+        $path = '/'.ltrim((string) $post->slug, '/');
 
         $prefix = $post->postType?->route_prefix;
         if ($prefix && $prefix !== '/') {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\PostResource;
 use App\Models\Post;
 use App\Models\PostType;
+use App\Rules\CanPublish;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -173,7 +174,11 @@ class ContentController extends Controller
             'slug' => ['sometimes', 'nullable', 'string', 'max:255', 'regex:/^[a-z0-9-]+$/'],
             'excerpt' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'content' => ['sometimes', 'nullable', 'string'],
-            'status' => ['sometimes', Rule::in(['draft', 'published', 'private', 'archived'])],
+            'status' => ['sometimes', Rule::in(['draft', 'published', 'private', 'archived']), new CanPublish(
+                $request->user(),
+                $post,
+                isPage: ($post?->postType?->name ?? $request->input('type', 'post')) === 'page',
+            )],
             'published_at' => ['sometimes', 'nullable', 'date'],
             'featured_image' => ['sometimes', 'nullable', 'string', 'max:1000', 'regex:#^(/|https?://)#i'],
             'meta_title' => ['sometimes', 'nullable', 'string', 'max:255'],

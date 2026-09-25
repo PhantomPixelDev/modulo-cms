@@ -37,7 +37,7 @@ it('allows posts index with permission', function () {
 });
 
 it('creates, updates and deletes a post with permissions', function () {
-    $u = postUser(['create posts', 'edit posts', 'delete posts']);
+    $u = postUser(['create posts', 'edit posts', 'delete posts', 'publish posts']);
     $this->actingAs($u);
 
     $type = PostType::create([
@@ -177,7 +177,7 @@ it('denies edit/update/destroy without respective permissions', function () {
 });
 
 it('persists featured_image on create and update', function () {
-    $u = postUser(['create posts', 'edit posts']);
+    $u = postUser(['create posts', 'edit posts', 'publish posts']);
     $this->actingAs($u);
 
     $type = PostType::create([

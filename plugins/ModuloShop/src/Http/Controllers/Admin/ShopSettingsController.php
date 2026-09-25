@@ -66,17 +66,22 @@ class ShopSettingsController
             'cart_page_id' => 'nullable|integer',
             'checkout_page_id' => 'nullable|integer',
             'terms_page_id' => 'nullable|integer',
+            'enable_checkout' => 'sometimes|boolean',
         ]);
 
         $plugin = Plugin::where('slug', 'modulo-shop')->first();
 
+        // Merged: settings this form doesn't cover (tax rate, checkout switch,
+        // gateways) must survive a save.
+        $settings = array_merge($plugin?->settings ?? [], $data);
+
         if ($plugin) {
-            $plugin->settings = $data;
+            $plugin->settings = $settings;
             $plugin->save();
         }
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'settings' => $data]);
+            return response()->json(['success' => true, 'settings' => $settings]);
         }
 
         return back()->with('success', 'Shop settings updated successfully');

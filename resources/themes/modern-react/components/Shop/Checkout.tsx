@@ -108,7 +108,16 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
             if (data.success) {
                 window.location.href = data.redirect;
             } else if (data.errors) {
-                setErrors(data.errors);
+                // Laravel sends each field's messages as an array; stock and cart
+                // problems arrive under "cart", which has no field of its own.
+                const flat: Record<string, string> = {};
+                for (const [key, value] of Object.entries(data.errors as Record<string, string | string[]>)) {
+                    flat[key] = Array.isArray(value) ? value[0] : value;
+                }
+                if (flat.cart && !flat.general) {
+                    flat.general = flat.cart;
+                }
+                setErrors(flat);
             } else {
                 setErrors({ general: data.error || 'Failed to process order' });
             }
