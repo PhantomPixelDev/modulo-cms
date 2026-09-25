@@ -54,7 +54,9 @@ it('creates the first administrator as a super admin', function () {
 
     expect($user->hasRole('super-admin'))->toBeTrue()
         ->and($user->is_admin)->toBeTrue()
-        ->and($user->can('access admin'))->toBeTrue();
+        ->and($user->can('access admin'))->toBeTrue()
+        // The admin area requires a verified address; a fresh site may have no mail yet.
+        ->and($user->hasVerifiedEmail())->toBeTrue();
 });
 
 it('refuses to create a second account through the installer', function () {

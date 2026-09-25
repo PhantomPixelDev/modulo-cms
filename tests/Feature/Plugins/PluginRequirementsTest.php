@@ -181,5 +181,6 @@ it('shows why a plugin cannot be activated on the plugins page', function () {
 
     $this->actingAs(makeAdminUserWithPermissions(['view plugins']))
         ->get(route('dashboard.admin.plugins.index'))
-        ->assertInertia(fn ($page) => $page->where('plugins.0.unmet.0', 'Modulo 2.0 or newer (this is 1.2.0)'));
+        // By slug: other tests' plugin rows may sort ahead of it (they do on PostgreSQL).
+        ->assertInertia(fn ($page) => $page->where('plugins', fn ($plugins) => collect($plugins)->firstWhere('slug', 'needy')['unmet'] === ['Modulo 2.0 or newer (this is 1.2.0)']));
 });
