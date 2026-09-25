@@ -169,11 +169,13 @@ class HandleInertiaRequests extends Middleware
                     }),
                 ] : null,
             ],
-            // Visitors don't get the admin route map (smaller payload, less exposed surface)
-            'ziggy' => fn (): array => [
+            // Visitors don't get the admin route map (smaller payload, less exposed surface).
+            // Only SSR reads this prop, on the first render; the browser uses the
+            // @routes global, so later visits needn't resend it (~23KB for admins).
+            'ziggy' => Inertia::once(fn (): array => [
                 ...($canAccessAdmin ? new Ziggy : (new Ziggy)->filter(['dashboard.admin.*'], false))->toArray(),
                 'location' => $request->url(),
-            ],
+            ])->as($canAccessAdmin ? 'ziggy.admin' : 'ziggy.public'),
             'adminStats' => fn () => $request->user()?->hasRole(['admin', 'super-admin'])
                 ? app(AdminStatsService::class)->get()
                 : null,

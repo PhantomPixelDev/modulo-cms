@@ -31,3 +31,17 @@ it('sends admin translations once and skips them while the browser has them', fu
     $afterEdit = inertiaVisit($this, (string) $page['version'], [$key])->assertOk()->json();
     expect($afterEdit['props'])->toHaveKey('translations');
 });
+
+it('sends the route map once per audience', function () {
+    $this->actingAs(makeAdminUserWithPermissions());
+
+    $page = $this->get(route('dashboard'))->assertOk()->viewData('page');
+    expect($page['props']['ziggy']['routes'])->toHaveKey('dashboard.admin.users.index');
+
+    $held = inertiaVisit($this, (string) $page['version'], ['ziggy.admin'])->assertOk()->json();
+    expect($held['props'])->not->toHaveKey('ziggy');
+
+    // A browser still holding the visitor map (e.g. just signed in) gets the admin one.
+    $signedIn = inertiaVisit($this, (string) $page['version'], ['ziggy.public'])->assertOk()->json();
+    expect($signedIn['props']['ziggy']['routes'])->toHaveKey('dashboard.admin.users.index');
+});
