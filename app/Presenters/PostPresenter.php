@@ -7,6 +7,7 @@ use App\Models\Locale;
 use App\Models\Post;
 use App\Models\SiteSetting;
 use App\Services\HtmlSanitizer;
+use App\Services\ResponsiveImages;
 use App\Services\ShortcodeService;
 use App\Services\SiteSettingsService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -31,6 +32,9 @@ class PostPresenter
             'content' => $content,
             'excerpt' => $post->excerpt ?? '',
             'featured_image' => $post->featured_image,
+            // Smaller WebP copies when the image comes from the media library
+            'featured_image_srcset' => app(ResponsiveImages::class)->srcset($post->featured_image),
+            'featured_image_alt' => app(ResponsiveImages::class)->alt($post->featured_image),
             'published_at' => $settings->formatDateTime($post->published_at),
             'updated_at' => $settings->formatDateTime($post->updated_at),
             'meta_title' => $post->meta_title,
@@ -118,7 +122,16 @@ class PostPresenter
             }
         }
 
-        return is_string($content) ? $content : '';
+        return is_string($content) ? $this->lazyImages($content) : '';
+    }
+
+    /**
+     * Images in the body load when scrolled near, unless the author set loading.
+     * Runs on sanitized output, so it only ever adds an attribute to <img>.
+     */
+    protected function lazyImages(string $html): string
+    {
+        return (string) preg_replace('/<img(?![^>]*\bloading=)(\s[^>]*)?>/i', '<img loading="lazy" decoding="async"$1>', $html);
     }
 
     /**
@@ -126,6 +139,9 @@ class PostPresenter
      */
     public function presentPaginator(LengthAwarePaginator $posts): array
     {
+        // One query for every card image on the page
+        app(ResponsiveImages::class)->preload(array_map(fn ($post) => $post->featured_image ?? null, $posts->items()));
+
         $data = $posts->getCollection()->map(function ($post) {
             return $this->presentPost($post, full: false);
         })->toArray();

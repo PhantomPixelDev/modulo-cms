@@ -8,6 +8,9 @@ interface Page {
     content: string;
     excerpt?: string;
     featured_image?: string;
+    /** Smaller WebP copies ("url 768w, …") when the image is from the media library */
+    featured_image_srcset?: string | null;
+    featured_image_alt?: string | null;
     published_at: string;
     updated_at: string;
     meta_title?: string;
@@ -61,7 +64,15 @@ export default function Page({ page, site, theme, menus }: PageProps) {
 
                 {safePage.featured_image && (
                     <figure className="mb-10 overflow-hidden rounded-xl border bg-muted">
-                        <img src={safePage.featured_image} alt={safePage.title} className="h-auto w-full" />
+                        <img
+                            src={safePage.featured_image}
+                            srcSet={safePage.featured_image_srcset ?? undefined}
+                            sizes="(min-width: 800px) 768px, 100vw"
+                            alt={safePage.featured_image_alt ?? safePage.title}
+                            fetchPriority="high"
+                            decoding="async"
+                            className="h-auto w-full"
+                        />
                     </figure>
                 )}
 

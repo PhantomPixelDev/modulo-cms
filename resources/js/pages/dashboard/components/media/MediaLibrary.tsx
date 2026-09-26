@@ -1,6 +1,9 @@
 import { useAdminToast } from '@/components/admin/AdminToastProvider';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
 import React, { useMemo, useRef, useState } from 'react';
 import { ROUTE } from '../../routes';
@@ -31,6 +34,37 @@ export const MediaLibrary: React.FC<Props> = ({
 }) => {
     const { success: showSuccess, error: showError } = useAdminToast();
     const fileRef = useRef<HTMLInputElement | null>(null);
+    // Details dialog: name, alt text (read by screen readers and search engines) and caption
+    const [editing, setEditing] = useState<MediaItem | null>(null);
+    const [details, setDetails] = useState({ name: '', alt: '', caption: '' });
+    const [savingDetails, setSavingDetails] = useState(false);
+
+    const openDetails = (m: MediaItem) => {
+        setEditing(m);
+        setDetails({
+            name: m.name ?? '',
+            alt: typeof m.custom_properties?.alt === 'string' ? m.custom_properties.alt : '',
+            caption: typeof m.custom_properties?.caption === 'string' ? m.custom_properties.caption : '',
+        });
+    };
+
+    const saveDetails = () => {
+        if (!editing) return;
+        setSavingDetails(true);
+        router.put(
+            ROUTE.media.update(editing.id),
+            { name: details.name, alt: details.alt || null, caption: details.caption || null },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    showSuccess('Media details saved');
+                    setEditing(null);
+                },
+                onError: () => showError('Could not save the media details'),
+                onFinish: () => setSavingDetails(false),
+            },
+        );
+    };
     const [uploading, setUploading] = useState(false);
     const [creating, setCreating] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
@@ -396,6 +430,11 @@ export const MediaLibrary: React.FC<Props> = ({
                                 >
                                     Copy URL
                                 </button>
+                                {canEdit && (
+                                    <button className="underline" type="button" onClick={() => openDetails(m)}>
+                                        Details
+                                    </button>
+                                )}
                                 <a className="underline" href={m.url} target="_blank" rel="noreferrer">
                                     Open
                                 </a>
@@ -416,6 +455,9 @@ export const MediaLibrary: React.FC<Props> = ({
                         <div className="text-xs break-words">
                             <div className="font-medium">{m.name}</div>
                             <div className="text-muted-foreground">{m.mime_type}</div>
+                            {m.mime_type?.startsWith('image/') && !m.custom_properties?.alt && (
+                                <div className="text-warning-foreground">No alt text</div>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -475,60 +517,110 @@ export const MediaLibrary: React.FC<Props> = ({
 
             {/* Move dialog */}
             {canEdit && (
-                <Dialog open={moveOpen} onOpenChange={setMoveOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Move selected media</DialogTitle>
-                            <DialogDescription>
-                                Choose a destination folder for {selected.size} selected item{selected.size === 1 ? '' : 's'}.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-3">
-                            <input
-                                type="text"
-                                className="w-full rounded border px-2 py-1 text-sm"
-                                placeholder="Filter folders by name or path…"
-                                value={moveFilter}
-                                onChange={(e) => setMoveFilter(e.target.value)}
-                            />
-                            <div className="max-h-64 overflow-auto rounded border">
-                                <ul className="divide-y">
-                                    {filteredAllFolders.map((f) => (
-                                        <li key={f.id}>
-                                            <label className="flex cursor-pointer items-center gap-2 px-3 py-2">
-                                                <input
-                                                    type="radio"
-                                                    name="move-target"
-                                                    value={f.id}
-                                                    checked={moveTargetId === f.id}
-                                                    onChange={() => setMoveTargetId(f.id)}
-                                                />
-                                                <span className="text-sm">{f.path || f.name}</span>
-                                            </label>
-                                        </li>
-                                    ))}
-                                    {filteredAllFolders.length === 0 && (
-                                        <li className="px-3 py-2 text-sm text-muted-foreground">No folders match your filter.</li>
-                                    )}
-                                </ul>
+                <>
+                    <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Media details</DialogTitle>
+                                <DialogDescription>
+                                    Alt text describes the image for people who can't see it, and for search engines.
+                                </DialogDescription>
+                            </DialogHeader>
+                            {editing?.mime_type?.startsWith('image/') && (
+                                <img src={editing.thumb || editing.url} alt="" className="mx-auto max-h-48 rounded object-contain" />
+                            )}
+                            <div className="space-y-3">
+                                <div className="space-y-1">
+                                    <Label htmlFor="media-name">Name</Label>
+                                    <Input id="media-name" value={details.name} onChange={(e) => setDetails({ ...details, name: e.target.value })} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="media-alt">Alt text</Label>
+                                    <Input
+                                        id="media-alt"
+                                        value={details.alt}
+                                        maxLength={255}
+                                        placeholder="e.g. Red cotton t-shirt on a hanger"
+                                        onChange={(e) => setDetails({ ...details, alt: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="media-caption">Caption</Label>
+                                    <Textarea
+                                        id="media-caption"
+                                        rows={2}
+                                        maxLength={1000}
+                                        value={details.caption}
+                                        onChange={(e) => setDetails({ ...details, caption: e.target.value })}
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        <DialogFooter>
-                            <DialogClose asChild>
-                                <Button variant="outline" type="button">
-                                    Cancel
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="outline">Cancel</Button>
+                                </DialogClose>
+                                <Button onClick={saveDetails} disabled={savingDetails || details.name.trim() === ''}>
+                                    {savingDetails ? 'Saving…' : 'Save'}
                                 </Button>
-                            </DialogClose>
-                            <Button
-                                type="button"
-                                onClick={submitMove}
-                                disabled={!moveTargetId || selected.size === 0 || moveTargetId === currentFolderId}
-                            >
-                                Move {selected.size} item{selected.size === 1 ? '' : 's'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={moveOpen} onOpenChange={setMoveOpen}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Move selected media</DialogTitle>
+                                <DialogDescription>
+                                    Choose a destination folder for {selected.size} selected item{selected.size === 1 ? '' : 's'}.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-3">
+                                <input
+                                    type="text"
+                                    className="w-full rounded border px-2 py-1 text-sm"
+                                    placeholder="Filter folders by name or path…"
+                                    value={moveFilter}
+                                    onChange={(e) => setMoveFilter(e.target.value)}
+                                />
+                                <div className="max-h-64 overflow-auto rounded border">
+                                    <ul className="divide-y">
+                                        {filteredAllFolders.map((f) => (
+                                            <li key={f.id}>
+                                                <label className="flex cursor-pointer items-center gap-2 px-3 py-2">
+                                                    <input
+                                                        type="radio"
+                                                        name="move-target"
+                                                        value={f.id}
+                                                        checked={moveTargetId === f.id}
+                                                        onChange={() => setMoveTargetId(f.id)}
+                                                    />
+                                                    <span className="text-sm">{f.path || f.name}</span>
+                                                </label>
+                                            </li>
+                                        ))}
+                                        {filteredAllFolders.length === 0 && (
+                                            <li className="px-3 py-2 text-sm text-muted-foreground">No folders match your filter.</li>
+                                        )}
+                                    </ul>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="outline" type="button">
+                                        Cancel
+                                    </Button>
+                                </DialogClose>
+                                <Button
+                                    type="button"
+                                    onClick={submitMove}
+                                    disabled={!moveTargetId || selected.size === 0 || moveTargetId === currentFolderId}
+                                >
+                                    Move {selected.size} item{selected.size === 1 ? '' : 's'}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </>
             )}
         </div>
     );

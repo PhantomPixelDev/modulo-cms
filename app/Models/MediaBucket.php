@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\ResponsiveImages;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -57,5 +59,17 @@ class MediaBucket extends Model implements HasMedia
             ->sharpen(10)
             ->quality((int) $quality)
             ->nonQueued();
+
+        // WebP copies for srcset (see ResponsiveImages). Made on the queue so an
+        // upload doesn't wait for them; never upscaled beyond the original.
+        if ($media === null || str_starts_with((string) $media->mime_type, 'image/') && $media->mime_type !== 'image/svg+xml') {
+            foreach (ResponsiveImages::SIZES as $name => $width) {
+                $this->addMediaConversion($name)
+                    ->queued()
+                    ->fit(Fit::Max, $width, $width * 4)
+                    ->format('webp')
+                    ->quality((int) $quality);
+            }
+        }
     }
 }
