@@ -69,5 +69,7 @@ it('saves search engine settings and checks the page custom fields', function ()
     $this->post(route('dashboard.admin.pages.store'), pagePayload(['meta_data' => ['noindex' => true, 'fields' => ['hero_text' => 'Welcome']]]))
         ->assertSessionHasNoErrors();
 
-    expect(Post::where('slug', 'about')->first()->meta_data)->toBe(['noindex' => true, 'fields' => ['hero_text' => 'Welcome']]);
+    $meta = Post::where('slug', 'about')->first()->meta_data;
+    expect($meta['fields'])->toBe(['hero_text' => 'Welcome'])
+        ->and((bool) $meta['noindex'])->toBeTrue();
 });

@@ -3,19 +3,19 @@ import { Button } from '@/components/ui/button';
 import { ActionButtonGroup } from '@/components/ui/button-groups';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePage } from '@inertiajs/react';
-import type { CustomFieldDefinition } from '../../types';
-import { CustomFieldInputs, type CustomFieldValues } from '../posts/CustomFieldInputs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePage } from '@inertiajs/react';
 import { Image as ImageIcon, Loader2, X } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
+import type { CustomFieldDefinition } from '../../types';
 import { AutosaveStatus, PreviewButton, RecoverAutosave, useAutosave, type AutosaveFields } from '../common/Autosave';
 import { RevisionsDialog } from '../common/RevisionsDialog';
+import { CustomFieldInputs, type CustomFieldValues } from '../posts/CustomFieldInputs';
 
 import type { FeaturedImagePreview } from '../posts/types';
 
@@ -368,7 +368,9 @@ export function PageForm({
                         {fields.length > 0 && (
                             <div className="space-y-4 rounded-lg border p-4">
                                 <div>
-                                    <h3 className="text-sm font-bold">{t('dashboard.posts.form.details_title', { type: t('dashboard.pages.title') })}</h3>
+                                    <h3 className="text-sm font-bold">
+                                        {t('dashboard.posts.form.details_title', { type: t('dashboard.pages.title') })}
+                                    </h3>
                                     <p className="text-xs text-muted-foreground">{t('dashboard.posts.form.details_hint')}</p>
                                 </div>
                                 <CustomFieldInputs fields={fields} values={fieldValues} onChange={setFieldValues} errors={errors} />
@@ -448,7 +450,9 @@ export function PageForm({
                             <label className="flex items-start gap-3 rounded-md border p-3">
                                 <Checkbox
                                     checked={form.meta_data.noindex === true || form.meta_data.noindex === 'true'}
-                                    onCheckedChange={(checked) => setForm((f) => ({ ...f, meta_data: { ...f.meta_data, noindex: checked === true } }))}
+                                    onCheckedChange={(checked) =>
+                                        setForm((f) => ({ ...f, meta_data: { ...f.meta_data, noindex: checked === true } }))
+                                    }
                                 />
                                 <span className="space-y-0.5">
                                     <span className="block text-sm font-medium">{t('dashboard.posts.form.seo.noindex')}</span>
