@@ -159,6 +159,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
 
             Route::get('/backups', [BackupController::class, 'index'])->name('backups');
             Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');
+            Route::post('/backups/upload', [BackupController::class, 'upload'])->name('backups.upload');
+            Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->name('backups.restore');
             Route::get('/backups/{backup}', [BackupController::class, 'download'])->name('backups.download');
             Route::delete('/backups/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy');
         });

@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Support\SchemaVersion;
+use App\Support\SystemMeta;
 use App\Support\Version;
 use FilesystemIterator;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -121,6 +123,68 @@ class BackupManager
         }
 
         return $target;
+    }
+
+    /**
+     * Copy a backup to the off-site disk (config backups.offsite_disk) and
+     * prune old copies there. Returns false when no disk is set up; throws
+     * when the copy fails. The outcome is remembered for the admin page.
+     */
+    public function copyOffsite(string $path): bool
+    {
+        $disk = (string) config('backups.offsite_disk');
+        if ($disk === '') {
+            return false;
+        }
+
+        $name = basename($path);
+        $directory = trim((string) config('backups.offsite_path'), '/');
+
+        try {
+            $storage = Storage::disk($disk);
+            $stream = fopen($path, 'rb');
+            if ($stream === false || ! $storage->writeStream(ltrim($directory.'/'.$name, '/'), $stream)) {
+                throw new RuntimeException('The storage refused the file.');
+            }
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+
+            $copies = collect($storage->files($directory))
+                ->filter(fn (string $file) => preg_match('/modulo-backup-[0-9_-]+\.zip$/', $file) === 1)
+                ->sort()->values();
+            $keep = max(1, (int) config('backups.offsite_keep'));
+            foreach ($copies->slice(0, max(0, $copies->count() - $keep)) as $old) {
+                $storage->delete($old);
+            }
+        } catch (Throwable $e) {
+            SystemMeta::put('backups.offsite', (string) json_encode(['ok' => false, 'at' => now()->toIso8601String(), 'error' => $e->getMessage(), 'file' => $name]));
+
+            throw $e instanceof RuntimeException ? $e : new RuntimeException($e->getMessage(), 0, $e);
+        }
+
+        SystemMeta::put('backups.offsite', (string) json_encode(['ok' => true, 'at' => now()->toIso8601String(), 'error' => null, 'file' => $name]));
+
+        return true;
+    }
+
+    /**
+     * Where copies go and how the last one went, for the admin page.
+     *
+     * @return array{enabled: bool, disk: string|null, target: string|null, last: array<string, mixed>|null}
+     */
+    public function offsiteStatus(): array
+    {
+        $disk = (string) config('backups.offsite_disk');
+        $last = json_decode((string) SystemMeta::get('backups.offsite'), true);
+        $bucket = $disk !== '' ? config("filesystems.disks.{$disk}.bucket") : null;
+
+        return [
+            'enabled' => $disk !== '',
+            'disk' => $disk !== '' ? $disk : null,
+            'target' => $disk !== '' ? trim((is_string($bucket) ? $bucket.'/' : '').trim((string) config('backups.offsite_path'), '/'), '/') : null,
+            'last' => is_array($last) ? $last : null,
+        ];
     }
 
     /**
