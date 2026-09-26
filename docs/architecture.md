@@ -4,7 +4,7 @@ A map of the code for contributors. The individual guides go deeper.
 
 ## Stack
 
-- **Laravel 12** (PHP 8.4) serves everything; **Inertia** hands pages to **React 19**
+- **Laravel 13** (PHP 8.4) serves everything; **Inertia** hands pages to **React 19**
   (TypeScript, Tailwind v4, shadcn-style components in `resources/js/components/ui`).
 - **PostgreSQL** in production (Docker), **SQLite** for tests and quick local runs.
 - One Docker image for the app (php-fpm), one for the web server (nginx with `public/`

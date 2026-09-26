@@ -4,11 +4,11 @@
 [![linter](https://github.com/PhantomPixelDev/modulo-cms/actions/workflows/lint.yml/badge.svg)](https://github.com/PhantomPixelDev/modulo-cms/actions/workflows/lint.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PHP 8.4](https://img.shields.io/badge/PHP-8.4-777BB4.svg)](https://www.php.net/)
-[![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20.svg)](https://laravel.com/)
+[![Laravel 13](https://img.shields.io/badge/Laravel-13-FF2D20.svg)](https://laravel.com/)
 
 ![Modulo CMS: the public site and the admin dashboard](docs/screenshots/hero.png)
 
-A self-hosted, modular content management system built on Laravel 12 with a React 19
+A self-hosted, modular content management system built on Laravel 13 with a React 19
 front end. Custom post types, taxonomies and menus; a media library; multi-language
 content; role-based permissions; and a plugin and theme system.
 
@@ -322,7 +322,7 @@ and [docs/migration-policy.md](docs/migration-policy.md) before writing a migrat
 
 ## Tech stack
 
-PHP 8.4 · Laravel 12 · React 19 · Inertia.js · Tailwind CSS 4 · PostgreSQL 16 · Redis 7
+PHP 8.4 · Laravel 13 · React 19 · Inertia.js · Tailwind CSS 4 · PostgreSQL 16 · Redis 7
 · Vite 7 · Pest · Vitest
 
 ## License

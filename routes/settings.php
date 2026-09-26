@@ -4,8 +4,7 @@ use App\Http\Controllers\Settings\ApiTokenController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\TwoFactorController;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -14,17 +13,13 @@ Route::middleware('auth')->group(function () {
     Route::redirect('settings', '/settings/profile');
 
     // CSRF is disabled for these routes only during tests to avoid 419 errors in feature tests
-    $csrfMiddleware = class_exists(ValidateCsrfToken::class)
-        ? ValidateCsrfToken::class
-        : (class_exists(VerifyCsrfToken::class)
-            ? VerifyCsrfToken::class
-            : null);
+    $csrfMiddleware = PreventRequestForgery::class;
 
     $profileEdit = Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     $profileUpdate = Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
     $profileDestroy = Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    if (App::environment('testing') && $csrfMiddleware) {
+    if (App::environment('testing')) {
         $profileUpdate->withoutMiddleware($csrfMiddleware);
         $profileDestroy->withoutMiddleware($csrfMiddleware);
     }
@@ -32,7 +27,7 @@ Route::middleware('auth')->group(function () {
     $passwordEdit = Route::get('settings/password', [PasswordController::class, 'edit'])->name('password.edit');
     $passwordUpdate = Route::put('settings/password', [PasswordController::class, 'update'])->name('password.update');
 
-    if (App::environment('testing') && $csrfMiddleware) {
+    if (App::environment('testing')) {
         $passwordUpdate->withoutMiddleware($csrfMiddleware);
     }
 
