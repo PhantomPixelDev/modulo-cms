@@ -38,6 +38,7 @@ export default defineConfig({
                 items: [
                     { text: 'Plugins', link: '/plugins' },
                     { text: 'Plugin front ends', link: '/plugin-frontend' },
+                    { text: 'Hooks', link: '/hooks' },
                     { text: 'Themes', link: '/theme-development' },
                     { text: 'Headless API', link: '/api' },
                 ],

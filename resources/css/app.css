@@ -3,8 +3,6 @@
 @plugin 'tailwindcss-animate';
 
 @source '../views';
-/* Bundled plugins' admin screens use the core's classes, which must be compiled here */
-@source '../../plugins/*/resources/js';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 @custom-variant dark (&:is(.dark *));

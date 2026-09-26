@@ -7,7 +7,6 @@ use App\Services\InstallService;
 use App\Services\ThemeManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
-use Plugins\ModuloShop\ModuloShopServiceProvider;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
@@ -83,40 +82,6 @@ function makeAdminUserWithPermissions(array $perms = []): User
     $user->givePermissionTo($allPerms);
 
     return $user;
-}
-
-/**
- * Register the ModuloShop plugin and run its migrations for the current test.
- */
-function bootShopPlugin(TestCase $test): void
-{
-    app()->register(ModuloShopServiceProvider::class);
-    // Routes added after boot need their names indexed for route()
-    app('router')->getRoutes()->refreshNameLookups();
-
-    $test->artisan('migrate', [
-        '--path' => 'plugins/ModuloShop/database/migrations',
-        '--realpath' => false,
-    ]);
-}
-
-function createShopProduct(array $meta = []): Post
-{
-    $postType = PostType::where('name', 'product')->first()
-        ?? PostType::factory()->create([
-            'name' => 'product',
-            'slug' => 'product',
-            'route_prefix' => 'shop',
-        ]);
-
-    return Post::factory()->published()->create([
-        'post_type_id' => $postType->id,
-        'meta_data' => array_merge([
-            'price' => 29.99,
-            'currency' => 'USD',
-            'sku' => 'SKU-TEST',
-        ], $meta),
-    ]);
 }
 
 /**

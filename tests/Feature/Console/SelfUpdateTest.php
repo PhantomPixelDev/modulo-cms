@@ -109,13 +109,12 @@ it('replaces the code, keeps the site files, and upgrades with the new code', fu
         ->and(File::exists($this->root.'/public/storage'))->toBeTrue()
         ->and(File::get($this->root.'/public/themes/modern-react/published.css'))->toBe('published')
         ->and(File::exists($this->root.'/plugins/RuntimePlugin/plugin.json'))->toBeTrue()
-        // Bundled plugins are synced, not dropped over plugins/.
+        // Installed plugins belong to the site; a release never touches plugins/.
         ->and(File::exists($this->root.'/plugins/Bundled'))->toBeFalse();
 
     $log = artisanLog();
     expect($log[0])->toBe('site:1.0.0 down --retry=60')
-        ->and($log[1])->toStartWith('site:1.1.0 plugin:sync-bundled --from=')
-        ->and($log[2])->toBe('site:1.1.0 modulo:upgrade --no-interaction')
+        ->and($log[1])->toBe('site:1.1.0 modulo:upgrade --no-interaction')
         ->and(end($log))->toBe('site:1.1.0 up');
 });
 

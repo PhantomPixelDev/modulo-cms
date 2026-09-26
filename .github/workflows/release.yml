@@ -350,9 +350,9 @@ jobs:
           prev="$(git tag --list 'v*' --sort=-v:refname --no-contains HEAD | grep -v -- '-' | head -n1 || true)"
           range="${prev:+${prev}..}HEAD"
 
-          # Migrations added since the previous release (core and bundled plugins).
+          # Migrations added since the previous release.
           migrations="$(git diff --name-only --diff-filter=A ${prev:+"$prev"} HEAD -- \
-            database/migrations 'plugins/*/database/migrations' | grep -c '\.php$' || true)"
+            database/migrations | grep -c '\.php$' || true)"
 
           log="$(git log --format=%B "$range")"
           breaking=false

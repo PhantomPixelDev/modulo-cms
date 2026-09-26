@@ -5,6 +5,20 @@ use App\Services\PluginManager;
 use Illuminate\Support\Facades\File;
 
 /**
+ * A sample plugin in a throwaway plugins directory: core ships none.
+ */
+beforeEach(function () {
+    $this->pluginsDir = storage_path('framework/testing/lifecycle-'.getmypid());
+    File::deleteDirectory($this->pluginsDir);
+    File::ensureDirectoryExists($this->pluginsDir.'/HelloWorld');
+    File::put($this->pluginsDir.'/HelloWorld/plugin.json', json_encode([
+        'name' => 'Hello World', 'slug' => 'hello-world', 'version' => '1.0.0',
+        'service_provider' => 'Plugins\HelloWorld\HelloWorldServiceProvider',
+    ]));
+    config(['plugins.path' => $this->pluginsDir]);
+});
+
+/**
  * Where an uninstall is recorded.
  *
  * Deliberately outside the plugin's own directory: a marker written inside the
@@ -18,16 +32,16 @@ function helloWorldUninstallRecord(): string
 
 function helloWorldLegacyMarker(): string
 {
-    return base_path('plugins/HelloWorld/.modulo-uninstalled');
+    return config('plugins.path').'/HelloWorld/.modulo-uninstalled';
 }
 
 afterEach(function () {
-    // Never leave uninstall state behind in the working tree.
+    // Never leave uninstall state behind.
     File::delete(helloWorldUninstallRecord());
-    File::delete(helloWorldLegacyMarker());
+    File::deleteDirectory($this->pluginsDir);
 });
 
-it('discovers the bundled plugins', function () {
+it('discovers installed plugins', function () {
     app(PluginManager::class)->discover();
 
     expect(Plugin::where('slug', 'hello-world')->exists())->toBeTrue();

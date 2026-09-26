@@ -63,12 +63,6 @@ ENV MODULO_INSTALL_CHANNEL=docker
 RUN if [ -n "$MODULO_VERSION" ]; then echo "${MODULO_VERSION#v}" > VERSION; \
     else echo "$(cat VERSION | tr -d '[:space:]' | sed 's/-dev$//')-dev" > VERSION; fi && cat VERSION
 
-# Keep a pristine copy of the bundled plugins. /var/www/html/plugins is a named
-# volume in production, and a named volume is seeded from the image exactly
-# once -- so without this, bundled plugins would freeze at whatever version
-# first booted and never update again. The entrypoint applies newer ones over it (plugin:sync-bundled).
-RUN cp -a plugins plugins-bundled
-
 RUN set -eux; \
     rm -f .env bootstrap/cache/*.php; \
     mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache public/plugins; \

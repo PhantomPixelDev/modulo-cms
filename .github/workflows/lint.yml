@@ -22,10 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Bundled plugins must match the release of their own repository
-      - name: Bundled plugins match their releases
-        run: bash scripts/check-bundled-plugins.sh
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:

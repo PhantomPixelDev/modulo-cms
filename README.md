@@ -272,19 +272,21 @@ before a byte is written. A failed update restores the previous version.
 Note that a plugin runs as part of the application and is not sandboxed. See
 [docs/plugins.md](docs/plugins.md).
 
-## Bundled plugins
+## Plugins
 
-**Contact Form** — a `[contact_form]` shortcode that stores submissions and emails the
-configured admin address. Activate it in the admin plugin manager, then set a recipient
-in **Site Settings → General → Admin Email** or via `MAIL_ADMIN_ADDRESS`.
+Modulo itself ships no plugins; install them from **Plugins → Browse registry** (or
+`php artisan plugin:install <slug>`). Each lives in its own repository:
 
-```
-[contact_form]
-[contact_form subject="Support request"]
-```
+- **[Shop](https://github.com/PhantomPixelDev/modulo-plugin-shop)** — products with
+  variations, cart and checkout, tax, shipping, coupons, Stripe/PayPal/Mollie payments,
+  order admin, invoices and customer accounts.
+- **[Contact Form](https://github.com/PhantomPixelDev/modulo-plugin-contact-form)** — a
+  `[contact_form]` shortcode that stores submissions and emails them to you.
+- **[Hello World](https://github.com/PhantomPixelDev/modulo-plugin-hello-world)** — a
+  minimal example to start a plugin from.
 
-**Shop** — products (as a post type), cart, checkout, stock handling and order emails,
-with an admin section for orders.
+Writing one: [docs/plugins.md](docs/plugins.md), [docs/plugin-frontend.md](docs/plugin-frontend.md)
+and [docs/hooks.md](docs/hooks.md).
 
 ## Tests
 

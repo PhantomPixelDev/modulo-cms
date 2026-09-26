@@ -108,9 +108,6 @@ class SelfUpdateCommand extends Command
         }
 
         // From here on it is the new release's code that runs.
-        $this->info('Syncing bundled plugins...');
-        $updater->artisan(['plugin:sync-bundled', '--from='.$package.'/plugins']);
-
         $this->info('Upgrading (backup, preflight, migrations)...');
         if (! $updater->artisan(['modulo:upgrade', '--no-interaction'])) {
             $this->error('The upgrade did not complete; the site stays in maintenance mode.');
