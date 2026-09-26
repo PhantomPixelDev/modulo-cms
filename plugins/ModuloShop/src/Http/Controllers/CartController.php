@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Plugins\ModuloShop\src\Services\CartService;
+use Plugins\ModuloShop\src\Services\ModuloShopSettings;
 
 class CartController
 {
@@ -33,6 +34,7 @@ class CartController
         }
 
         return $this->reactRenderer->render('Shop/Cart', [
+            'money' => app(ModuloShopSettings::class)->moneyFormat(),
             'cart' => $cart,
             'totals' => $totals,
         ]);
@@ -186,6 +188,7 @@ class CartController
             'subtotal' => $cart['subtotal'],
             'currency' => $cart['currency'],
             'is_empty' => $cart['is_empty'],
+            'money' => app(ModuloShopSettings::class)->moneyFormat(),
         ]);
     }
 }

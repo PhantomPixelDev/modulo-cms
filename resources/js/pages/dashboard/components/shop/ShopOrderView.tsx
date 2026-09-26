@@ -64,6 +64,7 @@ interface ShopOrderDetail extends ShopOrder {
     payments?: PaymentAttempt[];
     can_refund?: boolean;
     refunds_online?: boolean;
+    invoice_url?: string;
 }
 
 interface ShopOrderViewProps {
@@ -191,7 +192,14 @@ export function ShopOrderView({ order, canManage }: ShopOrderViewProps) {
                             Placed by {order.customer_name} on {formatDate(order.created_at)}
                         </CardDescription>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {order.invoice_url && (
+                            <Button variant="outline" size="sm" asChild>
+                                <a href={order.invoice_url} target="_blank" rel="noopener">
+                                    Invoice
+                                </a>
+                            </Button>
+                        )}
                         <Badge variant="outline">{order.status_label}</Badge>
                         <Badge variant={order.payment_status === 'paid' ? 'default' : 'secondary'}>{order.payment_status_label}</Badge>
                     </div>

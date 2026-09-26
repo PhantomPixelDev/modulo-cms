@@ -22,6 +22,23 @@ class ModuloShopSettings
         return (string) $this->get('currency', 'USD');
     }
 
+    /**
+     * How the storefront writes amounts, from the Currency tab of the shop
+     * settings.
+     *
+     * @return array{currency: string, position: string, thousand: string, decimal: string, decimals: int}
+     */
+    public function moneyFormat(): array
+    {
+        return [
+            'currency' => $this->currency(),
+            'position' => $this->get('currency_position', 'before') === 'after' ? 'after' : 'before',
+            'thousand' => (string) $this->get('thousand_separator', ','),
+            'decimal' => (string) $this->get('decimal_separator', '.'),
+            'decimals' => max(0, min(4, (int) $this->get('decimals', 2))),
+        ];
+    }
+
     /** Percent, e.g. 21 for 21%. */
     public function taxRate(): float
     {

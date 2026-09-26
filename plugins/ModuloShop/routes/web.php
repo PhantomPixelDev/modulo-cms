@@ -10,6 +10,7 @@ use Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\ShopSettingsController;
 use Plugins\ModuloShop\src\Http\Controllers\CartController;
 use Plugins\ModuloShop\src\Http\Controllers\CheckoutController;
+use Plugins\ModuloShop\src\Http\Controllers\InvoiceController;
 use Plugins\ModuloShop\src\Http\Controllers\PaymentController;
 use Plugins\ModuloShop\src\Http\Controllers\ShopController;
 
@@ -63,6 +64,9 @@ Route::prefix('shop')->group(function () {
     Route::get('/order/{orderNumber}', [CheckoutController::class, 'confirmation'])
         ->middleware('throttle:30,1')
         ->name('shop.order.confirmation');
+    Route::get('/order/{orderNumber}/invoice', [InvoiceController::class, 'show'])
+        ->middleware('throttle:30,1')
+        ->name('shop.order.invoice');
     Route::post('/order/{orderNumber}/pay', [PaymentController::class, 'pay'])
         ->middleware('throttle:10,1')
         ->name('shop.order.pay');

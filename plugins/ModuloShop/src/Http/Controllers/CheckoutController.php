@@ -75,6 +75,7 @@ class CheckoutController
         }
 
         return $this->reactRenderer->render('Shop/Checkout', [
+            'money' => app(ModuloShopSettings::class)->moneyFormat(),
             'cart' => $cart,
             'totals' => $totals,
             'user' => $user ? [
@@ -353,6 +354,7 @@ class CheckoutController
         }
 
         return $this->reactRenderer->render('Shop/OrderConfirmation', [
+            'money' => app(ModuloShopSettings::class)->moneyFormat(),
             'order' => $this->transformOrder($order),
             'payment' => $this->paymentState($order, $request->query('key')),
             'flash' => [
@@ -383,6 +385,7 @@ class CheckoutController
             'online_methods' => $unpaid ? $online : [],
             'current_online' => (bool) $gateway?->isOnline(),
             'instructions' => $unpaid && $gateway instanceof BankTransferGateway ? $gateway->instructions() : null,
+            'invoice_url' => route('shop.order.invoice', ['orderNumber' => $order->order_number, 'key' => is_string($key) ? $key : null]),
         ];
     }
 

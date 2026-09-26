@@ -10,6 +10,7 @@ use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
+use Plugins\ModuloShop\src\Services\ModuloShopSettings;
 use Plugins\ModuloShop\src\Support\MetaSql;
 use Plugins\ModuloShop\src\Support\ProductData;
 
@@ -115,6 +116,7 @@ class ShopController
 
         // Render with React theme
         return $this->reactRenderer->render('Shop/Archive', [
+            'money' => app(ModuloShopSettings::class)->moneyFormat(),
             'products' => $products->through(fn ($p) => $this->transformProduct($p)),
             'categories' => $categories,
             'filters' => [
@@ -176,6 +178,7 @@ class ShopController
         }
 
         return $this->reactRenderer->render('Shop/Single', [
+            'money' => app(ModuloShopSettings::class)->moneyFormat(),
             'product' => $this->transformProduct($product),
             'relatedProducts' => $relatedProducts->map(fn ($p) => $this->transformProduct($p)),
         ]);
@@ -207,6 +210,7 @@ class ShopController
         }
 
         return $this->reactRenderer->render('Shop/Category', [
+            'money' => app(ModuloShopSettings::class)->moneyFormat(),
             'category' => $category,
             'products' => $products->through(fn ($p) => $this->transformProduct($p)),
         ]);
@@ -237,7 +241,8 @@ class ShopController
                 'price' => ProductData::unitPrice($meta, $v),
                 'in_stock' => $v['stock'] === null || $v['stock'] > 0,
             ], ProductData::variants($meta)),
-            'currency' => $meta['currency'] ?? 'USD',
+            // The store's currency: products are priced in it (there is no conversion)
+            'currency' => app(ModuloShopSettings::class)->currency(),
             'sku' => $meta['sku'] ?? null,
             'stock' => isset($meta['stock']) ? (int) $meta['stock'] : null,
             'in_stock' => ProductData::variants($meta) !== []

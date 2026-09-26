@@ -339,6 +339,7 @@ class OrderController
                     'created_at' => $payment->created_at?->toISOString(),
                 ])->all(),
                 'can_refund' => $order->isPaid(),
+                'invoice_url' => route('shop.order.invoice', ['orderNumber' => $order->order_number]),
                 'refunds_online' => (bool) app(PaymentService::class)->gateway($order->payment_method)?->isOnline(),
             ]);
         }

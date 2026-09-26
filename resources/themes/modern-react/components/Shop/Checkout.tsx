@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import { ChevronRight, CreditCard, Loader2, MapPin, ShoppingBag, Truck } from 'lucide-react';
 import React, { useState } from 'react';
 import Layout from '../Layout';
-import { formatMoney, shopRequest, TotalsRows, type ShopTotals } from './totals';
+import { configureMoney, formatMoney, type MoneyFormat, shopRequest, type ShopTotals, TotalsRows } from './totals';
 
 interface CartItem {
     key?: string;
@@ -17,6 +17,7 @@ interface CartItem {
 }
 
 interface CheckoutProps {
+    money?: MoneyFormat;
     cart?: {
         items: CartItem[];
         item_count: number;
@@ -39,7 +40,20 @@ interface CheckoutProps {
     menus?: any;
 }
 
-export default function Checkout({ cart, totals, user, countries, payment_methods, saved_address, terms_url, site, theme, menus }: CheckoutProps) {
+export default function Checkout({
+    cart,
+    totals,
+    user,
+    countries,
+    payment_methods,
+    saved_address,
+    terms_url,
+    site,
+    theme,
+    menus,
+    money,
+}: CheckoutProps) {
+    configureMoney(money);
     const safeSite = site && typeof site === 'object' ? site : { name: 'Shop' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
