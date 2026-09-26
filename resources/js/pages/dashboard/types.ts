@@ -296,6 +296,7 @@ export interface DashboardProps {
     trash?: TrashProps;
     redirects?: RedirectsProps;
     mailSettings?: import('./sections/system/emailSection').MailSettingsData;
+    languages?: import('./sections/system/languagesSection').LanguagesProps;
     // Plugins
     plugins?: any[];
     plugin?: any;

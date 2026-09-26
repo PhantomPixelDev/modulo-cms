@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\CommentController;
+use App\Http\Controllers\Admin\LocaleController;
 use App\Http\Controllers\Admin\MailSettingsController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
@@ -166,6 +167,12 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         });
 
         // Translations
+        // Languages content can be written in
+        Route::get('/languages', [LocaleController::class, 'index'])->name('languages.index');
+        Route::post('/languages', [LocaleController::class, 'store'])->name('languages.store');
+        Route::put('/languages/{language}', [LocaleController::class, 'update'])->name('languages.update');
+        Route::delete('/languages/{language}', [LocaleController::class, 'destroy'])->name('languages.destroy');
+
         Route::get('/translations', [TranslationController::class, 'index'])->name('translations.index');
         Route::post('/translations', [TranslationController::class, 'store'])->name('translations.store');
         Route::post('/translations/clear-cache', [TranslationController::class, 'clearCache'])->name('translations.clear-cache');

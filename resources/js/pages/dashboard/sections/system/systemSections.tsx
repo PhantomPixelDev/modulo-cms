@@ -9,6 +9,7 @@ import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { ActivityPage, type ActivityProps } from './activitySection';
 import { BackupsPage, type BackupsProps } from './backupsSection';
 import { EmailPage, type MailSettingsData } from './emailSection';
+import { LanguagesPage, type LanguagesProps } from './languagesSection';
 import { RedirectsPage, type RedirectsProps } from './redirectsSection';
 
 export interface CoreUpdate {
@@ -293,14 +294,17 @@ export function getSystemSections({
     activity,
     redirects,
     mailSettings,
+    languages,
 }: {
     updateCenter?: UpdateCenterProps;
     backups?: BackupsProps;
     activity?: ActivityProps;
     redirects?: RedirectsProps;
     mailSettings?: MailSettingsData;
+    languages?: LanguagesProps;
 }): Record<string, () => ReactNode> {
     return {
+        languages: () => (languages ? <LanguagesPage data={languages} /> : null),
         email: () => (mailSettings ? <EmailPage data={mailSettings} /> : null),
         activity: () => (activity ? <ActivityPage data={activity} /> : null),
         redirects: () => (redirects ? <RedirectsPage data={redirects} /> : null),
