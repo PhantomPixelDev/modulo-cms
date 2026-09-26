@@ -39,7 +39,7 @@ abstract class BaseFrontendController extends Controller
         return null;
     }
 
-    protected function renderContent($content, $template, $dataKey)
+    protected function renderContent($content, $template, $dataKey, bool $countView = true)
     {
         if ($resp = $this->requireReactTheme()) {
             return $resp;
@@ -51,7 +51,9 @@ abstract class BaseFrontendController extends Controller
 
         try {
             // Query-builder increment: doesn't touch updated_at or fire model events
-            Post::whereKey($content->id)->toBase()->increment('view_count');
+            if ($countView) {
+                Post::whereKey($content->id)->toBase()->increment('view_count');
+            }
         } catch (\Throwable $e) {
         }
 

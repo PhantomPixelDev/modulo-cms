@@ -12,6 +12,7 @@ import { ChevronDown, Globe, Image as ImageIcon, Loader2, X } from 'lucide-react
 import { useMemo, useRef, useState } from 'react';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { AutosaveStatus, PreviewButton, RecoverAutosave, useAutosave, type AutosaveFields } from '../common/Autosave';
 import { RevisionsDialog } from '../common/RevisionsDialog';
 import MediaPickerDialog from '../media/MediaPickerDialog';
 import { MetaDataSection } from './MetaDataSection';
@@ -73,6 +74,19 @@ export function PostForm({
         handleFeaturedImageRemove,
     } = usePostForm({ post, postTypes, groupedTerms, authors, parentsByType, canEditAuthor, isEditing, onSubmit, onCancel });
 
+    // Translations are edited elsewhere; the autosave holds the post's own text
+    const autosaveEnabled = Boolean(isEditing && post?.id) && (!currentLocaleData || Boolean(currentLocaleData.is_default));
+    const autosave = useAutosave(post?.id, { title, excerpt, content }, autosaveEnabled);
+    const [editorKey, setEditorKey] = useState(0);
+    const restoreAutosave = (fields: AutosaveFields) => {
+        setTitle(fields.title ?? '');
+        setExcerpt(fields.excerpt ?? '');
+        setContent(fields.content ?? '');
+        // The editor keeps its own state; remount it with the restored text
+        setEditorKey((key) => key + 1);
+        autosave.setRecovered(null);
+    };
+
     const availableParents = useMemo(() => {
         return postType ? parentsByType[postType] || [] : [];
     }, [postType, parentsByType]);
@@ -95,6 +109,7 @@ export function PostForm({
 
     return (
         <form ref={formRef} onSubmit={handleSubmit} className="mx-auto max-w-5xl space-y-8 pb-20">
+            <RecoverAutosave recovered={autosave.recovered} onRestore={restoreAutosave} onDiscard={autosave.discardRecovered} />
             <Card className="gap-0 overflow-hidden py-0">
                 <CardHeader className="border-b px-6 py-5">
                     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -145,6 +160,8 @@ export function PostForm({
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {autosaveEnabled && <AutosaveStatus status={autosave.status} savedAt={autosave.savedAt} />}
+                            {isEditing && post?.id && <PreviewButton postId={post.id} flush={autosave.flush} />}
                             {isEditing && post?.id && <RevisionsDialog postId={post.id} />}
                             <Button type="submit" disabled={isSubmitting} className="h-9 px-6">
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -269,7 +286,7 @@ export function PostForm({
                                     <div className="space-y-3 pt-2">
                                         <Label className="text-sm font-bold">{t('dashboard.posts.post_content')}</Label>
                                         <div className="overflow-hidden rounded-lg border bg-input-bg shadow-xs">
-                                            <SlateEditor initialHTML={content} onHTMLChange={setContent} />
+                                            <SlateEditor key={editorKey} initialHTML={content} onHTMLChange={setContent} />
                                         </div>
                                     </div>
                                 </div>

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Image as ImageIcon, Loader2, X } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
+import { AutosaveStatus, PreviewButton, RecoverAutosave, useAutosave, type AutosaveFields } from '../common/Autosave';
 import { RevisionsDialog } from '../common/RevisionsDialog';
 
 import type { FeaturedImagePreview } from '../posts/types';
@@ -114,6 +115,15 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
         };
     });
 
+    const autosave = useAutosave(page?.id, { title: form.title, excerpt: form.excerpt, content: form.content }, Boolean(isEditing));
+    const [editorKey, setEditorKey] = useState(0);
+    const restoreAutosave = (fields: AutosaveFields) => {
+        setForm((prev) => ({ ...prev, title: fields.title ?? '', excerpt: fields.excerpt ?? '', content: fields.content ?? '' }));
+        // The editor keeps its own state; remount it with the restored text
+        setEditorKey((key) => key + 1);
+        autosave.setRecovered(null);
+    };
+
     // Handle content changes from SlateEditor
     const handleContentChange = useCallback((html: string) => {
         setForm((f) => ({
@@ -197,6 +207,7 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
 
     return (
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+            <RecoverAutosave recovered={autosave.recovered} onRestore={restoreAutosave} onDiscard={autosave.discardRecovered} />
             <div className="space-y-2 sm:flex sm:items-start sm:justify-between sm:space-y-0">
                 <div className="max-w-xl text-sm text-muted-foreground">
                     <p>{isEditing ? t('dashboard.pages.form.description.edit') : t('dashboard.pages.form.description.create')}</p>
@@ -207,6 +218,8 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                     </ul>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                    {isEditing && <AutosaveStatus status={autosave.status} savedAt={autosave.savedAt} />}
+                    {isEditing && page?.id && <PreviewButton postId={page.id} flush={autosave.flush} />}
                     {isEditing && page?.id && <RevisionsDialog postId={page.id} />}
                     <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
                         {t('dashboard.common.cancel')}
@@ -313,7 +326,7 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                         <div className="space-y-2">
                             <Label>{t('dashboard.pages.form.fields.content')}</Label>
                             <div className="rounded-md border">
-                                <SlateEditor key={page?.id || 'new-page'} initialHTML={form.content} onHTMLChange={handleContentChange} />
+                                <SlateEditor key={`${page?.id || 'new-page'}-${editorKey}`} initialHTML={form.content} onHTMLChange={handleContentChange} />
                             </div>
                         </div>
                     </div>

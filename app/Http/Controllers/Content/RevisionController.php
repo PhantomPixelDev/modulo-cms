@@ -31,6 +31,8 @@ class RevisionController extends Controller
                     'user' => $revision->user?->name,
                     'created_at' => $revision->created_at->toIso8601String(),
                 ]),
+            // What the versions are compared with
+            'current' => $post->only(PostRevision::FIELDS),
         ]);
     }
 
@@ -43,6 +45,6 @@ class RevisionController extends Controller
 
         $post->update($revision->only(PostRevision::FIELDS));
 
-        return back()->with('success', 'Restored the version from '.$revision->created_at->toDayDateTimeString().'.');
+        return back()->with('success', __('dashboard.revisions.restored', ['date' => $revision->created_at->toDayDateTimeString()]));
     }
 }

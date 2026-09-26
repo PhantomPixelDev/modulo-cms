@@ -20,6 +20,7 @@ use App\Http\Controllers\Content\PagesController;
 use App\Http\Controllers\Content\PostController;
 use App\Http\Controllers\Content\PostTranslationController;
 use App\Http\Controllers\Content\PostTypeController;
+use App\Http\Controllers\Content\AutosaveController;
 use App\Http\Controllers\Content\RevisionController;
 use App\Http\Controllers\Content\TaxonomyController;
 use App\Http\Controllers\Content\TaxonomyTermController;
@@ -50,6 +51,11 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('content/{postId}/revisions', [RevisionController::class, 'index'])->whereNumber('postId')->name('revisions.index');
         Route::post('content/{postId}/revisions/{revisionId}/restore', [RevisionController::class, 'restore'])
             ->whereNumber(['postId', 'revisionId'])->name('revisions.restore');
+        // The editor's unsaved text, and a preview of it through the theme
+        Route::get('content/{postId}/autosave', [AutosaveController::class, 'show'])->whereNumber('postId')->name('autosave.show');
+        Route::put('content/{postId}/autosave', [AutosaveController::class, 'store'])->whereNumber('postId')->name('autosave.store');
+        Route::delete('content/{postId}/autosave', [AutosaveController::class, 'destroy'])->whereNumber('postId')->name('autosave.destroy');
+        Route::post('content/{postId}/preview-link', [AutosaveController::class, 'previewLink'])->whereNumber('postId')->name('preview.link');
 
         Route::post('posts/bulk', [PostController::class, 'bulk'])->name('posts.bulk');
         Route::resource('posts', PostController::class)

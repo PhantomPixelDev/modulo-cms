@@ -7,6 +7,7 @@ use App\Http\Controllers\Frontend\CommentController;
 use App\Http\Controllers\Frontend\FrontendRouterController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\PostController;
+use App\Http\Controllers\Frontend\PreviewController;
 use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\RobotsController;
@@ -50,6 +51,12 @@ Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 Route::get('/posts/{slug}', [PostController::class, 'show'])
     ->where('slug', '[a-zA-Z0-9\-_]+')
     ->name('post.show');
+
+// Drafts through the theme, from a signed link the editor hands out
+Route::get('/preview/{postId}', PreviewController::class)
+    ->whereNumber('postId')
+    ->middleware(['signed', 'throttle:60,1'])
+    ->name('content.preview');
 
 Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
     ->middleware('throttle:15,1')
