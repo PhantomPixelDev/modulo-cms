@@ -83,7 +83,6 @@ class RolePermissionSeeder extends Seeder
             'deactivate plugins',
             'delete plugins',
 
-
             // Settings management
             'view settings',
             'edit settings',

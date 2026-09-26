@@ -13,7 +13,7 @@ beforeEach(function () {
     File::ensureDirectoryExists($this->pluginsDir.'/HelloWorld');
     File::put($this->pluginsDir.'/HelloWorld/plugin.json', json_encode([
         'name' => 'Hello World', 'slug' => 'hello-world', 'version' => '1.0.0',
-        'service_provider' => 'Plugins\HelloWorld\HelloWorldServiceProvider',
+        'service_provider' => 'Plugins\LifecycleSample\SampleServiceProvider',
     ]));
     config(['plugins.path' => $this->pluginsDir]);
 });
