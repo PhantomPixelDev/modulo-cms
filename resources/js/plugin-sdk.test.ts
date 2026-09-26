@@ -40,4 +40,11 @@ describe('plugin SDK shims', () => {
             expect(source, `missing export "${name}" -- run npm run build:shims`).toContain(`export const ${name} = m.${name};`);
         }
     });
+
+    it('the SDK types declare every export of the admin kit', () => {
+        const types = readFileSync(resolve(__dirname, '../../packages/plugin-sdk/ui.d.ts'), 'utf8');
+        const declared = [...types.matchAll(/export (?:const|function) (\w+)/g)].map((match) => match[1]).sort();
+
+        expect(declared).toEqual(uiExports());
+    });
 });
