@@ -63,7 +63,7 @@ export function LanguagesPage({ data }: { data: LanguagesProps }) {
         form.post(route('dashboard.admin.languages.store'), { preserveScroll: true, onSuccess: () => form.reset() });
     };
 
-    const update = (language: Language, values: Record<string, unknown>) =>
+    const update = (language: Language, values: { is_active?: boolean; is_default?: boolean }) =>
         router.put(route('dashboard.admin.languages.update', language.id), values, { preserveScroll: true });
 
     return (
@@ -129,7 +129,9 @@ export function LanguagesPage({ data }: { data: LanguagesProps }) {
                                                     title={t('dashboard.languages.remove')}
                                                     onClick={() => {
                                                         if (window.confirm(t('dashboard.languages.confirm_remove', { name: language.name })))
-                                                            router.delete(route('dashboard.admin.languages.destroy', language.id), { preserveScroll: true });
+                                                            router.delete(route('dashboard.admin.languages.destroy', language.id), {
+                                                                preserveScroll: true,
+                                                            });
                                                     }}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -171,7 +173,12 @@ export function LanguagesPage({ data }: { data: LanguagesProps }) {
                                     <div className="grid grid-cols-[6rem_1fr] gap-3">
                                         <div className="space-y-1.5">
                                             <Label htmlFor="language-code">{t('dashboard.languages.fields.code')}</Label>
-                                            <Input id="language-code" value={form.data.code} onChange={(e) => form.setData('code', e.target.value)} placeholder="pt-BR" />
+                                            <Input
+                                                id="language-code"
+                                                value={form.data.code}
+                                                onChange={(e) => form.setData('code', e.target.value)}
+                                                placeholder="pt-BR"
+                                            />
                                         </div>
                                         <div className="space-y-1.5">
                                             <Label htmlFor="language-name">{t('dashboard.languages.fields.name')}</Label>
@@ -180,11 +187,18 @@ export function LanguagesPage({ data }: { data: LanguagesProps }) {
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label htmlFor="language-native">{t('dashboard.languages.fields.native_name')}</Label>
-                                        <Input id="language-native" value={form.data.native_name} onChange={(e) => form.setData('native_name', e.target.value)} />
+                                        <Input
+                                            id="language-native"
+                                            value={form.data.native_name}
+                                            onChange={(e) => form.setData('native_name', e.target.value)}
+                                        />
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label>{t('dashboard.languages.fields.direction')}</Label>
-                                        <Select value={form.data.direction} onValueChange={(direction) => form.setData('direction', direction as 'ltr' | 'rtl')}>
+                                        <Select
+                                            value={form.data.direction}
+                                            onValueChange={(direction) => form.setData('direction', direction as 'ltr' | 'rtl')}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue />
                                             </SelectTrigger>
