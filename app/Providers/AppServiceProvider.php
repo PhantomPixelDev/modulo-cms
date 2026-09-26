@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\CachePublicPages;
 use App\Listeners\RecordActivity;
 use App\Models\Post;
 use App\Models\PostTranslation;
@@ -41,6 +42,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Any content change through a model makes every cached public page stale
+        Event::listen(['eloquent.saved: *', 'eloquent.deleted: *', 'eloquent.restored: *'], fn () => CachePublicPages::bumpVersion());
+
         // Every password rule in the app uses Password::defaults(). Production
         // asks for a real password; elsewhere (tests, local) the framework's
         // 8-character minimum keeps fixtures simple.

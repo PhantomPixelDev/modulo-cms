@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Middleware\CachePublicPages;
 use App\Models\Post;
 use App\Models\PostType;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -56,6 +57,8 @@ class PostService
     public function flushCache(): void
     {
         Cache::forever(self::VERSION_KEY, $this->cacheVersion() + 1);
+        // Covers quiet saves too (stock changes), which fire no model events
+        CachePublicPages::bumpVersion();
     }
 
     /**

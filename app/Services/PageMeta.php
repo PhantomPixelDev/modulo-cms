@@ -16,7 +16,7 @@ use Illuminate\Http\Request;
 class PageMeta
 {
     /** Pages about one visitor's session, never worth indexing. */
-    protected const PRIVATE_TEMPLATES = ['Shop/Cart', 'Shop/Checkout', 'Shop/OrderConfirmation', 'Shop/Account'];
+    public const PRIVATE_TEMPLATES = ['Shop/Cart', 'Shop/Checkout', 'Shop/OrderConfirmation', 'Shop/Account'];
 
     /** Titles of listing templates that carry no entity of their own. */
     protected const TEMPLATE_TITLES = [
