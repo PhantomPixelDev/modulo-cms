@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import { ArrowRight, Minus, Plus, ShoppingBag, ShoppingCart, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import Layout from '../Layout';
-import { formatMoney, shopRequest, TotalsRows, type ShopTotals } from './totals';
+import { configureMoney, formatMoney, type MoneyFormat, shopRequest, type ShopTotals, TotalsRows } from './totals';
 
 interface CartItem {
     key?: string;
@@ -24,6 +24,7 @@ interface CartItem {
 }
 
 interface CartProps {
+    money?: MoneyFormat;
     cart?: {
         items: CartItem[];
         item_count: number;
@@ -37,7 +38,8 @@ interface CartProps {
     menus?: any;
 }
 
-export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
+export default function Cart({ cart, totals, site, theme, menus, money }: CartProps) {
+    configureMoney(money);
     const safeSite = site && typeof site === 'object' ? site : { name: 'Shop' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};

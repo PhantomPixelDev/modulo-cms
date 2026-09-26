@@ -2,6 +2,7 @@ import SEOHead from '@/components/SEOHead';
 import { Filter, Grid, List, Search, ShoppingCart, X } from 'lucide-react';
 import React, { useState } from 'react';
 import Layout from '../Layout';
+import { configureMoney, formatMoney, type MoneyFormat } from './totals';
 
 interface Product {
     id: number;
@@ -26,6 +27,7 @@ interface Category {
 }
 
 interface ShopArchiveProps {
+    money?: MoneyFormat;
     products?: {
         data: Product[];
     };
@@ -50,7 +52,8 @@ interface ShopArchiveProps {
     menus?: any;
 }
 
-export default function Archive({ products, categories, filters, pagination, site, theme, menus }: ShopArchiveProps) {
+export default function Archive({ products, categories, filters, pagination, site, theme, menus, money }: ShopArchiveProps) {
+    configureMoney(money);
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -63,11 +66,7 @@ export default function Archive({ products, categories, filters, pagination, sit
     const [addingId, setAddingId] = useState<number | null>(null);
     const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    const formatPrice = (price?: number, currency = 'USD') => {
-        if (price === undefined || price === null) return '';
-        const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-        return `${symbols[currency] || '$'}${price.toFixed(2)}`;
-    };
+    const formatPrice = formatMoney;
 
     const getDiscountPercent = (price?: number, salePrice?: number | null) => {
         if (!price || !salePrice || salePrice >= price) return null;

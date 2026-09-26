@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import { ChevronRight, Grid, List, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import Layout from '../Layout';
+import { configureMoney, formatMoney, type MoneyFormat } from './totals';
 
 interface Product {
     id: number;
@@ -26,6 +27,7 @@ interface Category {
 }
 
 interface ShopCategoryProps {
+    money?: MoneyFormat;
     category?: Category;
     products?: {
         data: Product[];
@@ -41,7 +43,8 @@ interface ShopCategoryProps {
     menus?: any;
 }
 
-export default function CategoryPage({ category, products, pagination, site, theme, menus }: ShopCategoryProps) {
+export default function CategoryPage({ category, products, pagination, site, theme, menus, money }: ShopCategoryProps) {
+    configureMoney(money);
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -49,11 +52,7 @@ export default function CategoryPage({ category, products, pagination, site, the
     const list: Product[] = Array.isArray(products?.data) ? products.data : [];
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-    const formatPrice = (price?: number, currency = 'USD') => {
-        if (price === undefined || price === null) return '';
-        const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-        return `${symbols[currency] || '$'}${price.toFixed(2)}`;
-    };
+    const formatPrice = formatMoney;
 
     const getDiscountPercent = (price?: number, salePrice?: number | null) => {
         if (!price || !salePrice || salePrice >= price) return null;

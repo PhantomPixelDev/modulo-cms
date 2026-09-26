@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import { CheckCircle, Clock, CreditCard, Landmark, Mail, MapPin, Package, ShoppingBag, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import Layout from '../Layout';
-import { formatMoney } from './totals';
+import { configureMoney, formatMoney, type MoneyFormat } from './totals';
 
 interface OrderItem {
     id: number;
@@ -66,9 +66,11 @@ interface PaymentState {
     online_methods: { id: string; label: string; description: string }[];
     current_online: boolean;
     instructions: string | null;
+    invoice_url?: string;
 }
 
 interface OrderConfirmationProps {
+    money?: MoneyFormat;
     order?: Order;
     payment?: PaymentState;
     flash?: { success?: string | null; info?: string | null; warning?: string | null; error?: string | null };
@@ -77,7 +79,8 @@ interface OrderConfirmationProps {
     menus?: any;
 }
 
-export default function OrderConfirmation({ order, payment, flash, site, theme, menus }: OrderConfirmationProps) {
+export default function OrderConfirmation({ order, payment, flash, site, theme, menus, money }: OrderConfirmationProps) {
+    configureMoney(money);
     const safeSite = site && typeof site === 'object' ? site : { name: 'Shop' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -375,6 +378,16 @@ export default function OrderConfirmation({ order, payment, flash, site, theme, 
 
                     {/* Actions */}
                     <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+                        {payment?.invoice_url && (
+                            <a
+                                href={payment.invoice_url}
+                                target="_blank"
+                                rel="noopener"
+                                className="inline-flex items-center justify-center gap-2 rounded-md border px-6 py-3 font-semibold text-foreground transition-colors hover:bg-accent"
+                            >
+                                View invoice
+                            </a>
+                        )}
                         <Link
                             href="/shop"
                             className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 font-semibold text-white transition-colors hover:bg-primary/90"

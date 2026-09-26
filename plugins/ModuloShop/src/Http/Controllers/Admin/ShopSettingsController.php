@@ -77,6 +77,7 @@ class ShopSettingsController
             'checkout_page_id' => 'nullable|integer',
             'terms_page_id' => 'nullable|integer',
             'enable_checkout' => 'sometimes|boolean',
+            'invoice_details' => 'sometimes|nullable|string|max:1000',
             'tax_rate' => 'sometimes|numeric|min:0|max:100',
             'prices_include_tax' => 'sometimes|boolean',
             'shipping_methods' => 'sometimes|array|max:20',

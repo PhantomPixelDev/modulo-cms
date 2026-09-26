@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import { Package, ShoppingBag } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import Layout from '../Layout';
-import { formatMoney } from './totals';
+import { configureMoney, formatMoney, type MoneyFormat } from './totals';
 
 interface AccountOrder {
     order_number: string;
@@ -19,6 +19,7 @@ interface AccountOrder {
 }
 
 interface AccountProps {
+    money?: MoneyFormat;
     orders?: {
         data: AccountOrder[];
         current_page: number;
@@ -39,7 +40,8 @@ const badge = (tone: 'ok' | 'wait' | 'off') =>
         tone === 'ok' ? 'bg-success/10 text-success' : tone === 'off' ? 'bg-muted text-muted-foreground' : 'bg-warning/20 text-warning-foreground'
     }`;
 
-export default function Account({ orders, customer, site, theme, menus }: AccountProps) {
+export default function Account({ orders, customer, site, theme, menus, money }: AccountProps) {
+    configureMoney(money);
     const safeSite = site ?? { name: 'Shop' };
     const safeTheme = theme ?? {};
     const safeMenus = menus ?? {};

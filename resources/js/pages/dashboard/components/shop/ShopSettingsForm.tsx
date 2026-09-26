@@ -50,6 +50,7 @@ export function ShopSettingsForm({ settings, canEdit, onSave }: ShopSettingsForm
         checkout_page_id: settings.checkout_page_id || null,
         terms_page_id: settings.terms_page_id || null,
         enable_checkout: settings.enable_checkout ?? true,
+        invoice_details: settings.invoice_details ?? '',
         tax_rate: settings.tax_rate ?? 0,
         prices_include_tax: settings.prices_include_tax ?? false,
         shipping_methods: (Array.isArray(settings.shipping_methods) ? settings.shipping_methods : []) as ShippingMethodRow[],
@@ -159,6 +160,22 @@ export function ShopSettingsForm({ settings, canEdit, onSave }: ShopSettingsForm
                                         onChange={(e) => handleChange('products_per_page', parseInt(e.target.value) || 12)}
                                         disabled={!canEdit}
                                     />
+                                </div>
+
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label htmlFor="invoice_details">Invoice details</Label>
+                                    <textarea
+                                        id="invoice_details"
+                                        rows={3}
+                                        value={formData.invoice_details}
+                                        onChange={(e) => handleChange('invoice_details', e.target.value)}
+                                        disabled={!canEdit}
+                                        placeholder={'Company name\nStreet 1, 1234 AB City\nVAT NL123456789B01'}
+                                        className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Printed at the top of every invoice: your address, company and VAT numbers.
+                                    </p>
                                 </div>
 
                                 <div className="flex items-center justify-between space-x-2 sm:col-span-2">

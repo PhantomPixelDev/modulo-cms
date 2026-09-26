@@ -27,9 +27,34 @@ export interface ShopTotals {
     coupon_error?: string | null;
 }
 
-export function formatMoney(amount: number, currency = 'USD'): string {
-    const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-    return `${symbols[currency] ?? currency + ' '}${amount.toFixed(2)}`;
+/** The store's way of writing amounts (Shop settings → Currency), sent with every shop page. */
+export interface MoneyFormat {
+    currency: string;
+    position: 'before' | 'after';
+    thousand: string;
+    decimal: string;
+    decimals: number;
+}
+
+const SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', CAD: 'C$', AUD: 'A$', CHF: 'CHF', CNY: '¥', INR: '₹', BRL: 'R$' };
+
+let money: MoneyFormat = { currency: 'USD', position: 'before', thousand: ',', decimal: '.', decimals: 2 };
+
+/** Shop pages call this with their `money` prop before formatting anything. */
+export function configureMoney(format?: MoneyFormat | null): void {
+    if (format) money = format;
+}
+
+export function formatMoney(amount: number | null | undefined, currency?: string): string {
+    if (amount === null || amount === undefined || Number.isNaN(amount)) return '';
+
+    const code = currency || money.currency;
+    const [whole, fraction] = Math.abs(amount).toFixed(money.decimals).split('.');
+    const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, money.thousand);
+    const number = (amount < 0 ? '-' : '') + grouped + (fraction ? money.decimal + fraction : '');
+    const symbol = SYMBOLS[code] ?? code;
+
+    return money.position === 'after' ? `${number} ${symbol}` : `${symbol}${symbol.length > 1 && !SYMBOLS[code] ? ' ' : ''}${number}`;
 }
 
 /** JSON request with the CSRF token; returns the parsed body and the status. */

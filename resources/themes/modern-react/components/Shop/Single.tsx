@@ -1,8 +1,9 @@
 import SEOHead from '@/components/SEOHead';
-import { Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Check, ChevronRight, Heart, Minus, Plus, RotateCcw, Shield, ShoppingCart, Truck } from 'lucide-react';
 import { useState } from 'react';
 import Layout from '../Layout';
+import { configureMoney, formatMoney, type MoneyFormat } from './totals';
 
 interface Product {
     id: number;
@@ -39,6 +40,7 @@ interface RelatedProduct {
 }
 
 interface ShopSingleProps {
+    money?: MoneyFormat;
     product?: Product;
     relatedProducts?: RelatedProduct[];
     site?: any;
@@ -46,7 +48,8 @@ interface ShopSingleProps {
     menus?: any;
 }
 
-export default function Single({ product, relatedProducts, site, theme, menus }: ShopSingleProps) {
+export default function Single({ product, relatedProducts, site, theme, menus, money }: ShopSingleProps) {
+    configureMoney(money);
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -99,11 +102,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
         setAddingToCart(false);
     };
 
-    const formatPrice = (price?: number, currency = 'USD') => {
-        if (price === undefined || price === null) return '';
-        const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-        return `${symbols[currency] || '$'}${price.toFixed(2)}`;
-    };
+    const formatPrice = formatMoney;
 
     const getDiscountPercent = () => {
         if (!product.price || !product.sale_price || product.sale_price >= product.price) return null;
@@ -132,6 +131,29 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
             menus={safeMenus}
         >
             <SEOHead title={`${product.title} | ${safeSite.name}`} description={product.excerpt} />
+            <Head>
+                {/* schema.org Product: price and availability for search results */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'Product',
+                        name: product.title,
+                        description: product.excerpt || undefined,
+                        image: allImages.length ? allImages : undefined,
+                        sku: product.sku || undefined,
+                        category: product.categories?.[0]?.name,
+                        offers: (variants.length ? variants : [null]).map((v) => ({
+                            '@type': 'Offer',
+                            name: v?.name,
+                            url: product.url,
+                            priceCurrency: product.currency,
+                            price: (v ? v.price : (displayPrice ?? 0)).toFixed(2),
+                            priceValidUntil: !v && onSale && product.sale_ends_at ? product.sale_ends_at.slice(0, 10) : undefined,
+                            availability: (v ? v.in_stock : inStock) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                        })),
+                    })}
+                </script>
+            </Head>
 
             <div>
                 {/* Breadcrumb */}

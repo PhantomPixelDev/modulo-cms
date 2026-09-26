@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Plugins\ModuloShop\src\Models\Order;
+use Plugins\ModuloShop\src\Services\ModuloShopSettings;
 
 class AccountController
 {
@@ -46,6 +47,7 @@ class AccountController
         }
 
         return $this->reactRenderer->render('Shop/Account', [
+            'money' => app(ModuloShopSettings::class)->moneyFormat(),
             'orders' => $orders,
             'customer' => ['name' => $user->name, 'email' => $user->email],
         ]);

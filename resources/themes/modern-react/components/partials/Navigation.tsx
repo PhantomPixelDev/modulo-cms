@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronDown, LayoutDashboard, LogOut, Menu as MenuIcon, ShoppingCart, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { MiniCart } from './MiniCart';
 import { buttonClass, Container, isExternalUrl, normalizeMenuItems, useThemeT, type MenuItem } from './ui';
 
 interface NavigationProps {
@@ -148,16 +149,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 </nav>
 
                 <div className="hidden items-center gap-2 md:flex">
-                    {shopActive && (
-                        <Link href="/shop/cart" className={cn(buttonClass('ghost', 'sm'), 'relative')} aria-label={tt('nav.cart', 'Cart')}>
-                            <ShoppingCart />
-                            {cartCount > 0 && (
-                                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground tabular-nums">
-                                    {cartCount}
-                                </span>
-                            )}
-                        </Link>
-                    )}
+                    {shopActive && <MiniCart count={cartCount} />}
                     {auth?.user ? (
                         <>
                             {shopActive && (
