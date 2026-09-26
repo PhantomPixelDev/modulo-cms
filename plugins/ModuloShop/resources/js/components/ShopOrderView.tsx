@@ -1,17 +1,8 @@
-import { useAdminToast } from '@/components/admin/AdminToastProvider';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge, Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Checkbox, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Textarea, useAdminToast } from '@modulo/ui';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { ROUTE } from '../../routes';
-import type { ShopOrder } from '../../types';
+import { ROUTE } from '../routes';
+import type { ShopOrder } from '../types';
 
 interface OrderItem {
     id: number;

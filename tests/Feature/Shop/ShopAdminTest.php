@@ -117,3 +117,20 @@ it('closes checkout when the store owner switches it off', function () {
 
     $this->get('/shop/checkout')->assertRedirect('/shop/cart');
 });
+
+it('shows the admin screens from the plugin bundle and its sidebar entry', function () {
+    Plugin::updateOrCreate(['slug' => 'modulo-shop'], [
+        'name' => 'Modulo Shop', 'version' => '1.7.0', 'service_provider' => 'Plugins\ModuloShop\ModuloShopServiceProvider', 'is_active' => true,
+    ]);
+    shopManager();
+
+    $this->get(route('dashboard.admin.shop.products.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Plugins/modulo-shop/Products', false)
+            ->where('pluginMenu.0.label', 'Shop')
+            ->where('pluginMenu.0.href', '/dashboard/admin/shop/products'));
+
+    $this->get(route('dashboard.admin.shop.orders.index'))->assertInertia(fn ($page) => $page->component('Plugins/modulo-shop/Orders', false));
+    $this->get(route('dashboard.admin.shop.settings.index'))->assertInertia(fn ($page) => $page->component('Plugins/modulo-shop/Settings', false));
+});

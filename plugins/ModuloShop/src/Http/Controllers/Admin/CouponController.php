@@ -24,8 +24,7 @@ class CouponController
             return response()->json($coupons);
         }
 
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'shop-coupons',
+        return Inertia::render('Plugins/modulo-shop/Coupons', [
             'shopCoupons' => $coupons,
         ]);
     }

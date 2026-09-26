@@ -25,8 +25,7 @@ class PaymentSettingsController
             return response()->json($gateways);
         }
 
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'shop-payments',
+        return Inertia::render('Plugins/modulo-shop/Payments', [
             'shopGateways' => $gateways,
         ]);
     }

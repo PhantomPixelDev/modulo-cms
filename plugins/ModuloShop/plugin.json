@@ -2,9 +2,9 @@
   "name": "Modulo Shop",
   "slug": "modulo-shop",
   "namespace": "ModuloShop",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "requires": {
-    "core": ">=0.2.0"
+    "core": ">=0.3.0"
   },
   "description": "A feature-rich e-commerce plugin for Modulo CMS.",
   "author": "Modulo CMS",
@@ -19,5 +19,70 @@
     "inventory_management": true,
     "shipping_methods": [],
     "prices_include_tax": false
+  },
+  "admin": {
+    "menu": [
+      {
+        "label": "Shop",
+        "label_key": "modulo-shop::admin.menu.shop",
+        "icon": "shopping-bag",
+        "route": "dashboard.admin.shop.products.index",
+        "permissions": [
+          "view shop products",
+          "create shop products",
+          "edit shop products",
+          "delete shop products",
+          "view shop orders",
+          "manage shop orders",
+          "manage shop settings"
+        ],
+        "children": [
+          {
+            "label": "Products",
+            "label_key": "modulo-shop::admin.menu.products",
+            "route": "dashboard.admin.shop.products.index",
+            "permissions": [
+              "view shop products",
+              "create shop products",
+              "edit shop products",
+              "delete shop products"
+            ]
+          },
+          {
+            "label": "Orders",
+            "label_key": "modulo-shop::admin.menu.orders",
+            "route": "dashboard.admin.shop.orders.index",
+            "permissions": [
+              "view shop orders",
+              "manage shop orders"
+            ]
+          },
+          {
+            "label": "Coupons",
+            "label_key": "modulo-shop::admin.menu.coupons",
+            "route": "dashboard.admin.shop.coupons.index",
+            "permissions": [
+              "manage shop settings"
+            ]
+          },
+          {
+            "label": "Payments",
+            "label_key": "modulo-shop::admin.menu.payments",
+            "route": "dashboard.admin.shop.payments.index",
+            "permissions": [
+              "manage shop settings"
+            ]
+          },
+          {
+            "label": "Settings",
+            "label_key": "modulo-shop::admin.menu.settings",
+            "route": "dashboard.admin.shop.settings.index",
+            "permissions": [
+              "manage shop settings"
+            ]
+          }
+        ]
+      }
+    ]
   }
 }

@@ -17,7 +17,7 @@ class OrderPlacedAdmin extends Mailable implements ShouldQueue
     public function build(): self
     {
         return $this->subject('New order: '.$this->order->order_number)
-            ->markdown('emails.shop.order-placed-admin', [
+            ->markdown('modulo-shop::emails.order-placed-admin', [
                 'order' => $this->order,
             ]);
     }

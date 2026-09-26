@@ -17,7 +17,7 @@ class OrderPlacedCustomer extends Mailable implements ShouldQueue
     public function build(): self
     {
         return $this->subject('Order received: '.$this->order->order_number)
-            ->markdown('emails.shop.order-placed-customer', [
+            ->markdown('modulo-shop::emails.order-placed-customer', [
                 'order' => $this->order,
             ]);
     }

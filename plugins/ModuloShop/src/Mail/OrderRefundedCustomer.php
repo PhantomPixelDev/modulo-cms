@@ -17,7 +17,7 @@ class OrderRefundedCustomer extends Mailable implements ShouldQueue
     public function build(): self
     {
         return $this->subject('Refund for order '.$this->order->order_number)
-            ->markdown('emails.shop.order-refunded-customer', [
+            ->markdown('modulo-shop::emails.order-refunded-customer', [
                 'order' => $this->order,
             ]);
     }

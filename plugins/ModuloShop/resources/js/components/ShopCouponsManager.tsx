@@ -1,18 +1,9 @@
-import { useAdminToast } from '@/components/admin/AdminToastProvider';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge, Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, EmptyState, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow, useAdminToast } from '@modulo/ui';
 import { router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { ROUTE } from '../../routes';
-import type { Paginated, ShopCoupon } from '../../types';
-import { EmptyState } from '../common/EmptyState';
+import { ROUTE } from '../routes';
+import type { Paginated, ShopCoupon } from '../types';
 
 type CouponForm = {
     code: string;

@@ -41,8 +41,7 @@ class ProductController
 
         $productType = $this->getProductType();
         if (! $productType) {
-            return Inertia::render('Dashboard', [
-                'adminSection' => 'shop-products',
+            return Inertia::render('Plugins/modulo-shop/Products', [
                 'shopProducts' => ['data' => [], 'total' => 0],
                 'error' => 'Product post type not configured. Please activate the shop plugin.',
             ]);
@@ -88,8 +87,7 @@ class ProductController
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
 
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'shop-products',
+        return Inertia::render('Plugins/modulo-shop/Products', [
             'shopProducts' => $products,
             'productCategories' => $categories,
             'productTags' => $tags,

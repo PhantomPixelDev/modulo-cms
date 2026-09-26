@@ -1,17 +1,8 @@
-import { useAdminToast } from '@/components/admin/AdminToastProvider';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge, Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow, Textarea, useAdminToast } from '@modulo/ui';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
-import { ROUTE } from '../../routes';
-import type { Paginated, ShopProduct } from '../../types';
+import { ROUTE } from '../routes';
+import type { Paginated, ShopProduct } from '../types';
 import { detailsFrom, detailsPayload, ProductDetailsFields, type ProductDetails, type Term } from './ProductDetailsFields';
 
 export function ShopProductsManager({

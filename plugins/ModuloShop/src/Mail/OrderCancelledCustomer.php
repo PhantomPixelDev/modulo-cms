@@ -17,7 +17,7 @@ class OrderCancelledCustomer extends Mailable implements ShouldQueue
     public function build(): self
     {
         return $this->subject('Order cancelled: '.$this->order->order_number)
-            ->markdown('emails.shop.order-cancelled-customer', [
+            ->markdown('modulo-shop::emails.order-cancelled-customer', [
                 'order' => $this->order,
             ]);
     }

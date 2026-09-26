@@ -51,8 +51,7 @@ class ShopSettingsController
             return response()->json($settings);
         }
 
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'shop-settings',
+        return Inertia::render('Plugins/modulo-shop/Settings', [
             'shopSettings' => $settings,
         ]);
     }

@@ -16,8 +16,10 @@ declare -A REPOSITORIES=(
     [HelloWorld]=PhantomPixelDev/modulo-plugin-hello-world
 )
 
-# Repository-only files that are not part of the installed plugin
-IGNORE=(--exclude=.git --exclude=.github --exclude=README.md --exclude=LICENSE --exclude=.gitattributes --exclude=.gitignore)
+# Compared against the release package (git archive of the tag, which leaves out
+# what .gitattributes marks export-ignore, e.g. build tooling); README and LICENSE
+# stay in the repository only.
+IGNORE=(--exclude=README.md --exclude=LICENSE)
 
 status=0
 for dir in "${!REPOSITORIES[@]}"; do
@@ -30,6 +32,11 @@ for dir in "${!REPOSITORIES[@]}"; do
         status=1
         continue
     fi
+
+    package="$(mktemp -d)"
+    git -C "$checkout" archive HEAD | tar -x -C "$package"
+    rm -rf "$checkout"
+    checkout="$package"
 
     if diff -r -q "${IGNORE[@]}" "plugins/$dir" "$checkout" >/dev/null; then
         echo "plugins/$dir matches $repo v$version"

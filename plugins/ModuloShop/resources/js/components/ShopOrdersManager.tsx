@@ -1,11 +1,8 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@modulo/ui';
 import { router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Eye, Package, Search } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
-import type { Paginated, ShopOrder } from '../../types';
+import type { Paginated, ShopOrder } from '../types';
 
 interface ShopOrdersManagerProps {
     orders?: Paginated<ShopOrder>;

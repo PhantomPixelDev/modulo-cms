@@ -17,7 +17,7 @@ class OrderNoteCustomer extends Mailable implements ShouldQueue
     public function build(): self
     {
         return $this->subject('Update on order '.$this->order->order_number)
-            ->markdown('emails.shop.order-note-customer', [
+            ->markdown('modulo-shop::emails.order-note-customer', [
                 'order' => $this->order,
                 'note' => $this->note,
             ]);

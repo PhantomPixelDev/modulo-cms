@@ -17,7 +17,7 @@ class OrderShippedCustomer extends Mailable implements ShouldQueue
     public function build(): self
     {
         return $this->subject('Order shipped: '.$this->order->order_number)
-            ->markdown('emails.shop.order-shipped-customer', [
+            ->markdown('modulo-shop::emails.order-shipped-customer', [
                 'order' => $this->order,
             ]);
     }

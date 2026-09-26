@@ -1,17 +1,9 @@
-import { useAdminToast } from '@/components/admin/AdminToastProvider';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge, Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Textarea, useAdminToast } from '@modulo/ui';
 import { router } from '@inertiajs/react';
 import { Copy } from 'lucide-react';
 import { useState } from 'react';
-import { ROUTE } from '../../routes';
-import type { ShopGateway } from '../../types';
+import { ROUTE } from '../routes';
+import type { ShopGateway } from '../types';
 
 function GatewayCard({ gateway, canManage }: { gateway: ShopGateway; canManage: boolean }) {
     const { success: showSuccess, error: showError } = useAdminToast();

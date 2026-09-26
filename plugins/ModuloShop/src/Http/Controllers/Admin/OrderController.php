@@ -58,8 +58,7 @@ class OrderController
             return response()->json($orders);
         }
 
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'shop-orders',
+        return Inertia::render('Plugins/modulo-shop/Orders', [
             'shopOrders' => $orders,
             'orderStatuses' => $this->getStatusOptions(),
             'paymentStatuses' => $this->getPaymentStatusOptions(),
@@ -76,8 +75,7 @@ class OrderController
             return response()->json($this->transformForAdmin($order, true));
         }
 
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'shop-orders-view',
+        return Inertia::render('Plugins/modulo-shop/OrderView', [
             'shopOrder' => $this->transformForAdmin($order, true),
             'orderStatuses' => $this->getStatusOptions(),
             'paymentStatuses' => $this->getPaymentStatusOptions(),

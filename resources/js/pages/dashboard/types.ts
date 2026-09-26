@@ -206,67 +206,6 @@ export interface Paginated<T> {
     total: number;
 }
 
-export interface ShopProduct extends BaseEntity {
-    sku?: string | null;
-    name: string;
-    slug: string;
-    description?: string | null;
-    price: string;
-    sale_price?: string | null;
-    currency: string;
-    is_active: boolean;
-    status?: 'draft' | 'published' | 'pending' | 'private';
-    stock?: number | null;
-    featured_image?: string | null;
-    meta?: Record<string, any> | null;
-}
-
-export interface ShopCoupon extends BaseEntity {
-    code: string;
-    description: string | null;
-    type: 'percent' | 'fixed' | 'free_shipping';
-    amount: number;
-    min_subtotal: number | null;
-    starts_at: string | null;
-    expires_at: string | null;
-    usage_limit: number | null;
-    used_count: number;
-    is_active: boolean;
-}
-
-export interface ShopGatewayField {
-    key: string;
-    label: string;
-    type: 'text' | 'secret' | 'select' | 'textarea';
-    options?: Record<string, string>;
-    help?: string;
-}
-
-export interface ShopGateway {
-    id: string;
-    label: string;
-    online: boolean;
-    enabled: boolean;
-    configured: boolean;
-    fields: ShopGatewayField[];
-    /** Secret fields are true/false (set or not), never the value */
-    values: Record<string, string | boolean | null>;
-    webhook_url: string | null;
-}
-
-export interface ShopOrder extends BaseEntity {
-    order_number: string;
-    status: string;
-    status_label: string;
-    payment_status: string;
-    payment_status_label: string;
-    total: number;
-    currency: string;
-    customer_name: string;
-    customer_email: string;
-    item_count: number;
-}
-
 export interface Template extends BaseEntity {
     name: string;
     slug: string;
@@ -384,16 +323,6 @@ export interface DashboardProps {
     allFolders?: MediaFolder[];
     breadcrumb?: MediaFolder[];
     currentFolderId?: number | null;
-    // ModuloShop
-    shopProducts?: Paginated<ShopProduct>;
-    editProduct?: ShopProduct | null;
-    productCategories?: { id: number; name: string }[];
-    productTags?: { id: number; name: string }[];
-    shopOrders?: Paginated<ShopOrder>;
-    shopCoupons?: Paginated<ShopCoupon>;
-    shopGateways?: ShopGateway[];
-    shopOrder?: ShopOrder;
-    shopSettings?: Record<string, any>;
     // Dashboard activity and status
     overview?: DashboardOverviewData;
     systemStatus?: Record<
