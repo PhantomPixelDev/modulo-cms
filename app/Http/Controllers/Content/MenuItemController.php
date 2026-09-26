@@ -62,7 +62,7 @@ class MenuItemController extends Controller
             return response()->json($item, Response::HTTP_CREATED);
         }
 
-        return redirect()->route('dashboard.admin.menus.show', ['menu' => $item->menu_id]);
+        return redirect()->route('dashboard.admin.menus.show', ['menu' => $item->menu_id])->with('success', __('dashboard.menus.messages.item_added'));
     }
 
     public function update(MenuItemRequest $request, MenuItem $menuItem)
@@ -80,7 +80,7 @@ class MenuItemController extends Controller
             return response()->json($menuItem);
         }
 
-        return redirect()->route('dashboard.admin.menus.show', ['menu' => $menuItem->menu_id]);
+        return redirect()->route('dashboard.admin.menus.show', ['menu' => $menuItem->menu_id])->with('success', __('dashboard.menus.messages.item_saved'));
     }
 
     public function destroy(Request $request, MenuItem $menuItem)
@@ -94,7 +94,7 @@ class MenuItemController extends Controller
             return response()->noContent();
         }
 
-        return redirect()->route('dashboard.admin.menus.show', ['menu' => $menuItem->menu_id]);
+        return redirect()->route('dashboard.admin.menus.show', ['menu' => $menuItem->menu_id])->with('success', __('dashboard.menus.messages.item_removed'));
     }
 
     protected function syncTranslations(MenuItem $menuItem, array $translations = []): void

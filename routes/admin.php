@@ -68,6 +68,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::post('posts/{post}/translations', [PostTranslationController::class, 'store'])->name('posts.translations.store');
         Route::delete('posts/{post}/translations/{locale}', [PostTranslationController::class, 'destroy'])->name('posts.translations.destroy');
         Route::resource('post-types', PostTypeController::class);
+        Route::put('menus/{menu}/order', [MenuController::class, 'reorder'])->name('menus.reorder');
+        Route::post('menus/{menu}/pages', [MenuController::class, 'addPages'])->name('menus.add-pages');
         Route::resource('menus', MenuController::class);
         Route::resource('menu-items', MenuItemController::class);
         Route::resource('taxonomies', TaxonomyController::class);
