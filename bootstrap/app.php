@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AuthenticateApiToken;
+use App\Http\Middleware\CachePublicPages;
 use App\Http\Middleware\CacheResponseHeaders;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\CheckPermission;
@@ -66,6 +67,8 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            // Last: a cached page skips only the controller and rendering
+            CachePublicPages::class,
         ]);
 
         // Register middleware aliases

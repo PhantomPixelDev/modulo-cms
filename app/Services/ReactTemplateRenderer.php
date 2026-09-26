@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Middleware\CachePublicPages;
 use App\Http\Resources\ThemeResource;
 use App\Models\SiteSetting;
 use App\Models\Theme;
@@ -80,6 +81,9 @@ class ReactTemplateRenderer
                 'next_page_url' => null,
             ];
         }
+
+        // The same for every visitor, so the whole page may be cached (see CachePublicPages)
+        request()->attributes->set(CachePublicPages::CACHEABLE, ! in_array($templateName, PageMeta::PRIVATE_TEMPLATES, true));
 
         // Server-side <head> tags for crawlers and link previews (see PageMeta)
         return Inertia::render($componentPath, $renderData)
