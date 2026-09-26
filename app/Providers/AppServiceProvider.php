@@ -103,7 +103,7 @@ class AppServiceProvider extends ServiceProvider
                     'header' => $ms->menuArrayBySlug('main-navigation') ?: $ms->menuArrayByLocation('header'),
                     'footer' => $ms->menuArrayBySlug('footer-links') ?: $ms->menuArrayByLocation('footer'),
                 ];
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 return [
                     'header' => [],
                     'footer' => [],

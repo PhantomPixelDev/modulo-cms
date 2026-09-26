@@ -78,7 +78,12 @@ export function EmailPage({ data }: { data: MailSettingsData }) {
                                 <div className="grid gap-4 sm:grid-cols-[1fr_8rem_12rem]">
                                     <div className="space-y-1.5">
                                         <Label htmlFor="mail-host">{t('dashboard.email.fields.host')}</Label>
-                                        <Input id="mail-host" value={form.data.host} onChange={(e) => form.setData('host', e.target.value)} placeholder="smtp.example.com" />
+                                        <Input
+                                            id="mail-host"
+                                            value={form.data.host}
+                                            onChange={(e) => form.setData('host', e.target.value)}
+                                            placeholder="smtp.example.com"
+                                        />
                                         <InputError message={form.errors.host} />
                                     </div>
                                     <div className="space-y-1.5">
@@ -100,7 +105,12 @@ export function EmailPage({ data }: { data: MailSettingsData }) {
                                                     ...current,
                                                     security: security as MailSettingsData['security'],
                                                     // The usual port for each, unless one was typed
-                                                    port: current.port === 587 || current.port === 465 ? (security === 'ssl' ? 465 : 587) : current.port,
+                                                    port:
+                                                        current.port === 587 || current.port === 465
+                                                            ? security === 'ssl'
+                                                                ? 465
+                                                                : 587
+                                                            : current.port,
                                                 }));
                                             }}
                                         >
@@ -151,7 +161,11 @@ export function EmailPage({ data }: { data: MailSettingsData }) {
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="mail-from-name">{t('dashboard.email.fields.from_name')}</Label>
-                                    <Input id="mail-from-name" value={form.data.from_name} onChange={(e) => form.setData('from_name', e.target.value)} />
+                                    <Input
+                                        id="mail-from-name"
+                                        value={form.data.from_name}
+                                        onChange={(e) => form.setData('from_name', e.target.value)}
+                                    />
                                 </div>
                             </div>
                             <p className="text-xs text-muted-foreground">{t('dashboard.email.from_hint')}</p>
