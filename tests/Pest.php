@@ -22,21 +22,21 @@ use Tests\TestCase;
 |
 */
 
+// The hooks go on the uses() chain: a bare beforeEach() in this file is not
+// global and never ran, so tests only looked installed once they had a user.
 uses(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(function () {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        // Treat the site as installed unless a test says otherwise, so the
+        // installer redirect does not swallow unrelated requests.
+        markInstalled();
+    })
+    ->afterEach(function () {
+        markNotInstalled();
+    })
     ->in('Feature');
-
-beforeEach(function () {
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
-
-    // Treat the site as installed unless a test says otherwise, so the
-    // installer redirect does not swallow unrelated requests.
-    markInstalled();
-});
-
-afterEach(function () {
-    markNotInstalled();
-});
 
 function installLockPath(): string
 {
