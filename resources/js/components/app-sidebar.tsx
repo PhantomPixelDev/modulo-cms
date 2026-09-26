@@ -28,6 +28,7 @@ import {
     History,
     ImageIcon,
     LayoutDashboard,
+    Mail,
     Menu,
     MessageSquare,
     Palette,
@@ -286,6 +287,7 @@ export function AppSidebar() {
                                     </SidebarMenuBadge>
                                 ) : undefined,
                         },
+                        { label: t('dashboard.nav.email'), href: '/dashboard/admin/system/email', icon: Mail, show: can('edit settings') },
                         {
                             label: t('dashboard.nav.redirects'),
                             href: '/dashboard/admin/system/redirects',

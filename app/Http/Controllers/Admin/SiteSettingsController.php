@@ -37,6 +37,8 @@ class SiteSettingsController extends Controller
 
         // Get all settings organized by group
         $allSettings = $this->settings->getAllByGroup($currentLocale);
+        // Email has its own screen (System -> Email) and a stored password
+        unset($allSettings['email']);
         $defaults = SiteSetting::getDefaults();
 
         // Merge with defaults to ensure all keys exist

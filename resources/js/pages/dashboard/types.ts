@@ -294,6 +294,7 @@ export interface DashboardProps {
     activity?: ActivityProps;
     trash?: TrashProps;
     redirects?: RedirectsProps;
+    mailSettings?: import('./sections/system/emailSection').MailSettingsData;
     // Plugins
     plugins?: any[];
     plugin?: any;

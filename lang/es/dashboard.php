@@ -7,6 +7,7 @@ return [
     ],
     // Navigation
     'nav' => [
+        'email' => 'Correo',
         'content' => 'Contenido',
         'content_types' => 'Tipos de contenido',
         'organization' => 'Organización',
@@ -95,7 +96,7 @@ return [
                 ],
                 'email' => [
                     'title' => 'Configura el envío de correo',
-                    'hint' => 'Los correos solo se escriben en el registro hasta que se configure SMTP en el servidor (ajustes MAIL_*).',
+                    'hint' => 'Introduce tu proveedor de correo en Sistema → Correo; hasta entonces los correos solo se escriben en el registro.',
                 ],
                 'two_factor' => [
                     'title' => 'Activa el inicio de sesión en dos pasos',
@@ -1323,6 +1324,53 @@ return [
             'recovered_body' => 'El editor guardó un borrador de cambios que nunca se guardaron. Restáuralos para seguir donde lo dejaste.',
             'restore' => 'Restaurar cambios',
             'discard' => 'Descartar',
+        ],
+    ],
+    'email' => [
+        'title' => 'Correo',
+        'description' => 'Cómo envía el sitio las confirmaciones de pedido, los restablecimientos de contraseña y los mensajes de contacto.',
+        'settings_title' => 'Envío',
+        'fields' => [
+            'mode' => 'Enviar correo',
+            'host' => 'Servidor SMTP',
+            'port' => 'Puerto',
+            'security' => 'Cifrado',
+            'username' => 'Usuario',
+            'password' => 'Contraseña',
+            'from_address' => 'Dirección del remitente',
+            'from_name' => 'Nombre del remitente',
+        ],
+        'modes' => [
+            'smtp' => 'Mediante un servidor SMTP',
+            'env' => 'Según la configuración del servidor (:mailer)',
+            'log' => 'No enviar, escribir en el registro',
+        ],
+        'mode_hints' => [
+            'smtp' => 'Tu proveedor de correo (Mailgun, Brevo, Postmark, Gmail, tu hosting…) te da estos datos.',
+            'env' => 'Usa los ajustes MAIL_* del archivo .env del servidor.',
+            'log' => 'Para pruebas: los correos se escriben en el registro en lugar de enviarse.',
+        ],
+        'security' => [
+            'starttls' => 'STARTTLS (puerto 587)',
+            'ssl' => 'SSL/TLS (puerto 465)',
+        ],
+        'password_saved' => 'Guardada: déjalo vacío para conservarla',
+        'password_hint' => 'Se guarda cifrada y no se vuelve a mostrar.',
+        'from_hint' => 'Los clientes ven esto como remitente. Usa una dirección de un dominio para el que tu proveedor pueda enviar, o los correos acabarán en spam.',
+        'save' => 'Guardar',
+        'test_title' => 'Enviar un correo de prueba',
+        'test_description' => 'Comprueba los ajustes: se envía un mensaje corto al momento.',
+        'test_to' => 'Enviar a',
+        'test_send' => 'Enviar correo de prueba',
+        'test_save_first' => 'Guarda primero los cambios; la prueba usa los ajustes guardados.',
+        'test_subject' => 'Correo de prueba de tu sitio',
+        'test_body' => 'Este es un correo de prueba de :site. Si lo estás leyendo, el correo funciona.',
+        'provider_hint' => 'La mayoría de los hostings bloquean el envío directo desde el servidor. Un proveedor de correo transaccional entrega de forma fiable y evita el spam.',
+        'messages' => [
+            'saved' => 'Ajustes de correo guardados.',
+            'test_sent' => 'Correo de prueba enviado a :to. Revisa la bandeja de entrada (y la de spam).',
+            'test_logged' => 'El correo de prueba se escribió en el registro, porque el sitio aún no envía correo.',
+            'test_failed' => 'No se pudo enviar el correo de prueba: :reason',
         ],
     ],
 ];

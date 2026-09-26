@@ -7,6 +7,7 @@ return [
     ],
     // Navigation
     'nav' => [
+        'email' => 'Email',
         'content' => 'Content',
         'content_types' => 'Content types',
         'organization' => 'Organization',
@@ -95,7 +96,7 @@ return [
                 ],
                 'email' => [
                     'title' => 'Set up email sending',
-                    'hint' => 'Emails are only written to the log until SMTP is configured on the server (MAIL_* settings).',
+                    'hint' => 'Enter your mail provider under System → Email; until then emails are only written to the log.',
                 ],
                 'two_factor' => [
                     'title' => 'Turn on two-factor sign-in',
@@ -1323,6 +1324,53 @@ return [
             'recovered_body' => 'The editor kept a draft of changes that were never saved. Restore them to continue where you left off.',
             'restore' => 'Restore changes',
             'discard' => 'Discard',
+        ],
+    ],
+    'email' => [
+        'title' => 'Email',
+        'description' => 'How the site sends order confirmations, password resets and contact messages.',
+        'settings_title' => 'Sending',
+        'fields' => [
+            'mode' => 'Send email',
+            'host' => 'SMTP server',
+            'port' => 'Port',
+            'security' => 'Encryption',
+            'username' => 'Username',
+            'password' => 'Password',
+            'from_address' => 'From address',
+            'from_name' => 'From name',
+        ],
+        'modes' => [
+            'smtp' => 'Through an SMTP server',
+            'env' => 'As set on the server (:mailer)',
+            'log' => 'Don’t send, write to the log',
+        ],
+        'mode_hints' => [
+            'smtp' => 'Your email provider (Mailgun, Brevo, Postmark, Gmail, your host…) gives you these details.',
+            'env' => 'Uses the MAIL_* settings in the server’s .env file.',
+            'log' => 'For trying things out: mails are written to the log file instead of being sent.',
+        ],
+        'security' => [
+            'starttls' => 'STARTTLS (port 587)',
+            'ssl' => 'SSL/TLS (port 465)',
+        ],
+        'password_saved' => 'Saved — leave empty to keep it',
+        'password_hint' => 'Stored encrypted and never shown again.',
+        'from_hint' => 'Customers see these as the sender. Use an address at a domain your provider may send for, or mails end up in spam.',
+        'save' => 'Save',
+        'test_title' => 'Send a test email',
+        'test_description' => 'Check the settings: a short message is sent right away.',
+        'test_to' => 'Send to',
+        'test_send' => 'Send test email',
+        'test_save_first' => 'Save your changes first; the test uses the saved settings.',
+        'test_subject' => 'Test email from your site',
+        'test_body' => 'This is a test email from :site. If you are reading it, email works.',
+        'provider_hint' => 'Most hosts block sending straight from the server. A transactional email provider delivers reliably and keeps your mails out of spam.',
+        'messages' => [
+            'saved' => 'Email settings saved.',
+            'test_sent' => 'Test email sent to :to. Check the inbox (and the spam folder).',
+            'test_logged' => 'The test email was written to the log, because the site doesn’t send email yet.',
+            'test_failed' => 'The test email could not be sent: :reason',
         ],
     ],
 ];

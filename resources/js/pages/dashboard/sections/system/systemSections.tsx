@@ -7,6 +7,7 @@ import { AlertTriangle, CheckCircle2, Download, ExternalLink, Loader2, RefreshCw
 import { useState, type ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { ActivityPage, type ActivityProps } from './activitySection';
+import { EmailPage, type MailSettingsData } from './emailSection';
 import { RedirectsPage, type RedirectsProps } from './redirectsSection';
 
 export interface CoreUpdate {
@@ -404,13 +405,16 @@ export function getSystemSections({
     backups,
     activity,
     redirects,
+    mailSettings,
 }: {
     updateCenter?: UpdateCenterProps;
     backups?: BackupsProps;
     activity?: ActivityProps;
     redirects?: RedirectsProps;
+    mailSettings?: MailSettingsData;
 }): Record<string, () => ReactNode> {
     return {
+        email: () => (mailSettings ? <EmailPage data={mailSettings} /> : null),
         activity: () => (activity ? <ActivityPage data={activity} /> : null),
         redirects: () => (redirects ? <RedirectsPage data={redirects} /> : null),
         updates: () => (updateCenter ? <UpdatesPage data={updateCenter} /> : null),
