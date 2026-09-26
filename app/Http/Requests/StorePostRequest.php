@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
+use App\Rules\CanPublish;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -43,7 +44,7 @@ class StorePostRequest extends FormRequest
             ],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
-            'status' => ['required', 'string', Rule::in(['draft', 'published', 'archived'])],
+            'status' => ['required', 'string', Rule::in(['draft', 'published', 'archived']), new CanPublish($this->user())],
             'published_at' => ['nullable', 'date'],
             'featured_image' => ['nullable', 'string', 'max:255'],
             'post_type_id' => ['required', 'exists:post_types,id'],

@@ -26,8 +26,12 @@ class ModuloShopSettings
         return (float) $this->get('tax_rate', 0);
     }
 
+    /**
+     * On unless switched off: stores whose settings lost the key (an old
+     * settings form replaced the whole array) must keep selling.
+     */
     public function checkoutEnabled(): bool
     {
-        return (bool) $this->get('enable_checkout', false);
+        return (bool) $this->get('enable_checkout', true);
     }
 }

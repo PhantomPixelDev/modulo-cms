@@ -1,6 +1,6 @@
 import SEOHead from '@/components/SEOHead';
 import { Link } from '@inertiajs/react';
-import { Check, ChevronRight, Heart, Minus, Plus, RotateCcw, Shield, ShoppingCart, Star, Truck } from 'lucide-react';
+import { Check, ChevronRight, Heart, Minus, Plus, RotateCcw, Shield, ShoppingCart, Truck } from 'lucide-react';
 import { useState } from 'react';
 import Layout from '../Layout';
 
@@ -219,16 +219,6 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                         )}
 
                         <h1 className="text-3xl leading-tight font-bold text-foreground md:text-4xl">{product.title}</h1>
-
-                        {/* Rating Placeholder */}
-                        <div className="flex items-center gap-2">
-                            <div className="flex">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star key={star} className="h-5 w-5 fill-current text-warning" />
-                                ))}
-                            </div>
-                            <span className="text-sm text-muted-foreground">(0 reviews)</span>
-                        </div>
 
                         {/* Price */}
                         <div className="flex items-center gap-4 border-y border-border py-4">

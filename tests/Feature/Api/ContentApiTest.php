@@ -55,7 +55,7 @@ it('rejects a wrong or expired token instead of quietly serving less', function 
 
 it('creates, changes and trashes posts with a write token and the permissions', function () {
     apiPostType();
-    [$user, $headers] = apiToken(['create posts', 'edit posts', 'delete posts', 'view posts'], ['read', 'write']);
+    [$user, $headers] = apiToken(['create posts', 'edit posts', 'delete posts', 'view posts', 'publish posts'], ['read', 'write']);
 
     $created = $this->postJson('/api/v1/posts', ['title' => 'From the API', 'content' => '<p>Hi</p>', 'status' => 'published'], $headers)
         ->assertCreated()

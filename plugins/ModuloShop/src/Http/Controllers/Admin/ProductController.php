@@ -25,6 +25,15 @@ class ProductController
         return $this->productType;
     }
 
+    /**
+     * Route model binding resolves any post; the shop permissions must only
+     * reach products.
+     */
+    protected function ensureProduct(Post $post): void
+    {
+        abort_unless($post->post_type_id === $this->getProductType()?->id, 404);
+    }
+
     public function index(Request $request): JsonResponse|Response
     {
         $this->authorizeView();
@@ -69,30 +78,28 @@ class ProductController
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
 
+        // ?edit={id} opens that product's edit dialog, whichever page it is on.
+        $editProduct = $request->integer('edit')
+            ? Post::where('post_type_id', $productType->id)->find($request->integer('edit'))
+            : null;
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'shop-products',
             'shopProducts' => $products,
             'productCategories' => $categories,
+            'editProduct' => $editProduct ? $this->transformForAdmin($editProduct) : null,
         ]);
     }
 
-    public function create(Request $request): Response
+    /**
+     * Products are created and edited on the list screen (inline form and
+     * dialog); these URLs lead there so bookmarks and links keep working.
+     */
+    public function create(Request $request): RedirectResponse
     {
         $this->authorizeCreate();
 
-        $categories = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-category'))
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
-
-        $tags = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-tag'))
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
-
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'shop-products-create',
-            'productCategories' => $categories,
-            'productTags' => $tags,
-        ]);
+        return redirect()->route('dashboard.admin.shop.products.index');
     }
 
     public function store(Request $request): JsonResponse|RedirectResponse
@@ -176,31 +183,18 @@ class ProductController
             ->with('success', 'Product created successfully');
     }
 
-    public function edit(Request $request, Post $post): Response
+    public function edit(Request $request, Post $post): RedirectResponse
     {
         $this->authorizeEdit();
+        $this->ensureProduct($post);
 
-        $post->load('taxonomyTerms');
-
-        $categories = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-category'))
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
-
-        $tags = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-tag'))
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
-
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'shop-products-edit',
-            'editProduct' => $this->transformForAdmin($post),
-            'productCategories' => $categories,
-            'productTags' => $tags,
-        ]);
+        return redirect()->route('dashboard.admin.shop.products.index', ['edit' => $post->id]);
     }
 
     public function update(Request $request, Post $post): JsonResponse|RedirectResponse
     {
         $this->authorizeEdit();
+        $this->ensureProduct($post);
 
         $productType = $this->getProductType();
 
@@ -261,11 +255,18 @@ class ProductController
             'featured_image' => $data['featured_image'] ?? $post->featured_image,
             'status' => $status,
             'published_at' => $publishedAt,
+            // Merged, so keys this form doesn't know about survive an edit.
             'meta_data' => [
+                ...$existingMeta,
                 'price' => isset($data['price']) ? (float) $data['price'] : ($existingMeta['price'] ?? 0),
-                'sale_price' => isset($data['sale_price']) ? (float) $data['sale_price'] : ($existingMeta['sale_price'] ?? null),
+                // Sent as null means "clear" (no sale / stock not tracked); omitted keeps it.
+                'sale_price' => array_key_exists('sale_price', $data)
+                    ? ($data['sale_price'] === null ? null : (float) $data['sale_price'])
+                    : ($existingMeta['sale_price'] ?? null),
                 'sku' => $data['sku'] ?? $existingMeta['sku'] ?? null,
-                'stock' => isset($data['stock']) ? (int) $data['stock'] : ($existingMeta['stock'] ?? null),
+                'stock' => array_key_exists('stock', $data)
+                    ? ($data['stock'] === null ? null : (int) $data['stock'])
+                    : ($existingMeta['stock'] ?? null),
                 'currency' => $data['currency'] ?? $existingMeta['currency'] ?? 'USD',
                 'featured' => isset($data['featured']) ? (bool) $data['featured'] : ($existingMeta['featured'] ?? false),
                 'gallery' => $data['gallery'] ?? $existingMeta['gallery'] ?? [],
@@ -273,9 +274,19 @@ class ProductController
             ],
         ]);
 
-        // Sync categories and tags
-        $termIds = array_merge($data['categories'] ?? [], $data['tags'] ?? []);
-        $post->taxonomyTerms()->sync($termIds);
+        // Only when the form sent them: an edit without the fields must not
+        // strip the product's categories and tags.
+        if ($request->has('categories') || $request->has('tags')) {
+            $current = $post->taxonomyTerms()->with('taxonomy')->get();
+            $keep = fn (string $taxonomy) => $current
+                ->filter(fn ($term) => $term->taxonomy?->slug === $taxonomy)
+                ->pluck('id')->all();
+
+            $post->taxonomyTerms()->sync(array_merge(
+                $request->has('categories') ? ($data['categories'] ?? []) : $keep('product-category'),
+                $request->has('tags') ? ($data['tags'] ?? []) : $keep('product-tag'),
+            ));
+        }
 
         if ($request->wantsJson()) {
             return response()->json($this->transformForAdmin($post));
@@ -288,6 +299,7 @@ class ProductController
     public function destroy(Request $request, Post $post): JsonResponse|RedirectResponse
     {
         $this->authorizeDelete();
+        $this->ensureProduct($post);
 
         $post->taxonomyTerms()->detach();
         $post->delete();

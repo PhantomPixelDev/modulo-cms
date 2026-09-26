@@ -17,6 +17,7 @@ use Plugins\ModuloShop\src\Mail\OrderPlacedCustomer;
 use Plugins\ModuloShop\src\Models\Order;
 use Plugins\ModuloShop\src\Models\OrderItem;
 use Plugins\ModuloShop\src\Services\CartService;
+use Plugins\ModuloShop\src\Services\ModuloShopSettings;
 use Plugins\ModuloShop\src\Services\StockService;
 
 class CheckoutController
@@ -36,6 +37,10 @@ class CheckoutController
 
     public function index(Request $request): JsonResponse|Response|RedirectResponse
     {
+        if ($closed = $this->closedResponse($request)) {
+            return $closed;
+        }
+
         $cart = $this->cartService->getCartWithProducts();
         $totals = $this->cartService->getTotals();
 
@@ -73,6 +78,10 @@ class CheckoutController
 
     public function store(Request $request): JsonResponse|RedirectResponse
     {
+        if ($closed = $this->closedResponse($request)) {
+            return $closed;
+        }
+
         $cart = $this->cartService->getCartWithProducts();
 
         if ($cart['is_empty']) {
@@ -203,6 +212,24 @@ class CheckoutController
 
         return redirect()->to($order->confirmationUrl())
             ->with('success', 'Order placed successfully!');
+    }
+
+    /**
+     * The store owner switched checkout off: browsing and the cart keep working.
+     */
+    protected function closedResponse(Request $request): JsonResponse|RedirectResponse|null
+    {
+        if (app(ModuloShopSettings::class)->checkoutEnabled()) {
+            return null;
+        }
+
+        $message = 'Checkout is currently closed. Please try again later.';
+
+        if ($request->wantsJson()) {
+            return response()->json(['error' => $message], 503);
+        }
+
+        return redirect('/shop/cart')->with('error', $message);
     }
 
     public function confirmation(Request $request, string $orderNumber): JsonResponse|Response

@@ -37,7 +37,7 @@ it('allows pages index with permission', function () {
 });
 
 it('creates, updates and deletes a page with permissions', function () {
-    $u = pageUser(['create posts', 'edit posts', 'delete posts']);
+    $u = pageUser(['create posts', 'edit posts', 'delete posts', 'publish content']);
     $this->actingAs($u);
 
     // Create

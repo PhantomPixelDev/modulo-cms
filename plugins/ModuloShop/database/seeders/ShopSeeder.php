@@ -118,6 +118,6 @@ class ShopSeeder extends Seeder
             $superAdminRole->givePermissionTo($permissions);
         }
 
-        $this->command->info('Shop post type, taxonomies, and permissions created successfully.');
+        $this->command?->info('Shop post type, taxonomies, and permissions created successfully.');
     }
 }

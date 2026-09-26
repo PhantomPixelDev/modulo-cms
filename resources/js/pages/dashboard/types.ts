@@ -329,6 +329,7 @@ export interface DashboardProps {
     currentFolderId?: number | null;
     // ModuloShop
     shopProducts?: Paginated<ShopProduct>;
+    editProduct?: ShopProduct | null;
     shopOrders?: Paginated<ShopOrder>;
     shopOrder?: ShopOrder;
     shopSettings?: Record<string, any>;

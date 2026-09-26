@@ -137,7 +137,7 @@ class SiteSettingsController extends Controller
                 'default_post_type' => 'required|string|max:50',
             ],
             'permalinks' => [
-                'permalink_structure' => 'required|string|max:255',
+                'permalink_structure' => 'nullable|string|max:255', // legacy, no longer routed or shown
                 'category_base' => 'nullable|string|max:100',
                 'tag_base' => 'nullable|string|max:100',
             ],

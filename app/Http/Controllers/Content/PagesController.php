@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Content;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostType;
+use App\Rules\CanPublish;
 use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -110,7 +111,7 @@ class PagesController extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:posts,slug',
-            'status' => 'required|in:draft,published,private,archived',
+            'status' => ['required', 'in:draft,published,private,archived', new CanPublish($request->user(), isPage: true)],
             'content' => 'required', // Content can be string or array
             'excerpt' => 'nullable|string',
             'featured_image' => 'nullable|string',
@@ -174,7 +175,7 @@ class PagesController extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:posts,slug,'.$page->id,
-            'status' => 'required|in:draft,published,private,archived',
+            'status' => ['required', 'in:draft,published,private,archived', new CanPublish($request->user(), $page, isPage: true)],
             'content' => 'required', // Content can be string or array
             'excerpt' => 'nullable|string',
             'featured_image' => 'nullable|string',

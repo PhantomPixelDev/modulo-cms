@@ -10,6 +10,7 @@ import type { Paginated, ShopOrder, ShopProduct } from '../../types';
 
 export function getShopSections({
     shopProducts,
+    editProduct,
     shopOrders,
     shopOrder,
     shopSettings,
@@ -19,6 +20,7 @@ export function getShopSections({
     ROUTE,
 }: {
     shopProducts: Paginated<ShopProduct> | undefined;
+    editProduct?: ShopProduct | null;
     shopOrders: Paginated<ShopOrder> | undefined;
     shopOrder: ShopOrder | undefined;
     shopSettings?: Record<string, any>;
@@ -31,6 +33,7 @@ export function getShopSections({
         <SectionWrapper title="Shop Products" description="Manage your store products and inventory.">
             <ShopProductsManager
                 products={shopProducts}
+                initialEdit={editProduct ?? null}
                 canView={can('view shop products')}
                 canCreate={can('create shop products')}
                 canEdit={can('edit shop products')}
