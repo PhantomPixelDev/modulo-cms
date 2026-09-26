@@ -5,6 +5,7 @@ namespace Plugins\ModuloShop\src\Services;
 use App\Models\Post;
 use Illuminate\Validation\ValidationException;
 use Plugins\ModuloShop\src\Models\Order;
+use Plugins\ModuloShop\src\Support\ProductData;
 
 /**
  * Stock lives in posts.meta_data.stock; null/missing means "not tracked".
@@ -17,50 +18,13 @@ class StockService
     /**
      * Lock the products and take the ordered quantities out of stock.
      *
-     * @param  array<int, int>  $quantities  product id => quantity
+     * @param  array<int|string, int>  $quantities  line key (product id, or "id:variation") => quantity
      *
      * @throws ValidationException when a product is gone or short on stock
      */
     public function reserve(array $quantities): void
     {
-        if (! $this->enabled() || $quantities === []) {
-            return;
-        }
-
-        $products = Post::whereIn('id', array_keys($quantities))->lockForUpdate()->get()->keyBy('id');
-        $problems = [];
-
-        foreach ($quantities as $productId => $quantity) {
-            $product = $products->get($productId);
-            if (! $product) {
-                $problems[] = 'A product in your cart is no longer available.';
-
-                continue;
-            }
-
-            $meta = $product->meta_data ?? [];
-            if (! $this->tracksStock($meta)) {
-                continue;
-            }
-
-            $available = (int) $meta['stock'];
-            if ($available < $quantity) {
-                $problems[] = $available > 0
-                    ? "Only {$available} of \"{$product->title}\" left in stock."
-                    : "\"{$product->title}\" is out of stock.";
-
-                continue;
-            }
-
-            $meta['stock'] = $available - $quantity;
-            $product->meta_data = $meta;
-            // Quiet: a stock change shouldn't ping search engines or flush every cache
-            $product->saveQuietly();
-        }
-
-        if ($problems !== []) {
-            throw ValidationException::withMessages(['cart' => $problems]);
-        }
+        $this->apply($quantities, -1);
     }
 
     /**
@@ -68,26 +32,79 @@ class StockService
      */
     public function release(Order $order): void
     {
-        if (! $this->enabled()) {
+        $this->apply($order->quantities(), 1);
+    }
+
+    /**
+     * @param  array<int|string, int>  $quantities
+     */
+    protected function apply(array $quantities, int $direction): void
+    {
+        if (! $this->enabled() || $quantities === []) {
             return;
         }
 
-        $quantities = $order->items()
-            ->whereNotNull('product_id')
-            ->get()
-            ->groupBy('product_id')
-            ->map(fn ($items) => (int) $items->sum('quantity'));
+        $ids = array_unique(array_map(fn ($key) => ProductData::parseLineKey($key)[0], array_keys($quantities)));
+        $products = Post::whereIn('id', $ids)->lockForUpdate()->get()->keyBy('id');
+        $problems = [];
+        $changed = [];
 
-        $products = Post::whereIn('id', $quantities->keys())->lockForUpdate()->get();
+        foreach ($quantities as $key => $quantity) {
+            [$productId, $variantId] = ProductData::parseLineKey($key);
+            $product = $products->get($productId);
 
-        foreach ($products as $product) {
-            $meta = $product->meta_data ?? [];
-            if (! $this->tracksStock($meta)) {
+            if (! $product) {
+                if ($direction < 0) {
+                    $problems[] = 'A product in your cart is no longer available.';
+                }
+
                 continue;
             }
 
-            $meta['stock'] = (int) $meta['stock'] + $quantities[$product->id];
+            $meta = $product->meta_data ?? [];
+
+            if ($variantId !== null) {
+                $index = collect($meta['variants'] ?? [])->search(fn ($row) => is_array($row) && ($row['id'] ?? null) === $variantId);
+                if ($index === false) {
+                    if ($direction < 0) {
+                        $problems[] = "An option of \"{$product->title}\" is no longer available.";
+                    }
+
+                    continue;
+                }
+                $current = $meta['variants'][$index]['stock'] ?? null;
+                $label = "{$product->title} ({$meta['variants'][$index]['name']})";
+            } else {
+                $current = $meta['stock'] ?? null;
+                $label = $product->title;
+            }
+
+            if ($current === null || $current === '' || ! is_numeric($current)) {
+                continue; // not tracked
+            }
+
+            $available = (int) $current;
+            if ($direction < 0 && $available < $quantity) {
+                $problems[] = $available > 0 ? "Only {$available} of \"{$label}\" left in stock." : "\"{$label}\" is out of stock.";
+
+                continue;
+            }
+
+            if ($variantId !== null) {
+                $meta['variants'][$index]['stock'] = $available + $direction * $quantity;
+            } else {
+                $meta['stock'] = $available + $direction * $quantity;
+            }
             $product->meta_data = $meta;
+            $changed[$product->id] = $product;
+        }
+
+        if ($problems !== []) {
+            throw ValidationException::withMessages(['cart' => $problems]);
+        }
+
+        foreach ($changed as $product) {
+            // Quiet: a stock change shouldn't ping search engines or flush every cache
             $product->saveQuietly();
         }
     }
@@ -95,10 +112,5 @@ class StockService
     protected function enabled(): bool
     {
         return (bool) $this->settings->get('enable_stock_management', true);
-    }
-
-    protected function tracksStock(array $meta): bool
-    {
-        return isset($meta['stock']) && $meta['stock'] !== '' && is_numeric($meta['stock']);
     }
 }

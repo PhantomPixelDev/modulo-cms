@@ -6,7 +6,10 @@ import Layout from '../Layout';
 import { formatMoney, shopRequest, TotalsRows, type ShopTotals } from './totals';
 
 interface CartItem {
+    key?: string;
     product_id: number;
+    variant_id?: string | null;
+    variant_name?: string | null;
     product_name: string;
     product_slug: string;
     product_image?: string;
@@ -40,7 +43,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
 
     const [items, setItems] = useState<CartItem[]>(cart?.items ?? []);
-    const [loading, setLoading] = useState<number | null>(null);
+    const [loading, setLoading] = useState<string | null>(null);
     const [cartTotals, setCartTotals] = useState<ShopTotals | undefined>(totals);
     const [couponCode, setCouponCode] = useState('');
     const [couponMessage, setCouponMessage] = useState<string | null>(totals?.coupon_error ?? null);
@@ -77,8 +80,11 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
         setCouponBusy(false);
     };
 
-    const updateQuantity = async (productId: number, newQuantity: number) => {
-        setLoading(productId);
+    const lineKey = (item: CartItem) => item.key ?? String(item.product_id);
+
+    const updateQuantity = async (item: CartItem, newQuantity: number) => {
+        const productId = item.product_id;
+        setLoading(lineKey(item));
         try {
             const response = await fetch('/shop/cart/update', {
                 method: 'POST',
@@ -86,7 +92,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify({ product_id: productId, quantity: newQuantity }),
+                body: JSON.stringify({ product_id: productId, variant_id: item.variant_id ?? null, quantity: newQuantity }),
             });
             const data = await response.json();
             if (data.success) {
@@ -99,8 +105,9 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
         setLoading(null);
     };
 
-    const removeItem = async (productId: number) => {
-        setLoading(productId);
+    const removeItem = async (item: CartItem) => {
+        const productId = item.product_id;
+        setLoading(lineKey(item));
         try {
             const response = await fetch('/shop/cart/remove', {
                 method: 'POST',
@@ -108,7 +115,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify({ product_id: productId }),
+                body: JSON.stringify({ product_id: productId, variant_id: item.variant_id ?? null }),
             });
             const data = await response.json();
             if (data.success) {
@@ -166,8 +173,8 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                             <div className="space-y-4 lg:col-span-2">
                                 {items.map((item) => (
                                     <div
-                                        key={item.product_id}
-                                        className={`flex gap-6 rounded-xl border bg-card p-6 shadow-xs ${loading === item.product_id ? 'opacity-50' : ''}`}
+                                        key={lineKey(item)}
+                                        className={`flex gap-6 rounded-xl border bg-card p-6 shadow-xs ${loading === lineKey(item) ? 'opacity-50' : ''}`}
                                     >
                                         {/* Product Image */}
                                         <Link href={item.product_url} className="shrink-0">
@@ -187,6 +194,7 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                                                     {item.product_name}
                                                 </h3>
                                             </Link>
+                                            {item.variant_name && <p className="mt-1 text-sm text-foreground/80">{item.variant_name}</p>}
                                             {item.sku && <p className="mt-1 text-sm text-muted-foreground">SKU: {item.sku}</p>}
                                             <div className="mt-2 flex items-center gap-2">
                                                 <span className="text-lg font-semibold tracking-tight text-foreground">
@@ -204,16 +212,16 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                                         <div className="flex flex-col items-end gap-4">
                                             <div className="flex items-center rounded-lg border">
                                                 <button
-                                                    onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                                                    disabled={loading === item.product_id || item.quantity <= 1}
+                                                    onClick={() => updateQuantity(item, item.quantity - 1)}
+                                                    disabled={loading === lineKey(item) || item.quantity <= 1}
                                                     className="p-2 hover:bg-accent disabled:opacity-50"
                                                 >
                                                     <Minus className="h-4 w-4" />
                                                 </button>
                                                 <span className="w-12 text-center font-medium">{item.quantity}</span>
                                                 <button
-                                                    onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                                                    disabled={loading === item.product_id || (item.stock != null && item.quantity >= item.stock)}
+                                                    onClick={() => updateQuantity(item, item.quantity + 1)}
+                                                    disabled={loading === lineKey(item) || (item.stock != null && item.quantity >= item.stock)}
                                                     className="p-2 hover:bg-accent disabled:opacity-50"
                                                 >
                                                     <Plus className="h-4 w-4" />
@@ -227,8 +235,8 @@ export default function Cart({ cart, totals, site, theme, menus }: CartProps) {
                                             </div>
 
                                             <button
-                                                onClick={() => removeItem(item.product_id)}
-                                                disabled={loading === item.product_id}
+                                                onClick={() => removeItem(item)}
+                                                disabled={loading === lineKey(item)}
                                                 className="p-2 text-destructive hover:text-destructive/80"
                                             >
                                                 <Trash2 className="h-5 w-5" />

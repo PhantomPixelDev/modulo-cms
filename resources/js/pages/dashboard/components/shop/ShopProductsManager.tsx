@@ -12,9 +12,12 @@ import { router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import { ROUTE } from '../../routes';
 import type { Paginated, ShopProduct } from '../../types';
+import { detailsFrom, detailsPayload, ProductDetailsFields, type ProductDetails, type Term } from './ProductDetailsFields';
 
 export function ShopProductsManager({
     products,
+    categories = [],
+    tags = [],
     initialEdit = null,
     canView,
     canCreate,
@@ -22,6 +25,8 @@ export function ShopProductsManager({
     canDelete,
 }: {
     products?: Paginated<ShopProduct>;
+    categories?: Term[];
+    tags?: Term[];
     /** Opened in the edit dialog on arrival (from /shop/products/{id}/edit). */
     initialEdit?: ShopProduct | null;
     canView: boolean;
@@ -55,6 +60,7 @@ export function ShopProductsManager({
     const mergedErrors = useMemo(() => ({ ...inertiaErrors, ...errors }), [inertiaErrors, errors]);
 
     const [editOpen, setEditOpen] = useState(false);
+    const [editDetails, setEditDetails] = useState<ProductDetails>(detailsFrom(null));
     const [editing, setEditing] = useState<ShopProduct | null>(null);
     const [editForm, setEditForm] = useState({
         sku: '',
@@ -84,6 +90,7 @@ export function ShopProductsManager({
             status: p.is_active ? 'published' : 'draft',
             featured_image: p.featured_image ?? '',
         });
+        setEditDetails(detailsFrom(p as unknown as Record<string, unknown>));
         setErrors({});
         setEditOpen(true);
     };
@@ -161,11 +168,10 @@ export function ShopProductsManager({
                 slug: editForm.slug || null,
                 description: editForm.description || null,
                 price: Number(editForm.price),
-                sale_price: editForm.sale_price === '' ? null : Number(editForm.sale_price),
                 currency: editForm.currency || null,
                 stock: editForm.stock === '' ? null : Number(editForm.stock),
                 status: editForm.status,
-                featured_image: editForm.featured_image || null,
+                ...detailsPayload(editDetails),
             },
             {
                 preserveScroll: true,
@@ -457,7 +463,7 @@ export function ShopProductsManager({
             </Card>
 
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Edit product</DialogTitle>
                         <DialogDescription>Update product details.</DialogDescription>
@@ -536,6 +542,14 @@ export function ShopProductsManager({
                                 </Select>
                             </div>
                         </div>
+
+                        <ProductDetailsFields
+                            value={editDetails}
+                            onChange={(patch) => setEditDetails((d) => ({ ...d, ...patch }))}
+                            categories={categories}
+                            tags={tags}
+                            errors={mergedErrors}
+                        />
 
                         <div className="space-y-2">
                             <Label htmlFor="edit-description">Description</Label>

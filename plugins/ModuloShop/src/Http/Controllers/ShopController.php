@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Plugins\ModuloShop\src\Support\MetaSql;
+use Plugins\ModuloShop\src\Support\ProductData;
 
 class ShopController
 {
@@ -227,11 +228,22 @@ class ShopController
             'featured_image' => $product->featured_image,
             'url' => url('/shop/'.$product->slug),
             'price' => (float) ($meta['price'] ?? 0),
-            'sale_price' => isset($meta['sale_price']) ? (float) $meta['sale_price'] : null,
+            // Only while the sale runs (dates included)
+            'sale_price' => ProductData::saleActive($meta) ? (float) $meta['sale_price'] : null,
+            'sale_ends_at' => ProductData::saleActive($meta) ? ($meta['sale_ends_at'] ?? null) : null,
+            'variants' => array_map(fn (array $v) => [
+                'id' => $v['id'],
+                'name' => $v['name'],
+                'price' => ProductData::unitPrice($meta, $v),
+                'in_stock' => $v['stock'] === null || $v['stock'] > 0,
+            ], ProductData::variants($meta)),
             'currency' => $meta['currency'] ?? 'USD',
             'sku' => $meta['sku'] ?? null,
             'stock' => isset($meta['stock']) ? (int) $meta['stock'] : null,
-            'in_stock' => ! isset($meta['stock']) || $meta['stock'] > 0,
+            'in_stock' => ProductData::variants($meta) !== []
+                ? collect(ProductData::variants($meta))->contains(fn ($v) => $v['stock'] === null || $v['stock'] > 0)
+                : (! isset($meta['stock']) || $meta['stock'] > 0),
+            'weight' => isset($meta['weight']) ? (float) $meta['weight'] : null,
             'featured' => (bool) ($meta['featured'] ?? false),
             'gallery' => $meta['gallery'] ?? [],
             'attributes' => $meta['attributes'] ?? [],

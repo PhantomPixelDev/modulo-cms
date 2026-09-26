@@ -42,13 +42,15 @@ class CartController
     {
         $validated = $request->validate([
             'product_id' => 'required|integer',
+            'variant_id' => 'nullable|string|max:100',
             'quantity' => 'integer|min:1',
         ]);
 
         try {
             $cart = $this->cartService->addItem(
                 $validated['product_id'],
-                $validated['quantity'] ?? 1
+                $validated['quantity'] ?? 1,
+                $validated['variant_id'] ?? null,
             );
 
             return response()->json([
@@ -69,13 +71,15 @@ class CartController
     {
         $validated = $request->validate([
             'product_id' => 'required|integer',
+            'variant_id' => 'nullable|string|max:100',
             'quantity' => 'required|integer|min:0',
         ]);
 
         try {
             $cart = $this->cartService->updateItemQuantity(
                 $validated['product_id'],
-                $validated['quantity']
+                $validated['quantity'],
+                $validated['variant_id'] ?? null,
             );
 
             return response()->json([
@@ -96,9 +100,10 @@ class CartController
     {
         $validated = $request->validate([
             'product_id' => 'required|integer',
+            'variant_id' => 'nullable|string|max:100',
         ]);
 
-        $cart = $this->cartService->removeItem($validated['product_id']);
+        $cart = $this->cartService->removeItem($validated['product_id'], $validated['variant_id'] ?? null);
 
         return response()->json([
             'success' => true,

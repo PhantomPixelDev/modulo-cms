@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use Illuminate\Support\Facades\Session;
 use Plugins\ModuloShop\src\Models\Coupon;
+use Plugins\ModuloShop\src\Support\ProductData;
 
 class CartService
 {
@@ -31,68 +32,49 @@ class CartService
         return $this->getCart()['items'] ?? [];
     }
 
-    public function addItem(int $productId, int $quantity = 1): array
+    public function addItem(int $productId, int $quantity = 1, ?string $variantId = null): array
     {
-        $product = $this->getProduct($productId);
+        [$product, $variant] = $this->resolve($productId, $variantId);
+        $stock = $this->stockOf($product, $variant);
 
-        if (! $product) {
-            throw new \InvalidArgumentException('Product not found');
-        }
-
-        $meta = $product->meta_data ?? [];
-        $stock = $meta['stock'] ?? null;
-
-        // Check stock
-        if ($stock !== null) {
-            $currentQty = $this->getItemQuantity($productId);
-            if ($currentQty + $quantity > $stock) {
-                throw new \InvalidArgumentException('Not enough stock available');
-            }
+        if ($stock !== null && $this->getItemQuantity($productId, $variantId) + $quantity > $stock) {
+            throw new \InvalidArgumentException('Not enough stock available');
         }
 
         $cart = $this->getCart();
-        $items = $cart['items'];
-
-        $itemKey = $this->findItemKey($productId);
+        $itemKey = $this->findItemKey($productId, $variantId);
 
         if ($itemKey !== null) {
-            $items[$itemKey]['quantity'] += $quantity;
+            $cart['items'][$itemKey]['quantity'] += $quantity;
         } else {
-            $items[] = [
+            $cart['items'][] = [
                 'product_id' => $productId,
+                'variant_id' => $variant['id'] ?? null,
                 'quantity' => $quantity,
                 'added_at' => now()->toISOString(),
             ];
         }
-
-        $cart['items'] = $items;
 
         $this->saveCart($cart);
 
         return $this->getCartWithProducts();
     }
 
-    public function updateItemQuantity(int $productId, int $quantity): array
+    public function updateItemQuantity(int $productId, int $quantity, ?string $variantId = null): array
     {
         if ($quantity <= 0) {
-            return $this->removeItem($productId);
+            return $this->removeItem($productId, $variantId);
         }
 
-        $product = $this->getProduct($productId);
-
-        if (! $product) {
-            throw new \InvalidArgumentException('Product not found');
-        }
-
-        $meta = $product->meta_data ?? [];
-        $stock = $meta['stock'] ?? null;
+        [$product, $variant] = $this->resolve($productId, $variantId);
+        $stock = $this->stockOf($product, $variant);
 
         if ($stock !== null && $quantity > $stock) {
             throw new \InvalidArgumentException('Not enough stock available');
         }
 
         $cart = $this->getCart();
-        $itemKey = $this->findItemKey($productId);
+        $itemKey = $this->findItemKey($productId, $variantId);
 
         if ($itemKey !== null) {
             $cart['items'][$itemKey]['quantity'] = $quantity;
@@ -102,10 +84,10 @@ class CartService
         return $this->getCartWithProducts();
     }
 
-    public function removeItem(int $productId): array
+    public function removeItem(int $productId, ?string $variantId = null): array
     {
         $cart = $this->getCart();
-        $itemKey = $this->findItemKey($productId);
+        $itemKey = $this->findItemKey($productId, $variantId);
 
         if ($itemKey !== null) {
             unset($cart['items'][$itemKey]);
@@ -128,17 +110,11 @@ class CartService
         return array_sum(array_column($items, 'quantity'));
     }
 
-    public function getItemQuantity(int $productId): int
+    public function getItemQuantity(int $productId, ?string $variantId = null): int
     {
-        $itemKey = $this->findItemKey($productId);
+        $itemKey = $this->findItemKey($productId, $variantId);
 
-        if ($itemKey !== null) {
-            $items = $this->getItems();
-
-            return $items[$itemKey]['quantity'] ?? 0;
-        }
-
-        return 0;
+        return $itemKey !== null ? (int) ($this->getItems()[$itemKey]['quantity'] ?? 0) : 0;
     }
 
     public function getCartWithProducts(): array
@@ -159,34 +135,108 @@ class CartService
             }
 
             $meta = $product->meta_data ?? [];
-            $price = (float) ($meta['sale_price'] ?? $meta['price'] ?? 0);
-            $originalPrice = (float) ($meta['price'] ?? 0);
-            $itemSubtotal = $price * $item['quantity'];
+            $variantId = $item['variant_id'] ?? null;
+            $variant = $variantId !== null ? ProductData::variant($meta, $variantId) : null;
+
+            // A variation that was deleted since: the line can't be bought any more
+            if ($variantId !== null && $variant === null) {
+                continue;
+            }
+
+            $price = ProductData::unitPrice($meta, $variant);
+            $itemSubtotal = round($price * $item['quantity'], 2);
             $subtotal += $itemSubtotal;
+            $stock = $this->stockOf($product, $variant);
 
             $items[] = [
+                'key' => ProductData::lineKey($product->id, $variantId),
                 'product_id' => $product->id,
+                'variant_id' => $variantId,
+                'variant_name' => $variant['name'] ?? null,
                 'product_name' => $product->title,
                 'product_slug' => $product->slug,
                 'product_image' => $product->featured_image,
                 'product_url' => url('/shop/'.$product->slug),
-                'sku' => $meta['sku'] ?? null,
+                'sku' => $variant['sku'] ?? $meta['sku'] ?? null,
                 'price' => $price,
-                'original_price' => $originalPrice,
+                'original_price' => (float) ($variant['price'] ?? $meta['price'] ?? 0),
                 'quantity' => $item['quantity'],
                 'subtotal' => $itemSubtotal,
-                'stock' => $meta['stock'] ?? null,
-                'in_stock' => ! isset($meta['stock']) || $meta['stock'] > 0,
+                'stock' => $stock,
+                'in_stock' => $stock === null || $stock > 0,
             ];
         }
 
         return [
             'items' => $items,
             'item_count' => $this->getItemCount(),
-            'subtotal' => $subtotal,
+            'subtotal' => round($subtotal, 2),
             'currency' => $currency,
             'is_empty' => empty($items),
         ];
+    }
+
+    /**
+     * Stock quantities per cart line (product, or product:variation), as
+     * StockService takes them.
+     *
+     * @param  array<string, mixed>  $cart  From getCartWithProducts()
+     * @return array<string, int>
+     */
+    public function quantities(array $cart): array
+    {
+        $quantities = [];
+        foreach ($cart['items'] as $item) {
+            $key = ProductData::lineKey((int) $item['product_id'], $item['variant_id'] ?? null);
+            $quantities[$key] = ($quantities[$key] ?? 0) + (int) $item['quantity'];
+        }
+
+        return $quantities;
+    }
+
+    /**
+     * @return array{0: Post, 1: array<string, mixed>|null}
+     */
+    protected function resolve(int $productId, ?string $variantId): array
+    {
+        $product = $this->getProduct($productId);
+
+        if (! $product) {
+            throw new \InvalidArgumentException('Product not found');
+        }
+
+        $meta = $product->meta_data ?? [];
+        $hasVariants = ProductData::variants($meta) !== [];
+
+        if ($hasVariants && ($variantId === null || $variantId === '')) {
+            throw new \InvalidArgumentException('Please choose an option first');
+        }
+
+        $variant = $hasVariants ? ProductData::variant($meta, $variantId) : null;
+
+        if ($hasVariants && $variant === null) {
+            throw new \InvalidArgumentException('That option is no longer available');
+        }
+
+        return [$product, $variant];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $variant
+     */
+    protected function stockOf(Post $product, ?array $variant): ?int
+    {
+        if (! $this->settings->get('enable_stock_management', true)) {
+            return null;
+        }
+
+        if ($variant !== null) {
+            return $variant['stock'];
+        }
+
+        $stock = ($product->meta_data ?? [])['stock'] ?? null;
+
+        return $stock === null || $stock === '' ? null : (int) $stock;
     }
 
     /**
@@ -252,12 +302,10 @@ class CartService
         Session::put(self::SESSION_KEY, $cart);
     }
 
-    protected function findItemKey(int $productId): ?int
+    protected function findItemKey(int $productId, ?string $variantId = null): ?int
     {
-        $items = $this->getItems();
-
-        foreach ($items as $key => $item) {
-            if ($item['product_id'] === $productId) {
+        foreach ($this->getItems() as $key => $item) {
+            if ($item['product_id'] === $productId && ($item['variant_id'] ?? null) === ($variantId ?: null)) {
                 return $key;
             }
         }
