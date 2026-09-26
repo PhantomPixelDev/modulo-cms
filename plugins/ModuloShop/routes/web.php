@@ -136,6 +136,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
             ->name('payments.update');
         Route::post('/orders/{order}/refund', [OrderController::class, 'refund'])
             ->name('orders.refund');
+        Route::post('/orders/{order}/notes', [OrderController::class, 'addNote'])
+            ->name('orders.notes.store');
 
         Route::get('/coupons', [CouponController::class, 'index'])
             ->name('coupons.index');

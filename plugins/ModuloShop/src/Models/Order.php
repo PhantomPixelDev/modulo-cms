@@ -52,6 +52,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, OrderItem> $items
+ * @property-read Collection<int, OrderNote> $notes
  */
 class Order extends Model
 {
@@ -175,6 +176,39 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class, 'order_id');
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(OrderNote::class, 'order_id')->oldest('id');
+    }
+
+    /**
+     * Add a line to the order's history. Staff notes carry who wrote them;
+     * changes made by the system (payments, expiry) don't.
+     */
+    public function addNote(string $message, string $type = OrderNote::SYSTEM, ?int $userId = null, bool $customerNotified = false): OrderNote
+    {
+        return OrderNote::create([
+            'order_id' => $this->id,
+            'message' => $message,
+            'type' => $type,
+            'user_id' => $userId,
+            'customer_notified' => $customerNotified,
+        ]);
+    }
+
+    /**
+     * Quantities per product, as stock sees them.
+     *
+     * @return array<int, int>
+     */
+    public function quantities(): array
+    {
+        return $this->items()->whereNotNull('product_id')->get()
+            ->groupBy('product_id')
+            ->map(fn ($items) => (int) $items->sum('quantity'))
+            ->all();
     }
 
     public function isPaid(): bool

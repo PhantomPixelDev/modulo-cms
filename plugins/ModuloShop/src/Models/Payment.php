@@ -4,6 +4,7 @@ namespace Plugins\ModuloShop\src\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property float $amount
  * @property string $currency
  * @property array<string, mixed>|null $data
+ * @property Carbon|null $created_at
  * @property Order $order
  */
 class Payment extends Model

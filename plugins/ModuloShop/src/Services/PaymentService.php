@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Plugins\ModuloShop\src\Mail\OrderPlacedAdmin;
 use Plugins\ModuloShop\src\Mail\OrderPlacedCustomer;
+use Plugins\ModuloShop\src\Mail\OrderRefundedCustomer;
 use Plugins\ModuloShop\src\Models\Coupon;
 use Plugins\ModuloShop\src\Models\GatewaySetting;
 use Plugins\ModuloShop\src\Models\Order;
+use Plugins\ModuloShop\src\Models\OrderNote;
 use Plugins\ModuloShop\src\Models\Payment;
 use Plugins\ModuloShop\src\Payments\Gateways\BankTransferGateway;
 use Plugins\ModuloShop\src\Payments\Gateways\CashOnDeliveryGateway;
@@ -224,6 +226,7 @@ class PaymentService
                 // Never mark an order paid for less than it costs
                 $payment->status = Payment::FAILED;
                 $payment->save();
+                $locked->addNote(sprintf('%s reported %s %s, which does not cover the order total; not marked as paid.', $gateway, number_format($amount, 2), strtoupper($currency)), OrderNote::PAYMENT);
                 ActivityLog::record('shop.payment_mismatch', "Payment for order {$locked->order_number} did not match its total", $locked, [
                     'gateway' => $gateway, 'paid' => $amount, 'currency' => $currency, 'due' => (float) $locked->total,
                 ]);
@@ -251,6 +254,7 @@ class PaymentService
             }
 
             $locked->save();
+            $locked->addNote(sprintf('Payment of %s %s received via %s (%s).', number_format($amount, 2), strtoupper($currency), $gateway, $providerRef), OrderNote::PAYMENT);
 
             return true;
         });
@@ -269,7 +273,7 @@ class PaymentService
      */
     public function markRefunded(Order $order, string $note): void
     {
-        $releasedStock = DB::transaction(function () use ($order) {
+        $releasedStock = DB::transaction(function () use ($order, $note) {
             $locked = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->payment_status === Order::PAYMENT_REFUNDED) {
@@ -288,11 +292,26 @@ class PaymentService
                 app(StockService::class)->release($locked);
             }
 
-            return $releases;
+            $locked->addNote(ucfirst($note).'.', OrderNote::PAYMENT, auth()->id());
+
+            return ['releases' => $releases];
         });
+
+        if ($releasedStock === false) {
+            return; // already refunded
+        }
+        $releasedStock = $releasedStock['releases'];
 
         $order->refresh();
         ActivityLog::record('shop.order_refunded', "Order {$order->order_number}: {$note}", $order);
+
+        if ($order->customer_email) {
+            try {
+                Mail::to($order->customer_email)->send(new OrderRefundedCustomer($order));
+            } catch (\Throwable $e) {
+                logger()->error('Failed to send order refunded email: '.$e->getMessage());
+            }
+        }
 
         if ($releasedStock) {
             app(PostService::class)->flushCache();
@@ -324,6 +343,10 @@ class PaymentService
 
             return true;
         });
+
+        if ($cancelled) {
+            $order->addNote("Cancelled: {$reason}. Stock returned.", OrderNote::SYSTEM);
+        }
 
         if ($cancelled) {
             $order->refresh();
