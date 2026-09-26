@@ -218,6 +218,26 @@ export interface ShopCoupon extends BaseEntity {
     is_active: boolean;
 }
 
+export interface ShopGatewayField {
+    key: string;
+    label: string;
+    type: 'text' | 'secret' | 'select' | 'textarea';
+    options?: Record<string, string>;
+    help?: string;
+}
+
+export interface ShopGateway {
+    id: string;
+    label: string;
+    online: boolean;
+    enabled: boolean;
+    configured: boolean;
+    fields: ShopGatewayField[];
+    /** Secret fields are true/false (set or not), never the value */
+    values: Record<string, string | boolean | null>;
+    webhook_url: string | null;
+}
+
 export interface ShopOrder extends BaseEntity {
     order_number: string;
     status: string;
@@ -345,6 +365,7 @@ export interface DashboardProps {
     editProduct?: ShopProduct | null;
     shopOrders?: Paginated<ShopOrder>;
     shopCoupons?: Paginated<ShopCoupon>;
+    shopGateways?: ShopGateway[];
     shopOrder?: ShopOrder;
     shopSettings?: Record<string, any>;
     // Dashboard activity and status

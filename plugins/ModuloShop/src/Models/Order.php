@@ -3,15 +3,55 @@
 namespace Plugins\ModuloShop\src\Models;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
+ * @property int $id
+ * @property string $order_number
+ * @property int|null $user_id
+ * @property string $status
+ * @property string $subtotal
+ * @property string $discount
+ * @property string $shipping
+ * @property string $tax
+ * @property string $total
+ * @property string $currency
+ * @property string $customer_email
+ * @property string $customer_name
+ * @property string|null $customer_phone
+ * @property string $billing_address_1
+ * @property string|null $billing_address_2
+ * @property string $billing_city
+ * @property string|null $billing_state
+ * @property string $billing_postcode
+ * @property string $billing_country
+ * @property bool $ship_to_different
+ * @property string|null $shipping_address_1
+ * @property string|null $shipping_address_2
+ * @property string|null $shipping_city
+ * @property string|null $shipping_state
+ * @property string|null $shipping_postcode
+ * @property string|null $shipping_country
+ * @property string|null $payment_method
+ * @property string $payment_status
+ * @property string|null $transaction_id
+ * @property Carbon|null $paid_at
  * @property string|null $shipping_method Name of the method chosen at checkout
+ * @property string|null $tracking_number
+ * @property Carbon|null $shipped_at
+ * @property string|null $customer_note
+ * @property string|null $admin_note
  * @property string|null $coupon_code
  * @property array<string, mixed>|null $meta_data
+ * @property string|null $access_token
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, OrderItem> $items
  */
 class Order extends Model
 {

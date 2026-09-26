@@ -6,6 +6,17 @@ use App\Models\Post;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $order_id
+ * @property int|null $product_id
+ * @property string $product_name
+ * @property string|null $product_sku
+ * @property string $price
+ * @property int $quantity
+ * @property string $subtotal
+ * @property array<string, mixed>|null $product_data
+ */
 class OrderItem extends Model
 {
     protected $table = 'shop_order_items';

@@ -13,6 +13,8 @@ use Inertia\Response;
 use Plugins\ModuloShop\src\Mail\OrderCompletedCustomer;
 use Plugins\ModuloShop\src\Mail\OrderShippedCustomer;
 use Plugins\ModuloShop\src\Models\Order;
+use Plugins\ModuloShop\src\Payments\PaymentException;
+use Plugins\ModuloShop\src\Services\PaymentService;
 use Plugins\ModuloShop\src\Services\StockService;
 
 class OrderController
@@ -150,6 +152,42 @@ class OrderController
         }
 
         return back()->with('success', 'Order updated successfully');
+    }
+
+    /**
+     * Refund the full amount: at the provider for online payments, as a
+     * record only for cash and bank transfer (money goes back by hand).
+     */
+    public function refund(Request $request, Order $order): JsonResponse|RedirectResponse
+    {
+        $this->authorizeManage();
+
+        if (! $order->isPaid()) {
+            $message = 'Only paid orders can be refunded.';
+
+            return $request->wantsJson() ? response()->json(['error' => $message], 422) : back()->with('error', $message);
+        }
+
+        $payments = app(PaymentService::class);
+        $gateway = $payments->gateway($order->payment_method);
+
+        try {
+            if ($gateway?->isOnline()) {
+                $gateway->refund($order);
+            }
+        } catch (PaymentException $e) {
+            return $request->wantsJson() ? response()->json(['error' => $e->getMessage()], 422) : back()->with('error', $e->getMessage());
+        }
+
+        $payments->markRefunded($order, $gateway?->isOnline() ? "refunded via {$gateway->label()}" : 'marked as refunded');
+
+        $message = $gateway?->isOnline()
+            ? "Order refunded via {$gateway->label()}."
+            : 'Order marked as refunded. Send the money back to the customer yourself.';
+
+        return $request->wantsJson()
+            ? response()->json(['success' => true, 'message' => $message])
+            : back()->with('success', $message);
     }
 
     public function destroy(Request $request, Order $order): JsonResponse|RedirectResponse

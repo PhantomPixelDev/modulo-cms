@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { router } from '@inertiajs/react';
+import { ROUTE } from '../../routes';
 import type { ShopOrder } from '../../types';
 
 interface OrderItem {
@@ -94,9 +95,20 @@ export function ShopOrderView({ order, canManage }: ShopOrderViewProps) {
                         <Button variant="outline" onClick={() => router.visit('/dashboard/admin/shop/orders')}>
                             Back to Orders
                         </Button>
-                        {canManage && (
-                            <Button variant="outline" onClick={() => router.visit('/dashboard/admin/shop/orders')}>
-                                Manage Orders
+                        {canManage && order.payment_status === 'paid' && (
+                            <Button
+                                variant="destructive"
+                                onClick={() => {
+                                    if (
+                                        confirm(
+                                            `Refund ${formatPrice(order.total, order.currency)} for order ${order.order_number}? Online payments are refunded at the provider; cash and bank transfers are only marked as refunded.`,
+                                        )
+                                    ) {
+                                        router.post(ROUTE.shop.orders.refund(order.id), {}, { preserveScroll: true });
+                                    }
+                                }}
+                            >
+                                Refund
                             </Button>
                         )}
                     </div>
