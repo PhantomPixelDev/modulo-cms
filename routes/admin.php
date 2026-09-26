@@ -14,7 +14,7 @@ use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\UpdateCenterController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
-use AppHttpControllersContentAutosaveController;
+use App\Http\Controllers\Content\AutosaveController;
 use App\Http\Controllers\Content\MenuController;
 use App\Http\Controllers\Content\MenuItemController;
 use App\Http\Controllers\Content\PagesController;
