@@ -1,3 +1,4 @@
+import { MenuFields } from '@/components/menus/MenuFields';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +17,6 @@ import type { Locale } from '@/pages/dashboard/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ExternalLink, GripVertical, Loader2, Pencil, Search, Trash2, X } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { MenuFields } from '@/components/menus/MenuFields';
 import { canMove, flattenTree, indent, moveDown, moveTo, moveUp, outdent, project, toPayload, type TreeNode } from './menuTree';
 
 interface MenuItemDTO {
@@ -85,7 +85,8 @@ export default function AdminMenusShow() {
     const can = (permission: string) => isAdmin() || hasPermission(permission);
 
     const canEditMenu = can('edit menus');
-    const canAddItems = can('create menu items');
+    // Items belong to the menu: editing the menu covers them (MenuItemPolicy)
+    const canAddItems = canEditMenu;
 
     return (
         <div className="space-y-6 px-3 py-4 sm:px-6 sm:py-6">
@@ -131,8 +132,8 @@ export default function AdminMenusShow() {
                     pages={pages}
                     locales={locales}
                     canReorder={canEditMenu}
-                    canEditItems={can('edit menu items')}
-                    canDeleteItems={can('delete menu items')}
+                    canEditItems={canEditMenu}
+                    canDeleteItems={canEditMenu}
                 />
             </div>
         </div>
@@ -244,7 +245,9 @@ function MenuBuilder({
             </CardHeader>
             <CardContent>
                 {tree.length === 0 ? (
-                    <p className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">{t('dashboard.menus.builder.empty')}</p>
+                    <p className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
+                        {t('dashboard.menus.builder.empty')}
+                    </p>
                 ) : (
                     <ul ref={listRef} className="space-y-2" onDragOver={(event) => drag && event.preventDefault()} onDrop={onDrop}>
                         {tree.map((node) => {
@@ -276,7 +279,10 @@ function MenuBuilder({
                                     >
                                         <div className="flex items-center gap-2 p-2 pr-3">
                                             {canReorder && (
-                                                <span className="cursor-grab text-muted-foreground active:cursor-grabbing" title={t('dashboard.menus.builder.drag')}>
+                                                <span
+                                                    className="cursor-grab text-muted-foreground active:cursor-grabbing"
+                                                    title={t('dashboard.menus.builder.drag')}
+                                                >
                                                     <GripVertical className="h-4 w-4" />
                                                 </span>
                                             )}
@@ -292,7 +298,10 @@ function MenuBuilder({
                                                         <Badge variant="secondary">{t(`dashboard.menus.item.visible_${item.visible_to}`)}</Badge>
                                                     )}
                                                     {item.target === '_blank' && (
-                                                        <ExternalLink className="h-3 w-3 text-muted-foreground" aria-label={t('dashboard.menus.item.new_tab')} />
+                                                        <ExternalLink
+                                                            className="h-3 w-3 text-muted-foreground"
+                                                            aria-label={t('dashboard.menus.item.new_tab')}
+                                                        />
                                                     )}
                                                 </div>
                                                 <div className="truncate text-xs text-muted-foreground">{info.target}</div>
@@ -300,23 +309,43 @@ function MenuBuilder({
                                             <div className="flex shrink-0 items-center">
                                                 {canReorder && (
                                                     <>
-                                                        <IconButton label={t('dashboard.menus.actions.move_up')} disabled={!moves.up} onClick={() => save(moveUp(tree, node.id))}>
+                                                        <IconButton
+                                                            label={t('dashboard.menus.actions.move_up')}
+                                                            disabled={!moves.up}
+                                                            onClick={() => save(moveUp(tree, node.id))}
+                                                        >
                                                             <ArrowUp />
                                                         </IconButton>
-                                                        <IconButton label={t('dashboard.menus.actions.move_down')} disabled={!moves.down} onClick={() => save(moveDown(tree, node.id))}>
+                                                        <IconButton
+                                                            label={t('dashboard.menus.actions.move_down')}
+                                                            disabled={!moves.down}
+                                                            onClick={() => save(moveDown(tree, node.id))}
+                                                        >
                                                             <ArrowDown />
                                                         </IconButton>
-                                                        <IconButton label={t('dashboard.menus.actions.outdent')} disabled={!moves.outdent} onClick={() => save(outdent(tree, node.id))}>
+                                                        <IconButton
+                                                            label={t('dashboard.menus.actions.outdent')}
+                                                            disabled={!moves.outdent}
+                                                            onClick={() => save(outdent(tree, node.id))}
+                                                        >
                                                             <ArrowLeft />
                                                         </IconButton>
-                                                        <IconButton label={t('dashboard.menus.actions.indent')} disabled={!moves.indent} onClick={() => save(indent(tree, node.id))}>
+                                                        <IconButton
+                                                            label={t('dashboard.menus.actions.indent')}
+                                                            disabled={!moves.indent}
+                                                            onClick={() => save(indent(tree, node.id))}
+                                                        >
                                                             <ArrowRight />
                                                         </IconButton>
                                                     </>
                                                 )}
                                                 {canEditItems && (
                                                     <IconButton
-                                                        label={t(editing === node.id ? 'dashboard.menus.actions.close' : 'dashboard.menus.actions.edit_item')}
+                                                        label={t(
+                                                            editing === node.id
+                                                                ? 'dashboard.menus.actions.close'
+                                                                : 'dashboard.menus.actions.edit_item',
+                                                        )}
                                                         onClick={() => setEditing(editing === node.id ? null : node.id)}
                                                         pressed={editing === node.id}
                                                     >
@@ -329,7 +358,9 @@ function MenuBuilder({
                                                         className="text-destructive"
                                                         onClick={() => {
                                                             if (!confirm(t('dashboard.menus.confirm_remove_item', { name: item.label }))) return;
-                                                            router.delete(route('dashboard.admin.menu-items.destroy', item.id), { preserveScroll: true });
+                                                            router.delete(route('dashboard.admin.menu-items.destroy', item.id), {
+                                                                preserveScroll: true,
+                                                            });
                                                         }}
                                                     >
                                                         <Trash2 />
@@ -361,13 +392,7 @@ function isInside(tree: TreeNode[], ancestorId: number, id: number): boolean {
     return false;
 }
 
-function IconButton({
-    label,
-    children,
-    className,
-    pressed,
-    ...props
-}: { label: string; pressed?: boolean } & React.ComponentProps<typeof Button>) {
+function IconButton({ label, children, className, pressed, ...props }: { label: string; pressed?: boolean } & React.ComponentProps<typeof Button>) {
     return (
         <Button
             type="button"
@@ -457,7 +482,12 @@ function ItemEditor({ item, pages, locales, onDone }: { item: MenuItemDTO; pages
                 {type === 'url' && (
                     <div className="space-y-1.5 sm:col-span-2">
                         <Label htmlFor={`url-${item.id}`}>{t('dashboard.menus.item.url')}</Label>
-                        <Input id={`url-${item.id}`} value={data.url} onChange={(event) => setData('url', event.target.value)} placeholder="https://…" />
+                        <Input
+                            id={`url-${item.id}`}
+                            value={data.url}
+                            onChange={(event) => setData('url', event.target.value)}
+                            placeholder="https://…"
+                        />
                         <p className="text-xs text-muted-foreground">{t('dashboard.menus.add.link_url_hint')}</p>
                         {errors.url && <p className="text-xs text-destructive">{errors.url}</p>}
                     </div>
@@ -609,14 +639,18 @@ function AddItems({ menuId, items, pages }: { menuId: number; items: MenuItemDTO
                                     />
                                 </div>
                                 <ul className="max-h-64 space-y-1 overflow-y-auto rounded-md border p-2">
-                                    {visible.length === 0 && <li className="p-2 text-sm text-muted-foreground">{t('dashboard.menus.add.pages_none_found')}</li>}
+                                    {visible.length === 0 && (
+                                        <li className="p-2 text-sm text-muted-foreground">{t('dashboard.menus.add.pages_none_found')}</li>
+                                    )}
                                     {visible.map((page) => (
                                         <li key={page.id}>
                                             <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent/50">
                                                 <Checkbox
                                                     checked={selected.includes(page.id)}
                                                     onCheckedChange={(checked) =>
-                                                        setSelected((current) => (checked === true ? [...current, page.id] : current.filter((id) => id !== page.id)))
+                                                        setSelected((current) =>
+                                                            checked === true ? [...current, page.id] : current.filter((id) => id !== page.id),
+                                                        )
                                                     }
                                                 />
                                                 <span className="flex-1 truncate">{page.title}</span>
@@ -647,7 +681,12 @@ function AddItems({ menuId, items, pages }: { menuId: number; items: MenuItemDTO
                         <form onSubmit={addLink} className="space-y-3">
                             <div className="space-y-1.5">
                                 <Label htmlFor="link-label">{t('dashboard.menus.add.link_label')}</Label>
-                                <Input id="link-label" value={link.data.label} onChange={(event) => link.setData('label', event.target.value)} required />
+                                <Input
+                                    id="link-label"
+                                    value={link.data.label}
+                                    onChange={(event) => link.setData('label', event.target.value)}
+                                    required
+                                />
                                 {link.errors.label && <p className="text-xs text-destructive">{link.errors.label}</p>}
                             </div>
                             <div className="space-y-1.5">

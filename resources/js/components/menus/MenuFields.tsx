@@ -52,14 +52,25 @@ export function MenuFields({
                         </SelectContent>
                     </Select>
                 ) : (
-                    <Input id="menu-location" value={data.location} onChange={(event) => setData('location', event.target.value)} placeholder="header" />
+                    <Input
+                        id="menu-location"
+                        value={data.location}
+                        onChange={(event) => setData('location', event.target.value)}
+                        placeholder="header"
+                    />
                 )}
                 <p className="text-xs text-muted-foreground">{t('dashboard.menus.fields.location_hint')}</p>
                 {errors.location && <p className="text-xs text-destructive">{errors.location}</p>}
             </div>
             <div className="space-y-1.5">
                 <Label htmlFor="menu-slug">{t('dashboard.menus.fields.slug')}</Label>
-                <Input id="menu-slug" value={data.slug} onChange={(event) => setData('slug', event.target.value)} placeholder="main-navigation" required />
+                <Input
+                    id="menu-slug"
+                    value={data.slug}
+                    onChange={(event) => setData('slug', event.target.value)}
+                    placeholder="main-navigation"
+                    required
+                />
                 <p className="text-xs text-muted-foreground">{t('dashboard.menus.fields.slug_hint')}</p>
                 {errors.slug && <p className="text-xs text-destructive">{errors.slug}</p>}
             </div>

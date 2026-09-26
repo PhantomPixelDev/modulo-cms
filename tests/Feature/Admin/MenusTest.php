@@ -102,7 +102,6 @@ it('denies create/show/edit/update/destroy without respective permissions', func
     $this->delete(route('dashboard.admin.menus.destroy', $menu))->assertForbidden();
 });
 
-
 it('saves the whole tree from the builder', function () {
     $this->actingAs(menuUser(['view menus', 'edit menus']));
     $menu = Menu::create(['name' => 'Main', 'slug' => 'main']);
@@ -153,7 +152,7 @@ it('needs the edit permission to reorder', function () {
 });
 
 it('adds several pages at the end of the menu', function () {
-    $this->actingAs(menuUser(['view menus', 'create menu items']));
+    $this->actingAs(menuUser(['view menus', 'edit menus']));
     $menu = Menu::create(['name' => 'Main', 'slug' => 'main']);
     MenuItem::create(['menu_id' => $menu->id, 'label' => 'Home', 'url' => '/', 'order' => 4]);
     $about = makePublishedPage(['title' => 'About', 'slug' => 'about']);

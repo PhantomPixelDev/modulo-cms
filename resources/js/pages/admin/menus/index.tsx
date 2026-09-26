@@ -95,7 +95,9 @@ export default function AdminMenusIndex() {
                                                     {menu.name}
                                                 </Link>
                                                 <Badge variant={menu.location ? 'default' : 'outline'}>
-                                                    {menu.location ? (locations[menu.location] ?? menu.location) : t('dashboard.menus.fields.location_none')}
+                                                    {menu.location
+                                                        ? (locations[menu.location] ?? menu.location)
+                                                        : t('dashboard.menus.fields.location_none')}
                                                 </Badge>
                                             </div>
                                             <p className="text-xs text-muted-foreground">
