@@ -14,17 +14,11 @@
 * **plugins:** working plugin frontend SDK (import map + shims + Vite preset) ([ef22b9d](https://github.com/PhantomPixelDev/modulo-cms/commit/ef22b9d06140a6643c6d271279aecee11bfd3d31))
 * **security:** activity log with an admin page ([6d1cf58](https://github.com/PhantomPixelDev/modulo-cms/commit/6d1cf582da6ae6c23a952f915ca8f64377808ea4))
 * **security:** security headers with nonce CSP, stronger passwords, two-factor login ([ebaa393](https://github.com/PhantomPixelDev/modulo-cms/commit/ebaa3937bb9be694b37cf62f58ec326b7816ae2c))
-* **shop:** customer accounts, remembered addresses and terms (ModuloShop 1.4.0) ([79bdd8e](https://github.com/PhantomPixelDev/modulo-cms/commit/79bdd8e37e17ad76acee69ee295b99af01ce470b))
 * **shop:** customer accounts, remembered addresses and terms (ModuloShop 1.4.0) ([928f4ea](https://github.com/PhantomPixelDev/modulo-cms/commit/928f4ea67ca91c2b71fcac61a1cb73321b6f2b03))
-* **shop:** editable orders with history, notes and customer emails (ModuloShop 1.3.0) ([2d1eca7](https://github.com/PhantomPixelDev/modulo-cms/commit/2d1eca70c145cd4ab52b91cc00ed94a68e1a25cf))
 * **shop:** editable orders with history, notes and customer emails (ModuloShop 1.3.0) ([3527b62](https://github.com/PhantomPixelDev/modulo-cms/commit/3527b62b8533091833ce3020e59bb321f5920fcf))
-* **shop:** online payments with Stripe, PayPal and Mollie (ModuloShop 1.2.0) ([7eed562](https://github.com/PhantomPixelDev/modulo-cms/commit/7eed562d4934fcab02b3b71937b0bc62a5d33f00))
 * **shop:** online payments with Stripe, PayPal and Mollie (ModuloShop 1.2.0) ([3fc484b](https://github.com/PhantomPixelDev/modulo-cms/commit/3fc484b65d8c38d8c257fad7d302912433c832ea))
-* **shop:** product editor, sale dates and variations (ModuloShop 1.5.0) ([e471e43](https://github.com/PhantomPixelDev/modulo-cms/commit/e471e43d5b05795b5c7189e8e466cf47864b74b8))
 * **shop:** product editor, sale dates and variations (ModuloShop 1.5.0) ([2bca15d](https://github.com/PhantomPixelDev/modulo-cms/commit/2bca15d5b990cd62a1ed0b444a389e67df492e24))
-* **shop:** store money format, mini-cart, product rich results, invoices (ModuloShop 1.6.0) ([5f693d3](https://github.com/PhantomPixelDev/modulo-cms/commit/5f693d3e0a79f0880adf3b1d46b1d515c25c056a))
 * **shop:** store money format, mini-cart, product rich results, invoices (ModuloShop 1.6.0) ([dfa6985](https://github.com/PhantomPixelDev/modulo-cms/commit/dfa69851acb6601b18ec8e962c939ba19e74387b))
-* **shop:** tax, shipping methods and coupons (ModuloShop 1.1.0) ([6111aad](https://github.com/PhantomPixelDev/modulo-cms/commit/6111aad8e1b13bf93b6663507a06d985144c0d5e))
 * **shop:** tax, shipping methods and coupons (ModuloShop 1.1.0) ([f27561f](https://github.com/PhantomPixelDev/modulo-cms/commit/f27561f26117f3ceb4f0e3e858bbc6af279eaec5))
 * signed releases, release manifest and schema-version guard ([0a7f216](https://github.com/PhantomPixelDev/modulo-cms/commit/0a7f2163c47de3eb74eae1cf98f9bbc61003c32c))
 * **themes:** child themes installable from the registry ([2730d44](https://github.com/PhantomPixelDev/modulo-cms/commit/2730d44ec636d0782f6cc942a88b42c57b4181a4))
@@ -35,7 +29,6 @@
 
 * **contact-form:** send notifications when no recipient is set; subject optional ([935cf0c](https://github.com/PhantomPixelDev/modulo-cms/commit/935cf0cdb3932a97b2a8bc2db547c0c89e40dca1))
 * make upgrades, updates and plugin installs safe to rely on ([bfc63a3](https://github.com/PhantomPixelDev/modulo-cms/commit/bfc63a3bcd1708e61e3b572b709423537cd6181f))
-* phase 0 correctness pass (shop admin, publishing, permalinks) ([ddfa992](https://github.com/PhantomPixelDev/modulo-cms/commit/ddfa992870248013bbbb79f6714c462b0a1b4e66))
 * phase 0 correctness pass (shop admin, publishing, permalinks) ([79e1e56](https://github.com/PhantomPixelDev/modulo-cms/commit/79e1e56cbf4cfb6bebe04d6d061785230c8e5d88))
 * **plugins:** check the route cache file itself before rebuilding ([00c5e13](https://github.com/PhantomPixelDev/modulo-cms/commit/00c5e139ed0aa4b3fce4114ba28a8d8145a3a35d))
 * **plugins:** plugin pages 404 after activation; contact form notifications ([1574e77](https://github.com/PhantomPixelDev/modulo-cms/commit/1574e77db1f533bb763e36bd2dc51c7ddaeeb361))
@@ -46,7 +39,6 @@
 
 ### Performance
 
-* send admin translations once and keep caches after install ([7f7df1e](https://github.com/PhantomPixelDev/modulo-cms/commit/7f7df1e630ba31ee3d1abe8311cc422d4f60c114))
 * send admin translations once and keep caches after install ([90542b1](https://github.com/PhantomPixelDev/modulo-cms/commit/90542b19dc74b59d665b6340fffb0e5dae4a56c5))
 * send the Ziggy route map once per audience ([3367dfe](https://github.com/PhantomPixelDev/modulo-cms/commit/3367dfe73846a4e418fae154718eb679f28eb739))
 
