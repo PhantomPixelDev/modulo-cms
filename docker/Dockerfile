@@ -71,10 +71,12 @@ RUN cp -a plugins plugins-bundled
 
 RUN set -eux; \
     rm -f .env bootstrap/cache/*.php; \
-    mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; \
+    mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache public/plugins; \
     # Discover only the installed (non-dev) packages; no database exists at build time
     DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan package:discover --ansi; \
-    chown -R www-data:www-data storage bootstrap/cache
+    # public/plugins is a named volume; a new volume takes this directory's owner,
+    # so the app can publish plugin bundles into it
+    chown -R www-data:www-data storage bootstrap/cache public/plugins
 
 COPY docker/entrypoint.sh /usr/local/bin/modulo-entrypoint
 RUN chmod +x /usr/local/bin/modulo-entrypoint

@@ -54,7 +54,7 @@ if [ "${CONTAINER_ROLE:-app}" = "app" ]; then
 
   # Publish plugin assets to the volume nginx serves from; the web image bakes
   # public/ in at build time and cannot see runtime writes otherwise.
-  php artisan plugin:publish-assets >/dev/null 2>&1 || true
+  php artisan plugin:publish-assets >/dev/null 2>&1     || echo "WARNING: plugin assets could not be published. public/plugins must be writable by www-data; for a volume created by an older image run: docker compose run --rm --user root app chown -R www-data:www-data public/plugins" >&2
 
   # First boot: make sure the public site has a theme (never overrides an active one)
   php artisan theme:ensure "${DEFAULT_THEME:-modern-react}" || echo "WARNING: no active theme; install one in the admin." >&2
