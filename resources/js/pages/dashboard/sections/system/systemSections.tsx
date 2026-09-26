@@ -3,10 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { router } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle2, Download, ExternalLink, Loader2, RefreshCw, ShieldAlert, Trash2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ExternalLink, Loader2, RefreshCw, ShieldAlert } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { ActivityPage, type ActivityProps } from './activitySection';
+import { BackupsPage, type BackupsProps } from './backupsSection';
+import { EmailPage, type MailSettingsData } from './emailSection';
+import { LanguagesPage, type LanguagesProps } from './languagesSection';
 import { RedirectsPage, type RedirectsProps } from './redirectsSection';
 
 export interface CoreUpdate {
@@ -46,29 +49,7 @@ export interface UpdateCenterProps {
     canUpdatePlugins: boolean;
 }
 
-export interface BackupItem {
-    name: string;
-    size: number;
-    created_at: string;
-    version: string | null;
-    contents: string[];
-}
-
-export interface BackupsProps {
-    items: BackupItem[];
-    keep: number;
-    scheduled: boolean;
-    directory: string;
-}
-
 const formatDateTime = (value?: string | null) => (value ? new Date(value).toLocaleString() : 'never');
-
-const formatSize = (bytes: number) =>
-    bytes >= 1073741824
-        ? `${(bytes / 1073741824).toFixed(1)} GB`
-        : bytes >= 1048576
-          ? `${(bytes / 1048576).toFixed(1)} MB`
-          : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
 function usePost() {
     const [busy, setBusy] = useState<string | null>(null);
@@ -307,110 +288,24 @@ function UpdatesPage({ data }: { data: UpdateCenterProps }) {
     );
 }
 
-function BackupsPage({ data }: { data: BackupsProps }) {
-    const { busy, post } = usePost();
-
-    const destroy = (name: string) => {
-        if (!window.confirm(`Delete ${name}? This cannot be undone.`)) return;
-        router.delete(route('dashboard.admin.system.backups.destroy', name), { preserveScroll: true });
-    };
-
-    return (
-        <SectionWrapper
-            title="Backups"
-            description={`Database, media and plugins in one archive. The newest ${data.keep} are kept${data.scheduled ? '; a full backup also runs every Sunday night' : ''}.`}
-            actions={
-                <Button size="sm" disabled={busy !== null} onClick={() => post('create', route('dashboard.admin.system.backups.store'))}>
-                    {busy === 'create' && <Loader2 className="animate-spin" />}
-                    Back up now
-                </Button>
-            }
-        >
-            <div className="space-y-6">
-                <Card>
-                    <CardContent className="pt-6">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Backup</TableHead>
-                                    <TableHead>Created</TableHead>
-                                    <TableHead>Version</TableHead>
-                                    <TableHead>Contents</TableHead>
-                                    <TableHead>Size</TableHead>
-                                    <TableHead className="text-right" />
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {data.items.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                            No backups yet.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                                {data.items.map((backup) => (
-                                    <TableRow key={backup.name}>
-                                        <TableCell className="font-mono text-xs">{backup.name}</TableCell>
-                                        <TableCell>{formatDateTime(backup.created_at)}</TableCell>
-                                        <TableCell className="font-mono text-xs">{backup.version ?? '—'}</TableCell>
-                                        <TableCell className="text-muted-foreground">{backup.contents.join(', ')}</TableCell>
-                                        <TableCell className="tabular-nums">{formatSize(backup.size)}</TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-1">
-                                                <Button asChild size="icon" variant="ghost" aria-label="Download">
-                                                    <a href={route('dashboard.admin.system.backups.download', backup.name)}>
-                                                        <Download />
-                                                    </a>
-                                                </Button>
-                                                <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => destroy(backup.name)}>
-                                                    <Trash2 className="text-destructive" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Restoring</CardTitle>
-                        <CardDescription>
-                            A restore replaces the whole database, so it runs from the server rather than from this page. The site is put in
-                            maintenance mode while it runs, and an older backup is migrated up to this version afterwards.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <CommandBlock
-                            commands={[
-                                '# Docker (from the folder with docker-compose.yml):',
-                                `docker compose exec app php artisan modulo:restore ${data.items[0]?.name ?? '<backup>.zip'}`,
-                                '',
-                                '# Other installs:',
-                                `php artisan modulo:restore ${data.items[0]?.name ?? '<backup>.zip'}`,
-                            ]}
-                        />
-                    </CardContent>
-                </Card>
-            </div>
-        </SectionWrapper>
-    );
-}
-
 export function getSystemSections({
     updateCenter,
     backups,
     activity,
     redirects,
+    mailSettings,
+    languages,
 }: {
     updateCenter?: UpdateCenterProps;
     backups?: BackupsProps;
     activity?: ActivityProps;
     redirects?: RedirectsProps;
+    mailSettings?: MailSettingsData;
+    languages?: LanguagesProps;
 }): Record<string, () => ReactNode> {
     return {
+        languages: () => (languages ? <LanguagesPage data={languages} /> : null),
+        email: () => (mailSettings ? <EmailPage data={mailSettings} /> : null),
         activity: () => (activity ? <ActivityPage data={activity} /> : null),
         redirects: () => (redirects ? <RedirectsPage data={redirects} /> : null),
         updates: () => (updateCenter ? <UpdatesPage data={updateCenter} /> : null),

@@ -31,7 +31,10 @@ export default defineConfig({
             },
             {
                 text: 'Content',
-                items: [{ text: 'Working with content', link: '/content' }],
+                items: [
+                    { text: 'Guide for editors', link: '/editor-guide' },
+                    { text: 'Working with content', link: '/content' },
+                ],
             },
             {
                 text: 'Extending',

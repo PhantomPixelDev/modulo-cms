@@ -38,6 +38,17 @@ class BackupCommand extends Command
             $this->line('Pruned '.$name);
         }
 
+        try {
+            if ($backups->copyOffsite($path)) {
+                $this->info('Copied off-site to '.$backups->offsiteStatus()['target']);
+            }
+        } catch (Throwable $e) {
+            // The local backup is fine; say loudly that the off-site copy is not
+            $this->error('The off-site copy failed: '.$e->getMessage());
+
+            return self::FAILURE;
+        }
+
         return self::SUCCESS;
     }
 }

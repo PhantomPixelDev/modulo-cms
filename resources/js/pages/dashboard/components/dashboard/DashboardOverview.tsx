@@ -15,7 +15,7 @@ const STEP_LINKS: Record<string, () => string | null> = {
     logo: () => ROUTE.siteSettings.index('general'),
     first_page: () => ROUTE.pages.create(),
     menu: () => route('dashboard.admin.menus.index'),
-    email: () => null,
+    email: () => route('dashboard.admin.system.email'),
     two_factor: () => route('two-factor.edit'),
 };
 

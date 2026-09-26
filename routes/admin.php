@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\CommentController;
+use App\Http\Controllers\Admin\LocaleController;
+use App\Http\Controllers\Admin\MailSettingsController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MediaFolderController as AdminMediaFolderController;
 use App\Http\Controllers\Admin\PluginController;
@@ -147,6 +149,10 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
 
             Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
 
+            Route::get('/email', [MailSettingsController::class, 'index'])->name('email');
+            Route::put('/email', [MailSettingsController::class, 'update'])->name('email.update');
+            Route::post('/email/test', [MailSettingsController::class, 'test'])->middleware('throttle:6,1')->name('email.test');
+
             Route::get('/redirects', [RedirectController::class, 'index'])->name('redirects');
             Route::post('/redirects', [RedirectController::class, 'store'])->name('redirects.store');
             Route::put('/redirects/{redirect}', [RedirectController::class, 'update'])->name('redirects.update');
@@ -154,11 +160,19 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
 
             Route::get('/backups', [BackupController::class, 'index'])->name('backups');
             Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');
+            Route::post('/backups/upload', [BackupController::class, 'upload'])->name('backups.upload');
+            Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->name('backups.restore');
             Route::get('/backups/{backup}', [BackupController::class, 'download'])->name('backups.download');
             Route::delete('/backups/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy');
         });
 
         // Translations
+        // Languages content can be written in
+        Route::get('/languages', [LocaleController::class, 'index'])->name('languages.index');
+        Route::post('/languages', [LocaleController::class, 'store'])->name('languages.store');
+        Route::put('/languages/{language}', [LocaleController::class, 'update'])->name('languages.update');
+        Route::delete('/languages/{language}', [LocaleController::class, 'destroy'])->name('languages.destroy');
+
         Route::get('/translations', [TranslationController::class, 'index'])->name('translations.index');
         Route::post('/translations', [TranslationController::class, 'store'])->name('translations.store');
         Route::post('/translations/clear-cache', [TranslationController::class, 'clearCache'])->name('translations.clear-cache');

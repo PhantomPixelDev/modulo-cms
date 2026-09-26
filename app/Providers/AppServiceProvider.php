@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Observers\PostObserver;
 use App\Services\AdminStatsService;
 use App\Services\HookRegistry;
+use App\Services\MailSettings;
 use App\Services\MenuService;
 use App\Services\PostService;
 use App\Services\ResponsiveImages;
@@ -17,11 +18,13 @@ use App\Services\ShortcodeService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,6 +48,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Email settings from the admin (System -> Email) override .env; a worker
+        // re-reads them before each job so it doesn't keep sending the old way
+        $applyMail = function () {
+            try {
+                app(MailSettings::class)->apply();
+            } catch (Throwable $e) {
+                report($e);
+            }
+        };
+        $applyMail();
+        Queue::before($applyMail);
+
         // Any content change through a model makes every cached public page stale
         Event::listen(['eloquent.saved: *', 'eloquent.deleted: *', 'eloquent.restored: *'], fn () => CachePublicPages::bumpVersion());
 
@@ -88,7 +103,7 @@ class AppServiceProvider extends ServiceProvider
                     'header' => $ms->menuArrayBySlug('main-navigation') ?: $ms->menuArrayByLocation('header'),
                     'footer' => $ms->menuArrayBySlug('footer-links') ?: $ms->menuArrayByLocation('footer'),
                 ];
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 return [
                     'header' => [],
                     'footer' => [],

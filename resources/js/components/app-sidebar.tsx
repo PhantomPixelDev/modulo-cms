@@ -27,7 +27,9 @@ import {
     FolderTree,
     History,
     ImageIcon,
+    Languages,
     LayoutDashboard,
+    Mail,
     Menu,
     MessageSquare,
     Palette,
@@ -261,6 +263,7 @@ export function AppSidebar() {
                         { label: t('dashboard.nav.roles'), href: '/dashboard/admin/roles', icon: ShieldCheck, show: can('view roles') },
                         { label: t('dashboard.nav.plugins'), href: '/dashboard/admin/plugins', icon: Puzzle, show: can('view plugins') },
                         { label: t('dashboard.nav.post_types'), href: '/dashboard/admin/post-types', icon: Boxes, show: can('view post types') },
+                        { label: t('dashboard.nav.languages'), href: '/dashboard/admin/languages', icon: Languages, show: can('edit settings') },
                         { label: t('dashboard.nav.translations'), href: '/dashboard/admin/translations', icon: BookOpen, show: can('edit settings') },
                         { label: t('dashboard.nav.sitemap'), href: '/dashboard/admin/sitemap', icon: FolderTree, show: can('view sitemap') },
                         { label: t('dashboard.nav.site_settings'), href: '/dashboard/admin/settings', icon: Settings, show: can('view settings') },
@@ -286,6 +289,7 @@ export function AppSidebar() {
                                     </SidebarMenuBadge>
                                 ) : undefined,
                         },
+                        { label: t('dashboard.nav.email'), href: '/dashboard/admin/system/email', icon: Mail, show: can('edit settings') },
                         {
                             label: t('dashboard.nav.redirects'),
                             href: '/dashboard/admin/system/redirects',

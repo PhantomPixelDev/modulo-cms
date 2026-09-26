@@ -82,6 +82,41 @@ docker compose -f docker/docker-compose.yml exec -T db psql -U modulo -d modulo_
 docker compose -f docker/docker-compose.yml start app queue scheduler
 ```
 
+## From the admin
+
+**System → Backups** lists the full backups, makes one on demand, and:
+
+- **Restores** one: choose what to restore (database, media, plugins) and type the
+  backup's name to confirm. A queued job runs `modulo:restore` (maintenance mode,
+  restore, migrate) and the page shows how it went. It needs the queue worker (the
+  `queue` container); with `QUEUE_CONNECTION=sync` it runs inside the request.
+- **Uploads** a backup made on another server, e.g. to move a site. The size is limited
+  by PHP's `upload_max_filesize`/`post_max_size`; copy bigger archives into
+  `storage/app/backups` on the server instead.
+
+## Off-site copies
+
+A backup on the same server doesn't survive losing the server. Point
+`MODULO_BACKUP_DISK` at a filesystem disk and every new full backup (scheduled, from
+the admin or `modulo:backup`) is also copied there, keeping the newest
+`MODULO_BACKUP_DISK_KEEP` (10):
+
+```dotenv
+MODULO_BACKUP_DISK=s3
+MODULO_BACKUP_DISK_PATH=modulo-backups   # folder in the bucket
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=auto
+AWS_BUCKET=my-site-backups
+# Any S3-compatible storage: set its endpoint (Backblaze B2, Wasabi, Cloudflare R2, MinIO)
+AWS_ENDPOINT=https://s3.eu-central-003.backblazeb2.com
+AWS_USE_PATH_STYLE_ENDPOINT=false
+```
+
+Use a key that can only write to that bucket. The Backups page shows where copies go
+and whether the last one worked; a failed copy also makes `modulo:backup` exit with an
+error, so the scheduler's failure reporting sees it.
+
 ## What a dump does not contain
 
 **Uploaded files.** Media lives in the `storage` volume, not the database. A
