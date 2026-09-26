@@ -81,7 +81,9 @@ class ReactTemplateRenderer
             ];
         }
 
-        return Inertia::render($componentPath, $renderData);
+        // Server-side <head> tags for crawlers and link previews (see PageMeta)
+        return Inertia::render($componentPath, $renderData)
+            ->withViewData('pageMeta', app(PageMeta::class)->build($templateName, $renderData, request()));
     }
 
     /**

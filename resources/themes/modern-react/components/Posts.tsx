@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { FileText } from 'lucide-react';
 import Layout from './Layout';
 import PostCard from './partials/PostCard';
@@ -79,7 +78,6 @@ export default function Posts({ posts, postType, site, theme, menus, loading = f
 
     return (
         <Layout theme={theme} site={safeSite} menus={menus} title={title} description={description} sidebar>
-            <SEOHead title={`${title} | ${safeSite.name}`} description={description} />
             <PageHeader title={title} description={description} />
 
             {loading ? (
