@@ -5,6 +5,7 @@ namespace Plugins\ModuloShop\src\Services;
 use App\Models\Post;
 use App\Models\PostType;
 use Illuminate\Support\Facades\Session;
+use Plugins\ModuloShop\src\Models\Coupon;
 
 class CartService
 {
@@ -190,19 +191,60 @@ class CartService
 
     /**
      * Pass an already built cart to avoid loading it twice.
+     *
+     * A coupon that stopped applying (expired, cart now below its minimum) is
+     * reported in coupon_error and left out of the totals, not silently kept.
      */
     public function getTotals(?array $cart = null): array
     {
         $cart ??= $this->getCartWithProducts();
+        $state = $this->getCart();
 
         return [
-            'subtotal' => $cart['subtotal'],
-            'discount' => 0,
-            'shipping' => 0,
-            'tax' => 0,
-            'total' => $cart['subtotal'],
+            ...app(PriceCalculator::class)->calculate(
+                (float) $cart['subtotal'],
+                $state['shipping_method'] ?? null,
+                Coupon::findByCode($state['coupon_code'] ?? null),
+            ),
             'currency' => $cart['currency'],
         ];
+    }
+
+    public function setShippingMethod(?string $methodId): void
+    {
+        $cart = $this->getCart();
+        $cart['shipping_method'] = $methodId;
+        $this->saveCart($cart);
+    }
+
+    /**
+     * Remember a coupon for this cart. Returns why it can't be used, or null.
+     */
+    public function applyCoupon(string $code): ?string
+    {
+        $coupon = Coupon::findByCode($code);
+
+        if (! $coupon) {
+            return 'That coupon code is not valid.';
+        }
+
+        $reason = $coupon->unusableReason((float) $this->getCartWithProducts()['subtotal']);
+        if ($reason !== null) {
+            return $reason;
+        }
+
+        $cart = $this->getCart();
+        $cart['coupon_code'] = $coupon->code;
+        $this->saveCart($cart);
+
+        return null;
+    }
+
+    public function removeCoupon(): void
+    {
+        $cart = $this->getCart();
+        unset($cart['coupon_code']);
+        $this->saveCart($cart);
     }
 
     protected function saveCart(array $cart): void

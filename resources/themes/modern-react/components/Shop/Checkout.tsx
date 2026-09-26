@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import { ChevronRight, CreditCard, Loader2, MapPin, ShoppingBag, Truck } from 'lucide-react';
 import React, { useState } from 'react';
 import Layout from '../Layout';
+import { formatMoney, shopRequest, TotalsRows, type ShopTotals } from './totals';
 
 interface CartItem {
     product_id: number;
@@ -21,14 +22,7 @@ interface CheckoutProps {
         currency: string;
         is_empty: boolean;
     };
-    totals?: {
-        subtotal: number;
-        discount: number;
-        shipping: number;
-        tax: number;
-        total: number;
-        currency: string;
-    };
+    totals?: ShopTotals;
     user?: {
         name: string;
         email: string;
@@ -48,6 +42,20 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [shipToDifferent, setShipToDifferent] = useState(false);
+    const [liveTotals, setLiveTotals] = useState<ShopTotals | undefined>(totals);
+    const [shippingBusy, setShippingBusy] = useState(false);
+    const shippingMethods = liveTotals?.shipping_methods ?? [];
+
+    const chooseShipping = async (methodId: string) => {
+        setShippingBusy(true);
+        try {
+            const { data } = await shopRequest<{ totals?: ShopTotals }>('/shop/cart/shipping', 'POST', { shipping_method: methodId });
+            if (data.totals) setLiveTotals(data.totals);
+        } catch {
+            setErrors({ general: 'Could not update shipping. Please try again.' });
+        }
+        setShippingBusy(false);
+    };
 
     const [form, setForm] = useState({
         customer_name: user?.name ?? '',
@@ -70,10 +78,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
         payment_method: 'cod',
     });
 
-    const formatPrice = (price: number, currency = 'USD') => {
-        const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-        return `${symbols[currency] || '$'}${price.toFixed(2)}`;
-    };
+    const formatPrice = formatMoney;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
@@ -100,7 +105,7 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                     Accept: 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify(form),
+                body: JSON.stringify({ ...form, shipping_method: liveTotals?.shipping_method ?? null }),
             });
 
             const data = await response.json();
@@ -116,6 +121,9 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                 }
                 if (flat.cart && !flat.general) {
                     flat.general = flat.cart;
+                }
+                if (flat.coupon && !flat.general) {
+                    flat.general = flat.coupon;
                 }
                 setErrors(flat);
             } else {
@@ -395,6 +403,47 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                     </div>
                                 )}
 
+                                {/* Shipping Method */}
+                                {shippingMethods.length > 0 && (
+                                    <div className="rounded-xl border bg-card p-6 shadow-xs">
+                                        <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                                            <Truck className="h-5 w-5 text-primary" />
+                                            Shipping Method
+                                        </h2>
+                                        <div className="space-y-3">
+                                            {shippingMethods.map((method) => (
+                                                <label
+                                                    key={method.id}
+                                                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent"
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name="shipping_method"
+                                                        value={method.id}
+                                                        checked={liveTotals?.shipping_method === method.id}
+                                                        onChange={() => chooseShipping(method.id)}
+                                                        disabled={shippingBusy}
+                                                        className="size-4 accent-primary"
+                                                    />
+                                                    <div className="flex flex-1 items-center justify-between gap-4">
+                                                        <div>
+                                                            <span className="font-medium text-foreground">{method.name}</span>
+                                                            {method.free_over !== null && method.cost > 0 && (
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    Free over {formatPrice(method.free_over, liveTotals?.currency)}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <span className="font-medium text-foreground">
+                                                            {method.cost === 0 ? 'Free' : formatPrice(method.cost, liveTotals?.currency)}
+                                                        </span>
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Payment Method */}
                                 <div className="rounded-xl border bg-card p-6 shadow-xs">
                                     <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
@@ -470,36 +519,17 @@ export default function Checkout({ cart, totals, user, countries, site, theme, m
                                                     <p className="truncate font-medium text-foreground">{item.product_name}</p>
                                                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                                 </div>
-                                                <p className="font-medium text-foreground">{formatPrice(item.subtotal, totals?.currency)}</p>
+                                                <p className="font-medium text-foreground">{formatPrice(item.subtotal, liveTotals?.currency)}</p>
                                             </div>
                                         ))}
                                     </div>
 
                                     <div className="space-y-3 border-t pt-4">
-                                        <div className="flex justify-between text-muted-foreground">
-                                            <span>Subtotal</span>
-                                            <span>{formatPrice(totals?.subtotal ?? 0, totals?.currency)}</span>
-                                        </div>
-                                        {(totals?.discount ?? 0) > 0 && (
-                                            <div className="flex justify-between text-success">
-                                                <span>Discount</span>
-                                                <span>-{formatPrice(totals?.discount ?? 0, totals?.currency)}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex justify-between text-muted-foreground">
-                                            <span>Shipping</span>
-                                            <span>{totals?.shipping ? formatPrice(totals.shipping, totals.currency) : 'Free'}</span>
-                                        </div>
-                                        {(totals?.tax ?? 0) > 0 && (
-                                            <div className="flex justify-between text-muted-foreground">
-                                                <span>Tax</span>
-                                                <span>{formatPrice(totals?.tax ?? 0, totals?.currency)}</span>
-                                            </div>
-                                        )}
+                                        <TotalsRows totals={liveTotals} />
                                         <div className="border-t pt-3">
                                             <div className="flex justify-between text-xl font-semibold tracking-tight text-foreground">
                                                 <span>Total</span>
-                                                <span>{formatPrice(totals?.total ?? 0, totals?.currency)}</span>
+                                                <span>{formatPrice(liveTotals?.total ?? 0, liveTotals?.currency)}</span>
                                             </div>
                                         </div>
                                     </div>

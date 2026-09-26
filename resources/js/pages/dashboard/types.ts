@@ -205,6 +205,19 @@ export interface ShopProduct extends BaseEntity {
     meta?: Record<string, any> | null;
 }
 
+export interface ShopCoupon extends BaseEntity {
+    code: string;
+    description: string | null;
+    type: 'percent' | 'fixed' | 'free_shipping';
+    amount: number;
+    min_subtotal: number | null;
+    starts_at: string | null;
+    expires_at: string | null;
+    usage_limit: number | null;
+    used_count: number;
+    is_active: boolean;
+}
+
 export interface ShopOrder extends BaseEntity {
     order_number: string;
     status: string;
@@ -331,6 +344,7 @@ export interface DashboardProps {
     shopProducts?: Paginated<ShopProduct>;
     editProduct?: ShopProduct | null;
     shopOrders?: Paginated<ShopOrder>;
+    shopCoupons?: Paginated<ShopCoupon>;
     shopOrder?: ShopOrder;
     shopSettings?: Record<string, any>;
     // Dashboard activity and status

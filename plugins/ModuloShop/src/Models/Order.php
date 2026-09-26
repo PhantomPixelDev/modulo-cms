@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
+/**
+ * @property string|null $shipping_method Name of the method chosen at checkout
+ * @property string|null $coupon_code
+ * @property array<string, mixed>|null $meta_data
+ */
 class Order extends Model
 {
     protected $table = 'shop_orders';

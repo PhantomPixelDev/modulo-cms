@@ -2,16 +2,18 @@ import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
+import { ShopCouponsManager } from '../../components/shop/ShopCouponsManager';
 import { ShopOrdersManager } from '../../components/shop/ShopOrdersManager';
 import { ShopOrderView } from '../../components/shop/ShopOrderView';
 import { ShopProductsManager } from '../../components/shop/ShopProductsManager';
 import { ShopSettingsForm } from '../../components/shop/ShopSettingsForm';
-import type { Paginated, ShopOrder, ShopProduct } from '../../types';
+import type { Paginated, ShopCoupon, ShopOrder, ShopProduct } from '../../types';
 
 export function getShopSections({
     shopProducts,
     editProduct,
     shopOrders,
+    shopCoupons,
     shopOrder,
     shopSettings,
     can,
@@ -22,6 +24,7 @@ export function getShopSections({
     shopProducts: Paginated<ShopProduct> | undefined;
     editProduct?: ShopProduct | null;
     shopOrders: Paginated<ShopOrder> | undefined;
+    shopCoupons?: Paginated<ShopCoupon>;
     shopOrder: ShopOrder | undefined;
     shopSettings?: Record<string, any>;
     can: (perm: string) => boolean;
@@ -62,6 +65,20 @@ export function getShopSections({
         </SectionWrapper>
     );
 
+    const renderShopCoupons = () => (
+        <SectionWrapper
+            title="Coupons"
+            description="Discount codes customers can enter in their cart."
+            actions={
+                <Button variant="outline" size="sm" onClick={() => router.visit(ROUTE.shop.products.index())}>
+                    Back to Products
+                </Button>
+            }
+        >
+            <ShopCouponsManager coupons={shopCoupons} canManage={can('manage shop settings')} />
+        </SectionWrapper>
+    );
+
     const renderShopSettings = () => (
         <SectionWrapper title="Shop Settings" description="Configure your store settings and preferences.">
             <ShopSettingsForm
@@ -87,6 +104,7 @@ export function getShopSections({
         'shop-products': renderShopProducts,
         'shop-orders': renderShopOrders,
         'shop-orders-view': renderShopOrderView,
+        'shop-coupons': renderShopCoupons,
         'shop-settings': renderShopSettings,
     };
 }

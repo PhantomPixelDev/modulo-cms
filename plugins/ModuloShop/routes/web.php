@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Plugins\ModuloShop\src\Http\Controllers\Admin\CouponController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\OrderController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\ProductController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\ShopSettingsController;
@@ -34,6 +35,16 @@ Route::prefix('shop')->group(function () {
     Route::post('/cart/clear', [CartController::class, 'clear'])
         ->middleware('throttle:60,1')
         ->name('shop.cart.clear');
+    // Tight limit: a coupon code is a guessable secret
+    Route::post('/cart/coupon', [CartController::class, 'applyCoupon'])
+        ->middleware('throttle:10,1')
+        ->name('shop.cart.coupon');
+    Route::delete('/cart/coupon', [CartController::class, 'removeCoupon'])
+        ->middleware('throttle:60,1')
+        ->name('shop.cart.coupon.remove');
+    Route::post('/cart/shipping', [CartController::class, 'shipping'])
+        ->middleware('throttle:60,1')
+        ->name('shop.cart.shipping');
     Route::get('/cart/count', [CartController::class, 'count'])
         ->name('shop.cart.count');
     Route::get('/cart/mini', [CartController::class, 'mini'])
@@ -100,6 +111,15 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
             ->name('orders.destroy');
 
         // Shop settings
+        Route::get('/coupons', [CouponController::class, 'index'])
+            ->name('coupons.index');
+        Route::post('/coupons', [CouponController::class, 'store'])
+            ->name('coupons.store');
+        Route::put('/coupons/{coupon}', [CouponController::class, 'update'])
+            ->name('coupons.update');
+        Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])
+            ->name('coupons.destroy');
+
         Route::get('/settings', [ShopSettingsController::class, 'index'])
             ->middleware('permission:manage shop settings')
             ->name('settings.index');
