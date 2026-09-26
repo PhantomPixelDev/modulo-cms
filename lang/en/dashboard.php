@@ -388,6 +388,7 @@ return [
             'delete' => 'Delete',
         ],
         'messages' => [
+            'trashed' => 'Page moved to the trash.',
             'created' => 'Page created successfully.',
             'updated' => 'Page updated successfully.',
             'deleted' => 'Page deleted',
@@ -409,6 +410,8 @@ return [
             'created' => 'Created',
         ],
         'form' => [
+            'no_parent' => 'None (top level)',
+            'parent_hint' => 'Put this page under another one, e.g. “Team” under “About”.',
             'description' => [
                 'create' => 'Fill in the page details, configure SEO, and prepare it for publishing.',
                 'edit' => 'Update the page content, metadata, and publishing options.',
@@ -424,6 +427,7 @@ return [
                 'advanced' => 'Advanced',
             ],
             'fields' => [
+                'parent' => 'Parent page',
                 'title' => 'Title',
                 'slug' => 'URL Slug',
                 'featured_image' => 'Featured Image',

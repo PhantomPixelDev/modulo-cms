@@ -2,6 +2,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ActionButtonGroup } from '@/components/ui/button-groups';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePage } from '@inertiajs/react';
+import type { CustomFieldDefinition } from '../../types';
+import { CustomFieldInputs, type CustomFieldValues } from '../posts/CustomFieldInputs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,6 +30,10 @@ export interface PageFormProps {
     authors?: Array<{ id: number; name: string }>;
     canEditAuthor?: boolean;
     defaultStatus?: string;
+    /** Pages this one can sit under */
+    parents?: Array<{ id: number; title: string }>;
+    /** The page type's custom fields */
+    fields?: CustomFieldDefinition[];
 }
 
 const slugify = (text: string) => {
@@ -62,8 +71,20 @@ const normalizeFeaturedImage = (source: any): FeaturedImagePreview | null => {
     return null;
 };
 
-export function PageForm({ page, isEditing, authors = [], canEditAuthor = false, defaultStatus = 'draft', onSubmit, onCancel }: PageFormProps) {
+export function PageForm({
+    page,
+    isEditing,
+    authors = [],
+    canEditAuthor = false,
+    defaultStatus = 'draft',
+    parents = [],
+    fields = [],
+    onSubmit,
+    onCancel,
+}: PageFormProps) {
     const { t } = useTranslation();
+    const errors = (usePage().props.errors ?? {}) as Record<string, string>;
+    const [fieldValues, setFieldValues] = useState<CustomFieldValues>(page?.meta_data?.fields ?? {});
     const formRef = useRef<HTMLFormElement | null>(null);
     const [activeTab, setActiveTab] = useState('content');
     const [showMediaPicker, setShowMediaPicker] = useState(false);
@@ -112,6 +133,12 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
             meta_description: page?.meta_description ?? '',
             author_id: page?.author_id?.toString() ?? '',
             published_at: page?.published_at ? new Date(page.published_at).toISOString().slice(0, 16) : '',
+            parent_id: page?.parent_id ? String(page.parent_id) : 'none',
+            meta_data: (() => {
+                const rest = { ...(page?.meta_data ?? {}) };
+                delete rest.fields;
+                return rest as Record<string, unknown>;
+            })(),
         };
     });
 
@@ -156,6 +183,9 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                 featured_image: featuredImageUrl,
                 content: contentToSubmit,
                 author_id: form.author_id ? parseInt(form.author_id, 10) : null,
+                parent_id: form.parent_id !== 'none' ? parseInt(form.parent_id, 10) : null,
+                published_at: form.published_at || null,
+                meta_data: { ...form.meta_data, fields: fieldValues },
             };
 
             await onSubmit(formData);
@@ -219,6 +249,18 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     {isEditing && <AutosaveStatus status={autosave.status} savedAt={autosave.savedAt} />}
+                    <Select value={form.status} onValueChange={(status) => setForm((f) => ({ ...f, status }))}>
+                        <SelectTrigger className="h-9 w-36" aria-label={t('dashboard.pages.form.fields.status')}>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {['draft', 'published', 'private', 'archived'].map((status) => (
+                                <SelectItem key={status} value={status}>
+                                    {t(`common.status.${status}`)}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     {isEditing && page?.id && <PreviewButton postId={page.id} flush={autosave.flush} />}
                     {isEditing && page?.id && <RevisionsDialog postId={page.id} />}
                     <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
@@ -323,6 +365,16 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                             />
                         </div>
 
+                        {fields.length > 0 && (
+                            <div className="space-y-4 rounded-lg border p-4">
+                                <div>
+                                    <h3 className="text-sm font-bold">{t('dashboard.posts.form.details_title', { type: t('dashboard.pages.title') })}</h3>
+                                    <p className="text-xs text-muted-foreground">{t('dashboard.posts.form.details_hint')}</p>
+                                </div>
+                                <CustomFieldInputs fields={fields} values={fieldValues} onChange={setFieldValues} errors={errors} />
+                            </div>
+                        )}
+
                         <div className="space-y-2">
                             <Label>{t('dashboard.pages.form.fields.content')}</Label>
                             <div className="rounded-md border">
@@ -370,6 +422,39 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                                     {t('dashboard.pages.form.seo.meta_description_hint', { count: form.meta_description.length })}
                                 </p>
                             </div>
+
+                            <div>
+                                <Label htmlFor="og_image">{t('dashboard.posts.form.seo.social_image')}</Label>
+                                <Input
+                                    id="og_image"
+                                    value={String(form.meta_data.og_image ?? '')}
+                                    onChange={(e) => setForm((f) => ({ ...f, meta_data: { ...f.meta_data, og_image: e.target.value } }))}
+                                    placeholder={t('dashboard.posts.form.seo.social_image_placeholder')}
+                                />
+                                <p className="mt-1 text-xs text-muted-foreground">{t('dashboard.posts.form.seo.social_image_hint')}</p>
+                            </div>
+
+                            <div>
+                                <Label htmlFor="canonical_url">{t('dashboard.posts.form.seo.canonical')}</Label>
+                                <Input
+                                    id="canonical_url"
+                                    value={String(form.meta_data.canonical_url ?? '')}
+                                    onChange={(e) => setForm((f) => ({ ...f, meta_data: { ...f.meta_data, canonical_url: e.target.value } }))}
+                                    placeholder="https://…"
+                                />
+                                <p className="mt-1 text-xs text-muted-foreground">{t('dashboard.posts.form.seo.canonical_hint')}</p>
+                            </div>
+
+                            <label className="flex items-start gap-3 rounded-md border p-3">
+                                <Checkbox
+                                    checked={form.meta_data.noindex === true || form.meta_data.noindex === 'true'}
+                                    onCheckedChange={(checked) => setForm((f) => ({ ...f, meta_data: { ...f.meta_data, noindex: checked === true } }))}
+                                />
+                                <span className="space-y-0.5">
+                                    <span className="block text-sm font-medium">{t('dashboard.posts.form.seo.noindex')}</span>
+                                    <span className="block text-xs text-muted-foreground">{t('dashboard.posts.form.seo.noindex_hint')}</span>
+                                </span>
+                            </label>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -381,20 +466,25 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <Label htmlFor="status">{t('dashboard.pages.form.fields.status')}</Label>
-                                    <select
-                                        id="status"
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                        value={form.status}
-                                        onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                                    >
-                                        <option value="draft">{t('common.status.draft')}</option>
-                                        <option value="published">{t('common.status.published')}</option>
-                                        <option value="private">{t('common.status.private')}</option>
-                                        <option value="archived">{t('common.status.archived')}</option>
-                                    </select>
-                                </div>
+                                {parents.length > 0 && (
+                                    <div className="space-y-1.5">
+                                        <Label>{t('dashboard.pages.form.fields.parent')}</Label>
+                                        <Select value={form.parent_id} onValueChange={(parent_id) => setForm((f) => ({ ...f, parent_id }))}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">{t('dashboard.pages.form.no_parent')}</SelectItem>
+                                                {parents.map((parent) => (
+                                                    <SelectItem key={parent.id} value={String(parent.id)}>
+                                                        {parent.title}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="text-xs text-muted-foreground">{t('dashboard.pages.form.parent_hint')}</p>
+                                    </div>
+                                )}
 
                                 {canEditAuthor && authors.length > 0 && (
                                     <div>

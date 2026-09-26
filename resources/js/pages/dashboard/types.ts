@@ -336,6 +336,10 @@ export interface DashboardProps {
     authors?: Array<{ id: number; name: string }>;
     // Active list filters echoed back by the server (posts list)
     filters?: Record<string, string>;
+    // Page form
+    pageParents?: Array<{ id: number; title: string }>;
+    pageFields?: CustomFieldDefinition[];
+    defaultStatus?: string;
     parentsByType?: Record<number | string, Array<{ id: number; title: string }>>;
     sitemapSettings?: SitemapSettings;
     // Site settings

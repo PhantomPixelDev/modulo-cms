@@ -9,8 +9,11 @@ use App\Models\User;
 use App\Rules\CanPublish;
 use App\Services\SiteSettingsService;
 use App\Support\ContentListFilters;
+use App\Support\CustomFields;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class PagesController extends Controller
@@ -112,22 +115,12 @@ class PagesController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'pages.create',
             'defaultStatus' => $defaultStatus,
-        ]);
+        ] + $this->formProps());
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:posts,slug',
-            'status' => ['required', 'in:draft,published,private,archived', new CanPublish($request->user(), isPage: true)],
-            'content' => 'required', // Content can be string or array
-            'excerpt' => 'nullable|string',
-            'featured_image' => 'nullable|string',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-            'author_id' => 'nullable|exists:users,id',
-        ]);
+        $data = $request->validate($this->rules($request), [], CustomFields::attributes($this->resolvePageType()));
 
         // Ensure content is properly formatted as JSON string
         if (is_array($data['content']) || is_object($data['content'])) {
@@ -136,11 +129,8 @@ class PagesController extends Controller
 
         $pageType = $this->resolvePageType();
 
-        // Set published_at if status is published and not set
-        $publishedAt = null;
-        if (($data['status'] ?? null) === 'published' && empty($data['published_at'])) {
-            $publishedAt = now();
-        }
+        // A chosen date wins (a future one schedules the page); publishing without one means now
+        $publishedAt = $data['published_at'] ?? (($data['status'] ?? null) === 'published' ? now() : null);
 
         // Generate slug if not provided
         $data['slug'] = Post::uniqueSlug(Str::slug(empty($data['slug']) ? $data['title'] : $data['slug']));
@@ -158,10 +148,12 @@ class PagesController extends Controller
             'featured_image' => $data['featured_image'] ?? null,
             'meta_title' => $data['meta_title'] ?? null,
             'meta_description' => $data['meta_description'] ?? null,
+            'parent_id' => $data['parent_id'] ?? null,
+            'meta_data' => $data['meta_data'] ?? [],
         ]);
 
         return redirect()->route('dashboard.admin.pages.index')
-            ->with('success', 'Page created successfully.');
+            ->with('success', __('dashboard.pages.messages.created'));
     }
 
     public function edit(Post $page)
@@ -173,7 +165,7 @@ class PagesController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'pages.edit',
             'post' => $page,
-        ]);
+        ] + $this->formProps($page));
     }
 
     public function update(Request $request, Post $page)
@@ -181,40 +173,19 @@ class PagesController extends Controller
         $pageType = $this->resolvePageType();
         abort_unless($page->post_type_id === $pageType->id, 404);
 
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:posts,slug,'.$page->id,
-            'status' => ['required', 'in:draft,published,private,archived', new CanPublish($request->user(), $page, isPage: true)],
-            'content' => 'required', // Content can be string or array
-            'excerpt' => 'nullable|string',
-            'featured_image' => 'nullable|string',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-            'author_id' => 'nullable|exists:users,id',
-        ]);
+        $data = $request->validate($this->rules($request, $page), [], CustomFields::attributes($this->resolvePageType()));
 
         // Ensure content is properly formatted as JSON string
         if (is_array($data['content']) || is_object($data['content'])) {
             $data['content'] = json_encode($data['content'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
 
-        // Handle published_at based on status
-        if (($data['status'] ?? null) === 'published' && empty($page->published_at)) {
-            $data['published_at'] = now();
-        } elseif (($data['status'] ?? null) !== 'published') {
-            $data['published_at'] = null;
-        }
+        // A chosen date wins; publishing without one keeps the first publish date, or now
+        $data['published_at'] = $data['published_at']
+            ?? (($data['status'] ?? null) === 'published' ? ($page->published_at ?? now()) : $page->published_at);
 
         // Generate slug if not provided
         $data['slug'] = Post::uniqueSlug(Str::slug(empty($data['slug']) ? $data['title'] : $data['slug']), $page->id);
-
-        // Log the data before update for debugging
-        \Log::info('Updating page content', [
-            'page_id' => $page->id,
-            'content_type' => gettype($data['content']),
-            'content_length' => is_string($data['content']) ? strlen($data['content']) : null,
-            'content_sample' => is_string($data['content']) ? substr($data['content'], 0, 100).'...' : null,
-        ]);
 
         // Update the page
         $page->update([
@@ -228,18 +199,69 @@ class PagesController extends Controller
             'meta_title' => $data['meta_title'] ?? $page->meta_title,
             'meta_description' => $data['meta_description'] ?? $page->meta_description,
             'author_id' => $data['author_id'] ?? $page->author_id,
-        ]);
-
-        // Log after update to verify
-        $updatedPage = $page->fresh();
-        \Log::info('Page updated', [
-            'page_id' => $updatedPage->id,
-            'content_stored' => $updatedPage->content ? 'yes' : 'no',
-            'content_length' => $updatedPage->content ? strlen($updatedPage->content) : 0,
+            'parent_id' => array_key_exists('parent_id', $data) ? $data['parent_id'] : $page->parent_id,
+            'meta_data' => $data['meta_data'] ?? $page->meta_data,
         ]);
 
         return redirect()->route('dashboard.admin.pages.index')
-            ->with('success', 'Page updated successfully.');
+            ->with('success', __('dashboard.pages.messages.updated'));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function rules(Request $request, ?Post $page = null): array
+    {
+        return [
+            'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:posts,slug'.($page ? ','.$page->id : ''),
+            'status' => ['required', 'in:draft,published,private,archived', new CanPublish($request->user(), $page, isPage: true)],
+            'content' => 'required', // Content can be string or array
+            'excerpt' => 'nullable|string',
+            'featured_image' => 'nullable|string',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string',
+            'author_id' => 'nullable|exists:users,id',
+            'published_at' => 'nullable|date',
+            'parent_id' => ['nullable', 'integer', Rule::in($this->possibleParents($page)->pluck('id')->all())],
+            'meta_data' => 'nullable|array',
+        ] + CustomFields::valueRules($this->resolvePageType());
+    }
+
+    /**
+     * Pages another page can sit under: any page but itself and the pages
+     * below it, which would make a loop.
+     *
+     * @return Collection<int, Post>
+     */
+    protected function possibleParents(?Post $page = null): Collection
+    {
+        $pages = Post::where('post_type_id', $this->resolvePageType()->id)->orderBy('title')->get(['id', 'title', 'parent_id']);
+        if (! $page) {
+            return $pages;
+        }
+
+        $excluded = [$page->id];
+        do {
+            $before = count($excluded);
+            $excluded = array_values(array_unique(array_merge($excluded, $pages->whereIn('parent_id', $excluded)->pluck('id')->all())));
+        } while (count($excluded) > $before);
+
+        return $pages->whereNotIn('id', $excluded)->values();
+    }
+
+    /**
+     * What the page form needs besides the page itself.
+     *
+     * @return array<string, mixed>
+     */
+    protected function formProps(?Post $page = null): array
+    {
+        return [
+            'pageParents' => $this->possibleParents($page)->map->only(['id', 'title'])->values(),
+            'pageFields' => (array) $this->resolvePageType()->fields,
+            'authors' => User::orderBy('name')->get(['id', 'name']),
+        ];
     }
 
     public function destroy(Post $page)
@@ -249,6 +271,6 @@ class PagesController extends Controller
         $page->delete();
 
         return redirect()->route('dashboard.admin.pages.index')
-            ->with('success', 'Page moved to the trash.');
+            ->with('success', __('dashboard.pages.messages.trashed'));
     }
 }

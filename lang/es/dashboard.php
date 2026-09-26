@@ -388,6 +388,7 @@ return [
             'delete' => 'Delete',
         ],
         'messages' => [
+            'trashed' => 'Página movida a la papelera.',
             'created' => 'Page created successfully.',
             'updated' => 'Page updated successfully.',
             'deleted' => 'Page deleted',
@@ -409,6 +410,8 @@ return [
             'created' => 'Created',
         ],
         'form' => [
+            'no_parent' => 'Ninguna (nivel superior)',
+            'parent_hint' => 'Coloca esta página bajo otra, p. ej. «Equipo» bajo «Sobre nosotros».',
             'description' => [
                 'create' => 'Fill in the page details, configure SEO, and prepare it for publishing.',
                 'edit' => 'Update the page content, metadata, and publishing options.',
@@ -424,6 +427,7 @@ return [
                 'advanced' => 'Advanced',
             ],
             'fields' => [
+                'parent' => 'Página superior',
                 'title' => 'Title',
                 'slug' => 'URL Slug',
                 'featured_image' => 'Featured Image',

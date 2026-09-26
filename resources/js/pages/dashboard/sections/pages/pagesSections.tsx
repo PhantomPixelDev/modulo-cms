@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { PageForm } from '../../components/pages/PageForm';
 import { PostList } from '../../components/posts/PostList';
+import type { CustomFieldDefinition } from '../../types';
 
 export function getPagesSections({
     postsProp,
@@ -11,6 +12,10 @@ export function getPagesSections({
     editPost,
     authors,
     filters,
+    pageParents,
+    pageFields,
+    defaultStatus,
+    canEditAuthorFlag,
     can,
     showSuccess,
     showError,
@@ -22,6 +27,10 @@ export function getPagesSections({
     editPost: any;
     authors?: Array<{ id: number; name: string }>;
     filters?: Record<string, string>;
+    pageParents?: Array<{ id: number; title: string }>;
+    pageFields?: CustomFieldDefinition[];
+    defaultStatus?: string;
+    canEditAuthorFlag?: boolean;
     can: (perm: string) => boolean;
     showSuccess: (msg: string) => void;
     showError: (msg: string) => void;
@@ -105,7 +114,16 @@ export function getPagesSections({
                 </Button>
             }
         >
-            <PageForm isEditing={false} onSubmit={(data) => handlePageSubmit(data)} onCancel={() => router.visit(ROUTE.pages.index())} />
+            <PageForm
+                isEditing={false}
+                parents={pageParents}
+                fields={pageFields}
+                authors={authors}
+                canEditAuthor={canEditAuthorFlag}
+                defaultStatus={defaultStatus}
+                onSubmit={(data) => handlePageSubmit(data)}
+                onCancel={() => router.visit(ROUTE.pages.index())}
+            />
         </SectionWrapper>
     );
 
@@ -129,6 +147,10 @@ export function getPagesSections({
             <PageForm
                 page={(post as any) || (editPost as any)}
                 isEditing={true}
+                parents={pageParents}
+                fields={pageFields}
+                authors={authors}
+                canEditAuthor={canEditAuthorFlag}
                 onSubmit={(data) => handlePageSubmit(data, ((post as any) || (editPost as any))?.id)}
                 onCancel={() => router.visit(ROUTE.pages.index())}
             />
