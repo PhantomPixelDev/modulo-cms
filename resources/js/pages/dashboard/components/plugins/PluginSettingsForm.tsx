@@ -81,13 +81,7 @@ export function PluginSettingsForm({ plugin, canEdit, schema = [] }: PluginSetti
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {schema.length > 0 ? (
-                                <CustomFieldInputs
-                                    fields={schema}
-                                    values={settings}
-                                    onChange={setSettings}
-                                    errors={errors}
-                                    errorPrefix="settings."
-                                />
+                                <CustomFieldInputs fields={schema} values={settings} onChange={setSettings} errors={errors} errorPrefix="settings." />
                             ) : Object.keys(settings).length === 0 ? (
                                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-6 text-center">
                                     <Cpu className="mb-2 h-8 w-8 text-muted-foreground" />
@@ -110,7 +104,11 @@ export function PluginSettingsForm({ plugin, canEdit, schema = [] }: PluginSetti
                             )}
                         </CardContent>
                         <CardFooter className="border-t px-6 py-4">
-                            <Button onClick={handleSave} disabled={saving || !canEdit || (schema.length === 0 && Object.keys(settings).length === 0)} className="gap-2">
+                            <Button
+                                onClick={handleSave}
+                                disabled={saving || !canEdit || (schema.length === 0 && Object.keys(settings).length === 0)}
+                                className="gap-2"
+                            >
                                 {saving ? (
                                     t('dashboard.plugins.settings.actions.saving')
                                 ) : (
@@ -155,12 +153,8 @@ export function PluginSettingsForm({ plugin, canEdit, schema = [] }: PluginSetti
                                 <div className="flex gap-3">
                                     <AlertCircle className="h-5 w-5 shrink-0 text-warning-foreground dark:text-warning" />
                                     <div className="space-y-1">
-                                        <p className="text-sm font-medium">
-                                            {t('dashboard.plugins.settings.inactive.title')}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {t('dashboard.plugins.settings.inactive.description')}
-                                        </p>
+                                        <p className="text-sm font-medium">{t('dashboard.plugins.settings.inactive.title')}</p>
+                                        <p className="text-xs text-muted-foreground">{t('dashboard.plugins.settings.inactive.description')}</p>
                                     </div>
                                 </div>
                             </CardContent>

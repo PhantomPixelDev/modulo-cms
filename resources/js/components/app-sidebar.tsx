@@ -92,7 +92,9 @@ function Group({ label, items, url }: { label: string; items: Item[]; url: strin
                         <SidebarMenuItem key={item.href}>
                             <SidebarMenuButton
                                 asChild
-                                isActive={(item.match ?? [item.href]).some((path) => url === path || url.startsWith(`${path}/`) || url.startsWith(`${path}?`))}
+                                isActive={(item.match ?? [item.href]).some(
+                                    (path) => url === path || url.startsWith(`${path}/`) || url.startsWith(`${path}?`),
+                                )}
                                 tooltip={{ children: item.label }}
                             >
                                 <Link href={item.href} prefetch>
@@ -153,10 +155,21 @@ export function AppSidebar() {
                     label={t('dashboard.nav.content')}
                     url={path}
                     items={[
-                        { label: t('dashboard.nav.posts'), href: '/dashboard/admin/posts', icon: FileText, show: can('view posts'), match: ['/dashboard/admin/posts'] },
+                        {
+                            label: t('dashboard.nav.posts'),
+                            href: '/dashboard/admin/posts',
+                            icon: FileText,
+                            show: can('view posts'),
+                            match: ['/dashboard/admin/posts'],
+                        },
                         { label: t('dashboard.nav.pages'), href: '/dashboard/admin/pages', icon: FileText, show: can('view posts', 'view pages') },
                         { label: t('dashboard.nav.media'), href: '/dashboard/admin/media', icon: ImageIcon, show: can('view media') },
-                        { label: t('dashboard.nav.comments'), href: '/dashboard/admin/comments', icon: MessageSquare, show: can('moderate comments') },
+                        {
+                            label: t('dashboard.nav.comments'),
+                            href: '/dashboard/admin/comments',
+                            icon: MessageSquare,
+                            show: can('moderate comments'),
+                        },
                         { label: t('dashboard.nav.trash'), href: '/dashboard/admin/trash', icon: Trash2, show: can('delete posts') },
                     ]}
                 />
@@ -212,7 +225,10 @@ export function AppSidebar() {
                                             <SidebarMenuSub>
                                                 {entry.children.map((child) => (
                                                     <SidebarMenuSubItem key={child.href}>
-                                                        <SidebarMenuSubButton asChild isActive={path === child.href.split('?')[0] || path.startsWith(`${child.href}/`)}>
+                                                        <SidebarMenuSubButton
+                                                            asChild
+                                                            isActive={path === child.href.split('?')[0] || path.startsWith(`${child.href}/`)}
+                                                        >
                                                             <Link href={child.href} prefetch>
                                                                 <span>{child.label}</span>
                                                             </Link>
@@ -270,7 +286,12 @@ export function AppSidebar() {
                                     </SidebarMenuBadge>
                                 ) : undefined,
                         },
-                        { label: t('dashboard.nav.redirects'), href: '/dashboard/admin/system/redirects', icon: CornerDownRight, show: can('edit settings') },
+                        {
+                            label: t('dashboard.nav.redirects'),
+                            href: '/dashboard/admin/system/redirects',
+                            icon: CornerDownRight,
+                            show: can('edit settings'),
+                        },
                         { label: t('dashboard.nav.activity'), href: '/dashboard/admin/system/activity', icon: History, show: isAdmin() },
                         { label: t('dashboard.nav.backups'), href: '/dashboard/admin/system/backups', icon: Archive, show: isAdmin() },
                     ]}
