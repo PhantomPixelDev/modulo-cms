@@ -55,9 +55,19 @@ export function CustomFieldInputs({
                         )}
 
                         {field.type === 'textarea' && (
-                            <Textarea id={id} rows={4} value={text(field.key)} onChange={(e) => set(field.key, e.target.value)} required={field.required} />
+                            <Textarea
+                                id={id}
+                                rows={4}
+                                value={text(field.key)}
+                                onChange={(e) => set(field.key, e.target.value)}
+                                required={field.required}
+                            />
                         )}
-                        {(field.type === 'text' || field.type === 'url' || field.type === 'email' || field.type === 'number' || field.type === 'date') && (
+                        {(field.type === 'text' ||
+                            field.type === 'url' ||
+                            field.type === 'email' ||
+                            field.type === 'number' ||
+                            field.type === 'date') && (
                             <Input
                                 id={id}
                                 type={field.type === 'text' ? 'text' : field.type}

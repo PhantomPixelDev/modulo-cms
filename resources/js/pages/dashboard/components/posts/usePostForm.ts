@@ -1,5 +1,5 @@
-import type { CustomFieldValues } from './CustomFieldInputs';
 import { useCallback, useState } from 'react';
+import type { CustomFieldValues } from './CustomFieldInputs';
 import { FeaturedImagePreview, MetaData, PostFormProps } from './types';
 import { getSelectedTermIds } from './utils';
 

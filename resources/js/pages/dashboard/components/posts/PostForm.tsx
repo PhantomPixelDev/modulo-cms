@@ -12,10 +12,10 @@ import { ChevronDown, Globe, Image as ImageIcon, Loader2, X } from 'lucide-react
 import { useMemo, useRef, useState } from 'react';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePage } from '@inertiajs/react';
 import { AutosaveStatus, PreviewButton, RecoverAutosave, useAutosave, type AutosaveFields } from '../common/Autosave';
 import { RevisionsDialog } from '../common/RevisionsDialog';
 import MediaPickerDialog from '../media/MediaPickerDialog';
-import { usePage } from '@inertiajs/react';
 import { CustomFieldInputs } from './CustomFieldInputs';
 import { MetaDataSection } from './MetaDataSection';
 import { PostTaxonomySection } from './PostTaxonomySection';
@@ -243,67 +243,69 @@ export function PostForm({
                                     </div>
 
                                     {selectedType?.has_featured_image !== false && (
-                                    <div className="space-y-3">
-                                        <Label className="text-sm font-bold">{t('dashboard.posts.featured_image')}</Label>
-                                        <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed bg-muted/20 p-4 sm:flex-row sm:items-center">
-                                            {featuredImage ? (
-                                                <div className="group relative">
-                                                    <img
-                                                        src={featuredImage.thumb || featuredImage.url}
-                                                        alt={featuredImage.name || featuredImage.file_name || t('dashboard.posts.featured_image')}
-                                                        className="h-20 w-20 rounded-md object-cover ring-1 ring-border"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="icon"
-                                                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full shadow-md"
-                                                        onClick={handleFeaturedImageRemove}
-                                                    >
-                                                        <X className="h-3 w-3" />
+                                        <div className="space-y-3">
+                                            <Label className="text-sm font-bold">{t('dashboard.posts.featured_image')}</Label>
+                                            <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed bg-muted/20 p-4 sm:flex-row sm:items-center">
+                                                {featuredImage ? (
+                                                    <div className="group relative">
+                                                        <img
+                                                            src={featuredImage.thumb || featuredImage.url}
+                                                            alt={featuredImage.name || featuredImage.file_name || t('dashboard.posts.featured_image')}
+                                                            className="h-20 w-20 rounded-md object-cover ring-1 ring-border"
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="icon"
+                                                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full shadow-md"
+                                                            onClick={handleFeaturedImageRemove}
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex h-20 w-20 items-center justify-center rounded-md border bg-muted">
+                                                        <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col gap-2">
+                                                    <Button type="button" variant="outline" size="sm" onClick={() => setShowMediaPicker(true)}>
+                                                        {featuredImage
+                                                            ? t('dashboard.posts.form.featured_image.change')
+                                                            : t('dashboard.posts.form.featured_image.select')}
                                                     </Button>
+                                                    <span className="max-w-[200px] truncate text-xs text-muted-foreground">
+                                                        {featuredImage
+                                                            ? featuredImage.name || featuredImage.file_name
+                                                            : t('dashboard.posts.form.featured_image.none')}
+                                                    </span>
                                                 </div>
-                                            ) : (
-                                                <div className="flex h-20 w-20 items-center justify-center rounded-md border bg-muted">
-                                                    <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
-                                                </div>
-                                            )}
-                                            <div className="flex flex-col gap-2">
-                                                <Button type="button" variant="outline" size="sm" onClick={() => setShowMediaPicker(true)}>
-                                                    {featuredImage
-                                                        ? t('dashboard.posts.form.featured_image.change')
-                                                        : t('dashboard.posts.form.featured_image.select')}
-                                                </Button>
-                                                <span className="max-w-[200px] truncate text-xs text-muted-foreground">
-                                                    {featuredImage
-                                                        ? featuredImage.name || featuredImage.file_name
-                                                        : t('dashboard.posts.form.featured_image.none')}
-                                                </span>
                                             </div>
                                         </div>
-                                    </div>
                                     )}
 
                                     {selectedType?.has_excerpt !== false && (
-                                    <div className="space-y-2">
-                                        <Label htmlFor="excerpt" className="text-sm font-bold">
-                                            {t('dashboard.posts.post_excerpt')}
-                                        </Label>
-                                        <Textarea
-                                            id="excerpt"
-                                            value={excerpt}
-                                            onChange={(e) => setExcerpt(e.target.value)}
-                                            placeholder={t('dashboard.posts.form.placeholders.excerpt')}
-                                            rows={3}
-                                            className="resize-none"
-                                        />
-                                    </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="excerpt" className="text-sm font-bold">
+                                                {t('dashboard.posts.post_excerpt')}
+                                            </Label>
+                                            <Textarea
+                                                id="excerpt"
+                                                value={excerpt}
+                                                onChange={(e) => setExcerpt(e.target.value)}
+                                                placeholder={t('dashboard.posts.form.placeholders.excerpt')}
+                                                rows={3}
+                                                className="resize-none"
+                                            />
+                                        </div>
                                     )}
 
                                     {customFields.length > 0 && (
                                         <div className="space-y-4 rounded-lg border p-4">
                                             <div>
-                                                <h3 className="text-sm font-bold">{t('dashboard.posts.form.details_title', { type: selectedType?.label ?? '' })}</h3>
+                                                <h3 className="text-sm font-bold">
+                                                    {t('dashboard.posts.form.details_title', { type: selectedType?.label ?? '' })}
+                                                </h3>
                                                 <p className="text-xs text-muted-foreground">{t('dashboard.posts.form.details_hint')}</p>
                                             </div>
                                             <CustomFieldInputs fields={customFields} values={fieldValues} onChange={setFieldValues} errors={errors} />
@@ -392,7 +394,9 @@ export function PostForm({
                                             />
                                             <span className="space-y-0.5">
                                                 <span className="block text-sm font-medium">{t('dashboard.posts.form.seo.noindex')}</span>
-                                                <span className="block text-[11px] text-muted-foreground">{t('dashboard.posts.form.seo.noindex_hint')}</span>
+                                                <span className="block text-[11px] text-muted-foreground">
+                                                    {t('dashboard.posts.form.seo.noindex_hint')}
+                                                </span>
                                             </span>
                                         </label>
                                     </div>

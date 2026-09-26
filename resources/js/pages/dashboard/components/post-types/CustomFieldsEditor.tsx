@@ -33,7 +33,8 @@ export function CustomFieldsEditor({
     errors?: Record<string, string>;
 }) {
     const { t } = useTranslation();
-    const update = (index: number, patch: Partial<CustomFieldDefinition>) => onChange(fields.map((field, i) => (i === index ? { ...field, ...patch } : field)));
+    const update = (index: number, patch: Partial<CustomFieldDefinition>) =>
+        onChange(fields.map((field, i) => (i === index ? { ...field, ...patch } : field)));
     const move = (index: number, by: number) => {
         const next = [...fields];
         const [field] = next.splice(index, 1);
@@ -48,7 +49,9 @@ export function CustomFieldsEditor({
                 <p className="text-xs text-muted-foreground">{t('dashboard.post_types.fields.description')}</p>
             </div>
 
-            {fields.length === 0 && <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">{t('dashboard.post_types.fields.empty')}</p>}
+            {fields.length === 0 && (
+                <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">{t('dashboard.post_types.fields.empty')}</p>
+            )}
 
             {fields.map((field, index) => {
                 const keyLocked = savedKeys.includes(field.key) && field.key !== '';
@@ -62,7 +65,10 @@ export function CustomFieldsEditor({
                                     id={`field-label-${index}`}
                                     value={field.label}
                                     onChange={(e) =>
-                                        update(index, { label: e.target.value, ...(keyLocked || field.keyTouched ? {} : { key: toKey(e.target.value) }) })
+                                        update(index, {
+                                            label: e.target.value,
+                                            ...(keyLocked || field.keyTouched ? {} : { key: toKey(e.target.value) }),
+                                        })
                                     }
                                     required
                                 />

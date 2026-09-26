@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
-import React, { useMemo, useState } from 'react';
 import { usePage } from '@inertiajs/react';
+import React, { useMemo, useState } from 'react';
 import type { CustomFieldDefinition, PostType } from '../../types';
 import { CustomFieldsEditor } from './CustomFieldsEditor';
 

@@ -30,7 +30,7 @@ class CustomFields
             'fields.*.help' => ['nullable', 'string', 'max:255'],
             'fields.*.required' => ['nullable', 'boolean'],
             'fields.*.options' => ['nullable', 'array', 'max:50'],
-            'fields.*.options.*' => ['string', 'max:100'],
+            'fields.*.options.*' => ['nullable', 'string', 'max:100'],
         ];
     }
 

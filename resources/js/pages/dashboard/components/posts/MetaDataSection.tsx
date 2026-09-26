@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface MetaDataSectionProps {
@@ -47,24 +47,30 @@ export function MetaDataSection({ metaData, onMetaDataChange }: MetaDataSectionP
                 {Object.entries(metaData)
                     .filter(([key, value]) => !MANAGED_KEYS.includes(key) && (value === null || typeof value !== 'object'))
                     .map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-2">
-                        <Input value={key} onChange={(e) => handleUpdate(key, e.target.value, String(metaData[key]))} className="flex-1" />
-                        <Input value={String(value)} onChange={(e) => handleUpdate(key, key, e.target.value)} className="flex-1" />
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemove(key)}
-                            className="text-destructive hover:text-destructive"
-                            aria-label={t('dashboard.settings.remove')}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                ))}
+                        <div key={key} className="flex items-center gap-2">
+                            <Input value={key} onChange={(e) => handleUpdate(key, e.target.value, String(metaData[key]))} className="flex-1" />
+                            <Input value={String(value)} onChange={(e) => handleUpdate(key, key, e.target.value)} className="flex-1" />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemove(key)}
+                                className="text-destructive hover:text-destructive"
+                                aria-label={t('dashboard.settings.remove')}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
             </div>
             <div className="flex gap-2">
-                <Input placeholder={t('dashboard.posts.form.extra_key')} aria-label={t('dashboard.posts.form.extra_key')} value={newKey} onChange={(e) => setNewKey(e.target.value)} className="flex-1" />
+                <Input
+                    placeholder={t('dashboard.posts.form.extra_key')}
+                    aria-label={t('dashboard.posts.form.extra_key')}
+                    value={newKey}
+                    onChange={(e) => setNewKey(e.target.value)}
+                    className="flex-1"
+                />
                 <Input
                     placeholder={t('dashboard.posts.form.extra_value')}
                     aria-label={t('dashboard.posts.form.extra_value')}
