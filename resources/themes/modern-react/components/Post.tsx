@@ -13,6 +13,9 @@ interface Post {
     content: string;
     excerpt?: string;
     featured_image?: string;
+    /** Smaller WebP copies ("url 768w, …") when the image is from the media library */
+    featured_image_srcset?: string | null;
+    featured_image_alt?: string | null;
     published_at: string;
     updated_at: string;
     meta_title?: string;
@@ -118,7 +121,15 @@ export default function Post({ post, site, theme, menus, relatedPosts }: PostPro
 
                 {post.featured_image && (
                     <figure className="mb-10 overflow-hidden rounded-xl border bg-muted">
-                        <img src={post.featured_image} alt={post.title} className="h-auto w-full" />
+                        <img
+                            src={post.featured_image}
+                            srcSet={post.featured_image_srcset ?? undefined}
+                            sizes="(min-width: 800px) 768px, 100vw"
+                            alt={post.featured_image_alt ?? post.title}
+                            fetchPriority="high"
+                            decoding="async"
+                            className="h-auto w-full"
+                        />
                     </figure>
                 )}
 

@@ -12,6 +12,7 @@ use App\Services\AdminStatsService;
 use App\Services\HookRegistry;
 use App\Services\MenuService;
 use App\Services\PostService;
+use App\Services\ResponsiveImages;
 use App\Services\ShortcodeService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -35,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
         // One registry every plugin adds its shortcodes to. Owned by core so a
         // plugin re-binding it cannot wipe out another plugin's shortcodes.
         $this->app->singleton(ShortcodeService::class);
+        // Per request: remembers the media rows it looked up for srcset
+        $this->app->scoped(ResponsiveImages::class);
     }
 
     /**

@@ -8,6 +8,9 @@ interface Post {
     slug: string;
     excerpt?: string;
     featured_image?: string;
+    /** Smaller WebP copies ("url 768w, …") when the image is from the media library */
+    featured_image_srcset?: string | null;
+    featured_image_alt?: string | null;
     published_at?: string;
     author?: {
         name: string;
@@ -55,8 +58,11 @@ export default function PostCard({ post, className }: PostCardProps) {
                 <div className="aspect-[16/9] overflow-hidden bg-muted">
                     <img
                         src={post.featured_image}
+                        srcSet={post.featured_image_srcset ?? undefined}
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                         alt=""
                         loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                     />
                 </div>
