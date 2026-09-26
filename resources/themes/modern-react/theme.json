@@ -86,6 +86,9 @@
         "Shop/Checkout": {
             "component": "components/Shop/Checkout.tsx"
         },
+        "Shop/Account": {
+            "component": "components/Shop/Account.tsx"
+        },
         "Shop/OrderConfirmation": {
             "component": "components/Shop/OrderConfirmation.tsx"
         }

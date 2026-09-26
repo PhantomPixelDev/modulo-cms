@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
+use Plugins\ModuloShop\src\Http\Controllers\AccountController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\CouponController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\OrderController;
 use Plugins\ModuloShop\src\Http\Controllers\Admin\PaymentSettingsController;
@@ -65,6 +66,11 @@ Route::prefix('shop')->group(function () {
     Route::post('/order/{orderNumber}/pay', [PaymentController::class, 'pay'])
         ->middleware('throttle:10,1')
         ->name('shop.order.pay');
+
+    // The signed-in customer's orders (before the product catch-all below)
+    Route::get('/account', [AccountController::class, 'orders'])
+        ->middleware('auth')
+        ->name('shop.account');
 
     // Online payments: back from the provider's page, and its server notifications
     Route::get('/payment/{gateway}/return/{orderNumber}', [PaymentController::class, 'return'])

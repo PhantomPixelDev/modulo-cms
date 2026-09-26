@@ -2,8 +2,11 @@
 
 namespace Plugins\ModuloShop\src\Http\Controllers;
 
+use App\Models\Post;
+use App\Models\User;
 use App\Services\PostService;
 use App\Services\ReactTemplateRenderer;
+use App\Services\SiteSettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,6 +68,9 @@ class CheckoutController
                     'name' => $user->name,
                     'email' => $user->email,
                 ] : null,
+                'payment_methods' => $this->paymentMethods(),
+                'saved_address' => $user ? $this->savedAddress($user) : null,
+                'terms_url' => $this->termsUrl(),
             ]);
         }
 
@@ -77,7 +83,35 @@ class CheckoutController
             ] : null,
             'countries' => $this->getCountries(),
             'payment_methods' => $this->paymentMethods(),
+            'saved_address' => $user ? $this->savedAddress($user) : null,
+            'terms_url' => $this->termsUrl(),
         ]);
+    }
+
+    /**
+     * A returning customer's details from their last order, to fill in the form.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function savedAddress(User $user): ?array
+    {
+        $last = AccountController::ordersOf($user)->latest('id')->first();
+
+        return $last?->only([
+            'customer_phone',
+            'billing_address_1', 'billing_address_2', 'billing_city', 'billing_state', 'billing_postcode', 'billing_country',
+            'ship_to_different',
+            'shipping_address_1', 'shipping_address_2', 'shipping_city', 'shipping_state', 'shipping_postcode', 'shipping_country',
+        ]);
+    }
+
+    /** The published terms page chosen in shop settings, if any. */
+    protected function termsUrl(): ?string
+    {
+        $pageId = app(ModuloShopSettings::class)->get('terms_page_id');
+        $page = $pageId ? Post::query()->whereKey($pageId)->where('status', 'published')->first() : null;
+
+        return $page ? app(SiteSettingsService::class)->formatPostUrl($page) : null;
     }
 
     /**
@@ -129,6 +163,9 @@ class CheckoutController
             'customer_note' => 'nullable|string|max:1000',
             'payment_method' => ['required', 'string', Rule::in(array_keys($this->payments->available()))],
             'shipping_method' => 'nullable|string|max:100',
+            'accept_terms' => $this->termsUrl() ? 'accepted' : 'nullable',
+        ], [
+            'accept_terms.accepted' => 'Please accept the terms and conditions.',
         ]);
 
         if (! empty($validated['shipping_method'])) {

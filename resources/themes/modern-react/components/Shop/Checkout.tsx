@@ -29,12 +29,15 @@ interface CheckoutProps {
     } | null;
     countries?: Record<string, string>;
     payment_methods?: { id: string; label: string; description: string; online: boolean }[];
+    /** A returning customer's details from their last order */
+    saved_address?: Record<string, string | boolean | null> | null;
+    terms_url?: string | null;
     site?: any;
     theme?: any;
     menus?: any;
 }
 
-export default function Checkout({ cart, totals, user, countries, payment_methods, site, theme, menus }: CheckoutProps) {
+export default function Checkout({ cart, totals, user, countries, payment_methods, saved_address, terms_url, site, theme, menus }: CheckoutProps) {
     const safeSite = site && typeof site === 'object' ? site : { name: 'Shop' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -42,7 +45,10 @@ export default function Checkout({ cart, totals, user, countries, payment_method
 
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [shipToDifferent, setShipToDifferent] = useState(false);
+    const saved = saved_address ?? {};
+    const pick = (key: string, fallback = '') => (typeof saved[key] === 'string' ? (saved[key] as string) : fallback);
+    const [shipToDifferent, setShipToDifferent] = useState(saved.ship_to_different === true);
+    const [acceptTerms, setAcceptTerms] = useState(false);
     const methods = payment_methods ?? [];
     const [liveTotals, setLiveTotals] = useState<ShopTotals | undefined>(totals);
     const [shippingBusy, setShippingBusy] = useState(false);
@@ -62,20 +68,20 @@ export default function Checkout({ cart, totals, user, countries, payment_method
     const [form, setForm] = useState({
         customer_name: user?.name ?? '',
         customer_email: user?.email ?? '',
-        customer_phone: '',
-        billing_address_1: '',
-        billing_address_2: '',
-        billing_city: '',
-        billing_state: '',
-        billing_postcode: '',
-        billing_country: 'US',
-        ship_to_different: false,
-        shipping_address_1: '',
-        shipping_address_2: '',
-        shipping_city: '',
-        shipping_state: '',
-        shipping_postcode: '',
-        shipping_country: 'US',
+        customer_phone: pick('customer_phone'),
+        billing_address_1: pick('billing_address_1'),
+        billing_address_2: pick('billing_address_2'),
+        billing_city: pick('billing_city'),
+        billing_state: pick('billing_state'),
+        billing_postcode: pick('billing_postcode'),
+        billing_country: pick('billing_country', 'US'),
+        ship_to_different: saved.ship_to_different === true,
+        shipping_address_1: pick('shipping_address_1'),
+        shipping_address_2: pick('shipping_address_2'),
+        shipping_city: pick('shipping_city'),
+        shipping_state: pick('shipping_state'),
+        shipping_postcode: pick('shipping_postcode'),
+        shipping_country: pick('shipping_country', 'US'),
         customer_note: '',
         payment_method: payment_methods?.[0]?.id ?? '',
     });
@@ -107,7 +113,7 @@ export default function Checkout({ cart, totals, user, countries, payment_method
                     Accept: 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify({ ...form, shipping_method: liveTotals?.shipping_method ?? null }),
+                body: JSON.stringify({ ...form, shipping_method: liveTotals?.shipping_method ?? null, accept_terms: acceptTerms }),
             });
 
             const data = await response.json();
@@ -551,9 +557,30 @@ export default function Checkout({ cart, totals, user, countries, payment_method
                                         )}
                                     </button>
 
-                                    <p className="mt-4 text-center text-xs text-muted-foreground">
-                                        By placing your order, you agree to our Terms of Service and Privacy Policy.
-                                    </p>
+                                    {terms_url ? (
+                                        <div className="mt-4">
+                                            <label className="flex items-start gap-2 text-sm text-muted-foreground">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={acceptTerms}
+                                                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                                                    className="mt-0.5 size-4 accent-primary"
+                                                />
+                                                <span>
+                                                    I have read and accept the{' '}
+                                                    <a href={terms_url} target="_blank" rel="noopener" className="underline hover:text-foreground">
+                                                        terms and conditions
+                                                    </a>
+                                                    .
+                                                </span>
+                                            </label>
+                                            {errors.accept_terms && <p className="mt-1 text-sm text-destructive">{errors.accept_terms}</p>}
+                                        </div>
+                                    ) : (
+                                        <p className="mt-4 text-center text-xs text-muted-foreground">
+                                            By placing your order, you agree to our Terms of Service and Privacy Policy.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

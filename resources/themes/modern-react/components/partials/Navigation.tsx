@@ -160,6 +160,11 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                     )}
                     {auth?.user ? (
                         <>
+                            {shopActive && (
+                                <Link href="/shop/account" className={buttonClass('ghost', 'sm')}>
+                                    {tt('nav.my_orders', 'My orders')}
+                                </Link>
+                            )}
                             <Link href="/dashboard" className={buttonClass('ghost', 'sm')}>
                                 <LayoutDashboard />
                                 {tt('nav.dashboard', 'Dashboard')}
@@ -230,6 +235,11 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                         <div className="mt-3 flex gap-2 border-t pt-4">
                             {auth?.user ? (
                                 <>
+                                    {shopActive && (
+                                        <Link href="/shop/account" className={buttonClass('ghost', 'md', 'flex-1')}>
+                                            {tt('nav.my_orders', 'My orders')}
+                                        </Link>
+                                    )}
                                     <Link href="/dashboard" className={buttonClass('outline', 'md', 'flex-1')}>
                                         {tt('nav.dashboard', 'Dashboard')}
                                     </Link>
