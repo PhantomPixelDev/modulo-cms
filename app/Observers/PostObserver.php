@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Post;
+use App\Models\PostAutosave;
 use App\Models\PostRevision;
 use App\Models\Redirect;
 use App\Services\AdminStatsService;
@@ -62,6 +63,11 @@ class PostObserver
      */
     public function updated(Post $post): void
     {
+        // Saved for real: the editor's autosave of this post is now history
+        if ($post->wasChanged(PostAutosave::FIELDS) && Auth::id() && schema_has_table('post_autosaves')) {
+            PostAutosave::where('post_id', $post->id)->where('user_id', Auth::id())->delete();
+        }
+
         if (! $post->wasChanged('slug') || ! schema_has_table('redirects')) {
             return;
         }

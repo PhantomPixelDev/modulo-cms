@@ -3,6 +3,7 @@
 return [
     // General actions
     'actions' => [
+        'add' => 'Add',
         'save' => 'Save',
         'cancel' => 'Cancel',
         'delete' => 'Delete',

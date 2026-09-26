@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PostType;
 use App\Models\SiteSetting;
 use App\Providers\DynamicRouteServiceProvider;
+use App\Support\CustomFields;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -92,7 +93,7 @@ class PostTypeController extends Controller
             'is_hierarchical' => 'boolean',
             'menu_icon' => 'nullable|string',
             'menu_position' => 'integer',
-        ]);
+        ] + CustomFields::definitionRules());
 
         PostType::create([
             'name' => $request->name,
@@ -107,6 +108,7 @@ class PostTypeController extends Controller
             'has_excerpt' => $request->has_excerpt ?? true,
             'has_comments' => $this->shouldEnableComments($request),
             'supports' => $request->supports ?? ['title', 'editor'],
+            'fields' => CustomFields::normalize($request->input('fields')),
             'taxonomies' => $request->taxonomies ?? [],
             'slug' => Str::slug($request->name),
             'is_public' => $request->is_public ?? true,
@@ -174,7 +176,7 @@ class PostTypeController extends Controller
             'is_hierarchical' => 'boolean',
             'menu_icon' => 'nullable|string',
             'menu_position' => 'integer',
-        ]);
+        ] + CustomFields::definitionRules());
 
         $postType->update([
             'name' => $request->name,
@@ -189,6 +191,7 @@ class PostTypeController extends Controller
             'has_excerpt' => $request->has_excerpt ?? true,
             'has_comments' => $this->shouldEnableComments($request),
             'supports' => $request->supports ?? ['title', 'editor'],
+            'fields' => CustomFields::normalize($request->input('fields')),
             'taxonomies' => $request->taxonomies ?? [],
             'slug' => Str::slug($request->name),
             'is_public' => $request->is_public ?? true,

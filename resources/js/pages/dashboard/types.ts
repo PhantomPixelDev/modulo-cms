@@ -88,6 +88,22 @@ export interface PostType extends BaseEntity {
     show_in_menu: boolean;
     menu_icon?: string;
     menu_position: number;
+    fields?: CustomFieldDefinition[];
+}
+
+export const CUSTOM_FIELD_TYPES = ['text', 'textarea', 'number', 'url', 'email', 'date', 'toggle', 'select', 'image'] as const;
+export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
+
+/** An extra field a post type asks for; the values live in meta_data.fields. */
+export interface CustomFieldDefinition {
+    key: string;
+    label: string;
+    type: CustomFieldType;
+    help?: string;
+    required?: boolean;
+    options?: string[];
+    /** Editor only: the key was typed, so it no longer follows the label */
+    keyTouched?: boolean;
 }
 
 export interface Taxonomy extends BaseEntity {
@@ -318,6 +334,12 @@ export interface DashboardProps {
     permissions?: Array<{ id: number; name: string }>;
     groupedTerms?: Record<string, any>;
     authors?: Array<{ id: number; name: string }>;
+    // Active list filters echoed back by the server (posts list)
+    filters?: Record<string, string>;
+    // Page form
+    pageParents?: Array<{ id: number; title: string }>;
+    pageFields?: CustomFieldDefinition[];
+    defaultStatus?: string;
     parentsByType?: Record<number | string, Array<{ id: number; title: string }>>;
     sitemapSettings?: SitemapSettings;
     // Site settings
@@ -371,15 +393,7 @@ export interface DashboardProps {
     shopOrder?: ShopOrder;
     shopSettings?: Record<string, any>;
     // Dashboard activity and status
-    recentActivity?: Array<{
-        type: string;
-        icon: string;
-        title: string;
-        description: string;
-        user: string;
-        timestamp: string;
-        created_at: any;
-    }>;
+    overview?: DashboardOverviewData;
     systemStatus?: Record<
         string,
         {
@@ -439,14 +453,6 @@ export interface TaxonomyListItem {
 }
 
 // Page List Item
-export interface PageListItem {
-    id: number;
-    title: string;
-    status: string;
-    author?: { name: string };
-    created_at: string;
-}
-
 // Post List Item
 export interface PostListItem {
     id: number;
@@ -459,10 +465,31 @@ export interface PostListItem {
     published_at?: string | null;
     /** Published with a future date: goes live then. */
     is_scheduled?: boolean;
+    translations?: Array<{ locale: string }>;
 }
 
 // Normalize paginated objects or arrays to arrays
 export function asArray<T>(val?: T[] | { data: T[] } | null): T[] {
     if (!val) return [];
     return Array.isArray(val) ? val : val.data || [];
+}
+
+export interface OverviewPost {
+    id: number;
+    title: string;
+    slug: string;
+    status: string;
+    is_page: boolean;
+    type: string | null;
+    author: string | null;
+    date: string;
+    date_iso: string | null;
+}
+
+export interface DashboardOverviewData {
+    drafts?: OverviewPost[];
+    scheduled?: OverviewPost[];
+    recent?: OverviewPost[];
+    pendingComments?: { count: number; latest: Array<{ id: number; author: string | null; excerpt: string; post: string | null }> };
+    checklist?: Array<{ key: string; done: boolean }>;
 }

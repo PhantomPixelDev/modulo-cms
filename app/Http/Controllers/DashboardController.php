@@ -8,9 +8,12 @@ use App\Http\Resources\RoleResource;
 use App\Http\Resources\UserResource;
 use App\Models\Post;
 use App\Models\PostType;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\AdminStatsService;
+use App\Services\DashboardOverview;
 use App\Services\SiteSettingsService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,11 +32,12 @@ class DashboardController extends Controller
 
         $data = [];
 
+        if ($user?->can('access admin') || $isAdmin) {
+            $data['overview'] = app(DashboardOverview::class)->for($user);
+        }
+
         if ($isAdmin) {
             $data['adminStats'] = app(AdminStatsService::class)->get();
-
-            // Recent Activity Feed
-            $data['recentActivity'] = $this->getRecentActivity();
 
             // System Status
             $data['systemStatus'] = $this->getSystemStatus();
@@ -62,53 +66,16 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', $data);
     }
 
-    private function getRecentActivity(): array
+    /**
+     * Hides the getting-started checklist for everyone, once the person
+     * running the site no longer needs it.
+     */
+    public function dismissOnboarding(): RedirectResponse
     {
-        $activities = [];
+        $this->authorize('update', SiteSetting::class);
+        SiteSetting::set('onboarding_dismissed', true, 'general', 'boolean');
 
-        // Recent posts
-        $recentPosts = Post::with('author')
-            ->orderByDesc('created_at')
-            ->limit(3)
-            ->get();
-
-        foreach ($recentPosts as $post) {
-            $activities[] = [
-                'type' => 'post_created',
-                'icon' => '📝',
-                'title' => 'New post published',
-                'description' => $post->title,
-                'user' => $post->author->name ?? 'Unknown',
-                'timestamp' => $post->created_at->diffForHumans(),
-                'formatted_date' => $this->settings->formatDateTime($post->created_at),
-                'created_at' => $post->created_at,
-            ];
-        }
-
-        // Recent users
-        $recentUsers = User::orderByDesc('created_at')
-            ->limit(2)
-            ->get();
-
-        foreach ($recentUsers as $user) {
-            $activities[] = [
-                'type' => 'user_registered',
-                'icon' => '👤',
-                'title' => 'New user registered',
-                'description' => $user->name.' joined',
-                'user' => $user->name,
-                'timestamp' => $user->created_at->diffForHumans(),
-                'formatted_date' => $this->settings->formatDateTime($user->created_at),
-                'created_at' => $user->created_at,
-            ];
-        }
-
-        // Sort by creation time and limit to 5 most recent
-        return collect($activities)
-            ->sortByDesc('created_at')
-            ->take(5)
-            ->values()
-            ->toArray();
+        return back();
     }
 
     private function getSystemStatus(): array

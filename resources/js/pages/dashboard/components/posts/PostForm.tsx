@@ -12,8 +12,11 @@ import { ChevronDown, Globe, Image as ImageIcon, Loader2, X } from 'lucide-react
 import { useMemo, useRef, useState } from 'react';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePage } from '@inertiajs/react';
+import { AutosaveStatus, PreviewButton, RecoverAutosave, useAutosave, type AutosaveFields } from '../common/Autosave';
 import { RevisionsDialog } from '../common/RevisionsDialog';
 import MediaPickerDialog from '../media/MediaPickerDialog';
+import { CustomFieldInputs } from './CustomFieldInputs';
 import { MetaDataSection } from './MetaDataSection';
 import { PostTaxonomySection } from './PostTaxonomySection';
 import SlateEditor from './SlateEditor';
@@ -62,6 +65,12 @@ export function PostForm({
         publishedAt,
         setPublishedAt,
         metaData,
+        seoTitle,
+        setSeoTitle,
+        seoDescription,
+        setSeoDescription,
+        fieldValues,
+        setFieldValues,
         selectedTerms,
         isSubmitting,
 
@@ -72,6 +81,24 @@ export function PostForm({
         handleFeaturedImageSelect,
         handleFeaturedImageRemove,
     } = usePostForm({ post, postTypes, groupedTerms, authors, parentsByType, canEditAuthor, isEditing, onSubmit, onCancel });
+
+    // Translations are edited elsewhere; the autosave holds the post's own text
+    const autosaveEnabled = Boolean(isEditing && post?.id) && (!currentLocaleData || Boolean(currentLocaleData.is_default));
+    const autosave = useAutosave(post?.id, { title, excerpt, content }, autosaveEnabled);
+    const [editorKey, setEditorKey] = useState(0);
+    const restoreAutosave = (fields: AutosaveFields) => {
+        setTitle(fields.title ?? '');
+        setExcerpt(fields.excerpt ?? '');
+        setContent(fields.content ?? '');
+        // The editor keeps its own state; remount it with the restored text
+        setEditorKey((key) => key + 1);
+        autosave.setRecovered(null);
+    };
+
+    // What the chosen content type uses: its own fields, and whether it has an excerpt, image, terms
+    const selectedType = postTypes.find((type) => String(type.id) === postType);
+    const customFields = selectedType?.fields ?? [];
+    const errors = (usePage().props.errors ?? {}) as Record<string, string>;
 
     const availableParents = useMemo(() => {
         return postType ? parentsByType[postType] || [] : [];
@@ -95,6 +122,7 @@ export function PostForm({
 
     return (
         <form ref={formRef} onSubmit={handleSubmit} className="mx-auto max-w-5xl space-y-8 pb-20">
+            <RecoverAutosave recovered={autosave.recovered} onRestore={restoreAutosave} onDiscard={autosave.discardRecovered} />
             <Card className="gap-0 overflow-hidden py-0">
                 <CardHeader className="border-b px-6 py-5">
                     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -145,6 +173,8 @@ export function PostForm({
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {autosaveEnabled && <AutosaveStatus status={autosave.status} savedAt={autosave.savedAt} />}
+                            {isEditing && post?.id && <PreviewButton postId={post.id} flush={autosave.flush} />}
                             {isEditing && post?.id && <RevisionsDialog postId={post.id} />}
                             <Button type="submit" disabled={isSubmitting} className="h-9 px-6">
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -212,71 +242,89 @@ export function PostForm({
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
-                                        <Label className="text-sm font-bold">{t('dashboard.posts.featured_image')}</Label>
-                                        <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed bg-muted/20 p-4 sm:flex-row sm:items-center">
-                                            {featuredImage ? (
-                                                <div className="group relative">
-                                                    <img
-                                                        src={featuredImage.thumb || featuredImage.url}
-                                                        alt={featuredImage.name || featuredImage.file_name || t('dashboard.posts.featured_image')}
-                                                        className="h-20 w-20 rounded-md object-cover ring-1 ring-border"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="icon"
-                                                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full shadow-md"
-                                                        onClick={handleFeaturedImageRemove}
-                                                    >
-                                                        <X className="h-3 w-3" />
+                                    {selectedType?.has_featured_image !== false && (
+                                        <div className="space-y-3">
+                                            <Label className="text-sm font-bold">{t('dashboard.posts.featured_image')}</Label>
+                                            <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed bg-muted/20 p-4 sm:flex-row sm:items-center">
+                                                {featuredImage ? (
+                                                    <div className="group relative">
+                                                        <img
+                                                            src={featuredImage.thumb || featuredImage.url}
+                                                            alt={featuredImage.name || featuredImage.file_name || t('dashboard.posts.featured_image')}
+                                                            className="h-20 w-20 rounded-md object-cover ring-1 ring-border"
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="icon"
+                                                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full shadow-md"
+                                                            onClick={handleFeaturedImageRemove}
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex h-20 w-20 items-center justify-center rounded-md border bg-muted">
+                                                        <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col gap-2">
+                                                    <Button type="button" variant="outline" size="sm" onClick={() => setShowMediaPicker(true)}>
+                                                        {featuredImage
+                                                            ? t('dashboard.posts.form.featured_image.change')
+                                                            : t('dashboard.posts.form.featured_image.select')}
                                                     </Button>
+                                                    <span className="max-w-[200px] truncate text-xs text-muted-foreground">
+                                                        {featuredImage
+                                                            ? featuredImage.name || featuredImage.file_name
+                                                            : t('dashboard.posts.form.featured_image.none')}
+                                                    </span>
                                                 </div>
-                                            ) : (
-                                                <div className="flex h-20 w-20 items-center justify-center rounded-md border bg-muted">
-                                                    <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
-                                                </div>
-                                            )}
-                                            <div className="flex flex-col gap-2">
-                                                <Button type="button" variant="outline" size="sm" onClick={() => setShowMediaPicker(true)}>
-                                                    {featuredImage
-                                                        ? t('dashboard.posts.form.featured_image.change')
-                                                        : t('dashboard.posts.form.featured_image.select')}
-                                                </Button>
-                                                <span className="max-w-[200px] truncate text-xs text-muted-foreground">
-                                                    {featuredImage
-                                                        ? featuredImage.name || featuredImage.file_name
-                                                        : t('dashboard.posts.form.featured_image.none')}
-                                                </span>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="excerpt" className="text-sm font-bold">
-                                            {t('dashboard.posts.post_excerpt')}
-                                        </Label>
-                                        <Textarea
-                                            id="excerpt"
-                                            value={excerpt}
-                                            onChange={(e) => setExcerpt(e.target.value)}
-                                            placeholder={t('dashboard.posts.form.placeholders.excerpt')}
-                                            rows={3}
-                                            className="resize-none"
-                                        />
-                                    </div>
+                                    {selectedType?.has_excerpt !== false && (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="excerpt" className="text-sm font-bold">
+                                                {t('dashboard.posts.post_excerpt')}
+                                            </Label>
+                                            <Textarea
+                                                id="excerpt"
+                                                value={excerpt}
+                                                onChange={(e) => setExcerpt(e.target.value)}
+                                                placeholder={t('dashboard.posts.form.placeholders.excerpt')}
+                                                rows={3}
+                                                className="resize-none"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {customFields.length > 0 && (
+                                        <div className="space-y-4 rounded-lg border p-4">
+                                            <div>
+                                                <h3 className="text-sm font-bold">
+                                                    {t('dashboard.posts.form.details_title', { type: selectedType?.label ?? '' })}
+                                                </h3>
+                                                <p className="text-xs text-muted-foreground">{t('dashboard.posts.form.details_hint')}</p>
+                                            </div>
+                                            <CustomFieldInputs fields={customFields} values={fieldValues} onChange={setFieldValues} errors={errors} />
+                                        </div>
+                                    )}
 
                                     <div className="space-y-3 pt-2">
                                         <Label className="text-sm font-bold">{t('dashboard.posts.post_content')}</Label>
                                         <div className="overflow-hidden rounded-lg border bg-input-bg shadow-xs">
-                                            <SlateEditor initialHTML={content} onHTMLChange={setContent} />
+                                            <SlateEditor key={editorKey} initialHTML={content} onHTMLChange={setContent} />
                                         </div>
                                     </div>
                                 </div>
                             </TabsContent>
 
                             <TabsContent value="metadata" className="mt-0 space-y-8 focus-visible:outline-none">
-                                <PostTaxonomySection groupedTerms={groupedTerms} selectedTerms={selectedTerms} onTermToggle={handleTermToggle} />
+                                {selectedType?.has_taxonomies !== false && (
+                                    <PostTaxonomySection groupedTerms={groupedTerms} selectedTerms={selectedTerms} onTermToggle={handleTermToggle} />
+                                )}
 
                                 <div className="space-y-6 border-t pt-6">
                                     <div className="flex items-center gap-2">
@@ -291,13 +339,8 @@ export function PostForm({
                                             </Label>
                                             <Input
                                                 id="metaTitle"
-                                                value={metaData.meta_title || ''}
-                                                onChange={(e) =>
-                                                    handleMetaDataChange({
-                                                        ...metaData,
-                                                        meta_title: e.target.value,
-                                                    })
-                                                }
+                                                value={seoTitle}
+                                                onChange={(e) => setSeoTitle(e.target.value)}
                                                 placeholder={t('dashboard.posts.form.placeholders.seo_title')}
                                             />
                                             <p className="text-[11px] text-muted-foreground">{t('dashboard.posts.form.seo.meta_hint')}</p>
@@ -309,13 +352,8 @@ export function PostForm({
                                             </Label>
                                             <Textarea
                                                 id="metaDescription"
-                                                value={metaData.meta_description || ''}
-                                                onChange={(e) =>
-                                                    handleMetaDataChange({
-                                                        ...metaData,
-                                                        meta_description: e.target.value,
-                                                    })
-                                                }
+                                                value={seoDescription}
+                                                onChange={(e) => setSeoDescription(e.target.value)}
                                                 placeholder={t('dashboard.posts.form.placeholders.seo_description')}
                                                 rows={3}
                                                 className="resize-none"
@@ -325,27 +363,28 @@ export function PostForm({
 
                                         <div className="space-y-2">
                                             <Label htmlFor="ogImage" className="text-sm font-bold">
-                                                Social image
+                                                {t('dashboard.posts.form.seo.social_image')}
                                             </Label>
                                             <Input
                                                 id="ogImage"
                                                 value={metaData.og_image || ''}
                                                 onChange={(e) => handleMetaDataChange({ ...metaData, og_image: e.target.value })}
-                                                placeholder="https://… or /storage/… (defaults to the featured image)"
+                                                placeholder={t('dashboard.posts.form.seo.social_image_placeholder')}
                                             />
-                                            <p className="text-[11px] text-muted-foreground">Shown when the post is shared on social networks.</p>
+                                            <p className="text-[11px] text-muted-foreground">{t('dashboard.posts.form.seo.social_image_hint')}</p>
                                         </div>
 
                                         <div className="space-y-2">
                                             <Label htmlFor="canonicalUrl" className="text-sm font-bold">
-                                                Canonical URL
+                                                {t('dashboard.posts.form.seo.canonical')}
                                             </Label>
                                             <Input
                                                 id="canonicalUrl"
                                                 value={metaData.canonical_url || ''}
                                                 onChange={(e) => handleMetaDataChange({ ...metaData, canonical_url: e.target.value })}
-                                                placeholder="Only if this content first appeared elsewhere"
+                                                placeholder="https://…"
                                             />
+                                            <p className="text-[11px] text-muted-foreground">{t('dashboard.posts.form.seo.canonical_hint')}</p>
                                         </div>
 
                                         <label className="flex items-start gap-3 rounded-md border p-3">
@@ -354,9 +393,9 @@ export function PostForm({
                                                 onCheckedChange={(checked) => handleMetaDataChange({ ...metaData, noindex: checked === true })}
                                             />
                                             <span className="space-y-0.5">
-                                                <span className="block text-sm font-medium">Hide from search engines</span>
+                                                <span className="block text-sm font-medium">{t('dashboard.posts.form.seo.noindex')}</span>
                                                 <span className="block text-[11px] text-muted-foreground">
-                                                    Adds noindex and leaves the post out of the sitemap. It stays visible to visitors.
+                                                    {t('dashboard.posts.form.seo.noindex_hint')}
                                                 </span>
                                             </span>
                                         </label>

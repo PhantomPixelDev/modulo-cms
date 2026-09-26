@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
 use App\Rules\CanPublish;
+use App\Support\CustomFields;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -77,6 +78,9 @@ class StorePostRequest extends FormRequest
             }
         }
 
+        // Values for the type's custom fields
+        $rules += CustomFields::valueRules($postType);
+
         return $rules;
     }
 
@@ -91,5 +95,13 @@ class StorePostRequest extends FormRequest
                 'slug' => Str::slug($this->title),
             ]);
         }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return CustomFields::attributes(PostType::find($this->input('post_type_id')));
     }
 }

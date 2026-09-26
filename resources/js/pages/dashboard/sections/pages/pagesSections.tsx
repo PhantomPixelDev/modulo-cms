@@ -3,13 +3,19 @@ import { router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { PageForm } from '../../components/pages/PageForm';
-import { PagesList } from '../../components/pages/PagesList';
-import { asArray } from '../../types';
+import { PostList } from '../../components/posts/PostList';
+import type { CustomFieldDefinition } from '../../types';
 
 export function getPagesSections({
     postsProp,
     post,
     editPost,
+    authors,
+    filters,
+    pageParents,
+    pageFields,
+    defaultStatus,
+    canEditAuthorFlag,
     can,
     showSuccess,
     showError,
@@ -19,6 +25,12 @@ export function getPagesSections({
     postsProp: any;
     post: any;
     editPost: any;
+    authors?: Array<{ id: number; name: string }>;
+    filters?: Record<string, string>;
+    pageParents?: Array<{ id: number; title: string }>;
+    pageFields?: CustomFieldDefinition[];
+    defaultStatus?: string;
+    canEditAuthorFlag?: boolean;
     can: (perm: string) => boolean;
     showSuccess: (msg: string) => void;
     showError: (msg: string) => void;
@@ -76,20 +88,18 @@ export function getPagesSections({
                 ) : null
             }
         >
-            <PagesList
-                pages={asArray((postsProp as any)?.data || [])
-                    .filter((p: any) => (p.post_type?.name ? p.post_type.name === 'page' : true))
-                    .map((p: any) => ({
-                        id: p.id,
-                        title: p.title,
-                        status: p.status,
-                        created_at: p.created_at,
-                        author: p.author ? { name: p.author.name } : undefined,
-                    }))}
+            <PostList
+                posts={postsProp ?? []}
+                filters={filters}
+                authors={authors}
+                showTypeFilter={false}
                 canEdit={can('edit posts')}
                 canDelete={can('delete posts')}
-                onEdit={(id) => router.visit(ROUTE.pages.edit(id))}
-                onDelete={(pg) => handleDeletePage(pg)}
+                canPublish={can('publish content')}
+                editHref={(item) => ROUTE.pages.edit(item.id)}
+                viewHref={(item) => (item.status === 'published' && !item.is_scheduled && item.slug ? `/${item.slug}` : null)}
+                searchPlaceholder={t('dashboard.pages.search')}
+                emptyText={t('dashboard.pages.empty.description')}
             />
         </SectionWrapper>
     );
@@ -104,7 +114,16 @@ export function getPagesSections({
                 </Button>
             }
         >
-            <PageForm isEditing={false} onSubmit={(data) => handlePageSubmit(data)} onCancel={() => router.visit(ROUTE.pages.index())} />
+            <PageForm
+                isEditing={false}
+                parents={pageParents}
+                fields={pageFields}
+                authors={authors}
+                canEditAuthor={canEditAuthorFlag}
+                defaultStatus={defaultStatus}
+                onSubmit={(data) => handlePageSubmit(data)}
+                onCancel={() => router.visit(ROUTE.pages.index())}
+            />
         </SectionWrapper>
     );
 
@@ -128,6 +147,10 @@ export function getPagesSections({
             <PageForm
                 page={(post as any) || (editPost as any)}
                 isEditing={true}
+                parents={pageParents}
+                fields={pageFields}
+                authors={authors}
+                canEditAuthor={canEditAuthorFlag}
                 onSubmit={(data) => handlePageSubmit(data, ((post as any) || (editPost as any))?.id)}
                 onCancel={() => router.visit(ROUTE.pages.index())}
             />

@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
+import { usePage } from '@inertiajs/react';
 import React, { useMemo, useState } from 'react';
-import type { PostType } from '../../types';
+import type { CustomFieldDefinition, PostType } from '../../types';
+import { CustomFieldsEditor } from './CustomFieldsEditor';
 
 export interface PostTypeFormProps {
     postType?: Partial<PostType>;
@@ -52,7 +54,11 @@ export function PostTypeForm({ postType, isEditing, globalCommentsEnabled = true
         show_in_menu: postType?.show_in_menu ?? true,
         menu_icon: postType?.menu_icon || '',
         menu_position: postType?.menu_position ?? 5,
+        fields: (postType?.fields ?? []) as CustomFieldDefinition[],
     });
+    const errors = (usePage().props.errors ?? {}) as Record<string, string>;
+    // Keys already in use by posts can't be renamed from here
+    const savedKeys = useMemo(() => (postType?.fields ?? []).map((field) => field.key), [postType?.fields]);
 
     const taxonomiesCsv = useMemo(() => normalizeTaxonomies(form.taxonomies).join(','), [form.taxonomies]);
 
@@ -71,6 +77,14 @@ export function PostTypeForm({ postType, isEditing, globalCommentsEnabled = true
         e.preventDefault();
         const payload = {
             ...form,
+            fields: form.fields.map((field) => ({
+                key: field.key,
+                label: field.label,
+                type: field.type,
+                help: field.help || null,
+                required: Boolean(field.required),
+                options: field.type === 'select' ? (field.options ?? []).filter(Boolean) : null,
+            })),
             taxonomies: (taxonomiesCsv || '')
                 .split(',')
                 .map((t) => t.trim())
@@ -230,6 +244,15 @@ export function PostTypeForm({ postType, isEditing, globalCommentsEnabled = true
                             />
                         </div>
                     </div>
+
+                    <Separator className="my-2" />
+
+                    <CustomFieldsEditor
+                        fields={form.fields}
+                        onChange={(fields) => handleChange('fields', fields)}
+                        savedKeys={savedKeys}
+                        errors={errors}
+                    />
 
                     <div className="flex items-center justify-end gap-2 pt-2">
                         <Button type="button" variant="outline" onClick={onCancel}>

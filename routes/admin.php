@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\UpdateCenterController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Content\AutosaveController;
 use App\Http\Controllers\Content\MenuController;
 use App\Http\Controllers\Content\MenuItemController;
 use App\Http\Controllers\Content\PagesController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Content\TaxonomyTermController;
 use App\Http\Controllers\Content\TemplateController;
 use App\Http\Controllers\Content\ThemeController;
 use App\Http\Controllers\Content\TrashController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // All admin routes are protected by auth, verified, and admin role check
@@ -37,6 +39,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('/', function () {
             return redirect('/dashboard');
         })->name('index');
+        Route::post('onboarding/dismiss', [DashboardController::class, 'dismissOnboarding'])->name('onboarding.dismiss');
 
         // Resource routes with automatic permission checks
         Route::resource('pages', PagesController::class)->except(['show']);
@@ -50,7 +53,13 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('content/{postId}/revisions', [RevisionController::class, 'index'])->whereNumber('postId')->name('revisions.index');
         Route::post('content/{postId}/revisions/{revisionId}/restore', [RevisionController::class, 'restore'])
             ->whereNumber(['postId', 'revisionId'])->name('revisions.restore');
+        // The editor's unsaved text, and a preview of it through the theme
+        Route::get('content/{postId}/autosave', [AutosaveController::class, 'show'])->whereNumber('postId')->name('autosave.show');
+        Route::put('content/{postId}/autosave', [AutosaveController::class, 'store'])->whereNumber('postId')->name('autosave.store');
+        Route::delete('content/{postId}/autosave', [AutosaveController::class, 'destroy'])->whereNumber('postId')->name('autosave.destroy');
+        Route::post('content/{postId}/preview-link', [AutosaveController::class, 'previewLink'])->whereNumber('postId')->name('preview.link');
 
+        Route::post('posts/bulk', [PostController::class, 'bulk'])->name('posts.bulk');
         Route::resource('posts', PostController::class)
             ->scoped(['post' => 'slug']);
         // Specific route for listing posts by post type
@@ -59,6 +68,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::post('posts/{post}/translations', [PostTranslationController::class, 'store'])->name('posts.translations.store');
         Route::delete('posts/{post}/translations/{locale}', [PostTranslationController::class, 'destroy'])->name('posts.translations.destroy');
         Route::resource('post-types', PostTypeController::class);
+        Route::put('menus/{menu}/order', [MenuController::class, 'reorder'])->name('menus.reorder');
+        Route::post('menus/{menu}/pages', [MenuController::class, 'addPages'])->name('menus.add-pages');
         Route::resource('menus', MenuController::class);
         Route::resource('menu-items', MenuItemController::class);
         Route::resource('taxonomies', TaxonomyController::class);

@@ -46,6 +46,10 @@ export default function DashboardContent({
     editPost,
     post,
     authors,
+    filters,
+    pageParents,
+    pageFields,
+    defaultStatus,
     parentsByType,
     groupedTerms,
     sitemapSettings,
@@ -82,6 +86,7 @@ export default function DashboardContent({
     parentTerms,
     auth,
     systemStatus,
+    overview,
     locales,
     currentLocale,
     translation,
@@ -164,7 +169,7 @@ export default function DashboardContent({
     const renderSection = () => {
         const section = normalizeSection(adminSection);
         if (!section) {
-            return renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t });
+            return renderDashboardHome({ auth, adminStats, systemStatus, overview, ROUTE, t });
         }
 
         const sectionsMap: Record<string, () => ReactNode> = {
@@ -253,6 +258,7 @@ export default function DashboardContent({
                 currentPostType,
                 groupedTerms,
                 authors,
+                filters,
                 parentsByType,
                 locales,
                 currentLocale,
@@ -268,6 +274,12 @@ export default function DashboardContent({
                 postsProp,
                 post,
                 editPost,
+                authors,
+                filters,
+                pageParents,
+                pageFields,
+                defaultStatus,
+                canEditAuthorFlag,
                 can,
                 showSuccess,
                 showError,
