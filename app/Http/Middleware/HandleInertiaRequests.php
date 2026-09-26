@@ -14,6 +14,7 @@ use App\Support\InstallChannel;
 use App\Support\Version;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -168,11 +169,13 @@ class HandleInertiaRequests extends Middleware
                     }),
                 ] : null,
             ],
-            // Visitors don't get the admin route map (smaller payload, less exposed surface)
-            'ziggy' => fn (): array => [
+            // Visitors don't get the admin route map (smaller payload, less exposed surface).
+            // Only SSR reads this prop, on the first render; the browser uses the
+            // @routes global, so later visits needn't resend it (~23KB for admins).
+            'ziggy' => Inertia::once(fn (): array => [
                 ...($canAccessAdmin ? new Ziggy : (new Ziggy)->filter(['dashboard.admin.*'], false))->toArray(),
                 'location' => $request->url(),
-            ],
+            ])->as($canAccessAdmin ? 'ziggy.admin' : 'ziggy.public'),
             'adminStats' => fn () => $request->user()?->hasRole(['admin', 'super-admin'])
                 ? app(AdminStatsService::class)->get()
                 : null,
@@ -200,7 +203,10 @@ class HandleInertiaRequests extends Middleware
             'locale' => fn () => schema_has_table('locales')
                 ? $this->translations->getLocaleInfo()
                 : ['current' => app()->getLocale(), 'direction' => 'ltr', 'name' => 'English', 'native_name' => 'English', 'available' => []],
-            'translations' => fn () => $this->translations->getAdminTranslations(),
+            // ~40KB: sent once, then kept by the browser across visits until the
+            // locale changes or a translation is edited (the key changes with both).
+            'translations' => Inertia::once(fn () => $this->translations->getAdminTranslations())
+                ->as('translations.'.$this->translations->adminTranslationsVersion()),
         ];
     }
 }
