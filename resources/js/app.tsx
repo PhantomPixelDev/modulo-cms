@@ -23,7 +23,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'Modulo CMS';
 const pages = import.meta.glob(['./pages/**/*.tsx', '!./pages/**/*.test.tsx'], { eager: false });
 const themeComponents = import.meta.glob(['../themes/**/components/**/*.tsx', '!../themes/**/*.test.tsx'], { eager: false });
 
-type PageModule = { default: ComponentType<never> & { layout?: unknown } };
+type PageModule = { default: ComponentType<unknown> & { layout?: unknown } };
 
 /**
  * A plugin's admin screen gets the admin frame (sidebar, header, toasts) unless

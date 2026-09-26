@@ -29,7 +29,7 @@ function demoPlugin(array $manifest = [], bool $active = true): void
 
 function platformAdmin(): User
 {
-    $user = User::factory()->create();
+    $user = makeAdminUserWithPermissions();
     $user->assignRole(Role::findOrCreate('admin', 'web'));
 
     return $user;
@@ -142,5 +142,6 @@ it('tells plugins when content is saved, published and deleted', function () {
     $post->update(['title' => 'Typo fixed']);
     $post->delete();
 
-    expect($events)->toBe(['saved:story', 'saved:story', 'published:story', 'saved:story', 'deleted:story']);
+    // Eloquent fires 'updated' (where publishing is noticed) before 'saved'
+    expect($events)->toBe(['saved:story', 'published:story', 'saved:story', 'saved:story', 'deleted:story']);
 });
