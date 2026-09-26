@@ -29,7 +29,7 @@ return [
         'welcome_message' => 'Esto es lo que está ocurriendo en tu sitio hoy.',
         'hero_description' => 'Aquí tienes una vista general de tu CMS. Crea contenido, gestiona usuarios y personaliza el sitio desde un solo lugar.',
         'cta_create_post' => 'Crear entrada',
-        'auto_refresh' => 'Se actualiza automáticamente cada minuto',
+        'auto_refresh' => 'Se comprueba al abrir el panel',
         'overview' => 'Resumen',
         'system_health' => 'Salud del sistema',
         'greetings' => [
@@ -54,6 +54,71 @@ return [
             'comments' => 'Comentarios totales',
             'media' => 'Archivos multimedia',
             'views' => 'Visitas totales',
+        ],
+        'checklist' => [
+            'title' => 'Prepara tu sitio',
+            'description' => ':done de :total hechos. Cada paso se marca solo cuando está configurado.',
+            'dismiss' => 'Ocultar esta lista',
+            'steps' => [
+                'site_name' => [
+                    'title' => 'Pon nombre a tu sitio',
+                    'hint' => 'Aparece en la cabecera, las pestañas del navegador y los resultados de búsqueda.',
+                ],
+                'logo' => [
+                    'title' => 'Añade tu logotipo',
+                    'hint' => 'Súbelo en Ajustes del sitio → General.',
+                ],
+                'first_page' => [
+                    'title' => 'Publica tu primera página',
+                    'hint' => 'Una página «Sobre nosotros» o «Contacto» es un buen comienzo.',
+                ],
+                'menu' => [
+                    'title' => 'Crea el menú principal',
+                    'hint' => 'Elige qué páginas aparecen en la navegación del sitio.',
+                ],
+                'email' => [
+                    'title' => 'Configura el envío de correo',
+                    'hint' => 'Los correos solo se escriben en el registro hasta que se configure SMTP en el servidor (ajustes MAIL_*).',
+                ],
+                'two_factor' => [
+                    'title' => 'Activa el inicio de sesión en dos pasos',
+                    'hint' => 'Protege tu cuenta de administrador con un código de tu móvil.',
+                ],
+            ],
+        ],
+        'widgets' => [
+            'drafts' => 'Tus borradores',
+            'drafts_empty' => 'No hay borradores. Todo lo que escribiste está publicado.',
+            'all_drafts' => 'Todos los borradores →',
+            'scheduled' => 'Se publica pronto',
+            'scheduled_empty' => 'Nada programado. Pon una fecha de publicación futura para planificar.',
+            'recent' => 'Editado recientemente',
+            'recent_empty' => 'Aún no se ha editado nada.',
+            'comments' => 'Comentarios por revisar',
+            'comments_empty' => 'No hay comentarios pendientes.',
+            'comment_by' => ':author en «:post»',
+            'moderate' => 'Revisar comentarios →',
+        ],
+        'system' => [
+            'loading' => 'Cargando el estado del sistema…',
+            'labels' => [
+                'server' => 'Servidor',
+                'uptime' => 'Tiempo activo',
+                'database' => 'Base de datos',
+                'cache' => 'Caché',
+                'storage' => 'Almacenamiento',
+                'queue' => 'Cola de trabajos',
+            ],
+            'status' => [
+                'online' => 'En línea',
+                'running' => 'En marcha',
+                'connected' => 'Conectada',
+                'disconnected' => 'Desconectada',
+                'active' => 'Activa',
+                'healthy' => 'Correcto',
+                'warning' => 'Requiere atención',
+                'inactive' => 'Inactiva',
+            ],
         ],
     ],
 

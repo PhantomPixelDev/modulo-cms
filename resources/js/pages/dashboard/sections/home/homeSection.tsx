@@ -20,7 +20,9 @@ import {
     Zap,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { DashboardOverview } from '../../components/dashboard/DashboardOverview';
 import { DashboardStats } from '../../components/dashboard/DashboardStats';
+import type { DashboardOverviewData } from '../../types';
 
 const statusIcons: Record<string, LucideIcon> = {
     server: Server,
@@ -78,20 +80,15 @@ const getGreetingKey = () => {
     return 'evening';
 };
 
+/** "just now", "5 minutes ago"… in the admin's language. */
 const formatLastChecked = (iso?: string) => {
-    if (!iso) return 'Just now';
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return 'Just now';
+    const relative = new Intl.RelativeTimeFormat(document.documentElement.lang || undefined, { numeric: 'auto' });
+    const date = iso ? new Date(iso) : new Date();
+    const diffMinutes = Number.isNaN(date.getTime()) ? 0 : Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
 
-    const diffMinutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
-    if (diffMinutes <= 1) return 'Just now';
-    if (diffMinutes < 60) return `${diffMinutes}m ago`;
-
-    const diffHours = Math.round(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-
-    const diffDays = Math.round(diffHours / 24);
-    return `${diffDays}d ago`;
+    if (diffMinutes < 60) return relative.format(-diffMinutes, 'minute');
+    if (diffMinutes < 60 * 24) return relative.format(-Math.round(diffMinutes / 60), 'hour');
+    return relative.format(-Math.round(diffMinutes / 1440), 'day');
 };
 
 const quickActions = [
@@ -128,22 +125,23 @@ const quickActions = [
     {
         labelKey: 'dashboard.home.quick_actions.settings',
         icon: Settings,
-        route: 'settings.index',
+        route: 'siteSettings.index',
         color: 'text-muted-foreground',
     },
 ];
 
-type TranslateFn = (key: string, replacements?: Record<string, string | number>) => string;
+type TranslateFn = (key: string, replacements?: Record<string, string | number>, fallback?: string) => string;
 
 interface RenderDashboardHomeArgs {
     auth: any;
     adminStats: any;
     systemStatus: any;
+    overview?: DashboardOverviewData;
     ROUTE: any;
     t: TranslateFn;
 }
 
-export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }: RenderDashboardHomeArgs): ReactNode {
+export function renderDashboardHome({ auth, adminStats, systemStatus, overview, ROUTE, t }: RenderDashboardHomeArgs): ReactNode {
     const userName = auth?.user?.name?.split(' ')[0] || 'Admin';
     const greetingKey = getGreetingKey();
 
@@ -164,6 +162,8 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
                     {t('dashboard.home.cta_create_post')}
                 </Button>
             </div>
+
+            {overview && <DashboardOverview overview={overview} />}
 
             {/* Quick Actions */}
             <div>
@@ -228,8 +228,14 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
                                                     <Icon className="size-4" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-sm text-muted-foreground">{status.label}</h3>
-                                                    <p className={cn('text-base font-semibold tabular-nums', colors.text)}>{status.value}</p>
+                                                    <h3 className="text-sm text-muted-foreground">
+                                                        {t(`dashboard.home.system.labels.${key}`, {}, status.label)}
+                                                    </h3>
+                                                    <p className={cn('text-base font-semibold tabular-nums', colors.text)}>
+                                                        {['server', 'database', 'cache'].includes(key)
+                                                            ? t(`dashboard.home.system.status.${status.status}`, {}, status.value)
+                                                            : status.value}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <div className="flex flex-col items-end gap-1">
@@ -246,7 +252,7 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
                                                             status.indicator === 'pulse' ? 'animate-pulse' : '',
                                                         )}
                                                     />
-                                                    {status.status}
+                                                    {t(`dashboard.home.system.status.${status.status}`, {}, status.status)}
                                                 </div>
                                                 <span className="text-[11px] text-muted-foreground">{formatLastChecked(status.last_checked_at)}</span>
                                             </div>
@@ -274,8 +280,7 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, ROUTE, t }
                                 <RefreshCcw className="h-5 w-5 animate-spin text-muted-foreground" />
                             </div>
                             <div className="text-center">
-                                <p className="font-medium">Loading system metrics...</p>
-                                <p className="text-sm text-muted-foreground">Gathering the latest health data</p>
+                                <p className="font-medium">{t('dashboard.home.system.loading')}</p>
                             </div>
                         </CardContent>
                     </Card>

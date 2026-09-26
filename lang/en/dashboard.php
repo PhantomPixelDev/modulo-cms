@@ -29,7 +29,7 @@ return [
         'welcome_message' => 'Here\'s what\'s happening with your site today.',
         'hero_description' => 'Here\'s an overview of your CMS. Create content, manage users, and customize your site all from one place.',
         'cta_create_post' => 'Create Post',
-        'auto_refresh' => 'Auto-refreshes every minute',
+        'auto_refresh' => 'Checked when you open the dashboard',
         'overview' => 'Overview',
         'system_health' => 'System Health',
         'greetings' => [
@@ -54,6 +54,71 @@ return [
             'comments' => 'Total Comments',
             'media' => 'Media Files',
             'views' => 'Total Views',
+        ],
+        'checklist' => [
+            'title' => 'Get your site ready',
+            'description' => ':done of :total done. Each step ticks itself off once it is set up.',
+            'dismiss' => 'Hide this checklist',
+            'steps' => [
+                'site_name' => [
+                    'title' => 'Name your site',
+                    'hint' => 'Shown in the header, browser tabs and search results.',
+                ],
+                'logo' => [
+                    'title' => 'Add your logo',
+                    'hint' => 'Upload it in Site settings → General.',
+                ],
+                'first_page' => [
+                    'title' => 'Publish your first page',
+                    'hint' => 'An About or Contact page is a good start.',
+                ],
+                'menu' => [
+                    'title' => 'Build the main menu',
+                    'hint' => 'Choose which pages appear in the site navigation.',
+                ],
+                'email' => [
+                    'title' => 'Set up email sending',
+                    'hint' => 'Emails are only written to the log until SMTP is configured on the server (MAIL_* settings).',
+                ],
+                'two_factor' => [
+                    'title' => 'Turn on two-factor sign-in',
+                    'hint' => 'Protects your admin account with a code from your phone.',
+                ],
+            ],
+        ],
+        'widgets' => [
+            'drafts' => 'Your drafts',
+            'drafts_empty' => 'No drafts. Everything you wrote is published.',
+            'all_drafts' => 'All drafts →',
+            'scheduled' => 'Going live soon',
+            'scheduled_empty' => 'Nothing scheduled. Set a future publish date to plan ahead.',
+            'recent' => 'Recently edited',
+            'recent_empty' => 'Nothing edited yet.',
+            'comments' => 'Comments to review',
+            'comments_empty' => 'No comments are waiting.',
+            'comment_by' => ':author on “:post”',
+            'moderate' => 'Review comments →',
+        ],
+        'system' => [
+            'loading' => 'Loading system status…',
+            'labels' => [
+                'server' => 'Server',
+                'uptime' => 'Uptime',
+                'database' => 'Database',
+                'cache' => 'Cache',
+                'storage' => 'Storage',
+                'queue' => 'Queue worker',
+            ],
+            'status' => [
+                'online' => 'Online',
+                'running' => 'Running',
+                'connected' => 'Connected',
+                'disconnected' => 'Disconnected',
+                'active' => 'Active',
+                'healthy' => 'Healthy',
+                'warning' => 'Needs attention',
+                'inactive' => 'Inactive',
+            ],
         ],
     ],
 

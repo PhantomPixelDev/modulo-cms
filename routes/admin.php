@@ -27,6 +27,7 @@ use App\Http\Controllers\Content\TaxonomyTermController;
 use App\Http\Controllers\Content\TemplateController;
 use App\Http\Controllers\Content\ThemeController;
 use App\Http\Controllers\Content\TrashController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // All admin routes are protected by auth, verified, and admin role check
@@ -38,6 +39,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('/', function () {
             return redirect('/dashboard');
         })->name('index');
+        Route::post('onboarding/dismiss', [DashboardController::class, 'dismissOnboarding'])->name('onboarding.dismiss');
 
         // Resource routes with automatic permission checks
         Route::resource('pages', PagesController::class)->except(['show']);

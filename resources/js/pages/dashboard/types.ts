@@ -373,15 +373,7 @@ export interface DashboardProps {
     shopOrder?: ShopOrder;
     shopSettings?: Record<string, any>;
     // Dashboard activity and status
-    recentActivity?: Array<{
-        type: string;
-        icon: string;
-        title: string;
-        description: string;
-        user: string;
-        timestamp: string;
-        created_at: any;
-    }>;
+    overview?: DashboardOverviewData;
     systemStatus?: Record<
         string,
         {
@@ -460,4 +452,24 @@ export interface PostListItem {
 export function asArray<T>(val?: T[] | { data: T[] } | null): T[] {
     if (!val) return [];
     return Array.isArray(val) ? val : val.data || [];
+}
+
+export interface OverviewPost {
+    id: number;
+    title: string;
+    slug: string;
+    status: string;
+    is_page: boolean;
+    type: string | null;
+    author: string | null;
+    date: string;
+    date_iso: string | null;
+}
+
+export interface DashboardOverviewData {
+    drafts?: OverviewPost[];
+    scheduled?: OverviewPost[];
+    recent?: OverviewPost[];
+    pendingComments?: { count: number; latest: Array<{ id: number; author: string | null; excerpt: string; post: string | null }> };
+    checklist?: Array<{ key: string; done: boolean }>;
 }
