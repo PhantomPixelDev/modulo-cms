@@ -2,6 +2,7 @@ import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { createElement, type ComponentType, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './ErrorBoundary';
 import { AdminToastProvider } from './components/admin/AdminToastProvider';
@@ -22,6 +23,21 @@ const appName = import.meta.env.VITE_APP_NAME || 'Modulo CMS';
 const pages = import.meta.glob(['./pages/**/*.tsx', '!./pages/**/*.test.tsx'], { eager: false });
 const themeComponents = import.meta.glob(['../themes/**/components/**/*.tsx', '!../themes/**/*.test.tsx'], { eager: false });
 
+type PageModule = { default: ComponentType<unknown> & { layout?: unknown } };
+
+/**
+ * A plugin's admin screen gets the admin frame (sidebar, header, toasts) unless
+ * it brings its own layout, so plugins needn't import it.
+ */
+async function withAdminLayout(module: PageModule): Promise<PageModule> {
+    const page = module.default;
+    if (page.layout === undefined && /^\/dashboard(\/|$)/.test(window.location.pathname)) {
+        const { default: AdminLayout } = await import('./layouts/admin-layout');
+        page.layout = (content: ReactNode) => createElement(AdminLayout, null, content);
+    }
+    return module;
+}
+
 createInertiaApp({
     // Admin screens pass a bare title ("Posts") and get the app name added. Public
     // pages come from the theme, which builds the whole title ("Page | Site").
@@ -36,7 +52,7 @@ createInertiaApp({
         if (name.startsWith('Plugins/')) {
             const [, slug, ...rest] = name.split('/');
 
-            return resolvePluginComponent(slug, rest.join('/'));
+            return resolvePluginComponent(slug, rest.join('/')).then(withAdminLayout);
         }
 
         // Check for theme components first (e.g., Themes/ModernReact/Index or Themes/ModernReact/Shop/Archive)

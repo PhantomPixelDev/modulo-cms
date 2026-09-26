@@ -83,15 +83,6 @@ class RolePermissionSeeder extends Seeder
             'deactivate plugins',
             'delete plugins',
 
-            // ModuloShop
-            'view shop products',
-            'create shop products',
-            'edit shop products',
-            'delete shop products',
-            'view shop orders',
-            'manage shop orders',
-            'manage shop settings',
-
             // Settings management
             'view settings',
             'edit settings',
@@ -141,8 +132,6 @@ class RolePermissionSeeder extends Seeder
                 'view taxonomies', 'create taxonomies', 'edit taxonomies', 'delete taxonomies',
                 'view taxonomy terms', 'create taxonomy terms', 'edit taxonomy terms', 'delete taxonomy terms',
                 'view plugins', 'install plugins', 'activate plugins', 'deactivate plugins', 'delete plugins',
-                'view shop products', 'create shop products', 'edit shop products', 'delete shop products',
-                'view shop orders', 'manage shop orders', 'manage shop settings',
                 'view settings', 'edit settings',
                 'view sitemap', 'edit sitemap',
                 'view analytics', 'export data',

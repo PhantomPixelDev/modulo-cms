@@ -50,3 +50,7 @@ docs/.vitepress/cache
 # Test coverage output
 /coverage
 coverage.xml
+
+# Plugins are installed per site (from the registry), never part of core
+/plugins/*
+!/plugins/.gitkeep

@@ -7,6 +7,7 @@ use App\Models\PostType;
 use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
 use App\Services\AdminStatsService;
+use App\Services\Plugins\PluginAdminMenu;
 use App\Services\SiteSettingsService;
 use App\Services\TranslationService;
 use App\Services\UpdateCenter;
@@ -127,7 +128,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...$parentShared,
-            'name' => $this->settings->get('site_name', config('app.name')),
+            'name' => $this->settings->siteName(),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             // Build identity, for the admin footer and the update panel. Cheap
             // enough to share unconditionally: it is config reads, no queries.
@@ -185,6 +186,8 @@ class HandleInertiaRequests extends Middleware
                 ? app(UpdateCenter::class)->pending()
                 : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            // Sidebar entries active plugins declare in plugin.json
+            'pluginMenu' => fn () => $canAccessAdmin ? app(PluginAdminMenu::class)->for($request->user()) : [],
             'activePlugins' => fn () => schema_has_table('plugins')
                 ? Plugin::query()->active()->pluck('slug')->values()->toArray()
                 : [],

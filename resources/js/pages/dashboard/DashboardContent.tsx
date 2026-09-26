@@ -13,7 +13,6 @@ import { getPluginsSections } from './sections/plugins/pluginsSections';
 import { getPostTypesSections } from './sections/post-types/postTypesSections';
 import { getPostsSections } from './sections/posts/postsSections';
 import { getRolesSections } from './sections/roles/rolesSections';
-import { getShopSections } from './sections/shop/shopSections';
 import { getSiteSettingsSections } from './sections/site-settings/siteSettingsSections';
 import { getSitemapSections } from './sections/sitemap/sitemapSections';
 import { getSystemSections } from './sections/system/systemSections';
@@ -60,6 +59,7 @@ export default function DashboardContent({
     timezones,
     plugins,
     plugin,
+    settingsSchema,
     templates,
     template,
     editTemplate,
@@ -69,15 +69,6 @@ export default function DashboardContent({
     allFolders,
     breadcrumb,
     currentFolderId,
-    shopProducts,
-    productCategories,
-    productTags,
-    editProduct,
-    shopOrders,
-    shopCoupons,
-    shopGateways,
-    shopOrder,
-    shopSettings,
     editUser,
     editRole,
     editPostType,
@@ -197,24 +188,10 @@ export default function DashboardContent({
             ...getPluginsSections({
                 plugins,
                 plugin,
+                settingsSchema,
                 can,
                 ROUTE,
                 t,
-            }),
-            ...getShopSections({
-                shopProducts,
-                productCategories,
-                productTags,
-                editProduct,
-                shopOrders,
-                shopCoupons,
-                shopGateways,
-                shopOrder,
-                shopSettings,
-                can,
-                showSuccess,
-                showError,
-                ROUTE,
             }),
             ...getTranslationSections({
                 translationManager,

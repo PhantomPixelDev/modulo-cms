@@ -63,18 +63,14 @@ ENV MODULO_INSTALL_CHANNEL=docker
 RUN if [ -n "$MODULO_VERSION" ]; then echo "${MODULO_VERSION#v}" > VERSION; \
     else echo "$(cat VERSION | tr -d '[:space:]' | sed 's/-dev$//')-dev" > VERSION; fi && cat VERSION
 
-# Keep a pristine copy of the bundled plugins. /var/www/html/plugins is a named
-# volume in production, and a named volume is seeded from the image exactly
-# once -- so without this, bundled plugins would freeze at whatever version
-# first booted and never update again. The entrypoint applies newer ones over it (plugin:sync-bundled).
-RUN cp -a plugins plugins-bundled
-
 RUN set -eux; \
     rm -f .env bootstrap/cache/*.php; \
-    mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; \
+    mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache public/plugins; \
     # Discover only the installed (non-dev) packages; no database exists at build time
     DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan package:discover --ansi; \
-    chown -R www-data:www-data storage bootstrap/cache
+    # public/plugins is a named volume; a new volume takes this directory's owner,
+    # so the app can publish plugin bundles into it
+    chown -R www-data:www-data storage bootstrap/cache public/plugins
 
 COPY docker/entrypoint.sh /usr/local/bin/modulo-entrypoint
 RUN chmod +x /usr/local/bin/modulo-entrypoint

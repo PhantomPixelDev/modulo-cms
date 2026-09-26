@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/useTranslation';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, Cpu, Save } from 'lucide-react';
 import { useState } from 'react';
 import { ROUTE } from '../../routes';
+import type { CustomFieldDefinition } from '../../types';
+import { CustomFieldInputs } from '../posts/CustomFieldInputs';
 
 interface Plugin {
     id: number;
@@ -22,9 +24,12 @@ interface Plugin {
 interface PluginSettingsFormProps {
     plugin: Plugin;
     canEdit: boolean;
+    /** The form the plugin describes in plugin.json (settings_schema) */
+    schema?: CustomFieldDefinition[];
 }
 
-export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps) {
+export function PluginSettingsForm({ plugin, canEdit, schema = [] }: PluginSettingsFormProps) {
+    const errors = (usePage().props.errors ?? {}) as Record<string, string>;
     const { t } = useTranslation();
     const { success: showSuccess, error: showError } = useAdminToast();
     const [saving, setSaving] = useState(false);
@@ -75,11 +80,9 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
                             <CardDescription>{t('dashboard.plugins.settings.configuration_description', { name: plugin.name })}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {/* This is a dynamic placeholder. In a real world scenario, 
-                  plugins might define their own setting schemas. 
-                  For now, we'll provide a simple key-value editor or 
-                  a placeholder if no settings are defined. */}
-                            {Object.keys(settings).length === 0 ? (
+                            {schema.length > 0 ? (
+                                <CustomFieldInputs fields={schema} values={settings} onChange={setSettings} errors={errors} errorPrefix="settings." />
+                            ) : Object.keys(settings).length === 0 ? (
                                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-6 text-center">
                                     <Cpu className="mb-2 h-8 w-8 text-muted-foreground" />
                                     <p className="text-sm text-muted-foreground">{t('dashboard.plugins.settings.no_settings')}</p>
@@ -101,7 +104,11 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
                             )}
                         </CardContent>
                         <CardFooter className="border-t px-6 py-4">
-                            <Button onClick={handleSave} disabled={saving || !canEdit || Object.keys(settings).length === 0} className="gap-2">
+                            <Button
+                                onClick={handleSave}
+                                disabled={saving || !canEdit || (schema.length === 0 && Object.keys(settings).length === 0)}
+                                className="gap-2"
+                            >
                                 {saving ? (
                                     t('dashboard.plugins.settings.actions.saving')
                                 ) : (
@@ -127,7 +134,7 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
                             </div>
                             <div className="flex justify-between border-b py-1">
                                 <span className="text-muted-foreground">{t('dashboard.plugins.settings.labels.status')}</span>
-                                <span className={`font-medium ${plugin.is_active ? 'text-green-600' : 'text-yellow-600'}`}>
+                                <span className={`font-medium ${plugin.is_active ? 'text-success' : 'text-warning-foreground dark:text-warning'}`}>
                                     {plugin.is_active
                                         ? t('dashboard.plugins.settings.labels.active')
                                         : t('dashboard.plugins.settings.labels.inactive')}
@@ -141,17 +148,13 @@ export function PluginSettingsForm({ plugin, canEdit }: PluginSettingsFormProps)
                     </Card>
 
                     {!plugin.is_active && (
-                        <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-900/20 dark:bg-yellow-900/10">
+                        <Card className="border-warning/40 bg-warning/10">
                             <CardContent className="pt-6">
                                 <div className="flex gap-3">
-                                    <AlertCircle className="h-5 w-5 shrink-0 text-yellow-600" />
+                                    <AlertCircle className="h-5 w-5 shrink-0 text-warning-foreground dark:text-warning" />
                                     <div className="space-y-1">
-                                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
-                                            {t('dashboard.plugins.settings.inactive.title')}
-                                        </p>
-                                        <p className="text-xs text-yellow-700 dark:text-yellow-500">
-                                            {t('dashboard.plugins.settings.inactive.description')}
-                                        </p>
+                                        <p className="text-sm font-medium">{t('dashboard.plugins.settings.inactive.title')}</p>
+                                        <p className="text-xs text-muted-foreground">{t('dashboard.plugins.settings.inactive.description')}</p>
                                     </div>
                                 </div>
                             </CardContent>

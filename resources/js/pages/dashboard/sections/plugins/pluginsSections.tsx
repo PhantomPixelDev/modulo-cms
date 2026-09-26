@@ -7,16 +7,19 @@ import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { PluginBrowser } from '../../components/plugins/PluginBrowser';
 import { PluginSettingsForm } from '../../components/plugins/PluginSettingsForm';
 import { PluginsList } from '../../components/plugins/PluginsList';
+import type { CustomFieldDefinition } from '../../types';
 
 export function getPluginsSections({
     plugins,
     plugin,
+    settingsSchema,
     can,
     ROUTE,
     t,
 }: {
     plugins: any;
     plugin: any;
+    settingsSchema?: CustomFieldDefinition[];
     can: (perm: string) => boolean;
     ROUTE: any;
     t: (key: string, replacements?: Record<string, string | number>) => string;
@@ -61,7 +64,7 @@ export function getPluginsSections({
                 </Button>
             }
         >
-            <PluginSettingsForm plugin={plugin} canEdit={can('install plugins')} />
+            <PluginSettingsForm plugin={plugin} schema={settingsSchema} canEdit={can('install plugins')} />
         </SectionWrapper>
     );
 

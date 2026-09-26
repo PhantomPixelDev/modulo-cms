@@ -59,20 +59,6 @@ it('escapes titles and keeps json-ld from closing its script tag', function () {
         ->and(jsonLdIn($html)[0]['headline'])->toContain('"quoted"')->toEndWith('title | Smoke Site');
 });
 
-it('describes products for rich results and keeps the cart out of search', function () {
-    bootShopPlugin($this);
-    $product = createShopProduct(['price' => 20, 'sale_price' => 15, 'sku' => 'TEE']);
-
-    $html = $this->get('/shop/'.$product->slug)->assertOk()->getContent();
-    $schema = collect(jsonLdIn($html))->firstWhere('@type', 'Product');
-
-    expect($schema['name'])->toBe($product->title)
-        ->and($schema['sku'])->toBe('TEE')
-        ->and($schema['offers'][0])->toMatchArray(['price' => '15.00', 'availability' => 'https://schema.org/InStock']);
-
-    expect($this->get('/shop/cart')->getContent())->toContain('<meta inertia name="robots" content="noindex, follow">');
-});
-
 it('leaves the admin without public page tags', function () {
     $this->actingAs(makeAdminUserWithPermissions());
 

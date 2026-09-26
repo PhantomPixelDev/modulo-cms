@@ -97,7 +97,8 @@
         "react": "{{ asset('modulo-sdk/react.js') }}",
         "react-dom": "{{ asset('modulo-sdk/react-dom.js') }}",
         "react/jsx-runtime": "{{ asset('modulo-sdk/react-jsx-runtime.js') }}",
-        "@inertiajs/react": "{{ asset('modulo-sdk/inertia-react.js') }}"
+        "@inertiajs/react": "{{ asset('modulo-sdk/inertia-react.js') }}",
+        "@modulo/ui": "{{ asset('modulo-sdk/ui.js') }}"
     }}
     </script>
     @routes(null, Vite::cspNonce())

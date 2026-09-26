@@ -137,8 +137,7 @@ download must match both the release's `.sha256` file and the checksum in its
 `release.json`, or nothing is changed. It unpacks and checks the release (VERSION,
 `vendor/`, `public/index.php`), puts the site into maintenance mode, and swaps the
 code in. `.env`, `storage/`, `plugins/` and the site's own folders under `public/`
-(`storage`, `themes`, `plugins`) are left alone; bundled plugins are synced from the
-release only where newer. Then the **new** code runs `modulo:upgrade` (backup,
+(`storage`, `themes`, `plugins`) are left alone; a release ships no plugins. Then the **new** code runs `modulo:upgrade` (backup,
 preflight, migrations) in a fresh PHP process.
 
 The replaced code is kept in `storage/app/updates/previous`. If the upgrade fails the

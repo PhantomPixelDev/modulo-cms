@@ -28,10 +28,10 @@ npm run docs:dev                 # documentation site
 - New user-facing behaviour gets a Pest test; new admin screens get an e2e check if they
   are central.
 - Record security-relevant actions with `App\Support\ActivityLog::record()`.
-- `plugins/*` are copies of the plugin repositories (`PhantomPixelDev/modulo-plugin-*`), which the registry
-  installs from. Change the plugin repository, tag the release, then copy it here; CI
-  (`scripts/check-bundled-plugins.sh`) fails when a bundled plugin differs from its tagged release. Bump
-  the plugin version for every change, or `plugin:sync-bundled` won't deliver it to existing sites.
+- Core ships no plugins. Each plugin is its own distribution (`PhantomPixelDev/modulo-plugin-*`) with
+  its own CI, which runs its tests inside a checkout of core; sites install plugins from the registry.
+  Never copy plugin code into core: change the plugin's repository and tag a release. `plugins/` is
+  gitignored; to try one locally or on a dev server, install it there (`php artisan plugin:install <slug>`).
 - No new PHP packages without a good reason: 2FA, API tokens and the activity log are
   deliberately in-house.
 - Migrations only run forwards in production; make them safe on PostgreSQL and SQLite

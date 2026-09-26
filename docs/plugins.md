@@ -101,12 +101,61 @@ Two volumes matter:
   `public/plugins`. The nginx image bakes `public/` in at build time, so anything
   written there at runtime is invisible to it otherwise.
 
-A named volume is seeded from the image **once** and never refreshed, which would
-freeze bundled plugins at whatever version first booted. The image therefore keeps a
-pristine copy at `plugins-bundled/`, and on every boot `plugin:sync-bundled` copies a
-bundled plugin over the volume **only when it is strictly newer** than what is there. A
-plugin you updated from the registry is never rolled back to the image's older copy,
-and plugins installed at runtime have their own directories and are untouched.
+The image ships no plugins: a site installs the ones it wants from the registry, and
+updating the image never touches them. On boot the app republishes the installed
+plugins' browser files (`plugin:publish-assets`) into `plugin_assets`.
+
+## Admin menu
+
+A plugin adds its entries to the admin sidebar (under **Extensions**) from
+`plugin.json`:
+
+```json
+"admin": {
+  "menu": [{
+    "label": "Shop",
+    "label_key": "modulo-shop::admin.menu.shop",
+    "icon": "shopping-bag",
+    "route": "dashboard.admin.shop.products.index",
+    "permissions": ["view shop products", "view shop orders"],
+    "children": [
+      { "label": "Orders", "route": "dashboard.admin.shop.orders.index", "permissions": ["view shop orders"] }
+    ]
+  }]
+}
+```
+
+- **Link**: `route` (a route name the plugin registers) or `href` (a path under
+  `/dashboard`). Anything else is ignored.
+- **Who sees it**: people with any of `permissions` (administrators see everything); no
+  permissions means everyone who can open the admin.
+- **Label**: `label_key` is a translation key from the plugin's `lang/` folder
+  (`<slug>::file.key`); `label` is the fallback.
+- **Icon**: one of the icon names the content-type editor offers (`shopping-bag`,
+  `mail`, `package`, ...); unknown names show a generic icon.
+- Children show under the entry while one of its pages is open.
+
+Other plugins can change the list with the `admin_menu` filter ([hooks](hooks.md)).
+
+## Settings form
+
+`settings` in `plugin.json` holds the defaults. Add `settings_schema` and the plugin's
+settings page becomes a proper form, checked on the server when it is saved:
+
+```json
+"settings": { "recipient_email": "", "subject": "Contact request" },
+"settings_schema": [
+  { "key": "recipient_email", "type": "email", "label": "Send messages to",
+    "label_key": "contact-form::settings.recipient", "help": "Leave empty to use the site's admin email." },
+  { "key": "subject", "type": "text", "label": "Subject", "required": true }
+]
+```
+
+Field types are the ones content types use for custom fields: `text`, `textarea`,
+`number`, `url`, `email`, `date`, `toggle`, `select` (with `options`) and `image`.
+`help_key` translates the help text like `label_key` does. Plugins without a schema keep
+a plain key/value editor. A plugin with a screen of its own (like the shop's settings)
+doesn't need either.
 
 ## Requirements
 

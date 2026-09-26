@@ -68,6 +68,7 @@ class CommentController extends Controller
         }
 
         $comment->save();
+        do_action('comment_posted', $comment, $post);
 
         return back()->with('success', $held ? 'Thanks! Your comment will appear once it has been approved.' : 'Thanks! Your comment has been posted.');
     }

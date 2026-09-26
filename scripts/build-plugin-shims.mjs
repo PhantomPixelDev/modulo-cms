@@ -8,7 +8,7 @@
 // The export lists are read from the installed packages, so they follow
 // upgrades: run `npm run build:shims` after updating React or Inertia (the
 // plugin-sdk test fails if they drift).
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +24,21 @@ export const SHIMS = {
 };
 
 const identifier = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
+
+/**
+ * The admin kit plugins import as @modulo/ui: the names resources/js/plugin-ui.ts
+ * re-exports (it is TypeScript with path aliases, so read, not imported).
+ */
+export function uiExports(source = readFileSync(resolve(root, 'resources/js/plugin-ui.ts'), 'utf8')) {
+    const names = [];
+    for (const [, list] of source.matchAll(/export\s*\{([^}]*)\}\s*from/g)) {
+        for (const entry of list.split(',')) {
+            const name = entry.trim().split(/\s+as\s+/).pop();
+            if (name && identifier.test(name)) names.push(name);
+        }
+    }
+    return names.sort();
+}
 
 export async function exportsOf(specifier) {
     const mod = await import(specifier);
@@ -49,4 +64,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         writeFileSync(resolve(out, file), shimSource(vendor, names));
         console.log(`${file}: ${names.length} exports from ${specifier}`);
     }
+    const ui = uiExports();
+    writeFileSync(resolve(out, 'ui.js'), shimSource('ui', ui).replace('window.Modulo.vendor.ui', 'window.Modulo.ui'));
+    console.log(`ui.js: ${ui.length} exports from resources/js/plugin-ui.ts`);
 }

@@ -44,12 +44,3 @@ it('never caches for signed-in users, flash messages or arbitrary query strings'
     $this->get('/about?utm_source=news')->assertHeaderMissing('X-Page-Cache');
     $this->get('/about?page=2')->assertHeader('X-Page-Cache', 'miss');
 });
-
-it('keeps private shop pages out of the cache', function () {
-    bootShopPlugin($this);
-
-    $product = createShopProduct();
-
-    $this->get('/shop/cart')->assertOk()->assertHeaderMissing('X-Page-Cache');
-    $this->get('/shop/'.$product->slug)->assertOk()->assertHeader('X-Page-Cache', 'miss');
-});

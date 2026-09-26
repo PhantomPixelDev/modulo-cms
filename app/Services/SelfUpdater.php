@@ -14,8 +14,8 @@ use Throwable;
  * Updates a release-tarball install in place: download, verify, swap the code,
  * then let the new code run its own guarded `modulo:upgrade`.
  *
- * What stays: .env, storage/, plugins/ (runtime-installed plugins; bundled ones
- * are synced from the release where newer) and the runtime folders under
+ * What stays: .env, storage/, plugins/ (installed plugins; a release ships
+ * none) and the runtime folders under
  * public/ (storage link, published theme and plugin assets). Everything else
  * that the release ships is replaced, and the previous code is kept under
  * storage/app/updates/previous for `modulo:update --rollback`.
@@ -26,7 +26,7 @@ use Throwable;
 class SelfUpdater
 {
     /** Top-level entries never replaced by a release. */
-    public const PRESERVED = ['.env', 'storage', 'plugins', 'plugins-bundled', '.git'];
+    public const PRESERVED = ['.env', 'storage', 'plugins', '.git'];
 
     /** Entries under public/ that belong to this site, not to the release. */
     public const PRESERVED_PUBLIC = ['storage', 'themes', 'plugins'];

@@ -16,12 +16,13 @@ So a plugin brings its own bundle and registers what it provides at runtime.
 ## The contract
 
 The core publishes `window.Modulo` before any plugin loads (runtime contract
-`1.1.0`):
+`1.2.0`):
 
 ```ts
 window.Modulo = {
-  version: '1.1.0',
+  version: '1.2.0',
   vendor: { react, reactDOM, jsxRuntime, inertia },
+  ui,            // the admin kit, set before the first plugin bundle loads
   registerComponents(slug, components),
   getComponent(slug, name),
   registered(),
@@ -115,8 +116,54 @@ Run it after upgrading React, ReactDOM or Inertia. `resources/js/plugin-sdk.test
 fails when a shim is missing an export, so a dependency bump cannot silently break
 plugins that import a new API.
 
+## The admin kit: `@modulo/ui`
+
+Admin screens should look and behave like the rest of the admin, so the core hands its
+building blocks to plugins (runtime contract `1.2.0`):
+
+```tsx
+import { Button, Card, CardContent, Input, Label, SectionWrapper, useAdminToast, useTranslation } from '@modulo/ui';
+```
+
+Buttons, badges, cards, checkboxes, dialogs, dropdown menus, inputs, labels, selects,
+switches, tables, tabs, textareas and tooltips; `SectionWrapper`, `SectionHeader`,
+`EmptyState`, `AdminLayout`, `MediaPickerDialog` and `CustomFieldInputs`; the hooks
+`useTranslation`, `useAdminToast` and `useAcl`, and `cn`. The full list is
+`resources/js/plugin-ui.ts`; types are in the SDK (`ui.d.ts`). Names are only ever
+added, so a plugin built against an older kit keeps working.
+
+Like React, `@modulo/ui` stays a bare import in the bundle (the SDK preset marks it
+external) and the page's import map points it at the core's copy.
+
+A plugin screen rendered under `/dashboard` gets the admin frame (sidebar, header,
+toasts) automatically; give the component a `layout` of your own to opt out.
+
 ## Styling
 
-The core's Tailwind build scans the core's own source, so utility classes that appear
-only in your plugin will not be in the compiled stylesheet. Either ship your own CSS
-from the plugin bundle, or stay within the classes the core already uses.
+The core's Tailwind build only sees the core's own source, so a plugin brings the
+utilities its screens use. Build them with Tailwind in the plugin (utilities only: the
+core already provides the base styles) and map the core's design tokens, so
+`bg-primary` or `text-muted-foreground` follow the site's theme and dark mode:
+
+```css
+/* resources/css/plugin.css, imported from resources/js/index.tsx */
+@import 'tailwindcss/theme' layer(theme);
+@import 'tailwindcss/utilities' layer(utilities);
+@custom-variant dark (&:is(.dark *));
+@theme {
+    --color-primary: var(--primary);
+    /* ...the rest of the @theme block in the core's resources/css/app.css */
+}
+```
+
+A library build writes the CSS next to the bundle (`build.lib.cssFileName: 'plugin'`)
+but doesn't load it; link it from the bundle:
+
+```ts
+const link = document.createElement('link');
+link.rel = 'stylesheet';
+link.href = new URL('./plugin.css', import.meta.url).href;
+document.head.appendChild(link);
+```
+
+The shop plugin (`PhantomPixelDev/modulo-plugin-shop`) is a complete example.

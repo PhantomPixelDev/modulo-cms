@@ -63,6 +63,10 @@ class PostObserver
      */
     public function updated(Post $post): void
     {
+        if ($post->wasChanged('status')) {
+            $this->announceIfLive($post);
+        }
+
         // Saved for real: the editor's autosave of this post is now history
         if ($post->wasChanged(PostAutosave::FIELDS) && Auth::id() && schema_has_table('post_autosaves')) {
             PostAutosave::where('post_id', $post->id)->where('user_id', Auth::id())->delete();
@@ -91,6 +95,27 @@ class PostObserver
         if ($post->status === 'published') {
             $this->pingingService->ping($post);
         }
+
+        do_action('post_saved', $post);
+    }
+
+    /**
+     * Created already live: tell plugins it was published.
+     */
+    public function created(Post $post): void
+    {
+        $this->announceIfLive($post);
+    }
+
+    /**
+     * Tells plugins a post went live (scheduled posts are announced by
+     * modulo:publish-scheduled when their time comes).
+     */
+    protected function announceIfLive(Post $post): void
+    {
+        if ($post->status === 'published' && ($post->published_at === null || $post->published_at <= now())) {
+            do_action('post_published', $post);
+        }
     }
 
     /**
@@ -100,6 +125,8 @@ class PostObserver
     {
         $this->postService->flushCache();
         $this->adminStats->forget();
+
+        do_action('post_deleted', $post);
     }
 
     public function restored(Post $post): void

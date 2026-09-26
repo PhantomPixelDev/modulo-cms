@@ -6,7 +6,4 @@ parameters:
     level: 5
     paths:
         - app
-        - plugins
-    excludePaths:
-        - plugins/*/database/*
     tmpDir: storage/framework/phpstan

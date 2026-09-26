@@ -1,11 +1,17 @@
 {
     "name": "@modulo/plugin-sdk",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Build a Modulo CMS plugin's React interface against the core's runtime.",
     "type": "module",
     "main": "index.js",
     "types": "index.d.ts",
-    "files": ["index.js", "index.d.ts", "runtime.d.ts", "README.md"],
+    "files": [
+        "index.js",
+        "index.d.ts",
+        "runtime.d.ts",
+        "ui.d.ts",
+        "README.md"
+    ],
     "peerDependencies": {
         "vite": ">=6",
         "@vitejs/plugin-react": ">=4"
