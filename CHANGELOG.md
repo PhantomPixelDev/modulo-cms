@@ -1,5 +1,60 @@
 # Changelog
 
+## [0.3.0](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.2.0...v0.3.0) (2026-09-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* new installs no longer include the Shop, Contact Form or Hello World plugins; install them from the plugin registry. Sites that already have them keep them, and get updates from the registry.
+
+### Features
+
+* **a11y:** skip link, hreflang links and working error pages ([31997d9](https://github.com/PhantomPixelDev/modulo-cms/commit/31997d9251fbb7748f290cc291c809fe61f52d53))
+* **a11y:** skip link, hreflang links and working error pages ([85f37a1](https://github.com/PhantomPixelDev/modulo-cms/commit/85f37a1c20e63108616a2e07e59b3af92cc9eeb6))
+* **admin:** dashboard overview with setup checklist ([4a8903a](https://github.com/PhantomPixelDev/modulo-cms/commit/4a8903a13ad3159288ba268863dc5407e4af963c))
+* **admin:** editor and admin experience (Phase 3) ([9b0c729](https://github.com/PhantomPixelDev/modulo-cms/commit/9b0c729fc18705c2b9bde8c978d9802db7df93ae))
+* **admin:** email settings and test message ([98c9cfe](https://github.com/PhantomPixelDev/modulo-cms/commit/98c9cfe36bfa9ddc34d29d6f5878b55d2cb5c630))
+* **admin:** manage languages from the admin ([ed2624a](https://github.com/PhantomPixelDev/modulo-cms/commit/ed2624aba88761e58e6e7649b8d4cb7b029fc175))
+* **admin:** server-side search, filters and bulk actions for posts and pages ([1c6eb34](https://github.com/PhantomPixelDev/modulo-cms/commit/1c6eb349fb9fe1a254825d26f928909080881f76))
+* **backups:** restore and upload from the admin, off-site copies ([12ad77b](https://github.com/PhantomPixelDev/modulo-cms/commit/12ad77b3e8de54f8a28260aa11b81ff316ef0985))
+* **content:** custom fields per content type; keep SEO fields on save ([611fa2f](https://github.com/PhantomPixelDev/modulo-cms/commit/611fa2ffcb48d9adc3c8bb4fc003507b035826a3))
+* **editor:** autosave, draft preview and revision changes ([bd82546](https://github.com/PhantomPixelDev/modulo-cms/commit/bd8254647a317c1a11a8b96f34aa468fa8bddf67))
+* email settings, backup restore and off-site copies, languages, editor guide (Phase 5) ([8650515](https://github.com/PhantomPixelDev/modulo-cms/commit/86505157e00d55ca66cdd4e93e0e44b089d37902))
+* **mail:** emails carry the site's name and logo ([b89fd23](https://github.com/PhantomPixelDev/modulo-cms/commit/b89fd235906512ba8c1de70b9415baad97da6556))
+* **menus:** drag-and-drop menu builder ([dcb32a5](https://github.com/PhantomPixelDev/modulo-cms/commit/dcb32a5a05394563affc2d96cf677cd7887ad382))
+* **pages:** page editor on par with posts ([c703c19](https://github.com/PhantomPixelDev/modulo-cms/commit/c703c1900b3d0d247c13684de4cae826538fc128))
+* **plugins:** admin menus, settings forms, UI kit and hooks for plugins ([62dbf33](https://github.com/PhantomPixelDev/modulo-cms/commit/62dbf3347795afa92f0c23ae17fd17babc6860a1))
+* **seo:** page title, description and structured data in the server HTML ([3314daf](https://github.com/PhantomPixelDev/modulo-cms/commit/3314daff79cc24c7737a162b2be4cc949d138687))
+* **seo:** page title, description and structured data in the server HTML ([ebf029b](https://github.com/PhantomPixelDev/modulo-cms/commit/ebf029b2aac45f305f138ad11a75b3a911cb32d4))
+* **shop:** shop admin screens come from the shop plugin ([c24bdb7](https://github.com/PhantomPixelDev/modulo-cms/commit/c24bdb74c0609d1b7879baff6d24adf92b207aa6))
+
+
+### Bug Fixes
+
+* **admin:** readable labels and hints for every site setting ([0d856d0](https://github.com/PhantomPixelDev/modulo-cms/commit/0d856d09439759fe04e1ba360e129eab7ee766dc))
+* autosave controller import ([d9f16ac](https://github.com/PhantomPixelDev/modulo-cms/commit/d9f16acbee08a61ac918d1f0513432a9e83537b9))
+* **content:** allow blank choices while editing a choice list; formatting ([39f2a73](https://github.com/PhantomPixelDev/modulo-cms/commit/39f2a73f50dc96606744f572b379c4bb9a7e4d18))
+* **docker:** let the app publish plugin assets to its volume ([bacbddf](https://github.com/PhantomPixelDev/modulo-cms/commit/bacbddf4e1ba6a118585e0fadc9b5c9d04161da3))
+* language update payload type; formatting ([15bc673](https://github.com/PhantomPixelDev/modulo-cms/commit/15bc673bb5dbdf1adc3a40978184635806f2cd4a))
+* **menus:** item permissions follow the menu policy; formatting ([209cc30](https://github.com/PhantomPixelDev/modulo-cms/commit/209cc30b587aaaea423d533f1df2f16ca313a8d0))
+* **pages:** keep all meta data keys on save ([0a23ec0](https://github.com/PhantomPixelDev/modulo-cms/commit/0a23ec0c88b4db432e8f5d6e9e796bc558674c61))
+* phpstan pattern escaping ([93a3dac](https://github.com/PhantomPixelDev/modulo-cms/commit/93a3dac884cab0f9f17016fa703492cc82a246dc))
+* **plugins:** announce publishing once; types; formatting ([26d53c8](https://github.com/PhantomPixelDev/modulo-cms/commit/26d53c839230f62da9efc0514b500851d947f3bb))
+* shop screen test permissions; plugin mail views in static analysis ([29ed1c6](https://github.com/PhantomPixelDev/modulo-cms/commit/29ed1c6895567264d743ed1cf33c65a7169f78c9))
+
+
+### Performance
+
+* **images:** WebP sizes with srcset, lazy loading and editable alt text ([462ce95](https://github.com/PhantomPixelDev/modulo-cms/commit/462ce9562bf332406b621203b6fc12039d8d8ad2))
+* **images:** WebP sizes with srcset, lazy loading and editable alt text ([02cb1b5](https://github.com/PhantomPixelDev/modulo-cms/commit/02cb1b583e52b60364e06d7e65d4ba39160ffb4b))
+* whole-page cache for visitors ([7f4a28a](https://github.com/PhantomPixelDev/modulo-cms/commit/7f4a28a4644f048427548899b0cdc423ab04c692))
+* whole-page cache for visitors ([313fa28](https://github.com/PhantomPixelDev/modulo-cms/commit/313fa28a61a1e370bc763ec3c43a4b20eaa9b0f5))
+
+
+### Refactoring
+
+* core ships no plugins ([4802eb8](https://github.com/PhantomPixelDev/modulo-cms/commit/4802eb8bba20d2eb3f37d21c1d2f80c6cc81eb01))
+
 ## [0.2.0](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.1.2...v0.2.0) (2026-09-26)
 
 
