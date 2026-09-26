@@ -238,12 +238,8 @@ export function SitemapSettingsForm({
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-semibold">
-                            {t('dashboard.sitemap.sections.custom_urls_title')}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                            {t('dashboard.sitemap.sections.custom_urls_description')}
-                        </p>
+                        <h3 className="text-lg font-semibold">{t('dashboard.sitemap.sections.custom_urls_title')}</h3>
+                        <p className="text-sm text-muted-foreground">{t('dashboard.sitemap.sections.custom_urls_description')}</p>
                     </div>
                     {canEdit && (
                         <Button variant="outline" size="sm" onClick={addCustomUrl}>
@@ -307,9 +303,7 @@ export function SitemapSettingsForm({
                                         disabled={!canEdit}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue
-                                                placeholder={t('dashboard.sitemap.placeholders.select_changefreq')}
-                                            />
+                                            <SelectValue placeholder={t('dashboard.sitemap.placeholders.select_changefreq')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="">{t('dashboard.sitemap.placeholders.none')}</SelectItem>

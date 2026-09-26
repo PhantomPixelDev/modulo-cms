@@ -135,14 +135,17 @@ export function PostList({
                                     <Link
                                         href={`${editHref(item)}?locale=${locale.code}`}
                                         className={`inline-flex h-6 min-w-6 items-center justify-center rounded px-1.5 text-xs font-medium ${
-                                            has ? 'bg-primary/10 text-primary hover:bg-primary/20' : 'border border-dashed text-muted-foreground hover:bg-muted'
+                                            has
+                                                ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                                                : 'border border-dashed text-muted-foreground hover:bg-muted'
                                         }`}
                                     >
                                         {has ? locale.code.toUpperCase() : <Plus className="h-3 w-3" />}
                                     </Link>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    {t(has ? 'dashboard.posts.translations.edit' : 'dashboard.posts.translations.add')} ({locale.native_name || locale.name})
+                                    {t(has ? 'dashboard.posts.translations.edit' : 'dashboard.posts.translations.add')} (
+                                    {locale.native_name || locale.name})
                                 </TooltipContent>
                             </Tooltip>
                         );
@@ -231,7 +234,11 @@ export function PostList({
             </div>
 
             {canBulk && selected.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm" role="region" aria-label={t('dashboard.posts.bulk.title')}>
+                <div
+                    className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm"
+                    role="region"
+                    aria-label={t('dashboard.posts.bulk.title')}
+                >
                     <span className="font-medium">{t('dashboard.posts.bulk.selected', { count: selected.length })}</span>
                     <span className="text-muted-foreground">·</span>
                     {canPublish && (
@@ -288,7 +295,9 @@ export function PostList({
                                     <TableCell>
                                         <Checkbox
                                             checked={selected.includes(item.id)}
-                                            onCheckedChange={(c) => setSelected((s) => (c === true ? [...s, item.id] : s.filter((id) => id !== item.id)))}
+                                            onCheckedChange={(c) =>
+                                                setSelected((s) => (c === true ? [...s, item.id] : s.filter((id) => id !== item.id)))
+                                            }
                                             aria-label={t('dashboard.posts.bulk.select_row')}
                                         />
                                     </TableCell>
@@ -352,7 +361,12 @@ export function PostList({
                         <span>
                             {page.current_page} / {page.last_page}
                         </span>
-                        <Button variant="outline" size="sm" disabled={page.current_page >= page.last_page} onClick={() => goTo(page.current_page + 1)}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page.current_page >= page.last_page}
+                            onClick={() => goTo(page.current_page + 1)}
+                        >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>

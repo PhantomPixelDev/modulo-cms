@@ -16,6 +16,7 @@ use App\Rules\CanPublish;
 use App\Services\SiteSettingsService;
 use App\Support\ContentListFilters;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -54,7 +55,7 @@ class PostController extends Controller
     /**
      * The list screen, with its search, filters and pagination.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<Post>  $query
+     * @param  Builder<Post>  $query
      */
     protected function renderList(Request $request, $query, ?PostType $postType = null)
     {
@@ -92,14 +93,15 @@ class PostController extends Controller
         ]);
 
         $user = $request->user();
+        $action = (string) $data['action'];
         $done = 0;
         $skipped = 0;
 
         foreach (Post::whereIn('id', $data['ids'])->get() as $post) {
-            $allowed = match ($data['action']) {
+            $allowed = match ($action) {
                 'trash' => $user->can('delete', $post),
                 'publish' => $user->can('update', $post) && $user->can(CanPublish::permissionFor($post->postType?->name === 'page')),
-                'draft' => $user->can('update', $post),
+                default => $user->can('update', $post),
             };
 
             if (! $allowed) {
@@ -108,16 +110,16 @@ class PostController extends Controller
                 continue;
             }
 
-            match ($data['action']) {
+            match ($action) {
                 'trash' => $post->delete(),
                 'publish' => $post->update(['status' => 'published', 'published_at' => $post->published_at ?? now()]),
-                'draft' => $post->update(['status' => 'draft']),
+                default => $post->update(['status' => 'draft']),
             };
             $done++;
         }
 
         $message = trans_choice(
-            "dashboard.posts.bulk.done_{$data['action']}",
+            "dashboard.posts.bulk.done_{$action}",
             $done,
             ['count' => $done],
         );

@@ -77,7 +77,7 @@ class PagesController extends Controller
             ->orderByDesc('created_at')
             ->paginate((int) $this->settings->get('posts_per_page', 15))
             ->withQueryString()
-            ->through(function ($page) {
+            ->through(function (Post $page) {
                 return [
                     'id' => $page->id,
                     'title' => $page->title,
@@ -91,7 +91,7 @@ class PagesController extends Controller
                         'id' => $page->author->id,
                         'name' => $page->author->name,
                     ] : null,
-                    'translations' => $page->translations->map(fn ($tr) => ['locale' => $tr->locale])->values(),
+                    'translations' => $page->translations->pluck('locale')->map(fn ($locale) => ['locale' => $locale])->values(),
                     'featured_image' => $page->featured_image,
                 ];
             });
