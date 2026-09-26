@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { exportsOf, SHIMS } from '../../scripts/build-plugin-shims.mjs';
+import { exportsOf, SHIMS, uiExports } from '../../scripts/build-plugin-shims.mjs';
 
 /**
  * The shims in public/modulo-sdk re-export the core's React & co. to plugin
@@ -25,6 +25,19 @@ describe('plugin SDK shims', () => {
         const blade = readFileSync(resolve(__dirname, '../views/app.blade.php'), 'utf8');
         for (const { specifier } of Object.values(SHIMS as Record<string, { specifier: string }>)) {
             expect(blade).toContain(`"${specifier}":`);
+        }
+        expect(blade).toContain('"@modulo/ui":');
+    });
+
+    it('ui.js re-exports the whole admin kit', async () => {
+        const source = readFileSync(resolve(__dirname, '../../public/modulo-sdk/ui.js'), 'utf8');
+        const kit = await import('./plugin-ui');
+        const names: string[] = uiExports();
+
+        expect(names.sort()).toEqual(Object.keys(kit).sort());
+        expect(source).toContain('window.Modulo.ui');
+        for (const name of names) {
+            expect(source, `missing export "${name}" -- run npm run build:shims`).toContain(`export const ${name} = m.${name};`);
         }
     });
 });

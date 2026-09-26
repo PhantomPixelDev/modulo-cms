@@ -182,7 +182,7 @@ class ReactTemplateRenderer
     protected function getSiteData(): array
     {
         return [
-            'name' => SiteSetting::get('site_name', config('app.name', 'Modulo CMS')),
+            'name' => app(SiteSettingsService::class)->siteName(),
             'tagline' => SiteSetting::get('site_tagline', 'Modern Content Management System'),
             'logo' => SiteSetting::get('site_logo', '') ?: null,
             // Default meta description for pages that have none of their own

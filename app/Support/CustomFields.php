@@ -61,11 +61,23 @@ class CustomFields
      */
     public static function valueRules(?PostType $postType): array
     {
-        $rules = ['meta_data.fields' => ['nullable', 'array']];
+        return ['meta_data.fields' => ['nullable', 'array']]
+            + self::rulesFor($postType !== null ? (array) $postType->fields : [], 'meta_data.fields.');
+    }
 
-        foreach ($postType !== null ? (array) $postType->fields : [] as $field) {
+    /**
+     * Rules for values of the given definitions, each at $prefix.key.
+     *
+     * @param  array<int, array<string, mixed>>  $fields
+     * @return array<string, mixed>
+     */
+    public static function rulesFor(array $fields, string $prefix): array
+    {
+        $rules = [];
+
+        foreach ($fields as $field) {
             $base = ! empty($field['required']) && $field['type'] !== 'toggle' ? ['required'] : ['nullable'];
-            $rules['meta_data.fields.'.$field['key']] = array_merge($base, match ($field['type']) {
+            $rules[$prefix.$field['key']] = array_merge($base, match ($field['type']) {
                 'number' => ['numeric'],
                 'url' => ['string', 'max:2048', 'regex:#^(https?://|/)#i'],
                 'email' => ['email', 'max:255'],

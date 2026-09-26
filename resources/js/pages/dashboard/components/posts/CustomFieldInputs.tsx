@@ -22,11 +22,14 @@ export function CustomFieldInputs({
     values,
     onChange,
     errors = {},
+    errorPrefix = 'meta_data.fields.',
 }: {
     fields: CustomFieldDefinition[];
     values: CustomFieldValues;
     onChange: (values: CustomFieldValues) => void;
     errors?: Record<string, string>;
+    /** Where the server reports a field's errors, before its key */
+    errorPrefix?: string;
 }) {
     const { t } = useTranslation();
     const [pickerFor, setPickerFor] = useState<string | null>(null);
@@ -37,7 +40,7 @@ export function CustomFieldInputs({
         <div className="grid gap-5 md:grid-cols-2">
             {fields.map((field) => {
                 const id = `field-${field.key}`;
-                const error = errors[`meta_data.fields.${field.key}`];
+                const error = errors[`${errorPrefix}${field.key}`];
                 const wide = field.type === 'textarea' || field.type === 'image';
 
                 return (

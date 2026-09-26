@@ -14,7 +14,7 @@
  */
 
 /** Imports the core provides at runtime; never bundled into a plugin. */
-export const SHARED = ['react', 'react-dom', 'react/jsx-runtime', '@inertiajs/react'];
+export const SHARED = ['react', 'react-dom', 'react/jsx-runtime', '@inertiajs/react', '@modulo/ui'];
 
 /**
  * @param {object} [options]

@@ -28,10 +28,11 @@ class PostPresenter
 
         return [
             'id' => $post->id ?? 0,
-            'title' => $post->title ?? '',
+            // Plugins can change what themes show: the_title, the_content, the_excerpt
+            'title' => (string) apply_filters('the_title', $post->title ?? '', $post),
             'slug' => $post->slug ?? '',
-            'content' => $content,
-            'excerpt' => $post->excerpt ?? '',
+            'content' => $full ? (string) apply_filters('the_content', $content, $post) : '',
+            'excerpt' => (string) apply_filters('the_excerpt', $post->excerpt ?? '', $post),
             'featured_image' => $post->featured_image,
             // Smaller WebP copies when the image comes from the media library
             'featured_image_srcset' => app(ResponsiveImages::class)->srcset($post->featured_image),

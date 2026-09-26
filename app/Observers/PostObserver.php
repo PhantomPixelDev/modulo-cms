@@ -91,6 +91,14 @@ class PostObserver
         if ($post->status === 'published') {
             $this->pingingService->ping($post);
         }
+
+        do_action('post_saved', $post);
+
+        // Went live just now (scheduled posts fire it from modulo:publish-scheduled)
+        $live = $post->status === 'published' && ($post->published_at === null || $post->published_at <= now());
+        if ($live && ($post->wasRecentlyCreated || $post->wasChanged('status'))) {
+            do_action('post_published', $post);
+        }
     }
 
     /**
@@ -100,6 +108,8 @@ class PostObserver
     {
         $this->postService->flushCache();
         $this->adminStats->forget();
+
+        do_action('post_deleted', $post);
     }
 
     public function restored(Post $post): void

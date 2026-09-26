@@ -15,7 +15,7 @@ class FeedController extends Controller
     {
         $settings = app(SiteSettingsService::class);
         $limit = $settings->get('feed_limit', 10);
-        $siteName = $settings->get('site_name', config('app.name', 'Modulo CMS'));
+        $siteName = $settings->siteName();
         $siteTagline = $settings->get('site_tagline', '');
         $siteUrl = $settings->get('site_url', config('app.url', 'http://localhost'));
 

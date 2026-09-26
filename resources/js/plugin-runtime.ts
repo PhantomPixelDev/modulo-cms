@@ -34,6 +34,8 @@ interface ModuloRuntime {
         jsxRuntime: typeof JsxRuntime;
         inertia: typeof Inertia;
     };
+    /** The admin kit (buttons, cards, forms, AdminLayout, useTranslation, …), loaded with the first plugin. */
+    ui?: Record<string, unknown>;
     registerComponents(slug: string, components: ComponentMap): void;
     getComponent(slug: string, name: string): ComponentMap[string] | undefined;
     registered(): Record<string, string[]>;
@@ -42,7 +44,7 @@ interface ModuloRuntime {
 const registry = new Map<string, ComponentMap>();
 
 const runtime: ModuloRuntime = {
-    version: '1.1.0',
+    version: '1.2.0',
 
     vendor: {
         react: React,
@@ -95,6 +97,9 @@ export async function resolvePluginComponent(slug: string, name: string): Promis
     }
 
     if (!registry.has(slug)) {
+        // @modulo/ui reads window.Modulo.ui when the plugin bundle is evaluated
+        runtime.ui ??= { ...(await import('./plugin-ui')) };
+
         if (!loading.has(slug)) {
             const url = `/plugins/${slug}/plugin.js`;
             loading.set(

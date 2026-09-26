@@ -840,4 +840,23 @@ class PluginManager
     {
         return $this->lastError;
     }
+
+    /** @var array<string, array<string, mixed>|null> */
+    protected array $manifests = [];
+
+    /**
+     * A plugin's plugin.json, read once per request.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function manifest(string $slug): ?array
+    {
+        if (! array_key_exists($slug, $this->manifests)) {
+            $directory = $this->findPluginDirectoryBySlug($slug);
+            $manifest = $directory !== null ? json_decode((string) File::get($directory.'/plugin.json'), true) : null;
+            $this->manifests[$slug] = is_array($manifest) ? $manifest : null;
+        }
+
+        return $this->manifests[$slug];
+    }
 }

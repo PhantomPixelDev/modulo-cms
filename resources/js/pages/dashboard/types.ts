@@ -336,6 +336,8 @@ export interface DashboardProps {
     authors?: Array<{ id: number; name: string }>;
     // Active list filters echoed back by the server (posts list)
     filters?: Record<string, string>;
+    // Plugin settings form described by the plugin
+    settingsSchema?: CustomFieldDefinition[];
     // Page form
     pageParents?: Array<{ id: number; title: string }>;
     pageFields?: CustomFieldDefinition[];

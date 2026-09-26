@@ -9,6 +9,7 @@ use App\Services\PluginManager;
 use App\Services\Plugins\PluginInstaller;
 use App\Services\Plugins\PluginRegistry;
 use App\Services\Plugins\PluginRequirements;
+use App\Services\Plugins\PluginSettingsSchema;
 use App\Services\UpdateCenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +21,7 @@ class PluginController extends Controller
 {
     protected PluginManager $pluginManager;
 
-    public function __construct(PluginManager $pluginManager)
+    public function __construct(PluginManager $pluginManager, protected PluginSettingsSchema $schema)
     {
         $this->pluginManager = $pluginManager;
     }
@@ -161,6 +162,8 @@ class PluginController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'plugin-settings',
             'plugin' => $plugin,
+            // A form described by the plugin; empty means the plain key/value editor
+            'settingsSchema' => $this->schema->fields($slug),
         ]);
     }
 
@@ -170,9 +173,10 @@ class PluginController extends Controller
     public function updateSettings(UpdatePluginSettingsRequest $request, string $slug)
     {
         $this->authorizePermission('install plugins');
+        $request->validate($this->schema->rules($slug), [], $this->schema->attributes($slug));
 
-        if ($this->pluginManager->updateSettings($slug, $request->validated('settings'))) {
-            return back()->with('success', 'Plugin settings updated successfully.');
+        if ($this->pluginManager->updateSettings($slug, (array) $request->input('settings'))) {
+            return back()->with('success', __('dashboard.plugins.settings.messages.updated'));
         }
 
         return back()->with('error', $this->pluginManager->getLastError() ?? 'Failed to update plugin settings.');

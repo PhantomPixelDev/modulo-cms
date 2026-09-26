@@ -55,12 +55,21 @@ class SiteSettingsService
     }
 
     /**
+     * The site's name as visitors see it, after plugins had their say
+     * (the site_name filter).
+     */
+    public function siteName(?string $locale = null): string
+    {
+        return (string) apply_filters('site_name', (string) $this->get('site_name', config('app.name'), $locale));
+    }
+
+    /**
      * Get settings for frontend (public, non-sensitive)
      */
     public function getPublicSettings(?string $locale = null): array
     {
         return [
-            'site_name' => $this->get('site_name', config('app.name'), $locale),
+            'site_name' => $this->siteName($locale),
             'site_tagline' => $this->get('site_tagline', '', $locale),
             'site_url' => $this->get('site_url', config('app.url')),
             'timezone' => $this->get('timezone', config('app.timezone')),

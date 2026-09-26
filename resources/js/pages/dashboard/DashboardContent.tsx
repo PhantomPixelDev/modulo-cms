@@ -60,6 +60,7 @@ export default function DashboardContent({
     timezones,
     plugins,
     plugin,
+    settingsSchema,
     templates,
     template,
     editTemplate,
@@ -197,6 +198,7 @@ export default function DashboardContent({
             ...getPluginsSections({
                 plugins,
                 plugin,
+                settingsSchema,
                 can,
                 ROUTE,
                 t,
