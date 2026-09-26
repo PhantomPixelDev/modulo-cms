@@ -73,6 +73,10 @@
     @endif
     <meta inertia name="twitter:card" content="{{ $pageMeta['image'] ? 'summary_large_image' : 'summary' }}">
     <meta inertia name="twitter:title" content="{{ $pageMeta['title'] }}">
+    {{-- Not marked `inertia`: the theme doesn't manage these, so they stay for crawlers that render --}}
+    @foreach($pageMeta['alternates'] as $hreflang => $href)
+    <link rel="alternate" hreflang="{{ $hreflang }}" href="{{ $href }}">
+    @endforeach
     @foreach($pageMeta['json_ld'] as $schema)
     <script inertia type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
     @endforeach

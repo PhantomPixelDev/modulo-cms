@@ -203,10 +203,17 @@ export default function Layout({
             </Head>
 
             <div className="flex min-h-screen flex-col bg-background text-foreground">
+                {/* First thing a keyboard or screen reader user reaches: past the navigation */}
+                <a
+                    href="#main"
+                    className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+                >
+                    Skip to content
+                </a>
                 <ErrorBoundary name="Navigation">
                     <Navigation site={safeSite} menus={safeMenus} auth={safeAuth} />
                 </ErrorBoundary>
-                <main id="main" className={cn('flex-1', !bare && 'py-10 sm:py-14')}>
+                <main id="main" tabIndex={-1} className={cn('flex-1', !bare && 'py-10 sm:py-14')}>
                     {bare ? (
                         <ErrorBoundary name="PageContent">{children}</ErrorBoundary>
                     ) : (

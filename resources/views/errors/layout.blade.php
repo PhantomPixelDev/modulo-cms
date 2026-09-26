@@ -12,7 +12,8 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.tsx'])
+    {{-- Styles only: an error page has no app to boot --}}
+    @vite(['resources/css/app.css'])
 
     @stack('styles')
 </head>
@@ -24,5 +25,12 @@
     </div>
 
     @stack('scripts')
+    {{-- Buttons use data-action: inline onclick handlers are blocked by the nonce-based CSP --}}
+    <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
+        document.querySelectorAll('[data-action]').forEach((el) => el.addEventListener('click', () => {
+            if (el.dataset.action === 'back') history.back();
+            if (el.dataset.action === 'reload') location.reload();
+        }));
+    </script>
 </body>
 </html>
