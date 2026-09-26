@@ -372,10 +372,10 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                                         value={form.status}
                                         onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
                                     >
-                                        <option value="draft">{t('dashboard.posts.form.status.draft')}</option>
-                                        <option value="published">{t('dashboard.posts.form.status.published')}</option>
-                                        <option value="private">{t('dashboard.posts.form.status.private')}</option>
-                                        <option value="archived">{t('dashboard.posts.form.status.archived')}</option>
+                                        <option value="draft">{t('common.status.draft')}</option>
+                                        <option value="published">{t('common.status.published')}</option>
+                                        <option value="private">{t('common.status.private')}</option>
+                                        <option value="archived">{t('common.status.archived')}</option>
                                     </select>
                                 </div>
 

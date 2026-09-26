@@ -164,6 +164,12 @@ export function SiteSettingsForm({
 
     const availableLocales = locales ?? [];
 
+    // One sentence under a field's label explaining what it does, when there is one
+    const hint = (key: string) => {
+        const text = t(`dashboard.settings.hints.${key}`, {}, '');
+        return text && !text.startsWith('dashboard.') ? <p className="text-xs text-muted-foreground">{text}</p> : null;
+    };
+
     const renderGeneralSettings = () => (
         <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
@@ -171,6 +177,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="site_name" className="text-sm font-bold">
                         {t('dashboard.settings.fields.site_name')}
                     </Label>
+                    {hint('site_name')}
                     <Input
                         id="site_name"
                         value={formData.general?.site_name || ''}
@@ -183,6 +190,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="site_url" className="text-sm font-bold">
                         {t('dashboard.settings.fields.site_url')}
                     </Label>
+                    {hint('site_url')}
                     <Input
                         id="site_url"
                         type="url"
@@ -198,8 +206,9 @@ export function SiteSettingsForm({
                 {(['site_logo', 'site_favicon'] as const).map((key) => (
                     <div key={key} className="space-y-2">
                         <Label htmlFor={key} className="text-sm font-bold">
-                            {key === 'site_logo' ? 'Logo' : 'Favicon'}
+                            {t(`dashboard.settings.fields.${key}`)}
                         </Label>
+                        {hint(key)}
                         <div className="flex items-center gap-3">
                             <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
                                 {formData.general?.[key] ? (
@@ -213,10 +222,10 @@ export function SiteSettingsForm({
                                 value={formData.general?.[key] || ''}
                                 onChange={(e) => updateField('general', key, e.target.value)}
                                 disabled={!canEdit}
-                                placeholder={key === 'site_logo' ? 'Shown in the site header' : 'Browser tab icon (square PNG or ICO)'}
+                                placeholder="https://…"
                             />
                             <Button type="button" variant="outline" size="sm" disabled={!canEdit} onClick={() => setPickerFor(key)}>
-                                Choose
+                                {t('dashboard.settings.choose')}
                             </Button>
                         </div>
                     </div>
@@ -235,6 +244,7 @@ export function SiteSettingsForm({
                 <Label htmlFor="site_tagline" className="text-sm font-bold">
                     {t('dashboard.settings.fields.site_tagline')}
                 </Label>
+                {hint('site_tagline')}
                 <Input
                     id="site_tagline"
                     value={formData.general?.site_tagline || ''}
@@ -248,6 +258,7 @@ export function SiteSettingsForm({
                 <Label htmlFor="admin_email" className="text-sm font-bold">
                     {t('dashboard.settings.fields.admin_email')}
                 </Label>
+                {hint('admin_email')}
                 <Input
                     id="admin_email"
                     type="email"
@@ -263,6 +274,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="timezone" className="text-sm font-bold">
                         {t('dashboard.settings.fields.timezone')}
                     </Label>
+                    {hint('timezone')}
                     <Select
                         value={formData.general?.timezone || 'UTC'}
                         onValueChange={(v) => updateField('general', 'timezone', v)}
@@ -284,6 +296,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="date_format" className="text-sm font-bold">
                         {t('dashboard.settings.fields.date_format')}
                     </Label>
+                    {hint('date_format')}
                     <Select
                         value={formData.general?.date_format || 'F j, Y'}
                         onValueChange={(v) => updateField('general', 'date_format', v)}
@@ -304,6 +317,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="time_format" className="text-sm font-bold">
                         {t('dashboard.settings.fields.time_format')}
                     </Label>
+                    {hint('time_format')}
                     <Select
                         value={formData.general?.time_format || 'g:i a'}
                         onValueChange={(v) => updateField('general', 'time_format', v)}
@@ -329,6 +343,7 @@ export function SiteSettingsForm({
                 <Label htmlFor="show_on_front" className="text-sm font-bold">
                     {t('dashboard.settings.fields.homepage')}
                 </Label>
+                {hint('homepage')}
                 <Select
                     value={formData.reading?.show_on_front || 'posts'}
                     onValueChange={(v) => updateField('reading', 'show_on_front', v)}
@@ -350,6 +365,7 @@ export function SiteSettingsForm({
                         <Label htmlFor="front_page_id" className="text-sm font-bold">
                             {t('dashboard.settings.fields.front_page')}
                         </Label>
+                        {hint('front_page')}
                         <Select
                             value={formData.reading?.front_page_id ? String(formData.reading.front_page_id) : 'none'}
                             onValueChange={(v) => updateField('reading', 'front_page_id', v === 'none' ? null : parseInt(v))}
@@ -372,6 +388,7 @@ export function SiteSettingsForm({
                         <Label htmlFor="posts_page_id" className="text-sm font-bold">
                             {t('dashboard.settings.fields.posts_page')}
                         </Label>
+                        {hint('posts_page')}
                         <Select
                             value={formData.reading?.posts_page_id ? String(formData.reading.posts_page_id) : 'none'}
                             onValueChange={(v) => updateField('reading', 'posts_page_id', v === 'none' ? null : parseInt(v))}
@@ -398,6 +415,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="posts_per_page" className="text-sm font-bold">
                         {t('dashboard.settings.fields.posts_per_page')}
                     </Label>
+                    {hint('posts_per_page')}
                     <div className="flex items-center gap-3">
                         <Input
                             id="posts_per_page"
@@ -416,6 +434,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="feed_limit" className="text-sm font-bold">
                         {t('dashboard.settings.fields.feed_limit')}
                     </Label>
+                    {hint('feed_limit')}
                     <div className="flex items-center gap-3">
                         <Input
                             id="feed_limit"
@@ -441,6 +460,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="default_post_status" className="text-sm font-bold">
                         {t('dashboard.settings.fields.default_post_status')}
                     </Label>
+                    {hint('default_post_status')}
                     <Select
                         value={formData.writing?.default_post_status || 'draft'}
                         onValueChange={(v) => updateField('writing', 'default_post_status', v)}
@@ -450,9 +470,9 @@ export function SiteSettingsForm({
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="draft">{t('dashboard.posts.form.status.draft')}</SelectItem>
+                            <SelectItem value="draft">{t('common.status.draft')}</SelectItem>
                             <SelectItem value="pending">{t('dashboard.settings.options.post_status.pending')}</SelectItem>
-                            <SelectItem value="published">{t('dashboard.posts.form.status.published')}</SelectItem>
+                            <SelectItem value="published">{t('common.status.published')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -460,6 +480,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="default_post_type" className="text-sm font-bold">
                         {t('dashboard.settings.fields.default_post_type')}
                     </Label>
+                    {hint('default_post_type')}
                     <Select
                         value={formData.writing?.default_post_type || 'post'}
                         onValueChange={(v) => updateField('writing', 'default_post_type', v)}
@@ -487,6 +508,7 @@ export function SiteSettingsForm({
                 <Label htmlFor="meta_title_suffix" className="text-sm font-bold">
                     {t('dashboard.settings.fields.meta_title_suffix')}
                 </Label>
+                {hint('meta_title_suffix')}
                 <Input
                     id="meta_title_suffix"
                     value={formData.seo?.meta_title_suffix || ''}
@@ -494,13 +516,13 @@ export function SiteSettingsForm({
                     placeholder={t('dashboard.settings.placeholders.meta_title_suffix')}
                     disabled={!canEdit}
                 />
-                <p className="text-xs text-muted-foreground">{t('dashboard.settings.hints.meta_title_suffix')}</p>
             </div>
 
             <div className="space-y-2">
                 <Label htmlFor="meta_description" className="text-sm font-bold">
                     {t('dashboard.settings.fields.meta_description')}
                 </Label>
+                {hint('meta_description')}
                 <Textarea
                     id="meta_description"
                     value={formData.seo?.meta_description || ''}
@@ -517,6 +539,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="google_site_verification" className="text-sm font-bold">
                         {t('dashboard.settings.fields.google_site_verification')}
                     </Label>
+                    {hint('google_site_verification')}
                     <Input
                         id="google_site_verification"
                         value={formData.seo?.google_site_verification || ''}
@@ -529,6 +552,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="bing_site_verification" className="text-sm font-bold">
                         {t('dashboard.settings.fields.bing_site_verification')}
                     </Label>
+                    {hint('bing_site_verification')}
                     <Input
                         id="bing_site_verification"
                         value={formData.seo?.bing_site_verification || ''}
@@ -543,6 +567,7 @@ export function SiteSettingsForm({
                 <Label htmlFor="indexnow_key" className="text-sm font-bold">
                     {t('dashboard.settings.fields.indexnow_key')}
                 </Label>
+                {hint('indexnow_key')}
                 <Input
                     id="indexnow_key"
                     value={formData.seo?.indexnow_key || ''}
@@ -550,13 +575,13 @@ export function SiteSettingsForm({
                     placeholder={t('dashboard.settings.placeholders.indexnow_key')}
                     disabled={!canEdit}
                 />
-                <p className="text-xs text-muted-foreground">{t('dashboard.settings.hints.indexnow_key')}</p>
             </div>
 
             <div className="space-y-2">
                 <Label htmlFor="robots_txt" className="text-sm font-bold">
                     {t('dashboard.settings.fields.robots_txt')}
                 </Label>
+                {hint('robots_txt')}
                 <Textarea
                     id="robots_txt"
                     value={formData.seo?.robots_txt || ''}
@@ -571,11 +596,13 @@ export function SiteSettingsForm({
 
     const renderSocialSettings = () => (
         <div className="space-y-6">
+            {hint('social')}
             <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                     <Label htmlFor="facebook_url" className="text-sm font-bold">
                         {t('dashboard.settings.fields.facebook_url')}
                     </Label>
+                    {hint('facebook_url')}
                     <Input
                         id="facebook_url"
                         type="url"
@@ -589,6 +616,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="twitter_url" className="text-sm font-bold">
                         {t('dashboard.settings.fields.twitter_url')}
                     </Label>
+                    {hint('twitter_url')}
                     <Input
                         id="twitter_url"
                         type="url"
@@ -602,6 +630,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="instagram_url" className="text-sm font-bold">
                         {t('dashboard.settings.fields.instagram_url')}
                     </Label>
+                    {hint('instagram_url')}
                     <Input
                         id="instagram_url"
                         type="url"
@@ -615,6 +644,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="linkedin_url" className="text-sm font-bold">
                         {t('dashboard.settings.fields.linkedin_url')}
                     </Label>
+                    {hint('linkedin_url')}
                     <Input
                         id="linkedin_url"
                         type="url"
@@ -628,6 +658,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="youtube_url" className="text-sm font-bold">
                         {t('dashboard.settings.fields.youtube_url')}
                     </Label>
+                    {hint('youtube_url')}
                     <Input
                         id="youtube_url"
                         type="url"
@@ -641,6 +672,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="github_url" className="text-sm font-bold">
                         {t('dashboard.settings.fields.github_url')}
                     </Label>
+                    {hint('github_url')}
                     <Input
                         id="github_url"
                         type="url"
@@ -661,6 +693,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="google_analytics_id" className="text-sm font-bold">
                         {t('dashboard.settings.fields.google_analytics_id')}
                     </Label>
+                    {hint('google_analytics_id')}
                     <Input
                         id="google_analytics_id"
                         value={formData.analytics?.google_analytics_id || ''}
@@ -673,6 +706,7 @@ export function SiteSettingsForm({
                     <Label htmlFor="gtm_container_id" className="text-sm font-bold">
                         {t('dashboard.settings.fields.gtm_container_id')}
                     </Label>
+                    {hint('gtm_container_id')}
                     <Input
                         id="gtm_container_id"
                         value={formData.analytics?.gtm_container_id || ''}
@@ -710,6 +744,7 @@ export function SiteSettingsForm({
                         <Label htmlFor="max_upload_size" className="text-sm font-bold">
                             {t('dashboard.settings.fields.max_upload_size')}
                         </Label>
+                        {hint('max_upload_size')}
                         <Input
                             id="max_upload_size"
                             type="number"
@@ -724,6 +759,7 @@ export function SiteSettingsForm({
                         <Label htmlFor="image_quality" className="text-sm font-bold">
                             {t('dashboard.settings.fields.image_quality')}
                         </Label>
+                        {hint('image_quality')}
                         <Input
                             id="image_quality"
                             type="number"
@@ -753,7 +789,6 @@ export function SiteSettingsForm({
                             </div>
                         ))}
                     </div>
-                    <p className="text-[11px] text-muted-foreground">{t('dashboard.settings.hints.allowed_file_types')}</p>
                 </div>
             </div>
         );

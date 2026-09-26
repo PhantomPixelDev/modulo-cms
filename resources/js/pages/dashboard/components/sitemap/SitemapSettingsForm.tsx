@@ -239,18 +239,16 @@ export function SitemapSettingsForm({
                 <div className="flex items-center justify-between">
                     <div>
                         <h3 className="text-lg font-semibold">
-                            {t('dashboard.sitemap.sections.custom_urls_title', { defaultValue: 'Custom URLs' })}
+                            {t('dashboard.sitemap.sections.custom_urls_title')}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                            {t('dashboard.sitemap.sections.custom_urls_description', {
-                                defaultValue: 'Add locale-specific URLs to include in this sitemap.',
-                            })}
+                            {t('dashboard.sitemap.sections.custom_urls_description')}
                         </p>
                     </div>
                     {canEdit && (
                         <Button variant="outline" size="sm" onClick={addCustomUrl}>
                             <Plus className="mr-1 h-4 w-4" />
-                            {t('dashboard.sitemap.actions.add_url', { defaultValue: 'Add URL' })}
+                            {t('dashboard.sitemap.actions.add_url')}
                         </Button>
                     )}
                 </div>
@@ -258,7 +256,7 @@ export function SitemapSettingsForm({
                 <div className="space-y-3">
                     {customUrls.length === 0 && (
                         <p className="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground">
-                            {t('dashboard.sitemap.sections.custom_urls_empty', { defaultValue: 'No custom URLs added for this locale.' })}
+                            {t('dashboard.sitemap.sections.custom_urls_empty')}
                         </p>
                     )}
 
@@ -266,7 +264,7 @@ export function SitemapSettingsForm({
                         <div key={`custom-url-${index}`} className="space-y-3 rounded-md border p-3">
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-medium text-muted-foreground">
-                                    {t('dashboard.sitemap.fields.custom_url_label', { defaultValue: `Entry ${index + 1}` })}
+                                    {t('dashboard.sitemap.fields.custom_url_label', { number: index + 1 })}
                                 </p>
                                 {canEdit && (
                                     <Button variant="ghost" size="icon" onClick={() => removeCustomUrl(index)}>
@@ -277,7 +275,7 @@ export function SitemapSettingsForm({
                             <div className="grid gap-3 md:grid-cols-2">
                                 <div className="space-y-1">
                                     <Label className="text-xs tracking-wide text-muted-foreground uppercase">
-                                        {t('dashboard.sitemap.fields.custom_loc', { defaultValue: 'Location' })}
+                                        {t('dashboard.sitemap.fields.custom_loc')}
                                     </Label>
                                     <Input
                                         placeholder="/custom-path"
@@ -288,7 +286,7 @@ export function SitemapSettingsForm({
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs tracking-wide text-muted-foreground uppercase">
-                                        {t('dashboard.sitemap.fields.custom_lastmod', { defaultValue: 'Last Modified' })}
+                                        {t('dashboard.sitemap.fields.custom_lastmod')}
                                     </Label>
                                     <Input
                                         type="date"
@@ -301,7 +299,7 @@ export function SitemapSettingsForm({
                             <div className="grid gap-3 md:grid-cols-2">
                                 <div className="space-y-1">
                                     <Label className="text-xs tracking-wide text-muted-foreground uppercase">
-                                        {t('dashboard.sitemap.fields.custom_changefreq', { defaultValue: 'Change Frequency' })}
+                                        {t('dashboard.sitemap.fields.custom_changefreq')}
                                     </Label>
                                     <Select
                                         value={customUrl.changefreq || ''}
@@ -310,13 +308,11 @@ export function SitemapSettingsForm({
                                     >
                                         <SelectTrigger>
                                             <SelectValue
-                                                placeholder={t('dashboard.sitemap.placeholders.select_changefreq', {
-                                                    defaultValue: 'Select frequency',
-                                                })}
+                                                placeholder={t('dashboard.sitemap.placeholders.select_changefreq')}
                                             />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">{t('dashboard.sitemap.placeholders.none', { defaultValue: 'None' })}</SelectItem>
+                                            <SelectItem value="">{t('dashboard.sitemap.placeholders.none')}</SelectItem>
                                             {changefreqOptions.map((option) => (
                                                 <SelectItem key={option} value={option}>
                                                     {option}
@@ -327,7 +323,7 @@ export function SitemapSettingsForm({
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs tracking-wide text-muted-foreground uppercase">
-                                        {t('dashboard.sitemap.fields.custom_priority', { defaultValue: 'Priority' })}
+                                        {t('dashboard.sitemap.fields.custom_priority')}
                                     </Label>
                                     <Input
                                         type="number"
