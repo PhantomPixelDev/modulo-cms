@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { Link } from '@inertiajs/react';
 import { ChevronRight, CreditCard, Loader2, MapPin, ShoppingBag, Truck } from 'lucide-react';
 import React, { useState } from 'react';
@@ -177,9 +176,7 @@ export default function Checkout({
     }
 
     return (
-        <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Checkout">
-            <SEOHead title="Checkout" description="Complete your order" />
-
+        <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Checkout" noindex>
             <div>
                 <div>
                     {/* Breadcrumb */}

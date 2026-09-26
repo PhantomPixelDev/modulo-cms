@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { Link } from '@inertiajs/react';
 import { CheckCircle, Clock, CreditCard, Landmark, Mail, MapPin, Package, ShoppingBag, XCircle } from 'lucide-react';
 import { useState } from 'react';
@@ -128,9 +127,7 @@ export default function OrderConfirmation({ order, payment, flash, site, theme, 
     }
 
     return (
-        <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title={`Order ${order.order_number}`}>
-            <SEOHead title={`Order Confirmed - ${order.order_number}`} description="Thank you for your order" />
-
+        <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title={`Order ${order.order_number}`} noindex>
             <div>
                 <div className="mx-auto max-w-4xl">
                     {flashes.map((f) => (

@@ -20,6 +20,8 @@ interface LayoutProps {
     keywords?: string;
     ogImage?: string;
     canonicalUrl?: string;
+    /** Keep the page out of search engines (cart, checkout, account pages). */
+    noindex?: boolean;
     theme?: {
         /** Stylesheets from theme.json "styles" (child themes restyle this one with these). */
         styles?: string[];
@@ -96,6 +98,7 @@ export default function Layout({
     widgets = [],
     post,
     page,
+    noindex = false,
 }: LayoutProps) {
     const { auth, theme: pageTheme } = usePage().props as any;
     // Some templates do not pass the theme down; the page props always carry it.
@@ -159,7 +162,9 @@ export default function Layout({
                 {/* Additional SEO meta tags */}
                 <meta
                     name="robots"
-                    content={seo?.noindex ? 'noindex, follow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'}
+                    content={
+                        seo?.noindex || noindex ? 'noindex, follow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'
+                    }
                 />
                 <meta name="language" content="en-US" />
                 {canonicalUrlValue && <link rel="canonical" href={canonicalUrlValue} />}

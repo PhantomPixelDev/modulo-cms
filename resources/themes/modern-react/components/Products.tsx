@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { Filter, Grid, List, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import Layout from './Layout';
@@ -98,8 +97,6 @@ export default function Products({ products, posts, categories, filters, paginat
 
     return (
         <Layout theme={safeTheme} site={safeSite} menus={safeMenus} title={pageTitle} description={pageDescription}>
-            <SEOHead title={`${pageTitle} | ${safeSite.name}`} description={pageDescription} />
-
             <div className="space-y-8">
                 {/* Header */}
                 <header className="space-y-2 border-b pb-8">

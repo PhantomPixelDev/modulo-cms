@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { Filter, Grid, List, Search, ShoppingCart, X } from 'lucide-react';
 import React, { useState } from 'react';
 import Layout from '../Layout';
@@ -104,9 +103,7 @@ export default function Archive({ products, categories, filters, pagination, sit
     };
 
     return (
-        <Layout theme={safeTheme} site={safeSite} menus={safeMenus} title="Shop" description="Browse our products">
-            <SEOHead title={`Shop | ${safeSite.name}`} description="Browse our products and find what you need." />
-
+        <Layout theme={safeTheme} site={safeSite} menus={safeMenus} title="Shop" description="Browse our products and find what you need.">
             <div className="space-y-8">
                 {/* Header */}
                 <header className="flex flex-col gap-6 border-b pb-8 md:flex-row md:items-end md:justify-between">

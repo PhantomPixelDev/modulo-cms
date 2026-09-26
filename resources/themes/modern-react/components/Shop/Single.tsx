@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { Head, Link } from '@inertiajs/react';
 import { Check, ChevronRight, Heart, Minus, Plus, RotateCcw, Shield, ShoppingCart, Truck } from 'lucide-react';
 import { useState } from 'react';
@@ -130,7 +129,6 @@ export default function Single({ product, relatedProducts, site, theme, menus, m
             theme={safeTheme}
             menus={safeMenus}
         >
-            <SEOHead title={`${product.title} | ${safeSite.name}`} description={product.excerpt} />
             <Head>
                 {/* schema.org Product: price and availability for search results */}
                 <script type="application/ld+json">

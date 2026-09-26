@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Grid, List, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
@@ -76,8 +75,6 @@ export default function CategoryPage({ category, products, pagination, site, the
 
     return (
         <Layout title={category.name} description={category.description} site={safeSite} theme={safeTheme} menus={safeMenus}>
-            <SEOHead title={`${category.name} | Shop | ${safeSite.name}`} description={category.description} />
-
             <div className="space-y-8">
                 {/* Breadcrumb */}
                 <nav>

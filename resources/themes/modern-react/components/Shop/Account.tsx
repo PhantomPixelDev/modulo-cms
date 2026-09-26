@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { Link } from '@inertiajs/react';
 import { Package, ShoppingBag } from 'lucide-react';
 import type { ComponentProps } from 'react';
@@ -48,9 +47,7 @@ export default function Account({ orders, customer, site, theme, menus, money }:
     const rows = orders?.data ?? [];
 
     return (
-        <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="My orders">
-            <SEOHead title="My orders" description="Your orders" noindex />
-
+        <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="My orders" noindex>
             <div className="mx-auto max-w-4xl">
                 <div className="mb-8">
                     <h1 className="text-3xl font-semibold tracking-tight text-foreground">My orders</h1>

@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { FileText } from 'lucide-react';
 import React from 'react';
 import Layout from './Layout';
@@ -41,7 +40,6 @@ const Archive: React.FC<ArchiveProps> = ({ title, posts = [], pagination, site, 
             keywords={archiveKeywords.join(', ')}
             sidebar
         >
-            <SEOHead title={archiveTitle} description={archiveDescription} />
             <PageHeader title={title} />
             {posts.length === 0 ? (
                 <EmptyState icon={FileText} title={tt('posts.empty', 'No posts found.')} />

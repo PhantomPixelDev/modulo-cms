@@ -1,4 +1,3 @@
-import SEOHead from '@/components/SEOHead';
 import { Link } from '@inertiajs/react';
 import { ArrowRight, Minus, Plus, ShoppingBag, ShoppingCart, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
@@ -133,9 +132,7 @@ export default function Cart({ cart, totals, site, theme, menus, money }: CartPr
     const isEmpty = items.length === 0;
 
     return (
-        <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Shopping Cart">
-            <SEOHead title="Shopping Cart" description="Review your shopping cart" />
-
+        <Layout site={safeSite} theme={safeTheme} menus={safeMenus} title="Shopping Cart" noindex>
             <div>
                 <div>
                     {/* Breadcrumb */}

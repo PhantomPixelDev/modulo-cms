@@ -23,7 +23,12 @@ const pages = import.meta.glob(['./pages/**/*.tsx', '!./pages/**/*.test.tsx'], {
 const themeComponents = import.meta.glob(['../themes/**/components/**/*.tsx', '!../themes/**/*.test.tsx'], { eager: false });
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    // Admin screens pass a bare title ("Posts") and get the app name added. Public
+    // pages come from the theme, which builds the whole title ("Page | Site").
+    title: (title) => {
+        const admin = typeof window !== 'undefined' && /^\/(dashboard|settings)(\/|$)/.test(window.location.pathname);
+        return !title ? appName : admin ? `${title} - ${appName}` : title;
+    },
     resolve: (name) => {
         // Plugins/<slug>/<Component>: loaded from the plugin's own bundle at
         // runtime. These cannot come from import.meta.glob, which Rollup
