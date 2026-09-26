@@ -14,6 +14,7 @@ export function getPostsSections({
     currentPostType,
     groupedTerms,
     authors,
+    filters,
     parentsByType,
     locales,
     currentLocale,
@@ -32,6 +33,7 @@ export function getPostsSections({
     currentPostType?: any;
     groupedTerms: any;
     authors: any;
+    filters?: Record<string, string>;
     parentsByType: any;
     locales?: any[];
     currentLocale?: string;
@@ -73,8 +75,6 @@ export function getPostsSections({
     };
 
     const renderPostsList = () => {
-        const postItems = Array.isArray(postsProp) ? postsProp : ((postsProp as any)?.data ?? []);
-
         return (
             <SectionWrapper
                 title={postTypeName}
@@ -87,7 +87,17 @@ export function getPostsSections({
                     ) : null
                 }
             >
-                <PostList posts={postItems} locales={locales} canCreate={false} canEdit={can('edit posts')} />
+                <PostList
+                    posts={postsProp ?? []}
+                    filters={filters}
+                    authors={authors}
+                    postTypes={postTypes}
+                    showTypeFilter={!currentPostType}
+                    locales={locales}
+                    canEdit={can('edit posts')}
+                    canDelete={can('delete posts')}
+                    canPublish={can('publish posts')}
+                />
             </SectionWrapper>
         );
     };

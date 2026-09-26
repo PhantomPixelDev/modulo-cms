@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Content;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostType;
+use App\Models\User;
 use App\Rules\CanPublish;
 use App\Services\SiteSettingsService;
+use App\Support\ContentListFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -64,14 +66,17 @@ class PagesController extends Controller
         return $this->pageType = $pageType;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $pageType = $this->resolvePageType();
-        $perPage = $this->settings->get('posts_per_page', 15);
-        $pages = Post::with(['author', 'postType'])
+        $filters = ContentListFilters::fromRequest($request);
+        unset($filters['post_type_id']);
+
+        $pages = ContentListFilters::apply(Post::with(['author', 'postType', 'translations']), $filters)
             ->where('post_type_id', $pageType->id)
             ->orderByDesc('created_at')
-            ->paginate($perPage)
+            ->paginate((int) $this->settings->get('posts_per_page', 15))
+            ->withQueryString()
             ->through(function ($page) {
                 return [
                     'id' => $page->id,
@@ -79,12 +84,14 @@ class PagesController extends Controller
                     'slug' => $page->slug,
                     'status' => $page->status,
                     'published_at' => $this->settings->formatDateTime($page->published_at),
+                    'is_scheduled' => $page->status === 'published' && $page->published_at?->isFuture(),
                     'created_at' => $this->settings->formatDateTime($page->created_at),
                     'updated_at' => $this->settings->formatDateTime($page->updated_at),
                     'author' => $page->author ? [
                         'id' => $page->author->id,
                         'name' => $page->author->name,
                     ] : null,
+                    'translations' => $page->translations->map(fn ($tr) => ['locale' => $tr->locale])->values(),
                     'featured_image' => $page->featured_image,
                 ];
             });
@@ -93,6 +100,8 @@ class PagesController extends Controller
             'adminSection' => 'pages',
             'posts' => $pages,
             'postTypes' => [],
+            'authors' => User::orderBy('name')->get(['id', 'name']),
+            'filters' => $filters,
         ]);
     }
 

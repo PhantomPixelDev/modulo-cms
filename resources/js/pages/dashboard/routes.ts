@@ -16,6 +16,7 @@ export const ROUTE = {
         destroy: (identifier: number | string | { post: number | string }) => route('dashboard.admin.posts.destroy', postParam(identifier)),
         edit: (identifier: number | string | { post: number | string }) => route('dashboard.admin.posts.edit', postParam(identifier)),
         show: (identifier: number | string | { post: number | string }) => route('dashboard.admin.posts.show', postParam(identifier)),
+        bulk: () => route('dashboard.admin.posts.bulk'),
     },
     pages: {
         index: () => route('dashboard.admin.pages.index'),

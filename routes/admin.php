@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::post('content/{postId}/revisions/{revisionId}/restore', [RevisionController::class, 'restore'])
             ->whereNumber(['postId', 'revisionId'])->name('revisions.restore');
 
+        Route::post('posts/bulk', [PostController::class, 'bulk'])->name('posts.bulk');
         Route::resource('posts', PostController::class)
             ->scoped(['post' => 'slug']);
         // Specific route for listing posts by post type

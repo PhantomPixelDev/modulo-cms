@@ -134,6 +134,23 @@ return [
         ],
     ],
     'posts' => [
+        'bulk' => [
+            'title' => 'With selected',
+            'selected' => ':count selected',
+            'publish' => 'Publish',
+            'draft' => 'Move to draft',
+            'trash' => 'Move to trash',
+            'confirm_trash' => 'Move :count post(s) to the trash? You can restore them from the trash.',
+            'done_publish' => '{1} 1 post published.|[2,*] :count posts published.|[0] Nothing was published.',
+            'done_draft' => '{1} 1 post moved to draft.|[2,*] :count posts moved to draft.|[0] Nothing was changed.',
+            'done_trash' => '{1} 1 post moved to the trash.|[2,*] :count posts moved to the trash.|[0] Nothing was moved.',
+            'skipped' => '{1} 1 was skipped: you may not change it.|[2,*] :count were skipped: you may not change them.',
+            'select_all' => 'Select all on this page',
+            'select_row' => 'Select this post',
+        ],
+        'filter_scheduled' => 'Scheduled',
+        'no_results' => 'No posts match these filters.',
+        'empty' => 'Nothing here yet.',
         'title' => 'Posts',
         'all_posts' => 'All Posts',
         'add_new' => 'Add New Post',
@@ -250,6 +267,7 @@ return [
 
     // Pages section
     'pages' => [
+        'search' => 'Search pages…',
         'title' => 'Pages',
         'all_pages' => 'All Pages',
         'add_new' => 'Add New Page',

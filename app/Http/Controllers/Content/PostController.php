@@ -12,7 +12,9 @@ use App\Models\SiteSetting;
 use App\Models\TaxonomyTerm;
 use App\Models\User;
 use App\Presenters\PostPresenter;
+use App\Rules\CanPublish;
 use App\Services\SiteSettingsService;
+use App\Support\ContentListFilters;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -23,7 +25,7 @@ class PostController extends Controller
     public function __construct(
         protected SiteSettingsService $settings
     ) {
-        $this->middleware('permission:view posts')->only(['index', 'show']);
+        $this->middleware('permission:view posts')->only(['index', 'show', 'bulk']);
         $this->middleware('permission:create posts')->only(['create', 'store']);
         $this->middleware('permission:edit posts')->only(['edit', 'update']);
         $this->middleware('permission:delete posts')->only(['destroy']);
@@ -34,38 +36,7 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy', 'translations'])
-            ->whereHas('postType', function ($q) {
-                $q->where('name', '!=', 'page');
-            })
-            ->orderBy('created_at', 'desc');
-
-        // Filter by post type
-        if ($request->has('post_type_id')) {
-            $query->where('post_type_id', $request->post_type_id);
-        }
-
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Filter by author
-        if ($request->has('author_id')) {
-            $query->where('author_id', $request->author_id);
-        }
-
-        $perPage = $this->settings->get('posts_per_page', 15);
-        $posts = $query->paginate($perPage);
-
-        return Inertia::render('Dashboard', [
-            'adminSection' => 'posts',
-            'posts' => $posts->through(fn ($post) => $this->formatPostForList($post)),
-            // Exclude 'page' from selectable post types in the Posts area
-            'postTypes' => PostType::where('name', '!=', 'page')->get(),
-            'authors' => User::orderBy('name')->get(['id', 'name']),
-            'locales' => Locale::getActive(),
-        ]);
+        return $this->renderList($request, Post::whereHas('postType', fn ($q) => $q->where('name', '!=', 'page')));
     }
 
     /**
@@ -73,37 +44,89 @@ class PostController extends Controller
      */
     public function indexByType(Request $request, string $postTypeSlug)
     {
-        // Find the post type by slug
         $postType = PostType::where('slug', $postTypeSlug)->firstOrFail();
 
-        // Check permission for this post type
         $this->authorize('view', Post::class);
 
-        $query = Post::with(['postType', 'author', 'taxonomyTerms.taxonomy', 'translations'])
-            ->where('post_type_id', $postType->id)
-            ->orderBy('created_at', 'desc');
+        return $this->renderList($request, Post::where('post_type_id', $postType->id), $postType);
+    }
 
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
+    /**
+     * The list screen, with its search, filters and pagination.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Post>  $query
+     */
+    protected function renderList(Request $request, $query, ?PostType $postType = null)
+    {
+        $filters = ContentListFilters::fromRequest($request);
+        ContentListFilters::apply($query, $filters);
 
-        // Filter by author
-        if ($request->has('author_id')) {
-            $query->where('author_id', $request->author_id);
-        }
-
-        $perPage = $this->settings->get('posts_per_page', 15);
-        $posts = $query->paginate($perPage);
+        $posts = $query->with(['postType', 'author', 'taxonomyTerms.taxonomy', 'translations'])
+            ->orderByDesc('created_at')
+            ->paginate((int) $this->settings->get('posts_per_page', 15))
+            ->withQueryString();
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'posts',
             'posts' => $posts->through(fn ($post) => $this->formatPostForList($post)),
+            // Exclude 'page' from selectable post types in the Posts area
             'postTypes' => PostType::where('name', '!=', 'page')->get(),
             'currentPostType' => $postType,
             'authors' => User::orderBy('name')->get(['id', 'name']),
             'locales' => Locale::getActive(),
+            'filters' => $filters,
         ]);
+    }
+
+    /**
+     * Publish, unpublish or trash several posts at once. Each post is checked
+     * against the same permissions as editing it one by one; the ones the
+     * user may not touch are skipped and counted.
+     */
+    public function bulk(Request $request)
+    {
+        $data = $request->validate([
+            'action' => ['required', 'in:publish,draft,trash'],
+            'ids' => ['required', 'array', 'max:200'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $user = $request->user();
+        $done = 0;
+        $skipped = 0;
+
+        foreach (Post::whereIn('id', $data['ids'])->get() as $post) {
+            $allowed = match ($data['action']) {
+                'trash' => $user->can('delete', $post),
+                'publish' => $user->can('update', $post) && $user->can(CanPublish::permissionFor($post->postType?->name === 'page')),
+                'draft' => $user->can('update', $post),
+            };
+
+            if (! $allowed) {
+                $skipped++;
+
+                continue;
+            }
+
+            match ($data['action']) {
+                'trash' => $post->delete(),
+                'publish' => $post->update(['status' => 'published', 'published_at' => $post->published_at ?? now()]),
+                'draft' => $post->update(['status' => 'draft']),
+            };
+            $done++;
+        }
+
+        $message = trans_choice(
+            "dashboard.posts.bulk.done_{$data['action']}",
+            $done,
+            ['count' => $done],
+        );
+
+        if ($skipped > 0) {
+            $message .= ' '.trans_choice('dashboard.posts.bulk.skipped', $skipped, ['count' => $skipped]);
+        }
+
+        return back()->with($skipped > 0 ? 'warning' : 'success', $message);
     }
 
     private function formatPostForList(Post $post): array

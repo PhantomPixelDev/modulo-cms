@@ -318,6 +318,8 @@ export interface DashboardProps {
     permissions?: Array<{ id: number; name: string }>;
     groupedTerms?: Record<string, any>;
     authors?: Array<{ id: number; name: string }>;
+    // Active list filters echoed back by the server (posts list)
+    filters?: Record<string, string>;
     parentsByType?: Record<number | string, Array<{ id: number; title: string }>>;
     sitemapSettings?: SitemapSettings;
     // Site settings
@@ -439,14 +441,6 @@ export interface TaxonomyListItem {
 }
 
 // Page List Item
-export interface PageListItem {
-    id: number;
-    title: string;
-    status: string;
-    author?: { name: string };
-    created_at: string;
-}
-
 // Post List Item
 export interface PostListItem {
     id: number;
@@ -459,6 +453,7 @@ export interface PostListItem {
     published_at?: string | null;
     /** Published with a future date: goes live then. */
     is_scheduled?: boolean;
+    translations?: Array<{ locale: string }>;
 }
 
 // Normalize paginated objects or arrays to arrays
