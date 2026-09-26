@@ -23,6 +23,8 @@ interface Product {
     attributes?: Record<string, string>;
     categories?: Array<{ id: number; name: string; slug: string }>;
     tags?: Array<{ id: number; name: string; slug: string }>;
+    variants?: Array<{ id: string; name: string; price: number; in_stock: boolean }>;
+    sale_ends_at?: string | null;
 }
 
 interface RelatedProduct {
@@ -55,6 +57,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
     const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [variantId, setVariantId] = useState('');
 
     if (!product) {
         return (
@@ -81,7 +84,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify({ product_id: product.id, quantity }),
+                body: JSON.stringify({ product_id: product.id, quantity, variant_id: variantId || null }),
             });
             const data = await response.json();
             if (data.success) {
@@ -107,11 +110,17 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
         return Math.round(((product.price - product.sale_price) / product.price) * 100);
     };
 
-    const displayPrice = product.sale_price && product.sale_price < (product.price || 0) ? product.sale_price : product.price;
-    const discount = getDiscountPercent();
+    const variants = product.variants ?? [];
+    const variant = variants.find((v) => v.id === variantId);
+    const onSale = !variant && !!product.sale_price && product.sale_price < (product.price || 0);
+    const displayPrice = variant ? variant.price : onSale ? product.sale_price! : product.price;
+    const discount = variant ? null : getDiscountPercent();
     const allImages = [product.featured_image, ...(product.gallery || [])].filter(Boolean) as string[];
-    const inStock = product.in_stock !== false && (product.stock === null || product.stock === undefined || product.stock > 0);
-    const maxQuantity = product.stock || 99;
+    const inStock = variant
+        ? variant.in_stock
+        : product.in_stock !== false && (variants.length > 0 || product.stock === null || product.stock === undefined || product.stock > 0);
+    const maxQuantity = variants.length > 0 ? 99 : product.stock || 99;
+    const needsVariant = variants.length > 0 && !variant;
 
     return (
         <Layout
@@ -222,12 +231,10 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
 
                         {/* Price */}
                         <div className="flex items-center gap-4 border-y border-border py-4">
-                            {product.sale_price && product.sale_price < (product.price || 0) && (
+                            {onSale && (
                                 <span className="text-2xl text-muted-foreground/80 line-through">{formatPrice(product.price, product.currency)}</span>
                             )}
-                            <span
-                                className={`text-4xl font-semibold tracking-tight ${product.sale_price && product.sale_price < (product.price || 0) ? 'text-destructive' : 'text-foreground'}`}
-                            >
+                            <span className={`text-4xl font-semibold tracking-tight ${onSale ? 'text-destructive' : 'text-foreground'}`}>
                                 {formatPrice(displayPrice, product.currency)}
                             </span>
                             {discount && (
@@ -235,7 +242,33 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                     Save {discount}%
                                 </span>
                             )}
+                            {onSale && product.sale_ends_at && (
+                                <span className="text-sm text-muted-foreground">until {new Date(product.sale_ends_at).toLocaleDateString()}</span>
+                            )}
                         </div>
+
+                        {/* Variations */}
+                        {variants.length > 0 && (
+                            <div className="space-y-2">
+                                <label htmlFor="variant" className="text-sm font-medium text-foreground">
+                                    Option
+                                </label>
+                                <select
+                                    id="variant"
+                                    value={variantId}
+                                    onChange={(e) => setVariantId(e.target.value)}
+                                    className="h-11 w-full rounded-md border border-input bg-input-bg px-3 text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
+                                >
+                                    <option value="">Choose an option</option>
+                                    {variants.map((v) => (
+                                        <option key={v.id} value={v.id} disabled={!v.in_stock}>
+                                            {v.name} — {formatPrice(v.price, product.currency)}
+                                            {v.in_stock ? '' : ' (sold out)'}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
                         {/* Stock Status */}
                         <div className="flex items-center gap-3">
@@ -243,7 +276,7 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                 <>
                                     <div className="h-3 w-3 animate-pulse rounded-full bg-success"></div>
                                     <span className="font-medium text-success">
-                                        {product.stock ? `In Stock (${product.stock} available)` : 'In Stock'}
+                                        {!variants.length && product.stock ? `In Stock (${product.stock} available)` : 'In Stock'}
                                     </span>
                                 </>
                             ) : (
@@ -313,7 +346,8 @@ export default function Single({ product, relatedProducts, site, theme, menus }:
                                 </div>
                                 <button
                                     onClick={addToCart}
-                                    disabled={addingToCart}
+                                    disabled={addingToCart || needsVariant}
+                                    title={needsVariant ? 'Choose an option first' : undefined}
                                     className="flex flex-1 items-center justify-center gap-3 rounded-md bg-primary px-8 py-4 font-semibold text-white shadow-lg shadow-primary/20 transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <ShoppingCart className="h-5 w-5" />

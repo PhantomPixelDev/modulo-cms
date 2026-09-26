@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Plugins\ModuloShop\src\Support\ProductData;
 
 class ProductController
 {
@@ -83,10 +84,15 @@ class ProductController
             ? Post::where('post_type_id', $productType->id)->find($request->integer('edit'))
             : null;
 
+        $tags = TaxonomyTerm::whereHas('taxonomy', fn ($q) => $q->where('slug', 'product-tag'))
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug']);
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'shop-products',
             'shopProducts' => $products,
             'productCategories' => $categories,
+            'productTags' => $tags,
             'editProduct' => $editProduct ? $this->transformForAdmin($editProduct) : null,
         ]);
     }
@@ -126,7 +132,17 @@ class ProductController
             'stock' => 'nullable|integer|min:0',
             'currency' => 'nullable|string|max:10',
             'featured' => 'nullable|boolean',
-            'gallery' => 'nullable|array',
+            'gallery' => 'nullable|array|max:30',
+            'gallery.*' => 'string|max:500',
+            'sale_starts_at' => 'nullable|date',
+            'sale_ends_at' => 'nullable|date|after_or_equal:sale_starts_at',
+            'weight' => 'nullable|numeric|min:0',
+            'variants' => 'nullable|array|max:100',
+            'variants.*.id' => 'nullable|string|max:100',
+            'variants.*.name' => 'required|string|max:120',
+            'variants.*.sku' => 'nullable|string|max:64',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.stock' => 'nullable|integer|min:0',
             'attributes' => 'nullable|array',
             'categories' => 'nullable|array',
             'tags' => 'nullable|array',
@@ -164,8 +180,12 @@ class ProductController
                 'stock' => isset($data['stock']) ? (int) $data['stock'] : null,
                 'currency' => $data['currency'] ?? 'USD',
                 'featured' => (bool) ($data['featured'] ?? false),
-                'gallery' => $data['gallery'] ?? [],
+                'gallery' => array_values($data['gallery'] ?? []),
                 'attributes' => $data['attributes'] ?? [],
+                'sale_starts_at' => $data['sale_starts_at'] ?? null,
+                'sale_ends_at' => $data['sale_ends_at'] ?? null,
+                'weight' => isset($data['weight']) ? (float) $data['weight'] : null,
+                'variants' => ProductData::prepareVariants($data['variants'] ?? []),
             ],
         ]);
 
@@ -214,7 +234,17 @@ class ProductController
             'stock' => 'nullable|integer|min:0',
             'currency' => 'nullable|string|max:10',
             'featured' => 'nullable|boolean',
-            'gallery' => 'nullable|array',
+            'gallery' => 'nullable|array|max:30',
+            'gallery.*' => 'string|max:500',
+            'sale_starts_at' => 'nullable|date',
+            'sale_ends_at' => 'nullable|date|after_or_equal:sale_starts_at',
+            'weight' => 'nullable|numeric|min:0',
+            'variants' => 'nullable|array|max:100',
+            'variants.*.id' => 'nullable|string|max:100',
+            'variants.*.name' => 'required|string|max:120',
+            'variants.*.sku' => 'nullable|string|max:64',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.stock' => 'nullable|integer|min:0',
             'attributes' => 'nullable|array',
             'categories' => 'nullable|array',
             'tags' => 'nullable|array',
@@ -269,8 +299,15 @@ class ProductController
                     : ($existingMeta['stock'] ?? null),
                 'currency' => $data['currency'] ?? $existingMeta['currency'] ?? 'USD',
                 'featured' => isset($data['featured']) ? (bool) $data['featured'] : ($existingMeta['featured'] ?? false),
-                'gallery' => $data['gallery'] ?? $existingMeta['gallery'] ?? [],
+                'gallery' => array_key_exists('gallery', $data) ? array_values($data['gallery'] ?? []) : ($existingMeta['gallery'] ?? []),
                 'attributes' => $data['attributes'] ?? $existingMeta['attributes'] ?? [],
+                'sale_starts_at' => array_key_exists('sale_starts_at', $data) ? $data['sale_starts_at'] : ($existingMeta['sale_starts_at'] ?? null),
+                'sale_ends_at' => array_key_exists('sale_ends_at', $data) ? $data['sale_ends_at'] : ($existingMeta['sale_ends_at'] ?? null),
+                'weight' => array_key_exists('weight', $data) ? ($data['weight'] === null ? null : (float) $data['weight']) : ($existingMeta['weight'] ?? null),
+                // Stock in existing variations is kept when the form leaves it out
+                'variants' => array_key_exists('variants', $data)
+                    ? ProductData::prepareVariants($data['variants'] ?? [])
+                    : ($existingMeta['variants'] ?? []),
             ],
         ]);
 
@@ -339,6 +376,11 @@ class ProductController
             'featured' => (bool) ($meta['featured'] ?? false),
             'gallery' => $meta['gallery'] ?? [],
             'attributes' => $meta['attributes'] ?? [],
+            'sale_starts_at' => $meta['sale_starts_at'] ?? null,
+            'sale_ends_at' => $meta['sale_ends_at'] ?? null,
+            'sale_active' => ProductData::saleActive($meta),
+            'weight' => isset($meta['weight']) ? (float) $meta['weight'] : null,
+            'variants' => ProductData::variants($meta),
             'categories' => $product->taxonomyTerms
                 ->filter(fn ($t) => $t->taxonomy?->slug === 'product-category')
                 ->pluck('id')

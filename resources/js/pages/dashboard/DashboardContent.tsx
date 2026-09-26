@@ -66,6 +66,8 @@ export default function DashboardContent({
     breadcrumb,
     currentFolderId,
     shopProducts,
+    productCategories,
+    productTags,
     editProduct,
     shopOrders,
     shopCoupons,
@@ -196,6 +198,8 @@ export default function DashboardContent({
             }),
             ...getShopSections({
                 shopProducts,
+                productCategories,
+                productTags,
                 editProduct,
                 shopOrders,
                 shopCoupons,

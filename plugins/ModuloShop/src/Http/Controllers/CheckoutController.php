@@ -181,10 +181,7 @@ class CheckoutController
                 'coupon' => $totals['coupon_error'] ?? 'Your coupon can no longer be used. Remove it to continue.',
             ]);
         }
-        $quantities = collect($cart['items'])
-            ->groupBy('product_id')
-            ->map(fn ($items) => (int) $items->sum('quantity'))
-            ->all();
+        $quantities = $this->cartService->quantities($cart);
 
         try {
             $order = DB::transaction(function () use ($validated, $cart, $totals, $request, $quantities) {
@@ -242,7 +239,7 @@ class CheckoutController
                     OrderItem::create([
                         'order_id' => $order->id,
                         'product_id' => $item['product_id'],
-                        'product_name' => $item['product_name'],
+                        'product_name' => $item['variant_name'] ? $item['product_name'].' — '.$item['variant_name'] : $item['product_name'],
                         'product_sku' => $item['sku'],
                         'price' => $item['price'],
                         'quantity' => $item['quantity'],
@@ -251,6 +248,8 @@ class CheckoutController
                             'slug' => $item['product_slug'],
                             'image' => $item['product_image'],
                             'original_price' => $item['original_price'],
+                            'variant_id' => $item['variant_id'],
+                            'variant_name' => $item['variant_name'],
                         ],
                     ]);
                 }

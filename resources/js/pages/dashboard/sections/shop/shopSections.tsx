@@ -12,6 +12,8 @@ import type { Paginated, ShopCoupon, ShopGateway, ShopOrder, ShopProduct } from 
 
 export function getShopSections({
     shopProducts,
+    productCategories,
+    productTags,
     editProduct,
     shopOrders,
     shopCoupons,
@@ -24,6 +26,8 @@ export function getShopSections({
     ROUTE,
 }: {
     shopProducts: Paginated<ShopProduct> | undefined;
+    productCategories?: { id: number; name: string }[];
+    productTags?: { id: number; name: string }[];
     editProduct?: ShopProduct | null;
     shopOrders: Paginated<ShopOrder> | undefined;
     shopCoupons?: Paginated<ShopCoupon>;
@@ -39,6 +43,8 @@ export function getShopSections({
         <SectionWrapper title="Shop Products" description="Manage your store products and inventory.">
             <ShopProductsManager
                 products={shopProducts}
+                categories={productCategories ?? []}
+                tags={productTags ?? []}
                 initialEdit={editProduct ?? null}
                 canView={can('view shop products')}
                 canCreate={can('create shop products')}

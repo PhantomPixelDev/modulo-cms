@@ -363,6 +363,8 @@ export interface DashboardProps {
     // ModuloShop
     shopProducts?: Paginated<ShopProduct>;
     editProduct?: ShopProduct | null;
+    productCategories?: { id: number; name: string }[];
+    productTags?: { id: number; name: string }[];
     shopOrders?: Paginated<ShopOrder>;
     shopCoupons?: Paginated<ShopCoupon>;
     shopGateways?: ShopGateway[];

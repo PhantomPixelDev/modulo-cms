@@ -6,7 +6,9 @@ import Layout from '../Layout';
 import { formatMoney, shopRequest, TotalsRows, type ShopTotals } from './totals';
 
 interface CartItem {
+    key?: string;
     product_id: number;
+    variant_name?: string | null;
     product_name: string;
     product_image?: string;
     price: number;
@@ -508,7 +510,7 @@ export default function Checkout({ cart, totals, user, countries, payment_method
 
                                     <div className="mb-6 space-y-4">
                                         {cart?.items.map((item) => (
-                                            <div key={item.product_id} className="flex gap-4">
+                                            <div key={item.key ?? item.product_id} className="flex gap-4">
                                                 {item.product_image ? (
                                                     <img
                                                         src={item.product_image}
@@ -522,6 +524,7 @@ export default function Checkout({ cart, totals, user, countries, payment_method
                                                 )}
                                                 <div className="min-w-0 flex-1">
                                                     <p className="truncate font-medium text-foreground">{item.product_name}</p>
+                                                    {item.variant_name && <p className="text-sm text-foreground/80">{item.variant_name}</p>}
                                                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                                 </div>
                                                 <p className="font-medium text-foreground">{formatPrice(item.subtotal, liveTotals?.currency)}</p>

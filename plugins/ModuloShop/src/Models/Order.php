@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Plugins\ModuloShop\src\Support\ProductData;
 
 /**
  * @property int $id
@@ -199,16 +200,19 @@ class Order extends Model
     }
 
     /**
-     * Quantities per product, as stock sees them.
+     * Quantities per product (or product:variation), as stock sees them.
      *
-     * @return array<int, int>
+     * @return array<string, int>
      */
     public function quantities(): array
     {
-        return $this->items()->whereNotNull('product_id')->get()
-            ->groupBy('product_id')
-            ->map(fn ($items) => (int) $items->sum('quantity'))
-            ->all();
+        $quantities = [];
+        foreach (OrderItem::where('order_id', $this->id)->whereNotNull('product_id')->get() as $item) {
+            $key = ProductData::lineKey((int) $item->product_id, $item->product_data['variant_id'] ?? null);
+            $quantities[$key] = ($quantities[$key] ?? 0) + (int) $item->quantity;
+        }
+
+        return $quantities;
     }
 
     public function isPaid(): bool
