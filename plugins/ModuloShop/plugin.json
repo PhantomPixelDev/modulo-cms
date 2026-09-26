@@ -3,6 +3,9 @@
   "slug": "modulo-shop",
   "namespace": "ModuloShop",
   "version": "1.6.0",
+  "requires": {
+    "core": ">=0.2.0"
+  },
   "description": "A feature-rich e-commerce plugin for Modulo CMS.",
   "author": "Modulo CMS",
   "service_provider": "Plugins\\ModuloShop\\ModuloShopServiceProvider",
