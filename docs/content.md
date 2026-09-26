@@ -10,11 +10,30 @@ until emptied by hand.
 A trashed post still owns its slug. New posts get a free one automatically
 (`hello`, `hello-2`, …).
 
+## Autosave and preview
+
+While you type, the editor keeps your unsaved text as a draft of your own (per post and
+person) a few seconds after you stop. If the tab closes, opening the post again offers to
+restore it. Saving the post discards the autosave.
+
+**Preview** opens the post through the theme with the unsaved text, from a signed link
+that expires after an hour, so it can be shared for a quick look. Previews are never
+cached, counted as views or indexed.
+
+## Custom fields
+
+A content type can define extra fields (**Post types → edit → Custom fields**): short
+and long text, number, link, email, date, yes/no, choice list and image. Posts of that
+type show them in a **Details** box; the values are checked when the post is saved and
+reach themes as `post.fields.<key>`. The key is fixed once saved, because themes and
+existing posts use it.
+
 ## Revisions
 
 Every time the title, excerpt, content or SEO title/description of a post or page
 changes, the previous version is kept. **Revisions** in the editor lists them with who
-made the change and when, previews them (as text), and restores one with a click.
+made the change and when, shows what changed since each one (word by word) or the
+version itself, and restores one with a click.
 Restoring keeps the current text as a revision too, so it can be undone. The newest
 `MODULO_REVISIONS_KEEP` (25) per post are kept.
 
