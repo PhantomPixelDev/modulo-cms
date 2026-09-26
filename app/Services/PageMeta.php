@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Locale;
 use Illuminate\Http\Request;
 
 /**
@@ -28,7 +29,7 @@ class PageMeta
 
     /**
      * @param  array<string, mixed>  $props  What the template receives
-     * @return array{title: string, description: ?string, image: ?string, canonical: string, robots: string, type: string, site: string, published: ?string, author: ?string, json_ld: list<array<string, mixed>>}
+     * @return array{title: string, description: ?string, image: ?string, canonical: string, robots: string, type: string, site: string, published: ?string, author: ?string, json_ld: list<array<string, mixed>>, alternates: array<string, string>}
      */
     public function build(string $template, array $props, Request $request): array
     {
@@ -103,7 +104,37 @@ class PageMeta
             'published' => $isArticle ? $published : null,
             'author' => $isArticle ? $author : null,
             'json_ld' => array_map(fn (array $data) => $this->withoutNulls($data), $jsonLd),
+            'alternates' => $this->alternates($entity),
         ];
+    }
+
+    /**
+     * The same content in other languages, as the sitemap lists it: the
+     * default language unprefixed, the others under /{locale}.
+     *
+     * @param  array<string, mixed>|null  $entity
+     * @return array<string, string> hreflang => URL, including x-default
+     */
+    protected function alternates(?array $entity): array
+    {
+        $localizations = is_array($entity['localizations'] ?? null) ? $entity['localizations'] : [];
+
+        if (count($localizations) < 2) {
+            return [];
+        }
+
+        $default = Locale::getDefault()->code ?? config('app.fallback_locale', 'en');
+        $urls = [];
+        foreach ($localizations as $locale => $entry) {
+            $path = '/'.ltrim((string) ($entry['path'] ?? ''), '/');
+            $urls[(string) $locale] = $locale === $default ? url($path) : url('/'.$locale.$path);
+        }
+
+        if (isset($urls[$default])) {
+            $urls['x-default'] = $urls[$default];
+        }
+
+        return $urls;
     }
 
     /**
