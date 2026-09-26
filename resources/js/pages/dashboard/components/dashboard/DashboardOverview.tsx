@@ -69,7 +69,9 @@ function Checklist({ steps }: { steps: Array<{ key: string; done: boolean }> }) 
                                         {t(`dashboard.home.checklist.steps.${step.key}.title`)}
                                     </span>
                                     {!step.done && (
-                                        <span className="block text-xs text-muted-foreground">{t(`dashboard.home.checklist.steps.${step.key}.hint`)}</span>
+                                        <span className="block text-xs text-muted-foreground">
+                                            {t(`dashboard.home.checklist.steps.${step.key}.hint`)}
+                                        </span>
                                     )}
                                 </span>
                             </>
@@ -120,7 +122,10 @@ function PostsCard({
                     <ul className="-mx-2 divide-y">
                         {items.map((item) => (
                             <li key={item.id}>
-                                <Link href={editHref(item)} className="flex items-baseline justify-between gap-3 rounded-md px-2 py-2 hover:bg-accent/50">
+                                <Link
+                                    href={editHref(item)}
+                                    className="flex items-baseline justify-between gap-3 rounded-md px-2 py-2 hover:bg-accent/50"
+                                >
                                     <span className="min-w-0">
                                         <span className="block truncate text-sm font-medium">{item.title || '—'}</span>
                                         <span className="block truncate text-xs text-muted-foreground">
@@ -211,7 +216,10 @@ export function DashboardOverview({ overview }: { overview: DashboardOverviewDat
                                 </ul>
                             )}
                             <div className="mt-auto pt-3">
-                                <Link href={`${route('dashboard.admin.comments.index')}?status=pending`} className="text-xs font-medium text-primary hover:underline">
+                                <Link
+                                    href={`${route('dashboard.admin.comments.index')}?status=pending`}
+                                    className="text-xs font-medium text-primary hover:underline"
+                                >
                                     {t('dashboard.home.widgets.moderate')}
                                 </Link>
                             </div>

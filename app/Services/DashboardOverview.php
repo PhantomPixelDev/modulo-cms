@@ -93,7 +93,7 @@ class DashboardOverview
                 'slug' => $post->slug,
                 'status' => $post->status,
                 'is_page' => $post->postType?->name === 'page',
-                'type' => $post->postType?->label ?? $post->postType?->name,
+                'type' => $post->postType === null ? null : ($post->postType->label ?? $post->postType->name),
                 'author' => $post->author?->name,
                 'date' => $this->settings->formatDateTime($post->{$dateColumn}),
                 'date_iso' => $post->{$dateColumn}?->toIso8601String(),
