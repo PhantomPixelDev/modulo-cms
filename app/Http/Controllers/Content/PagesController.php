@@ -149,7 +149,8 @@ class PagesController extends Controller
             'meta_title' => $data['meta_title'] ?? null,
             'meta_description' => $data['meta_description'] ?? null,
             'parent_id' => $data['parent_id'] ?? null,
-            'meta_data' => $data['meta_data'] ?? [],
+            // Validated above; validated() would keep only the keys with rules of their own
+            'meta_data' => (array) $request->input('meta_data', []),
         ]);
 
         return redirect()->route('dashboard.admin.pages.index')
@@ -200,7 +201,7 @@ class PagesController extends Controller
             'meta_description' => $data['meta_description'] ?? $page->meta_description,
             'author_id' => $data['author_id'] ?? $page->author_id,
             'parent_id' => array_key_exists('parent_id', $data) ? $data['parent_id'] : $page->parent_id,
-            'meta_data' => $data['meta_data'] ?? $page->meta_data,
+            'meta_data' => $request->has('meta_data') ? (array) $request->input('meta_data') : $page->meta_data,
         ]);
 
         return redirect()->route('dashboard.admin.pages.index')
