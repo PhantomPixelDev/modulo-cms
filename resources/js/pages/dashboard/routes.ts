@@ -168,6 +168,7 @@ export const ROUTE = {
             update: (id: number | string) => route('dashboard.admin.shop.orders.update', { order: id }),
             destroy: (id: number | string) => route('dashboard.admin.shop.orders.destroy', { order: id }),
             refund: (id: number | string) => route('dashboard.admin.shop.orders.refund', { order: id }),
+            notes: (id: number | string) => route('dashboard.admin.shop.orders.notes.store', { order: id }),
         },
         payments: {
             index: () => route('dashboard.admin.shop.payments.index'),
