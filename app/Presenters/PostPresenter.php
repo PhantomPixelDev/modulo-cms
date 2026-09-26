@@ -10,6 +10,7 @@ use App\Services\HtmlSanitizer;
 use App\Services\ResponsiveImages;
 use App\Services\ShortcodeService;
 use App\Services\SiteSettingsService;
+use App\Support\CustomFields;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -78,6 +79,8 @@ class PostPresenter
             })->toArray() : [],
             'comments' => $commentsEnabled ? $this->presentComments($post) : [],
             'allow_comments' => $commentsEnabled,
+            // The post type's custom fields, by key
+            'fields' => CustomFields::values($post),
             'localizations' => $full ? $this->buildLocalizationMap($post) : [],
         ];
     }

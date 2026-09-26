@@ -88,6 +88,22 @@ export interface PostType extends BaseEntity {
     show_in_menu: boolean;
     menu_icon?: string;
     menu_position: number;
+    fields?: CustomFieldDefinition[];
+}
+
+export const CUSTOM_FIELD_TYPES = ['text', 'textarea', 'number', 'url', 'email', 'date', 'toggle', 'select', 'image'] as const;
+export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
+
+/** An extra field a post type asks for; the values live in meta_data.fields. */
+export interface CustomFieldDefinition {
+    key: string;
+    label: string;
+    type: CustomFieldType;
+    help?: string;
+    required?: boolean;
+    options?: string[];
+    /** Editor only: the key was typed, so it no longer follows the label */
+    keyTouched?: boolean;
 }
 
 export interface Taxonomy extends BaseEntity {

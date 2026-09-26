@@ -3,6 +3,10 @@ export interface PostType {
     name: string;
     label: string;
     is_hierarchical?: boolean;
+    has_excerpt?: boolean;
+    has_featured_image?: boolean;
+    has_taxonomies?: boolean;
+    fields?: import('../../types').CustomFieldDefinition[];
 }
 
 export interface Term {
