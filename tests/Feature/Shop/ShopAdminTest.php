@@ -122,7 +122,7 @@ it('shows the admin screens from the plugin bundle and its sidebar entry', funct
     Plugin::updateOrCreate(['slug' => 'modulo-shop'], [
         'name' => 'Modulo Shop', 'version' => '1.7.0', 'service_provider' => 'Plugins\ModuloShop\ModuloShopServiceProvider', 'is_active' => true,
     ]);
-    shopManager();
+    $this->actingAs(makeAdminUserWithPermissions(['view shop products', 'view shop orders', 'manage shop settings']));
 
     $this->get(route('dashboard.admin.shop.products.index'))
         ->assertOk()

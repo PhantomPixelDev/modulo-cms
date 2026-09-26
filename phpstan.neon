@@ -10,3 +10,10 @@ parameters:
     excludePaths:
         - plugins/*/database/*
     tmpDir: storage/framework/phpstan
+    ignoreErrors:
+        # Plugins register their view namespace (slug::view) when they boot, which
+        # static analysis never sees, so their mail views can't be resolved here.
+        -
+            identifier: argument.type
+            message: '#^Parameter \#1 \$view of method Illuminate\Mail\Mailable\:\:markdown\(\) expects view\-string, string given\.$#'
+            path: plugins/*/src/Mail/*
