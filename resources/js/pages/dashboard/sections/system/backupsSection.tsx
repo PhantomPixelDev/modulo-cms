@@ -72,7 +72,10 @@ function RestoreDialog({ backup, onClose }: { backup: BackupItem; onClose: () =>
                                 <Checkbox
                                     checked={form.data.parts.includes(part)}
                                     onCheckedChange={(checked) =>
-                                        form.setData('parts', checked === true ? [...form.data.parts, part] : form.data.parts.filter((p) => p !== part))
+                                        form.setData(
+                                            'parts',
+                                            checked === true ? [...form.data.parts, part] : form.data.parts.filter((p) => p !== part),
+                                        )
                                     }
                                 />
                                 {t(`dashboard.backups.contents.${part}`)}
@@ -95,7 +98,11 @@ function RestoreDialog({ backup, onClose }: { backup: BackupItem; onClose: () =>
                         <Button type="button" variant="ghost" onClick={onClose}>
                             {t('dashboard.common.cancel')}
                         </Button>
-                        <Button type="submit" variant="destructive" disabled={form.processing || form.data.confirm !== backup.name || form.data.parts.length === 0}>
+                        <Button
+                            type="submit"
+                            variant="destructive"
+                            disabled={form.processing || form.data.confirm !== backup.name || form.data.parts.length === 0}
+                        >
                             {form.processing ? <Loader2 className="animate-spin" /> : <RotateCcw />}
                             {t('dashboard.backups.restore.submit')}
                         </Button>
@@ -114,7 +121,11 @@ export function BackupsPage({ data }: { data: BackupsProps }) {
     const upload = useForm<{ backup: File | null }>({ backup: null });
 
     const create = () =>
-        router.post(route('dashboard.admin.system.backups.store'), {}, { preserveScroll: true, onStart: () => setBusy(true), onFinish: () => setBusy(false) });
+        router.post(
+            route('dashboard.admin.system.backups.store'),
+            {},
+            { preserveScroll: true, onStart: () => setBusy(true), onFinish: () => setBusy(false) },
+        );
 
     const destroy = (name: string) => {
         if (!window.confirm(t('dashboard.backups.confirm_delete', { name }))) return;
@@ -257,7 +268,11 @@ export function BackupsPage({ data }: { data: BackupsProps }) {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
-                            {data.offsite.enabled ? <CloudUpload className="h-4 w-4 text-primary" /> : <CloudOff className="h-4 w-4 text-muted-foreground" />}
+                            {data.offsite.enabled ? (
+                                <CloudUpload className="h-4 w-4 text-primary" />
+                            ) : (
+                                <CloudOff className="h-4 w-4 text-muted-foreground" />
+                            )}
                             {t('dashboard.backups.offsite.title')}
                             {data.offsite.enabled && data.offsite.last && (
                                 <Badge variant={data.offsite.last.ok ? 'success' : 'destructive'}>
@@ -276,7 +291,10 @@ export function BackupsPage({ data }: { data: BackupsProps }) {
                             <p className={data.offsite.last.ok ? 'text-muted-foreground' : 'text-destructive'}>
                                 {data.offsite.last.ok
                                     ? t('dashboard.backups.offsite.last_ok', { file: data.offsite.last.file, at: when(data.offsite.last.at) })
-                                    : t('dashboard.backups.offsite.last_failed', { at: when(data.offsite.last.at), reason: data.offsite.last.error ?? '' })}
+                                    : t('dashboard.backups.offsite.last_failed', {
+                                          at: when(data.offsite.last.at),
+                                          reason: data.offsite.last.error ?? '',
+                                      })}
                             </p>
                         )}
                         {!data.offsite.enabled && (

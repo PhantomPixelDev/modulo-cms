@@ -29,7 +29,7 @@ function backupAdmin(): User
 /**
  * A minimal archive in the backup format, as another Modulo server would write it.
  */
-function fakeBackup(string $path, bool $withManifest = true): string
+function uploadableBackup(string $path, bool $withManifest = true): string
 {
     $zip = new ZipArchive;
     $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
@@ -48,7 +48,7 @@ function fakeBackup(string $path, bool $withManifest = true): string
 it('queues a restore once the backup name is typed again', function () {
     Queue::fake();
     $name = 'modulo-backup-2026-09-20_031500.zip';
-    fakeBackup($this->work.'/backups/'.$name);
+    uploadableBackup($this->work.'/backups/'.$name);
     $this->actingAs(backupAdmin());
 
     $this->post(route('dashboard.admin.system.backups.restore', $name), ['confirm' => 'something else', 'parts' => ['database']])
@@ -80,12 +80,12 @@ it('takes an uploaded backup and refuses other zip files', function () {
     $this->actingAs(backupAdmin());
 
     $this->post(route('dashboard.admin.system.backups.upload'), [
-        'backup' => new UploadedFile(fakeBackup($this->work.'/other.zip', withManifest: false), 'other.zip', 'application/zip', null, true),
+        'backup' => new UploadedFile(uploadableBackup($this->work.'/other.zip', withManifest: false), 'other.zip', 'application/zip', null, true),
     ])->assertSessionHasErrors('backup');
     expect(File::files($this->work.'/backups'))->toBe([]);
 
     $this->post(route('dashboard.admin.system.backups.upload'), [
-        'backup' => new UploadedFile(fakeBackup($this->work.'/site.zip'), 'site.zip', 'application/zip', null, true),
+        'backup' => new UploadedFile(uploadableBackup($this->work.'/site.zip'), 'site.zip', 'application/zip', null, true),
     ])->assertSessionHas('success');
 
     expect(app(BackupManager::class)->all())->toHaveCount(1);
@@ -93,7 +93,7 @@ it('takes an uploaded backup and refuses other zip files', function () {
 
 it('keeps restores and uploads to administrators', function () {
     $name = 'modulo-backup-2026-09-20_031500.zip';
-    fakeBackup($this->work.'/backups/'.$name);
+    uploadableBackup($this->work.'/backups/'.$name);
 
     $this->actingAs(makeAdminUserWithPermissions(['edit settings']))
         ->post(route('dashboard.admin.system.backups.restore', $name), ['confirm' => $name, 'parts' => ['database']])
@@ -106,7 +106,7 @@ it('copies backups off-site and keeps only the newest there', function () {
     $manager = app(BackupManager::class);
 
     foreach (['2026-09-01_000000', '2026-09-08_000000', '2026-09-15_000000'] as $stamp) {
-        expect($manager->copyOffsite(fakeBackup($this->work."/backups/modulo-backup-{$stamp}.zip")))->toBeTrue();
+        expect($manager->copyOffsite(uploadableBackup($this->work."/backups/modulo-backup-{$stamp}.zip")))->toBeTrue();
     }
 
     expect(Storage::disk('offsite')->files('site'))->toBe(['site/modulo-backup-2026-09-08_000000.zip', 'site/modulo-backup-2026-09-15_000000.zip'])
@@ -117,5 +117,5 @@ it('copies backups off-site and keeps only the newest there', function () {
 it('makes no off-site copy when no disk is set up', function () {
     config(['backups.offsite_disk' => null]);
 
-    expect(app(BackupManager::class)->copyOffsite(fakeBackup($this->work.'/backups/modulo-backup-2026-09-01_000000.zip')))->toBeFalse();
+    expect(app(BackupManager::class)->copyOffsite(uploadableBackup($this->work.'/backups/modulo-backup-2026-09-01_000000.zip')))->toBeFalse();
 });
