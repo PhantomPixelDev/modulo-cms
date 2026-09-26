@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
+use Symfony\Component\Process\PhpExecutableFinder;
 
 class PluginManager
 {
@@ -527,6 +529,8 @@ class PluginManager
 
                 return false;
             }
+
+            $this->refreshRouteCache();
         }
 
         return true;
@@ -659,8 +663,14 @@ class PluginManager
             return false;
         }
 
+        $wasActive = $plugin->is_active;
+
         $plugin->update(['is_active' => false]);
         $this->callLifecycle($plugin->service_provider, 'onDeactivate');
+
+        if ($wasActive) {
+            $this->refreshRouteCache();
+        }
 
         return true;
     }
@@ -738,6 +748,8 @@ class PluginManager
         // Run plugin-specific uninstall logic if needed
         $plugin->delete();
 
+        $this->refreshRouteCache();
+
         // Note: We don't delete the files automatically for safety,
         // just remove from DB and deactivate.
 
@@ -781,6 +793,39 @@ class PluginManager
         }
 
         return true;
+    }
+
+    /**
+     * Plugins add their routes when their provider boots, so a cached route
+     * table (production) goes stale whenever one is switched on, off or
+     * replaced: its pages 404, or keep answering after it was removed.
+     *
+     * Dropping the cache is safe in-process. Rebuilding is not -- route:cache
+     * boots a second application, which must not happen inside a web request
+     * -- so that runs as its own process. If it fails the site keeps working
+     * from uncached routes until the next deploy rebuilds them.
+     */
+    public function refreshRouteCache(): void
+    {
+        // The file itself, not routesAreCached(): what matters is whether a
+        // stale table is on disk now for the next request to load.
+        if (! File::exists(app()->getCachedRoutesPath())) {
+            return;
+        }
+
+        Artisan::call('route:clear');
+
+        try {
+            $result = Process::path(base_path())
+                ->timeout(120)
+                ->run([(new PhpExecutableFinder)->find(false) ?: 'php', 'artisan', 'route:cache']);
+
+            if ($result->failed()) {
+                Log::warning('Could not rebuild the route cache after a plugin change: '.trim($result->errorOutput() ?: $result->output()));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Could not rebuild the route cache after a plugin change: '.$e->getMessage());
+        }
     }
 
     /**

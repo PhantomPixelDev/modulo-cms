@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Plugin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Plugins\ContactForm\ContactFormServiceProvider;
@@ -42,4 +43,25 @@ test('contact form submission stores data and sends email', function () {
 
     $submission = ContactSubmission::first();
     expect($submission)->not->toBeNull();
+});
+
+test('an empty recipient setting falls back to the admin address and subject is optional', function () {
+    Mail::fake();
+    // Discovery may already have registered the bundled plugin (it does on PostgreSQL runs).
+    Plugin::query()->updateOrCreate(['slug' => 'contact-form'], [
+        'name' => 'Contact Form',
+        'version' => '1.0.1',
+        'service_provider' => ContactFormServiceProvider::class,
+        'is_active' => true,
+        'settings' => ['recipient_email' => '', 'default_subject' => 'Contact request'],
+    ]);
+
+    $this->postJson('/contact-form/submit', [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'message' => 'No subject field at all.',
+    ])->assertOk()->assertJson(['success' => true]);
+
+    $this->assertDatabaseHas('contact_submissions', ['subject' => 'Contact request']);
+    Mail::assertQueued(ContactFormSubmitted::class, fn ($mail) => $mail->hasTo('admin@example.com'));
 });

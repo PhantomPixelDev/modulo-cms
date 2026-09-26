@@ -112,6 +112,11 @@ class PluginInstaller
             'available_version' => null,
         ]);
 
+        // An active plugin's new version may add or drop routes.
+        if (Plugin::where('slug', $slug)->where('is_active', true)->exists()) {
+            $this->manager->refreshRouteCache();
+        }
+
         return [
             'slug' => $slug,
             'version' => (string) $release['version'],
