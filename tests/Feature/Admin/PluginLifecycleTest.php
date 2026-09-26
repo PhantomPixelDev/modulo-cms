@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\File;
 beforeEach(function () {
     $this->pluginsDir = storage_path('framework/testing/lifecycle-'.getmypid());
     File::deleteDirectory($this->pluginsDir);
-    File::ensureDirectoryExists($this->pluginsDir.'/HelloWorld');
-    File::put($this->pluginsDir.'/HelloWorld/plugin.json', json_encode([
+    File::ensureDirectoryExists($this->pluginsDir.'/LifecycleSample');
+    File::put($this->pluginsDir.'/LifecycleSample/plugin.json', json_encode([
         'name' => 'Hello World', 'slug' => 'hello-world', 'version' => '1.0.0',
         'service_provider' => 'Plugins\LifecycleSample\SampleServiceProvider',
     ]));
@@ -32,7 +32,7 @@ function helloWorldUninstallRecord(): string
 
 function helloWorldLegacyMarker(): string
 {
-    return config('plugins.path').'/HelloWorld/.modulo-uninstalled';
+    return config('plugins.path').'/LifecycleSample/.modulo-uninstalled';
 }
 
 afterEach(function () {

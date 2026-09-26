@@ -44,4 +44,3 @@ it('never caches for signed-in users, flash messages or arbitrary query strings'
     $this->get('/about?utm_source=news')->assertHeaderMissing('X-Page-Cache');
     $this->get('/about?page=2')->assertHeader('X-Page-Cache', 'miss');
 });
-
