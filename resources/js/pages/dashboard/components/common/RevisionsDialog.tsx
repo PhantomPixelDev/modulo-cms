@@ -28,7 +28,10 @@ interface Revision extends Version {
  */
 const toText = (html: string | null) =>
     html
-        ? (new DOMParser().parseFromString(html.replace(/<\/(p|h[1-6]|li|blockquote|div|pre)>|<br\s*\/?>/gi, '$&\n'), 'text/html').body.textContent ?? '')
+        ? (
+              new DOMParser().parseFromString(html.replace(/<\/(p|h[1-6]|li|blockquote|div|pre)>|<br\s*\/?>/gi, '$&\n'), 'text/html').body
+                  .textContent ?? ''
+          )
               .replace(/\n{3,}/g, '\n\n')
               .trim()
         : '';
@@ -151,7 +154,9 @@ export function RevisionsDialog({ postId }: { postId: number }) {
                                             )}
                                         >
                                             <span className="block font-medium tabular-nums">{new Date(revision.created_at).toLocaleString()}</span>
-                                            <span className="block text-xs text-muted-foreground">{revision.user ?? t('dashboard.revisions.unknown_user')}</span>
+                                            <span className="block text-xs text-muted-foreground">
+                                                {revision.user ?? t('dashboard.revisions.unknown_user')}
+                                            </span>
                                         </button>
                                     </li>
                                 ))}
@@ -177,7 +182,9 @@ export function RevisionsDialog({ postId }: { postId: number }) {
                                             {mode === 'changes' && (
                                                 <span className="flex items-center gap-3 text-xs text-muted-foreground">
                                                     <span>
-                                                        <del className="bg-destructive/15 text-destructive">{t('dashboard.revisions.legend_removed')}</del>
+                                                        <del className="bg-destructive/15 text-destructive">
+                                                            {t('dashboard.revisions.legend_removed')}
+                                                        </del>
                                                     </span>
                                                     <span>
                                                         <ins className="bg-primary/15 no-underline">{t('dashboard.revisions.legend_added')}</ins>
@@ -189,7 +196,9 @@ export function RevisionsDialog({ postId }: { postId: number }) {
 
                                     {mode === 'changes' && changes ? (
                                         unchanged ? (
-                                            <p className="py-6 text-center text-sm text-muted-foreground">{t('dashboard.revisions.same_as_current')}</p>
+                                            <p className="py-6 text-center text-sm text-muted-foreground">
+                                                {t('dashboard.revisions.same_as_current')}
+                                            </p>
                                         ) : (
                                             <>
                                                 <h3 className="text-lg font-semibold">
@@ -226,7 +235,9 @@ export function RevisionsDialog({ postId }: { postId: number }) {
                                             <h3 className="text-lg font-semibold">{selected.title}</h3>
                                             {selected.excerpt && <p className="text-sm text-muted-foreground">{selected.excerpt}</p>}
                                             <p className="text-sm whitespace-pre-line">
-                                                {toText(selected.content) || <em className="text-muted-foreground">{t('dashboard.revisions.no_content')}</em>}
+                                                {toText(selected.content) || (
+                                                    <em className="text-muted-foreground">{t('dashboard.revisions.no_content')}</em>
+                                                )}
                                             </p>
                                             {(selected.meta_title || selected.meta_description) && (
                                                 <dl className="space-y-1 border-t pt-3 text-xs text-muted-foreground">

@@ -326,7 +326,11 @@ export function PageForm({ page, isEditing, authors = [], canEditAuthor = false,
                         <div className="space-y-2">
                             <Label>{t('dashboard.pages.form.fields.content')}</Label>
                             <div className="rounded-md border">
-                                <SlateEditor key={`${page?.id || 'new-page'}-${editorKey}`} initialHTML={form.content} onHTMLChange={handleContentChange} />
+                                <SlateEditor
+                                    key={`${page?.id || 'new-page'}-${editorKey}`}
+                                    initialHTML={form.content}
+                                    onHTMLChange={handleContentChange}
+                                />
                             </div>
                         </div>
                     </div>
