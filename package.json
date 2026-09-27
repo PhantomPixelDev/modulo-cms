@@ -44,12 +44,12 @@
         "eslint-config-prettier": "^10.0.1",
         "eslint-plugin-react": "^7.37.3",
         "eslint-plugin-react-hooks": "^5.1.0",
-        "jsdom": "^30.1.0",
-        "prettier": "^3.9.8",
+        "jsdom": "^30.1.1",
+        "prettier": "^3.9.9",
         "prettier-plugin-organize-imports": "^4.3.0",
         "prettier-plugin-tailwindcss": "^0.8.1",
-        "sass": "^1.104.1",
-        "typescript-eslint": "^8.70.0",
+        "sass": "^1.105.0",
+        "typescript-eslint": "^8.70.1",
         "vitepress": "^2.0.0-alpha.20",
         "vitest": "^5.0.1"
     },
@@ -97,8 +97,8 @@
         "ziggy-js": "^2.6.4"
     },
     "optionalDependencies": {
-        "@rollup/rollup-linux-x64-gnu": "4.63.3",
+        "@rollup/rollup-linux-x64-gnu": "4.63.5",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
-        "lightningcss-linux-x64-gnu": "^1.29.1"
+        "lightningcss-linux-x64-gnu": "^1.33.0"
     }
 }
