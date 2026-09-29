@@ -51,6 +51,7 @@ jobs:
   prepare:
     name: prepare
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [tests, lint, e2e]
     outputs:
       version: ${{ steps.meta.outputs.version }}
@@ -103,6 +104,7 @@ jobs:
   image:
     name: image (${{ matrix.target }})
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     needs: prepare
     permissions:
       contents: read
@@ -202,6 +204,7 @@ jobs:
   tarball:
     name: tarball
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: prepare
     steps:
       - name: Checkout
@@ -221,6 +224,16 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/composer
+            ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
 
       - name: Stamp the version
         run: |
@@ -300,6 +313,7 @@ jobs:
   publish:
     name: publish
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [prepare, image, tarball]
     if: needs.prepare.outputs.publish == 'true'
     permissions:
@@ -314,13 +328,13 @@ jobs:
           fetch-depth: 0
 
       - name: Download tarball
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v7
         with:
           name: release-tarball
           path: dist
 
       - name: Download image digests
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v7
         with:
           pattern: image-digest-*
           merge-multiple: true

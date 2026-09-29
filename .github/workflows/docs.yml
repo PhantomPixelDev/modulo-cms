@@ -20,6 +20,7 @@ jobs:
   build:
     name: build the documentation site
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
@@ -49,6 +50,7 @@ jobs:
     needs: build
     if: github.event_name != 'pull_request' && vars.DOCS_PAGES == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write

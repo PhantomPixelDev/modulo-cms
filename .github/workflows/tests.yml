@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
   workflow_call:
 
 concurrency:
@@ -20,6 +21,7 @@ jobs:
   sqlite:
     name: tests (sqlite)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -32,6 +34,16 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/composer
+            ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
+
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
@@ -41,6 +53,7 @@ jobs:
   coverage:
     name: coverage
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -51,6 +64,16 @@ jobs:
           php-version: 8.4
           tools: composer:v2
           coverage: pcov
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/composer
+            ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
 
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
@@ -77,6 +100,7 @@ jobs:
   pgsql:
     name: tests (postgres)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     services:
       postgres:
@@ -110,6 +134,16 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/composer
+            ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
+
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
@@ -132,6 +166,7 @@ jobs:
   upgrade-bases:
     name: pick releases to upgrade from
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       bases: ${{ steps.pick.outputs.bases }}
     steps:
@@ -160,6 +195,7 @@ jobs:
   upgrade:
     name: upgrade from ${{ matrix.base }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: upgrade-bases
     strategy:
       fail-fast: false
@@ -204,6 +240,16 @@ jobs:
           php-version: 8.4
           tools: composer:v2
           coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/composer
+            ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
 
       - name: Build a database at the older version
         run: |
@@ -271,6 +317,7 @@ jobs:
   upgrade-result:
     name: upgrade an existing database
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: upgrade
     if: always()
     steps:
@@ -284,6 +331,7 @@ jobs:
   frontend:
     name: frontend build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
