@@ -39,27 +39,33 @@ class FeedController extends Controller
         $itemsXml = '';
 
         foreach ($posts as $post) {
-            $url = $settings->formatPostUrl($post);
+            $url = htmlspecialchars($settings->formatPostUrl($post), ENT_XML1, 'UTF-8');
             $pubDate = $post->published_at ? $post->published_at->toRfc2822String() : $post->created_at->toRfc2822String();
-            $author = $post->author?->name ?? 'Admin';
+            $author = htmlspecialchars($post->author?->name ?? 'Admin', ENT_XML1, 'UTF-8');
+            $title = htmlspecialchars($post->title ?? '', ENT_XML1, 'UTF-8');
+            $excerpt = htmlspecialchars($post->excerpt ?? '', ENT_XML1, 'UTF-8');
 
             $itemsXml .= "
         <item>
-            <title><![CDATA[{$post->title}]]></title>
+            <title>{$title}</title>
             <link>{$url}</link>
-            <description><![CDATA[{$post->excerpt}]]></description>
+            <description>{$excerpt}</description>
             <author>{$author}</author>
             <pubDate>{$pubDate}</pubDate>
             <guid isPermaLink=\"false\">{$post->id}</guid>
         </item>";
         }
 
+        $safeSiteName = htmlspecialchars($siteName, ENT_XML1, 'UTF-8');
+        $safeSiteUrl = htmlspecialchars($siteUrl, ENT_XML1, 'UTF-8');
+        $safeSiteTagline = htmlspecialchars($siteTagline, ENT_XML1, 'UTF-8');
+
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <rss version=\"2.0\" xmlns:content=\"http://purl.org/rss/1.0/modules/content/\" xmlns:wfw=\"http://wellformedweb.org/CommentAPI/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:atom=\"http://www.w3.org/2000/svg\" xmlns:sy=\"http://purl.org/rss/1.0/modules/syndication/\" xmlns:slash=\"http://purl.org/rss/1.0/modules/slash/\">
     <channel>
-        <title><![CDATA[{$siteName}]]></title>
-        <link>{$siteUrl}</link>
-        <description><![CDATA[{$siteTagline}]]></description>
+        <title>{$safeSiteName}</title>
+        <link>{$safeSiteUrl}</link>
+        <description>{$safeSiteTagline}</description>
         <lastBuildDate>{$now}</lastBuildDate>
         <language>".app()->getLocale()."</language>
         {$itemsXml}

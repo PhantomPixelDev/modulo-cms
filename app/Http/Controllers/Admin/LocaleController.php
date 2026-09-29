@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreLocaleRequest;
+use App\Http\Requests\UpdateLocaleRequest;
 use App\Models\Locale;
 use App\Models\MenuItemTranslation;
 use App\Models\PostTranslation;
@@ -11,7 +13,6 @@ use App\Support\ActivityLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -42,6 +43,11 @@ class LocaleController extends Controller
         'uk' => ['Ukrainian', 'Українська'], 'vi' => ['Vietnamese', 'Tiếng Việt'], 'zh' => ['Chinese', '中文'],
     ];
 
+    protected function commonLanguages(): array
+    {
+        return config('locales.common', self::COMMON);
+    }
+
     public function index(): Response
     {
         $this->authorizeManage();
@@ -55,23 +61,18 @@ class LocaleController extends Controller
                     ->map(fn (Locale $locale) => $locale->only(['id', 'code', 'name', 'native_name', 'direction', 'is_active', 'is_default'])
                         + ['translations' => $counts[$locale->code] ?? 0])
                     ->values(),
-                'common' => collect(self::COMMON)
+                'common' => collect($this->commonLanguages())
                     ->map(fn (array $language, string $code) => ['code' => $code, 'name' => $language[0], 'native_name' => $language[1], 'direction' => $language[2] ?? 'ltr'])
                     ->values(),
             ],
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreLocaleRequest $request): RedirectResponse
     {
         $this->authorizeManage();
 
-        $data = $request->validate([
-            'code' => ['required', 'string', 'max:10', 'regex:/^[a-z]{2,3}(-[A-Z]{2})?$/', Rule::unique('locales', 'code')],
-            'name' => ['required', 'string', 'max:100'],
-            'native_name' => ['nullable', 'string', 'max:100'],
-            'direction' => ['required', Rule::in(['ltr', 'rtl'])],
-        ]);
+        $data = $request->validated();
 
         $locale = Locale::create($data + ['is_active' => true, 'is_default' => false, 'sort_order' => (int) Locale::max('sort_order') + 1]);
         $this->changed('locale.created', 'Added the language '.$locale->name);
@@ -79,17 +80,11 @@ class LocaleController extends Controller
         return back()->with('success', __('dashboard.languages.messages.added', ['name' => $locale->name]));
     }
 
-    public function update(Request $request, Locale $language): RedirectResponse
+    public function update(UpdateLocaleRequest $request, Locale $language): RedirectResponse
     {
         $this->authorizeManage();
 
-        $data = $request->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:100'],
-            'native_name' => ['sometimes', 'nullable', 'string', 'max:100'],
-            'direction' => ['sometimes', Rule::in(['ltr', 'rtl'])],
-            'is_active' => ['sometimes', 'boolean'],
-            'is_default' => ['sometimes', 'accepted'],
-        ]);
+        $data = $request->validated();
 
         if (($data['is_active'] ?? true) === false && $language->is_default) {
             return back()->with('error', __('dashboard.languages.messages.default_stays_active'));

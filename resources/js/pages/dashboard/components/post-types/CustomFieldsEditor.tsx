@@ -56,8 +56,9 @@ export function CustomFieldsEditor({
             {fields.map((field, index) => {
                 const keyLocked = savedKeys.includes(field.key) && field.key !== '';
                 const error = (name: string) => errors[`fields.${index}.${name}`];
+                const fieldKey = field.key || `field-${index}`;
                 return (
-                    <div key={index} className="space-y-3 rounded-md border p-3">
+                    <div key={fieldKey} className="space-y-3 rounded-md border p-3">
                         <div className="grid gap-3 md:grid-cols-[1fr_1fr_10rem_auto]">
                             <div className="space-y-1">
                                 <Label htmlFor={`field-label-${index}`}>{t('dashboard.post_types.fields.label')}</Label>

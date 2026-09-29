@@ -75,6 +75,7 @@ export function TaxonomyTermForm({
                     <select
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
                         value={data.taxonomy_id ?? ''}
+                        aria-label="Taxonomy"
                         onChange={(e) => setData('taxonomy_id', Number(e.target.value) || null)}
                     >
                         {(taxonomies || []).map((t) => (
@@ -88,14 +89,14 @@ export function TaxonomyTermForm({
 
                 <div className="space-y-1.5">
                     <label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Order</label>
-                    <Input type="number" value={data.term_order} onChange={(e) => setData('term_order', Number(e.target.value))} />
+                    <Input type="number" value={data.term_order} aria-label="Order" onChange={(e) => setData('term_order', Number(e.target.value))} />
                     {errors.term_order && <p className="text-xs text-red-500">{errors.term_order as any}</p>}
                 </div>
             </div>
 
             <div className="space-y-1.5">
                 <label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Name</label>
-                <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                <Input value={data.name} aria-label="Name" onChange={(e) => setData('name', e.target.value)} />
                 {errors.name && <p className="text-xs text-red-500">{errors.name as any}</p>}
             </div>
 
@@ -104,6 +105,7 @@ export function TaxonomyTermForm({
                 <select
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
                     value={data.parent_id ?? 0}
+                    aria-label="Parent term"
                     onChange={(e) => setData('parent_id', Number(e.target.value) || null)}
                 >
                     <option value={0}>— None —</option>
@@ -118,18 +120,27 @@ export function TaxonomyTermForm({
 
             <div className="space-y-1.5">
                 <label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Description</label>
-                <Textarea value={data.description} onChange={(e) => setData('description', e.target.value)} className="min-h-[90px]" />
+                <Textarea
+                    value={data.description}
+                    aria-label="Description"
+                    onChange={(e) => setData('description', e.target.value)}
+                    className="min-h-[90px]"
+                />
                 {errors.description && <p className="text-xs text-red-500">{errors.description as any}</p>}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
                     <label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Meta Title</label>
-                    <Input value={data.meta_title} onChange={(e) => setData('meta_title', e.target.value)} />
+                    <Input value={data.meta_title} aria-label="Meta title" onChange={(e) => setData('meta_title', e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Meta Description</label>
-                    <Input value={data.meta_description} onChange={(e) => setData('meta_description', e.target.value)} />
+                    <Input
+                        value={data.meta_description}
+                        aria-label="Meta description"
+                        onChange={(e) => setData('meta_description', e.target.value)}
+                    />
                 </div>
             </div>
 

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreTranslationRequest;
+use App\Http\Requests\ClearTranslationCacheRequest;
 use App\Models\Locale;
 use App\Models\TranslationOverride;
 use App\Services\TranslationService;
@@ -70,16 +72,11 @@ class TranslationController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreTranslationRequest $request)
     {
         $this->authorizeManage();
 
-        $data = $request->validate([
-            'locale' => 'required|string|max:10',
-            'domain' => 'required|string|max:64',
-            'key' => 'required|string|max:255',
-            'value' => 'nullable|string',
-        ]);
+        $data = $request->validated();
 
         if ($data['value'] === null || $data['value'] === '') {
             TranslationOverride::where('locale', $data['locale'])
@@ -102,13 +99,11 @@ class TranslationController extends Controller
         return back()->with('success', __('Translation saved.'));
     }
 
-    public function clearCache(Request $request)
+    public function clearCache(ClearTranslationCacheRequest $request)
     {
         $this->authorizeManage();
 
-        $data = $request->validate([
-            'locale' => 'nullable|string|max:10',
-        ]);
+        $data = $request->validated();
 
         $this->translations->clearCache($data['locale'] ?? null);
 

@@ -2,8 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\Meta;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
@@ -35,7 +35,7 @@ class SchemaVersion
             }
 
             try {
-                return DB::table('modulo_meta')->where('key', self::KEY)->value('value') ?? '';
+                return Meta::find(self::KEY)?->value ?? '';
             } catch (Throwable) {
                 return '';
             }
@@ -55,9 +55,9 @@ class SchemaVersion
         }
 
         try {
-            DB::table('modulo_meta')->updateOrInsert(
+            Meta::updateOrCreate(
                 ['key' => self::KEY],
-                ['value' => Version::current(), 'updated_at' => now(), 'created_at' => now()],
+                ['value' => Version::current()],
             );
         } catch (Throwable) {
             // Recording is best-effort: a missing row only disables the guard.

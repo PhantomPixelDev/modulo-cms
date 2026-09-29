@@ -32,12 +32,12 @@ Route::middleware('auth')->group(function () {
     }
 
     // Password first, then the page: it shows the secret while setting up.
-    Route::get('settings/two-factor', [TwoFactorController::class, 'edit'])->middleware('password.confirm')->name('two-factor.edit');
-    Route::post('settings/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
     Route::middleware('password.confirm')->group(function () {
+        Route::get('settings/two-factor', [TwoFactorController::class, 'edit'])->name('two-factor.edit');
+        Route::post('settings/two-factor/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:6,1')->name('two-factor.confirm');
         Route::post('settings/two-factor', [TwoFactorController::class, 'store'])->name('two-factor.enable');
-        Route::post('settings/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
-        Route::delete('settings/two-factor', [TwoFactorController::class, 'destroy'])->name('two-factor.disable');
+        Route::post('settings/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->middleware('throttle:6,1')->name('two-factor.recovery-codes');
+        Route::delete('settings/two-factor', [TwoFactorController::class, 'destroy'])->middleware('throttle:6,1')->name('two-factor.disable');
     });
 
     // Asked when the page opens, so creating a token does not bounce through it.

@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property-read string $label
  */
 class Taxonomy extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -46,6 +47,10 @@ class Taxonomy extends Model
 
     public function translation(string $locale): ?TaxonomyTranslation
     {
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->firstWhere('locale', $locale);
+        }
+
         return $this->translations()->where('locale', $locale)->first();
     }
 
@@ -93,8 +98,5 @@ class Taxonomy extends Model
         return $translation?->description ?? $this->description;
     }
 
-    public function getPostTypesAttribute($value)
-    {
-        return json_decode($value, true) ?? [];
-    }
+
 }

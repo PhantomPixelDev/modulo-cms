@@ -10,6 +10,7 @@ use App\Models\Taxonomy;
 use App\Models\TaxonomyTerm;
 use App\Models\TaxonomyTermTranslation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -171,9 +172,11 @@ class TaxonomyTermController extends Controller
 
         $data['slug'] = $this->makeUniqueSlug($data['name'], (int) $data['taxonomy_id'], $taxonomyTerm->id);
         $data['term_order'] = $data['term_order'] ?? 0;
-        $taxonomyTerm->update($data);
 
-        $this->syncTranslations($taxonomyTerm, $translationsPayload);
+        DB::transaction(function () use ($taxonomyTerm, $data, $translationsPayload) {
+            $taxonomyTerm->update($data);
+            $this->syncTranslations($taxonomyTerm, $translationsPayload);
+        });
 
         return redirect()->route('dashboard.admin.taxonomy-terms.index')->with('success', 'Taxonomy term updated successfully.');
     }

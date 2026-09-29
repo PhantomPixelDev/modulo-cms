@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreRedirectRequest;
+use App\Http\Requests\UpdateRedirectRequest;
 use App\Models\Redirect;
 use App\Support\ActivityLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,7 +37,7 @@ class RedirectController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreRedirectRequest $request): RedirectResponse
     {
         $this->authorizeManage();
         $data = $this->validated($request);
@@ -51,7 +52,7 @@ class RedirectController extends Controller
         return back()->with('success', 'Redirect saved.');
     }
 
-    public function update(Request $request, Redirect $redirect): RedirectResponse
+    public function update(UpdateRedirectRequest $request, Redirect $redirect): RedirectResponse
     {
         $this->authorizeManage();
         $data = $this->validated($request, $redirect);

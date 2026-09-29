@@ -49,7 +49,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('trash', [TrashController::class, 'index'])->name('trash.index');
         Route::post('trash/{id}/restore', [TrashController::class, 'restore'])->whereNumber('id')->name('trash.restore');
         Route::delete('trash/{id}', [TrashController::class, 'destroy'])->whereNumber('id')->name('trash.destroy');
-        Route::delete('trash', [TrashController::class, 'empty'])->name('trash.empty');
+        Route::delete('trash', [TrashController::class, 'empty'])->middleware('throttle:6,1')->name('trash.empty');
 
         // Revisions of a post or page (by id; pages are posts too)
         Route::get('content/{postId}/revisions', [RevisionController::class, 'index'])->whereNumber('postId')->name('revisions.index');
@@ -61,7 +61,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::delete('content/{postId}/autosave', [AutosaveController::class, 'destroy'])->whereNumber('postId')->name('autosave.destroy');
         Route::post('content/{postId}/preview-link', [AutosaveController::class, 'previewLink'])->whereNumber('postId')->name('preview.link');
 
-        Route::post('posts/bulk', [PostController::class, 'bulk'])->name('posts.bulk');
+        Route::post('posts/bulk', [PostController::class, 'bulk'])->middleware('throttle:6,1')->name('posts.bulk');
         Route::resource('posts', PostController::class)
             ->scoped(['post' => 'slug']);
         // Specific route for listing posts by post type
@@ -101,7 +101,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
             Route::match(['put', 'patch'], '/{media}', [AdminMediaController::class, 'update'])->name('media.update');
             Route::delete('/{media}', [AdminMediaController::class, 'destroy'])->name('media.destroy');
             Route::post('/regenerate/{media?}', [AdminMediaController::class, 'regenerate'])->name('media.regenerate');
-            Route::post('/bulk', [AdminMediaController::class, 'bulk'])->name('media.bulk');
+            Route::post('/bulk', [AdminMediaController::class, 'bulk'])->middleware('throttle:6,1')->name('media.bulk');
 
             // Legacy alias for compatibility
             Route::post('/upload', [AdminMediaController::class, 'store'])->name('media.upload');
@@ -127,8 +127,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Sitemap
         Route::get('/sitemap', [SitemapController::class, 'index'])->name('sitemap.index');
         Route::put('/sitemap', [SitemapController::class, 'update'])->name('sitemap.update');
-        Route::post('/sitemap/regenerate', [SitemapController::class, 'regenerate'])->name('sitemap.regenerate');
-        Route::post('/sitemap/generate', [SitemapController::class, 'regenerate'])->name('sitemap.generate');
+        Route::post('/sitemap/regenerate', [SitemapController::class, 'regenerate'])->middleware('throttle:6,1')->name('sitemap.regenerate');
 
         // Site Settings
         Route::get('/settings', [SiteSettingsController::class, 'index'])->name('settings.index');
@@ -159,9 +158,9 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
             Route::delete('/redirects/{redirect}', [RedirectController::class, 'destroy'])->name('redirects.destroy');
 
             Route::get('/backups', [BackupController::class, 'index'])->name('backups');
-            Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');
-            Route::post('/backups/upload', [BackupController::class, 'upload'])->name('backups.upload');
-            Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->name('backups.restore');
+            Route::post('/backups', [BackupController::class, 'store'])->middleware('throttle:6,1')->name('backups.store');
+            Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware('throttle:6,1')->name('backups.upload');
+            Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware('throttle:6,1')->name('backups.restore');
             Route::get('/backups/{backup}', [BackupController::class, 'download'])->name('backups.download');
             Route::delete('/backups/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy');
         });
@@ -181,10 +180,10 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('plugins', [PluginController::class, 'index'])->name('plugins.index');
         Route::post('plugins/discover', [PluginController::class, 'discover'])->name('plugins.discover');
         Route::get('plugins/registry', [PluginController::class, 'registry'])->name('plugins.registry');
-        Route::post('plugins/install', [PluginController::class, 'install'])->name('plugins.install');
-        Route::post('plugins/{slug}/activate', [PluginController::class, 'activate'])->name('plugins.activate');
-        Route::post('plugins/{slug}/deactivate', [PluginController::class, 'deactivate'])->name('plugins.deactivate');
+        Route::post('plugins/install', [PluginController::class, 'install'])->middleware('throttle:6,1')->name('plugins.install');
+        Route::post('plugins/{slug}/activate', [PluginController::class, 'activate'])->middleware('throttle:6,1')->name('plugins.activate');
+        Route::post('plugins/{slug}/deactivate', [PluginController::class, 'deactivate'])->middleware('throttle:6,1')->name('plugins.deactivate');
         Route::get('plugins/{slug}/settings', [PluginController::class, 'settings'])->name('plugins.settings');
         Route::put('plugins/{slug}/settings', [PluginController::class, 'updateSettings'])->name('plugins.update-settings');
-        Route::delete('plugins/{slug}', [PluginController::class, 'destroy'])->name('plugins.destroy');
+        Route::delete('plugins/{slug}', [PluginController::class, 'destroy'])->middleware('throttle:6,1')->name('plugins.destroy');
     });

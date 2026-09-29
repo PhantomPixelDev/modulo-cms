@@ -18,6 +18,7 @@ use App\Support\ContentListFilters;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -144,11 +145,11 @@ class PostController extends Controller
             'published_at' => $this->settings->formatDateTime($post->published_at),
             'created_at' => $this->settings->formatDateTime($post->created_at),
             'updated_at' => $this->settings->formatDateTime($post->updated_at),
-            'post_type' => [
+            'post_type' => $post->postType ? [
                 'id' => $post->postType->id,
                 'name' => $post->postType->name,
                 'label' => $post->postType->label,
-            ],
+            ] : null,
             'author' => $post->author ? [
                 'id' => $post->author->id,
                 'name' => $post->author->name,
@@ -255,7 +256,7 @@ class PostController extends Controller
             $publishedAt = $request->status === 'published' ? now() : null;
         }
 
-        $post = Post::create([
+        $post = Post::createWithUniqueSlug([
             'post_type_id' => $request->post_type_id,
             'author_id' => $request->author_id ?: auth()->id(),
             'title' => $request->title,
@@ -306,11 +307,11 @@ class PostController extends Controller
             'parent_id' => $post->parent_id,
             'menu_order' => $post->menu_order,
             'meta_data' => $post->meta_data,
-            'post_type' => [
+            'post_type' => $post->postType ? [
                 'id' => $post->postType->id,
                 'name' => $post->postType->name,
                 'label' => $post->postType->label,
-            ],
+            ] : null,
             'author' => $post->author ? [
                 'id' => $post->author->id,
                 'name' => $post->author->name,
@@ -371,11 +372,11 @@ class PostController extends Controller
             'updated_at' => $post->updated_at->format('Y-m-d H:i:s'),
             'meta_title' => $translation?->seo_title ?? $post->meta_title,
             'meta_description' => $translation?->seo_description ?? $post->meta_description,
-            'post_type' => [
+            'post_type' => $post->postType ? [
                 'id' => $post->postType->id,
                 'name' => $post->postType->name,
                 'label' => $post->postType->label,
-            ],
+            ] : null,
             'author' => $post->author ? [
                 'id' => $post->author->id,
                 'name' => $post->author->name,
@@ -454,20 +455,20 @@ class PostController extends Controller
             ]);
         }
 
-        $post->update($baseUpdate);
+        DB::transaction(function () use ($post, $baseUpdate, $request, $locale) {
+            $post->update($baseUpdate);
 
-        // Sync taxonomy terms
-        $post->taxonomyTerms()->sync($request->taxonomy_terms ?? []);
+            $post->taxonomyTerms()->sync($request->taxonomy_terms ?? []);
 
-        // Update translation data for the selected locale
-        $post->setTranslation($locale, [
-            'title' => $request->title,
-            'slug' => Str::slug($request->slug ?: $request->title),
-            'excerpt' => $request->excerpt,
-            'content' => $request->content,
-            'seo_title' => $request->meta_title,
-            'seo_description' => $request->meta_description,
-        ]);
+            $post->setTranslation($locale, [
+                'title' => $request->title,
+                'slug' => Str::slug($request->slug ?: $request->title),
+                'excerpt' => $request->excerpt,
+                'content' => $request->content,
+                'seo_title' => $request->meta_title,
+                'seo_description' => $request->meta_description,
+            ]);
+        });
 
         return redirect()->route('dashboard.admin.posts.index')->with('success', 'Post updated successfully.');
     }

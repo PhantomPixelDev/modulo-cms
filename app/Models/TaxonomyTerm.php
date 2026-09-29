@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property-read string $name
  */
 class TaxonomyTerm extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'taxonomy_id',
@@ -62,6 +63,10 @@ class TaxonomyTerm extends Model
 
     public function translation(string $locale): ?TaxonomyTermTranslation
     {
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->firstWhere('locale', $locale);
+        }
+
         return $this->translations()->where('locale', $locale)->first();
     }
 
@@ -139,10 +144,7 @@ class TaxonomyTerm extends Model
         return $this->meta_data ?? [];
     }
 
-    public function getMetaDataAttribute($value)
-    {
-        return json_decode($value, true) ?? [];
-    }
+
 
     // Scopes for filtering
     public function scopeByTaxonomy($query, $taxonomyId)

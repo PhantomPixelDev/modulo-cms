@@ -257,7 +257,7 @@ export function SitemapSettingsForm({
                     )}
 
                     {customUrls.map((customUrl, index) => (
-                        <div key={`custom-url-${index}`} className="space-y-3 rounded-md border p-3">
+                        <div key={`${index}-${customUrl.loc ?? ''}`} className="space-y-3 rounded-md border p-3">
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-medium text-muted-foreground">
                                     {t('dashboard.sitemap.fields.custom_url_label', { number: index + 1 })}

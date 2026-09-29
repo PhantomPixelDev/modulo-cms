@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useTranslation } from '@/hooks/useTranslation';
+import { apiGet } from '@/lib/api';
 import { diffText, type DiffPart } from '@/lib/textDiff';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
@@ -72,9 +73,8 @@ export function RevisionsDialog({ postId }: { postId: number }) {
 
     const load = () => {
         setRevisions(null);
-        fetch(route('dashboard.admin.revisions.index', { postId }), { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then((response) => (response.ok ? response.json() : { revisions: [], current: null }))
-            .then((data: { revisions: Revision[]; current: Version | null }) => {
+        apiGet<{ revisions: Revision[]; current: Version | null }>(route('dashboard.admin.revisions.index', { postId }))
+            .then((data) => {
                 setRevisions(data.revisions);
                 setCurrent(data.current);
                 setSelected(data.revisions[0] ?? null);

@@ -76,6 +76,7 @@ export function AdminToastProvider({ children }: { children: ReactNode }) {
     );
 
     // Server-side flash messages (back()->with('error', ...)) as toasts.
+    // router.on() returns the unsubscribe function, which useEffect uses as cleanup.
     useEffect(
         () =>
             router.on('success', (event) => {

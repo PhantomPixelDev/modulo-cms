@@ -17,9 +17,20 @@ type DataTableProps<T> = {
     itemsPerPage?: number;
     searchFields?: (keyof T)[];
     mobileBreakpoint?: 'sm' | 'md' | 'lg';
+    loading?: boolean;
+    keyField?: keyof T | string;
 };
 
-export function DataTable<T>({ data, columns, actions, itemsPerPage = 10, searchFields = [], mobileBreakpoint = 'md' }: DataTableProps<T>) {
+export function DataTable<T>({
+    data,
+    columns,
+    actions,
+    itemsPerPage = 10,
+    searchFields = [],
+    mobileBreakpoint = 'md',
+    loading = false,
+    keyField,
+}: DataTableProps<T>) {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<{ key: keyof T | string; direction: 'asc' | 'desc' | null } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -150,8 +161,16 @@ export function DataTable<T>({ data, columns, actions, itemsPerPage = 10, search
         return filteredData.slice(startIndex, endIndex);
     }, [filteredData, currentPage, itemsPerPage]);
 
+    const getRowKey = (item: T, index: number): string | number => {
+        if (keyField) {
+            const val = item[keyField as keyof T];
+            if (val !== null && val !== undefined) return String(val);
+        }
+        return index;
+    };
+
     const renderMobileCard = (item: T, index: number) => (
-        <Card key={index} className="mb-4">
+        <Card key={getRowKey(item, index)} className="mb-4">
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -198,6 +217,7 @@ export function DataTable<T>({ data, columns, actions, itemsPerPage = 10, search
                             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                             <Input
                                 placeholder="Search..."
+                                aria-label="Search"
                                 value={searchTerm}
                                 onChange={(e) => {
                                     setSearchTerm(e.target.value);
@@ -211,11 +231,23 @@ export function DataTable<T>({ data, columns, actions, itemsPerPage = 10, search
 
                 {/* View Mode Toggle - Available on all screen sizes */}
                 <div className="flex items-center gap-2">
-                    <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('table')}>
+                    <Button
+                        variant={viewMode === 'table' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setViewMode('table')}
+                        aria-label="Table view"
+                        aria-pressed={viewMode === 'table'}
+                    >
                         <List className="mr-1 h-4 w-4" />
                         <span className="hidden sm:inline">Table</span>
                     </Button>
-                    <Button variant={viewMode === 'cards' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('cards')}>
+                    <Button
+                        variant={viewMode === 'cards' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setViewMode('cards')}
+                        aria-label="Card view"
+                        aria-pressed={viewMode === 'cards'}
+                    >
                         <Grid className="mr-1 h-4 w-4" />
                         <span className="hidden sm:inline">Cards</span>
                     </Button>
@@ -233,6 +265,13 @@ export function DataTable<T>({ data, columns, actions, itemsPerPage = 10, search
                                         key={String(col.key)}
                                         onClick={() => col.sortable && handleSort(col.key)}
                                         className={col.sortable ? 'cursor-pointer hover:bg-muted/50' : ''}
+                                        aria-sort={
+                                            col.sortable && sortConfig?.key === col.key
+                                                ? sortConfig.direction === 'asc'
+                                                    ? 'ascending'
+                                                    : 'descending'
+                                                : undefined
+                                        }
                                     >
                                         <div className="flex items-center gap-1">
                                             {col.label}
@@ -252,7 +291,13 @@ export function DataTable<T>({ data, columns, actions, itemsPerPage = 10, search
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {paginatedData.length === 0 ? (
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="text-center text-muted-foreground">
+                                        Loading...
+                                    </TableCell>
+                                </TableRow>
+                            ) : paginatedData.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="text-center text-muted-foreground">
                                         No data found
@@ -260,7 +305,7 @@ export function DataTable<T>({ data, columns, actions, itemsPerPage = 10, search
                                 </TableRow>
                             ) : (
                                 paginatedData.map((item, index) => (
-                                    <TableRow key={index}>
+                                    <TableRow key={getRowKey(item, index)}>
                                         {columns.map((col) => (
                                             <TableCell key={String(col.key)}>
                                                 {col.render
@@ -295,7 +340,13 @@ export function DataTable<T>({ data, columns, actions, itemsPerPage = 10, search
                         Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} items
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            aria-label="Previous page"
+                        >
                             Previous
                         </Button>
                         <div className="flex items-center gap-1">
@@ -319,6 +370,7 @@ export function DataTable<T>({ data, columns, actions, itemsPerPage = 10, search
                             size="sm"
                             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
+                            aria-label="Next page"
                         >
                             Next
                         </Button>

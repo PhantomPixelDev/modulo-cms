@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MenuItem extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'menu_id', 'parent_id', 'label', 'url', 'page_slug', 'route_name',
@@ -44,6 +45,10 @@ class MenuItem extends Model
 
     public function translation(string $locale): ?MenuItemTranslation
     {
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->firstWhere('locale', $locale);
+        }
+
         return $this->translations()->where('locale', $locale)->first();
     }
 

@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateCommentRequest;
+use App\Http\Requests\UpdateCommentSettingsRequest;
 use App\Models\Comment;
 use App\Models\SiteSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -66,11 +67,9 @@ class CommentController extends Controller
         ]);
     }
 
-    public function update(Request $request, Comment $comment): RedirectResponse
+    public function update(UpdateCommentRequest $request, Comment $comment): RedirectResponse
     {
-        $data = $request->validate([
-            'status' => ['required', Rule::in(self::STATUSES)],
-        ]);
+        $data = $request->validated();
 
         $comment->status = $data['status'];
         $comment->approved_at = $data['status'] === 'approved' ? ($comment->approved_at ?? now()) : null;
@@ -87,11 +86,9 @@ class CommentController extends Controller
         return back()->with('success', 'Comment deleted.');
     }
 
-    public function updateSettings(Request $request): RedirectResponse
+    public function updateSettings(UpdateCommentSettingsRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'comment_moderation' => ['required', 'boolean'],
-        ]);
+        $data = $request->validated();
 
         SiteSetting::set('comment_moderation', (bool) $data['comment_moderation'], 'general', 'boolean');
 

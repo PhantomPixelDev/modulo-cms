@@ -1,5 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ErrorBoundary from '@/ErrorBoundary';
+import { apiGet, apiPost } from '@/lib/api';
 import type { ModuloBuild, SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
@@ -30,7 +32,7 @@ interface UpdateState {
  * into the container, and it is the first thing needed in a bug report or when
  * checking whether a deploy landed.
  */
-export function SystemInfoCard({ title = 'System', description }: { title?: string; description?: string }) {
+function SystemInfoCardInner({ title = 'System', description }: { title?: string; description?: string }) {
     const build = usePage<SharedData>().props.modulo;
     const [state, setState] = useState<UpdateState | null>(null);
     const [requestError, setRequestError] = useState<string | null>(null);
@@ -38,22 +40,11 @@ export function SystemInfoCard({ title = 'System', description }: { title?: stri
 
     const load = (refresh = false) => {
         setChecking(true);
-        const request = refresh
-            ? fetch('/dashboard/admin/updates/refresh', {
-                  method: 'POST',
-                  headers: {
-                      'X-Requested-With': 'XMLHttpRequest',
-                      'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
-                  },
-              })
-            : fetch('/dashboard/admin/updates', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const request = refresh ? apiPost<UpdateState>('/dashboard/admin/updates/refresh') : apiGet<UpdateState>('/dashboard/admin/updates');
 
         request
-            .then(async (response) => {
-                if (!response.ok) {
-                    throw new Error(`Could not check for updates (HTTP ${response.status}).`);
-                }
-                setState((await response.json()) as UpdateState);
+            .then((data) => {
+                setState(data);
                 setRequestError(null);
             })
             // A failed update check must never break the settings page.
@@ -67,7 +58,7 @@ export function SystemInfoCard({ title = 'System', description }: { title?: stri
     useEffect(() => {
         load();
         // Runs once; the server caches the answer for hours.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     if (!build) {
@@ -132,5 +123,13 @@ export function SystemInfoCard({ title = 'System', description }: { title?: stri
                 </div>
             </CardContent>
         </Card>
+    );
+}
+
+export function SystemInfoCard({ title = 'System', description }: { title?: string; description?: string }) {
+    return (
+        <ErrorBoundary>
+            <SystemInfoCardInner title={title} description={description} />
+        </ErrorBoundary>
     );
 }

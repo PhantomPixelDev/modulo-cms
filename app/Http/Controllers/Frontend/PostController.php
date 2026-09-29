@@ -180,42 +180,5 @@ class PostController extends BaseFrontendController
         return $this->renderContent($content, 'post', 'post');
     }
 
-    public function showContent(Request $request)
-    {
-        if ($resp = $this->requireReactTheme()) {
-            return $resp;
-        }
 
-        $slug = $request->route('slug');
-        $postTypeSlug = $request->route('postTypeSlug');
-
-        if (! $slug || ! is_string($slug)) {
-            abort(404);
-        }
-
-        if (! $postTypeSlug) {
-            $content = $this->postService->getPostBySlug($slug, 'page');
-
-            if (! $content) {
-                abort(404, 'Page not found');
-            }
-
-            $postsPageId = SiteSetting::get('posts_page_id');
-            if ($postsPageId && $content->id == $postsPageId) {
-                return $this->index($request);
-            }
-
-            return $this->renderContent($content, 'page', 'page');
-        }
-
-        $postType = PostType::where('route_prefix', $postTypeSlug)->firstOrFail();
-        // Slugs are unique per post type, so look up within this type only
-        $content = $this->postService->getPostBySlugForType($slug, $postType);
-
-        if (! $content) {
-            abort(404);
-        }
-
-        return $this->renderContent($content, 'post', 'post');
-    }
 }

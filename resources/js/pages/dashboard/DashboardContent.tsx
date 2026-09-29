@@ -1,4 +1,5 @@
 import { useAdminToast } from '@/components/admin/AdminToastProvider';
+import ErrorBoundary from '@/ErrorBoundary';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAcl } from '@/lib/acl';
@@ -387,7 +388,9 @@ export default function DashboardContent({
                 <title key="title">{pageTitle}</title>
                 <meta name="description" content={pageTitle} key="description" />
             </Head>
-            <div className="min-h-screen bg-background">{renderSection()}</div>
+            <div className="min-h-screen bg-background">
+                <ErrorBoundary>{renderSection()}</ErrorBoundary>
+            </div>
         </>
     );
 }

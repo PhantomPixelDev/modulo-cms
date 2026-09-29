@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateSitemapRequest;
 use App\Models\Locale;
 use App\Models\PostType;
 use App\Services\SitemapBuilder;
@@ -36,23 +37,11 @@ class SitemapController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+    public function update(UpdateSitemapRequest $request)
     {
         $this->authorizeEdit();
 
-        $data = $request->validate([
-            'included_post_type_ids' => 'nullable|array',
-            'included_post_type_ids.*' => 'integer|exists:post_types,id',
-            'include_taxonomies' => 'required|boolean',
-            'enable_cache' => 'required|boolean',
-            'cache_ttl' => 'required|integer|min:60|max:86400',
-            'locale' => 'nullable|string',
-            'custom_urls' => 'nullable|array',
-            'custom_urls.*.loc' => 'nullable|string',
-            'custom_urls.*.lastmod' => 'nullable|date',
-            'custom_urls.*.changefreq' => 'nullable|string',
-            'custom_urls.*.priority' => 'nullable|numeric',
-        ]);
+        $data = $request->validated();
 
         $locale = $data['locale'] ?? null;
         if ($locale && (! schema_has_table('locales') || ! Locale::isValidCode($locale))) {

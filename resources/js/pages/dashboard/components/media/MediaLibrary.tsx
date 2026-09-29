@@ -288,6 +288,7 @@ export const MediaLibrary: React.FC<Props> = ({
                             type="text"
                             className="rounded border px-2 py-1 text-sm"
                             placeholder="New folder name"
+                            aria-label="New folder name"
                             value={newFolderName}
                             onChange={(e) => setNewFolderName(e.target.value)}
                         />
@@ -303,10 +304,16 @@ export const MediaLibrary: React.FC<Props> = ({
                         type="text"
                         className="rounded border px-2 py-1 text-sm"
                         placeholder="Search…"
+                        aria-label="Search media"
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
                     />
-                    <select className="rounded border px-2 py-1 text-sm" value={type} onChange={(e) => setType(e.target.value)}>
+                    <select
+                        className="rounded border px-2 py-1 text-sm"
+                        value={type}
+                        onChange={(e) => setType(e.target.value)}
+                        aria-label="Filter by type"
+                    >
                         <option value="">All</option>
                         <option value="image">Images</option>
                         <option value="video">Videos</option>
@@ -314,17 +321,32 @@ export const MediaLibrary: React.FC<Props> = ({
                         <option value="doc">Documents</option>
                         <option value="other">Other</option>
                     </select>
-                    <select className="rounded border px-2 py-1 text-sm" value={sort} onChange={(e) => setSort(e.target.value as any)}>
+                    <select
+                        className="rounded border px-2 py-1 text-sm"
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value as any)}
+                        aria-label="Sort by"
+                    >
                         <option value="date">Date</option>
                         <option value="name">Name</option>
                         <option value="size">Size</option>
                         <option value="type">Type</option>
                     </select>
-                    <select className="rounded border px-2 py-1 text-sm" value={dir} onChange={(e) => setDir(e.target.value as any)}>
+                    <select
+                        className="rounded border px-2 py-1 text-sm"
+                        value={dir}
+                        onChange={(e) => setDir(e.target.value as any)}
+                        aria-label="Sort direction"
+                    >
                         <option value="desc">Desc</option>
                         <option value="asc">Asc</option>
                     </select>
-                    <select className="rounded border px-2 py-1 text-sm" value={String(perPage)} onChange={(e) => setPerPage(Number(e.target.value))}>
+                    <select
+                        className="rounded border px-2 py-1 text-sm"
+                        value={String(perPage)}
+                        onChange={(e) => setPerPage(Number(e.target.value))}
+                        aria-label="Items per page"
+                    >
                         {[12, 24, 48, 96].map((n) => (
                             <option key={n} value={n}>
                                 {n}/page

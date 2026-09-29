@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { apiGet } from '@/lib/api';
 import React, { useEffect, useState } from 'react';
 import { ROUTE } from '../../routes';
 import type { MediaFolder, MediaItem, Paginated } from '../../types';
@@ -44,8 +45,7 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                 page: page || undefined,
                 perPage: pagination.per_page,
             });
-            const res = await fetch(url, { headers: { Accept: 'application/json' } });
-            const data = await res.json();
+            const data = await apiGet<{ media: MediaItem[] | Paginated<MediaItem>; folders: MediaFolder[]; breadcrumb: MediaFolder[] }>(url);
             const media = data.media;
             const arr: MediaItem[] = Array.isArray(media) ? media : media?.data || [];
             setItems(arr);
@@ -56,7 +56,7 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
             }
             setFolders(Array.isArray(data.folders) ? data.folders : []);
             setBreadcrumb(Array.isArray(data.breadcrumb) ? data.breadcrumb : []);
-        } catch (e) {
+        } catch {
             // noop
         } finally {
             setLoading(false);
@@ -84,7 +84,12 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                         <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                             {breadcrumb.map((b, idx) => (
                                 <span key={b.id} className="flex items-center gap-1">
-                                    <button type="button" className="underline hover:no-underline" onClick={() => setFolderId(b.id)}>
+                                    <button
+                                        type="button"
+                                        className="underline hover:no-underline"
+                                        onClick={() => setFolderId(b.id)}
+                                        aria-label={`Folder: ${b.name}`}
+                                    >
                                         {b.name}
                                     </button>
                                     {idx < breadcrumb.length - 1 && <span>/</span>}
@@ -100,6 +105,7 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                             value={q}
                             onChange={(e) => setQ(e.target.value)}
                             placeholder="Search…"
+                            aria-label="Search media"
                             className="w-full rounded border px-2 py-1 text-sm"
                         />
                         <Button size="sm" variant="secondary" onClick={() => load(1)} disabled={loading}>
@@ -116,6 +122,7 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                                     type="button"
                                     className="flex flex-col gap-2 rounded border p-2 text-left hover:bg-muted/30"
                                     onClick={() => setFolderId(f.id)}
+                                    aria-label={`Folder: ${f.name}`}
                                 >
                                     <div className="flex aspect-square items-center justify-center overflow-hidden rounded bg-amber-100 text-amber-800">
                                         <span className="text-3xl">📁</span>
@@ -134,6 +141,7 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                                 type="button"
                                 className="flex flex-col gap-2 rounded border p-2 hover:bg-muted/30"
                                 title={m.name}
+                                aria-label={`Select: ${m.name}`}
                                 onClick={() => onSelect(m)}
                             >
                                 <div className="flex aspect-square items-center justify-center overflow-hidden rounded bg-muted">

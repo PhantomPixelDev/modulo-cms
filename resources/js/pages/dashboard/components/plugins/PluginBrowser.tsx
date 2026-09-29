@@ -2,6 +2,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import ErrorBoundary from '@/ErrorBoundary';
+import { apiGet } from '@/lib/api';
 import { router } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, ExternalLink, Loader2, RefreshCw, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -24,7 +26,7 @@ const newer = (a: string, b: string) => a.localeCompare(b, undefined, { numeric:
  * Plugins published in the registry. Installing downloads the package,
  * verifies its checksum and unpacks it; it arrives inactive.
  */
-export function PluginBrowser({ canInstall }: { canInstall: boolean }) {
+function PluginBrowserInner({ canInstall }: { canInstall: boolean }) {
     const [plugins, setPlugins] = useState<RegistryPlugin[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [query, setQuery] = useState('');
@@ -32,12 +34,8 @@ export function PluginBrowser({ canInstall }: { canInstall: boolean }) {
 
     const load = useCallback((refresh = false) => {
         setPlugins(null);
-        fetch(`${ROUTE.plugins.registry()}${refresh ? '?refresh=1' : ''}`, {
-            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        })
-            .then(async (response) => {
-                if (!response.ok) throw new Error(`The registry could not be loaded (HTTP ${response.status}).`);
-                const data = (await response.json()) as { plugins: RegistryPlugin[]; error: string | null };
+        apiGet<{ plugins: RegistryPlugin[]; error: string | null }>(`${ROUTE.plugins.registry()}${refresh ? '?refresh=1' : ''}`)
+            .then((data) => {
                 setPlugins(data.plugins);
                 setError(data.error);
             })
@@ -73,7 +71,13 @@ export function PluginBrowser({ canInstall }: { canInstall: boolean }) {
             <div className="flex items-center gap-2">
                 <div className="relative max-w-sm flex-1">
                     <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search the registry" className="pl-9" />
+                    <Input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search the registry"
+                        aria-label="Search the registry"
+                        className="pl-9"
+                    />
                 </div>
                 <Button variant="outline" size="sm" onClick={() => load(true)} disabled={plugins === null}>
                     <RefreshCw />
@@ -155,5 +159,13 @@ export function PluginBrowser({ canInstall }: { canInstall: boolean }) {
                 </div>
             )}
         </div>
+    );
+}
+
+export function PluginBrowser({ canInstall }: { canInstall: boolean }) {
+    return (
+        <ErrorBoundary>
+            <PluginBrowserInner canInstall={canInstall} />
+        </ErrorBoundary>
     );
 }

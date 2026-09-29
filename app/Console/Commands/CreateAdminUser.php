@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 class CreateAdminUser extends Command
@@ -42,7 +43,7 @@ class CreateAdminUser extends Command
         $user = User::create([
             'name' => $name,
             'email' => $email,
-            'password' => bcrypt($password),
+            'password' => Hash::make($password),
         ]);
 
         // Assign admin role

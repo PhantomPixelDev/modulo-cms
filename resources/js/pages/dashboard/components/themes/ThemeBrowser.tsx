@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import ErrorBoundary from '@/ErrorBoundary';
+import { apiGet } from '@/lib/api';
 import { router } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, Loader2, Palette, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -24,19 +26,15 @@ const newer = (a: string, b: string) => a.localeCompare(b, undefined, { numeric:
  * Child themes published in the registry: styles and settings over a
  * bundled theme, installable without rebuilding the site.
  */
-export function ThemeBrowser({ canInstall }: { canInstall: boolean }) {
+function ThemeBrowserInner({ canInstall }: { canInstall: boolean }) {
     const [themes, setThemes] = useState<RegistryTheme[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState<string | null>(null);
 
     const load = useCallback((refresh = false) => {
         setThemes(null);
-        fetch(`${ROUTE.themes.registry()}${refresh ? '?refresh=1' : ''}`, {
-            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        })
-            .then(async (response) => {
-                if (!response.ok) throw new Error(`The registry could not be loaded (HTTP ${response.status}).`);
-                const data = (await response.json()) as { themes: RegistryTheme[]; error: string | null };
+        apiGet<{ themes: RegistryTheme[]; error: string | null }>(`${ROUTE.themes.registry()}${refresh ? '?refresh=1' : ''}`)
+            .then((data) => {
                 setThemes(data.themes);
                 setError(data.error);
             })
@@ -145,5 +143,13 @@ export function ThemeBrowser({ canInstall }: { canInstall: boolean }) {
                 </div>
             )}
         </section>
+    );
+}
+
+export function ThemeBrowser({ canInstall }: { canInstall: boolean }) {
+    return (
+        <ErrorBoundary>
+            <ThemeBrowserInner canInstall={canInstall} />
+        </ErrorBoundary>
     );
 }

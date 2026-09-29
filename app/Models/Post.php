@@ -75,6 +75,26 @@ class Post extends Model
     }
 
     /**
+     * Create a post with a unique slug, retrying on race condition.
+     */
+    public static function createWithUniqueSlug(array $attributes): static
+    {
+        $maxAttempts = 5;
+        $attempt = 0;
+
+        while (true) {
+            try {
+                return static::create($attributes);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                if (++$attempt >= $maxAttempts) {
+                    throw $e;
+                }
+                $attributes['slug'] = static::uniqueSlug($attributes['slug'] ?? 'untitled');
+            }
+        }
+    }
+
+    /**
      * Trashed posts past content.trash_days are purged by model:prune.
      *
      * @return Builder<static>
@@ -170,6 +190,10 @@ class Post extends Model
      */
     public function translation(string $locale): ?PostTranslation
     {
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->firstWhere('locale', $locale);
+        }
+
         return $this->translations()->where('locale', $locale)->first();
     }
 
@@ -195,6 +219,10 @@ class Post extends Model
      */
     public function availableLocales(): array
     {
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->pluck('locale')->toArray();
+        }
+
         return $this->translations()->pluck('locale')->toArray();
     }
 
@@ -203,6 +231,10 @@ class Post extends Model
      */
     public function hasTranslation(string $locale): bool
     {
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->contains('locale', $locale);
+        }
+
         return $this->translations()->where('locale', $locale)->exists();
     }
 

@@ -136,7 +136,7 @@ class PagesController extends Controller
         $data['slug'] = Post::uniqueSlug(Str::slug(empty($data['slug']) ? $data['title'] : $data['slug']));
 
         // Create the page/post
-        $page = Post::create([
+        $page = Post::createWithUniqueSlug([
             'title' => $data['title'],
             'slug' => $data['slug'],
             'content' => $data['content'],

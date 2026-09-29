@@ -75,4 +75,24 @@ class PostTranslation extends Model
 
         return $slug;
     }
+
+    /**
+     * Create a translation with a unique slug, retrying on race condition.
+     */
+    public static function createWithUniqueSlug(array $attributes): static
+    {
+        $maxAttempts = 5;
+        $attempt = 0;
+
+        while (true) {
+            try {
+                return static::create($attributes);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                if (++$attempt >= $maxAttempts) {
+                    throw $e;
+                }
+                $attributes['slug'] = static::generateUniqueSlug($attributes['slug'] ?? 'untitled', $attributes['locale']);
+            }
+        }
+    }
 }

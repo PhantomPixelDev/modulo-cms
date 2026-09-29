@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
 import { Check, CloudOff, Eye, History, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -18,22 +19,6 @@ type Status = 'idle' | 'saving' | 'saved' | 'error';
 
 /** How long typing has to pause before the draft is written. */
 const DEBOUNCE_MS = 3000;
-
-const request = (method: string, url: string, body?: unknown) =>
-    fetch(url, {
-        method,
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
-        },
-        credentials: 'same-origin',
-        body: body === undefined ? undefined : JSON.stringify(body),
-    }).then((response) => {
-        if (!response.ok) throw new Error(String(response.status));
-        return response.json();
-    });
 
 const formatTime = (iso: string | Date) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -55,8 +40,8 @@ export function useAutosave(postId: number | undefined, fields: AutosaveFields, 
 
     useEffect(() => {
         if (!active) return;
-        request('GET', route('dashboard.admin.autosave.show', { postId }))
-            .then((data: { autosave: RecoveredAutosave | null }) => setRecovered(data.autosave))
+        apiGet<{ autosave: RecoveredAutosave | null }>(route('dashboard.admin.autosave.show', { postId }))
+            .then((data) => setRecovered(data.autosave))
             .catch(() => undefined);
     }, [active, postId]);
 
@@ -66,7 +51,7 @@ export function useAutosave(postId: number | undefined, fields: AutosaveFields, 
         if (body === lastSaved.current) return;
         setStatus('saving');
         try {
-            const data = await request('PUT', route('dashboard.admin.autosave.store', { postId }), latest.current);
+            const data = await apiPut<{ saved_at: string }>(route('dashboard.admin.autosave.store', { postId }), latest.current);
             lastSaved.current = body;
             setSavedAt(data.saved_at);
             setStatus('saved');
@@ -83,7 +68,7 @@ export function useAutosave(postId: number | undefined, fields: AutosaveFields, 
 
     const discardRecovered = useCallback(() => {
         setRecovered(null);
-        if (active) request('DELETE', route('dashboard.admin.autosave.destroy', { postId })).catch(() => undefined);
+        if (active) apiDelete(route('dashboard.admin.autosave.destroy', { postId })).catch(() => undefined);
     }, [active, postId]);
 
     return { status, savedAt, recovered, setRecovered, discardRecovered, flush };
@@ -164,7 +149,7 @@ export function PreviewButton({ postId, flush }: { postId: number; flush: () => 
         setBusy(true);
         try {
             await flush();
-            const { url } = await request('POST', route('dashboard.admin.preview.link', { postId }));
+            const { url } = await apiPost<{ url: string }>(route('dashboard.admin.preview.link', { postId }));
             if (tab) tab.location.href = url;
             else window.location.href = url;
         } catch {

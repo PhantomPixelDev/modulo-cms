@@ -65,7 +65,7 @@ export function TemplateForm({
             <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
                     <label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Name</label>
-                    <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                    <Input value={data.name} aria-label="Name" onChange={(e) => setData('name', e.target.value)} />
                     {errors.name && <p className="text-xs text-red-500">{errors.name as any}</p>}
                 </div>
 
@@ -74,6 +74,7 @@ export function TemplateForm({
                     <select
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
                         value={data.type}
+                        aria-label="Type"
                         onChange={(e) => setData('type', e.target.value)}
                     >
                         {Object.entries(filteredTemplateTypes).map(([key, label]) => (
@@ -88,7 +89,12 @@ export function TemplateForm({
 
             <div className="space-y-1.5">
                 <label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Description</label>
-                <Textarea value={data.description} onChange={(e) => setData('description', e.target.value)} className="min-h-[80px]" />
+                <Textarea
+                    value={data.description}
+                    aria-label="Description"
+                    onChange={(e) => setData('description', e.target.value)}
+                    className="min-h-[80px]"
+                />
                 {errors.description && <p className="text-xs text-red-500">{errors.description as any}</p>}
             </div>
 
@@ -96,7 +102,12 @@ export function TemplateForm({
 
             <div className="space-y-1.5">
                 <label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Content</label>
-                <Textarea value={data.content} onChange={(e) => setData('content', e.target.value)} className="min-h-[220px] font-mono text-sm" />
+                <Textarea
+                    value={data.content}
+                    aria-label="Content"
+                    onChange={(e) => setData('content', e.target.value)}
+                    className="min-h-[220px] font-mono text-sm"
+                />
                 {errors.content && <p className="text-xs text-red-500">{errors.content as any}</p>}
             </div>
 

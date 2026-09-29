@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\DB;
+use App\Models\Meta;
 use Throwable;
 
 /**
@@ -19,7 +19,7 @@ class SystemMeta
         }
 
         try {
-            $value = DB::table('modulo_meta')->where('key', $key)->value('value');
+            $value = Meta::find($key)?->value;
         } catch (Throwable) {
             return null;
         }
@@ -35,14 +35,14 @@ class SystemMeta
 
         try {
             if ($value === null) {
-                DB::table('modulo_meta')->where('key', $key)->delete();
+                Meta::where('key', $key)->delete();
 
                 return;
             }
 
-            DB::table('modulo_meta')->updateOrInsert(
+            Meta::updateOrCreate(
                 ['key' => $key],
-                ['value' => $value, 'updated_at' => now(), 'created_at' => now()],
+                ['value' => $value],
             );
         } catch (Throwable) {
             return;

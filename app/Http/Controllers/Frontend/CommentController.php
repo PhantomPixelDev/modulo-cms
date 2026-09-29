@@ -23,6 +23,11 @@ class CommentController extends Controller
 
         // Honeypot filled in: a bot. Pretend success, store nothing.
         if (filled($request->input('website'))) {
+            \Log::info('Comment honeypot triggered', [
+                'ip' => $request->ip(),
+                'post_id' => $post->id,
+            ]);
+
             return back()->with('success', 'Thanks! Your comment has been posted.');
         }
 
