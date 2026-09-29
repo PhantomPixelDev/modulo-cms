@@ -96,6 +96,4 @@ class Taxonomy extends Model
 
         return $translation?->description ?? $this->description;
     }
-
-
 }

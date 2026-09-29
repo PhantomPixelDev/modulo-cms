@@ -59,6 +59,4 @@ class PostType extends Model
     {
         return $this->belongsTo(Template::class, 'archive_template_id');
     }
-
-
 }

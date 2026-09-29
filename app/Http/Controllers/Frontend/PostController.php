@@ -179,6 +179,4 @@ class PostController extends BaseFrontendController
 
         return $this->renderContent($content, 'post', 'post');
     }
-
-
 }

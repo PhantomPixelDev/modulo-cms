@@ -143,8 +143,6 @@ class TaxonomyTerm extends Model
         return $this->meta_data ?? [];
     }
 
-
-
     // Scopes for filtering
     public function scopeByTaxonomy($query, $taxonomyId)
     {

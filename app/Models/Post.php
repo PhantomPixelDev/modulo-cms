@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -85,8 +86,9 @@ class Post extends Model
         while (true) {
             try {
                 return static::create($attributes);
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-                if (++$attempt >= $maxAttempts) {
+            } catch (UniqueConstraintViolationException $e) {
+                $attempt++;
+                if ($attempt >= $maxAttempts) {
                     throw $e;
                 }
                 $attributes['slug'] = static::uniqueSlug($attributes['slug'] ?? 'untitled');

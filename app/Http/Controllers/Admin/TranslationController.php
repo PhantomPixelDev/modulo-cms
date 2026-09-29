@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreTranslationRequest;
 use App\Http\Requests\ClearTranslationCacheRequest;
+use App\Http\Requests\StoreTranslationRequest;
 use App\Models\Locale;
 use App\Models\TranslationOverride;
 use App\Services\TranslationService;
