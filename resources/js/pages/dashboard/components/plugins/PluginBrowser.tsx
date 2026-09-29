@@ -6,7 +6,7 @@ import ErrorBoundary from '@/ErrorBoundary';
 import { apiGet } from '@/lib/api';
 import { router } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, ExternalLink, Loader2, RefreshCw, Search } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ROUTE } from '../../routes';
 
 interface RegistryPlugin {
@@ -31,21 +31,30 @@ function PluginBrowserInner({ canInstall }: { canInstall: boolean }) {
     const [error, setError] = useState<string | null>(null);
     const [query, setQuery] = useState('');
     const [busy, setBusy] = useState<string | null>(null);
+    const mounted = useRef(true);
 
     const load = useCallback((refresh = false) => {
         setPlugins(null);
         apiGet<{ plugins: RegistryPlugin[]; error: string | null }>(`${ROUTE.plugins.registry()}${refresh ? '?refresh=1' : ''}`)
             .then((data) => {
+                if (!mounted.current) return;
                 setPlugins(data.plugins);
                 setError(data.error);
             })
             .catch((e: unknown) => {
+                if (!mounted.current) return;
                 setPlugins([]);
                 setError(e instanceof Error ? e.message : 'The registry could not be loaded.');
             });
     }, []);
 
-    useEffect(() => load(), [load]);
+    useEffect(() => {
+        mounted.current = true;
+        load();
+        return () => {
+            mounted.current = false;
+        };
+    }, [load]);
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();

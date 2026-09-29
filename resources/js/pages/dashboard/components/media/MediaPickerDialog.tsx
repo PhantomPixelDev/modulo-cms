@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { apiGet } from '@/lib/api';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ROUTE } from '../../routes';
 import type { MediaFolder, MediaItem, Paginated } from '../../types';
 
@@ -26,6 +26,14 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
     const [breadcrumb, setBreadcrumb] = useState<MediaFolder[]>([]);
     const [folderId, setFolderId] = useState<number | null>(initialFolderId ?? null);
     const [q, setQ] = useState('');
+    const mounted = useRef(true);
+
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (!open) return;
@@ -46,6 +54,7 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                 perPage: pagination.per_page,
             });
             const data = await apiGet<{ media: MediaItem[] | Paginated<MediaItem>; folders: MediaFolder[]; breadcrumb: MediaFolder[] }>(url);
+            if (!mounted.current) return;
             const media = data.media;
             const arr: MediaItem[] = Array.isArray(media) ? media : media?.data || [];
             setItems(arr);
@@ -59,7 +68,7 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
         } catch {
             // noop
         } finally {
-            setLoading(false);
+            if (mounted.current) setLoading(false);
         }
     };
 

@@ -5,7 +5,7 @@ import ErrorBoundary from '@/ErrorBoundary';
 import { apiGet } from '@/lib/api';
 import { router } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, Loader2, Palette, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ROUTE } from '../../routes';
 
 interface RegistryTheme {
@@ -30,21 +30,30 @@ function ThemeBrowserInner({ canInstall }: { canInstall: boolean }) {
     const [themes, setThemes] = useState<RegistryTheme[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState<string | null>(null);
+    const mounted = useRef(true);
 
     const load = useCallback((refresh = false) => {
         setThemes(null);
         apiGet<{ themes: RegistryTheme[]; error: string | null }>(`${ROUTE.themes.registry()}${refresh ? '?refresh=1' : ''}`)
             .then((data) => {
+                if (!mounted.current) return;
                 setThemes(data.themes);
                 setError(data.error);
             })
             .catch((e: unknown) => {
+                if (!mounted.current) return;
                 setThemes([]);
                 setError(e instanceof Error ? e.message : 'The registry could not be loaded.');
             });
     }, []);
 
-    useEffect(() => load(), [load]);
+    useEffect(() => {
+        mounted.current = true;
+        load();
+        return () => {
+            mounted.current = false;
+        };
+    }, [load]);
 
     const install = (slug: string) =>
         router.post(

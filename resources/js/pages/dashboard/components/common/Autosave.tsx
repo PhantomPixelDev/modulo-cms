@@ -40,9 +40,15 @@ export function useAutosave(postId: number | undefined, fields: AutosaveFields, 
 
     useEffect(() => {
         if (!active) return;
+        let cancelled = false;
         apiGet<{ autosave: RecoveredAutosave | null }>(route('dashboard.admin.autosave.show', { postId }))
-            .then((data) => setRecovered(data.autosave))
+            .then((data) => {
+                if (!cancelled) setRecovered(data.autosave);
+            })
             .catch(() => undefined);
+        return () => {
+            cancelled = true;
+        };
     }, [active, postId]);
 
     const flush = useCallback(async () => {

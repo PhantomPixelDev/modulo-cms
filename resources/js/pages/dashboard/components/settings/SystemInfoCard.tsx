@@ -5,7 +5,7 @@ import { apiGet, apiPost } from '@/lib/api';
 import type { ModuloBuild, SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const CHANNEL_LABELS: Record<ModuloBuild['channel'], string> = {
     docker: 'Docker image',
@@ -37,6 +37,7 @@ function SystemInfoCardInner({ title = 'System', description }: { title?: string
     const [state, setState] = useState<UpdateState | null>(null);
     const [requestError, setRequestError] = useState<string | null>(null);
     const [checking, setChecking] = useState(false);
+    const mounted = useRef(true);
 
     const load = (refresh = false) => {
         setChecking(true);
@@ -44,21 +45,29 @@ function SystemInfoCardInner({ title = 'System', description }: { title?: string
 
         request
             .then((data) => {
+                if (!mounted.current) return;
                 setState(data);
                 setRequestError(null);
             })
             // A failed update check must never break the settings page.
             .catch((error: unknown) => {
+                if (!mounted.current) return;
                 setState(null);
                 setRequestError(error instanceof Error ? error.message : 'Could not check for updates.');
             })
-            .finally(() => setChecking(false));
+            .finally(() => {
+                if (mounted.current) setChecking(false);
+            });
     };
 
     useEffect(() => {
+        mounted.current = true;
         load();
         // Runs once; the server caches the answer for hours.
          
+        return () => {
+            mounted.current = false;
+        };
     }, []);
 
     if (!build) {
