@@ -35,7 +35,7 @@ class SchemaVersion
             }
 
             try {
-                return Meta::find(self::KEY)?->value ?? '';
+                return Meta::where('key', self::KEY)->value('value') ?? '';
             } catch (Throwable) {
                 return '';
             }

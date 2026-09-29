@@ -585,7 +585,7 @@ parameters:
 		-
 			message: '#^Method App\\Models\\MenuItem\:\:translation\(\) should return App\\Models\\MenuItemTranslation\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: return.type
-			count: 1
+			count: 2
 			path: app/Models/MenuItem.php
 
 		-
@@ -627,7 +627,7 @@ parameters:
 		-
 			message: '#^Method App\\Models\\Post\:\:translation\(\) should return App\\Models\\PostTranslation\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: return.type
-			count: 1
+			count: 2
 			path: app/Models/Post.php
 
 		-
@@ -675,7 +675,7 @@ parameters:
 		-
 			message: '#^Method App\\Models\\Taxonomy\:\:translation\(\) should return App\\Models\\TaxonomyTranslation\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: return.type
-			count: 1
+			count: 2
 			path: app/Models/Taxonomy.php
 
 		-
@@ -711,7 +711,7 @@ parameters:
 		-
 			message: '#^Method App\\Models\\TaxonomyTerm\:\:translation\(\) should return App\\Models\\TaxonomyTermTranslation\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: return.type
-			count: 1
+			count: 2
 			path: app/Models/TaxonomyTerm.php
 
 		-

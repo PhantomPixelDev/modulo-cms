@@ -78,7 +78,7 @@ class Post extends Model
     /**
      * Create a post with a unique slug, retrying on race condition.
      */
-    public static function createWithUniqueSlug(array $attributes): static
+    public static function createWithUniqueSlug(array $attributes): self
     {
         $maxAttempts = 5;
         $attempt = 0;
