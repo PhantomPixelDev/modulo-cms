@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Models\Post;
 use App\Models\PostType;
-use App\Models\SiteSetting;
 use App\Presenters\PostPresenter;
 use App\Services\FrontendTemplateResolver;
 use App\Services\PostService;
