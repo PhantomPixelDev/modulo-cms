@@ -21,10 +21,14 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var list<string>
      */
+    // is_admin stays fillable: no request mass-assigns users (UserController
+    // and ProfileUpdateRequest use explicit field lists), while the installer
+    // and demo seeders set the flag server-side via create()/firstOrCreate().
     protected $fillable = [
         'name',
         'email',
         'password',
+        'is_admin',
     ];
 
     /**

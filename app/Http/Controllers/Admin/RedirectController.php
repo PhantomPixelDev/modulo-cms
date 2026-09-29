@@ -40,7 +40,7 @@ class RedirectController extends Controller
     public function store(StoreRedirectRequest $request): RedirectResponse
     {
         $this->authorizeManage();
-        $data = $this->validated($request);
+        $data = $this->checked($request->validated());
 
         $redirect = Redirect::updateOrCreate(
             ['from_path' => Redirect::normalizePath($data['from_path'])],
@@ -55,7 +55,7 @@ class RedirectController extends Controller
     public function update(UpdateRedirectRequest $request, Redirect $redirect): RedirectResponse
     {
         $this->authorizeManage();
-        $data = $this->validated($request, $redirect);
+        $data = $this->checked($request->validated(), $redirect);
 
         $redirect->update([
             'from_path' => Redirect::normalizePath($data['from_path']),
@@ -77,17 +77,13 @@ class RedirectController extends Controller
     }
 
     /**
+     * Business rules the field rules cannot express. Runs on data the
+     * FormRequest already validated.
+     *
      * @return array{from_path: string, to_url: string, status_code: int}
      */
-    protected function validated(Request $request, ?Redirect $redirect = null): array
+    protected function checked(array $data, ?Redirect $redirect = null): array
     {
-        $data = $request->validate([
-            'from_path' => ['required', 'string', 'max:500', 'regex:/^\/?[^\s]*$/'],
-            // A path on this site, or an absolute http(s) URL; never javascript: and the like.
-            'to_url' => ['required', 'string', 'max:1000', 'regex:#^(/|https?://)#i'],
-            'status_code' => ['required', 'integer', Rule::in(Redirect::STATUS_CODES)],
-        ]);
-
         $from = Redirect::normalizePath($data['from_path']);
         if ($from === '/') {
             throw ValidationException::withMessages(['from_path' => 'The home page cannot be redirected.']);

@@ -128,6 +128,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('/sitemap', [SitemapController::class, 'index'])->name('sitemap.index');
         Route::put('/sitemap', [SitemapController::class, 'update'])->name('sitemap.update');
         Route::post('/sitemap/regenerate', [SitemapController::class, 'regenerate'])->middleware('throttle:6,1')->name('sitemap.regenerate');
+        Route::post('/sitemap/generate', [SitemapController::class, 'regenerate'])->middleware('throttle:6,1')->name('sitemap.generate');
 
         // Site Settings
         Route::get('/settings', [SiteSettingsController::class, 'index'])->name('settings.index');
