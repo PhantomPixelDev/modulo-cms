@@ -64,7 +64,7 @@ function SystemInfoCardInner({ title = 'System', description }: { title?: string
         mounted.current = true;
         load();
         // Runs once; the server caches the answer for hours.
-         
+
         return () => {
             mounted.current = false;
         };
