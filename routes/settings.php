@@ -8,7 +8,6 @@ use App\Http\Controllers\Settings\TwoFactorController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware('auth')->group(function () {
     Route::redirect('settings', '/settings/profile');
