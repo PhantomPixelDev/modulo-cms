@@ -13,7 +13,7 @@ class MenuFactory extends Factory
     {
         return [
             'name' => $this->faker->word,
-            'slug' => $this->faker->slug,
+            'slug' => $this->faker->unique()->slug,
             'location' => $this->faker->randomElement(['header', 'footer', 'sidebar']),
             'description' => $this->faker->sentence,
         ];

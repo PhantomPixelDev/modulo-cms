@@ -45,13 +45,13 @@ class PostResource extends JsonResource
             'featured_image' => $post->featured_image,
             'published_at' => $post->published_at?->toIso8601String(),
             'updated_at' => $post->updated_at?->toIso8601String(),
-            'author' => $post->author !== null ? ['id' => $post->author->id, 'name' => $post->author->name] : null,
+            'author' => $post->relationLoaded('author') && $post->author !== null ? ['id' => $post->author->id, 'name' => $post->author->name] : null,
             'terms' => $post->relationLoaded('taxonomyTerms')
                 ? $post->taxonomyTerms->map(fn ($term) => [
                     'id' => $term->id,
                     'name' => $term->name,
                     'slug' => $term->slug,
-                    'taxonomy' => $term->taxonomy?->name,
+                    'taxonomy' => $term->relationLoaded('taxonomy') ? $term->taxonomy?->name : null,
                 ])->values()
                 : [],
             'seo' => [

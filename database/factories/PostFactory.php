@@ -20,7 +20,8 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
-        $title = fake()->sentence();
+        // Unique: posts.slug has a unique constraint.
+        $title = fake()->unique()->sentence();
 
         return [
             'post_type_id' => PostType::factory(),

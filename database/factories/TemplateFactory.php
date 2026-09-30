@@ -12,7 +12,8 @@ class TemplateFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->word,
+            // Unique: the slug is derived from the name and must be unique.
+            'name' => $this->faker->unique()->word,
             'type' => $this->faker->randomElement(['layout', 'partial', 'post', 'page', 'index', 'header', 'footer']),
             'content' => $this->faker->randomHtml(),
             'variables' => [],

@@ -37,10 +37,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
     ->prefix('dashboard/admin')
     ->name('dashboard.admin.')
     ->group(function () {
-        // Dashboard
-        Route::get('/', function () {
-            return redirect('/dashboard');
-        })->name('index');
+        // Dashboard (Route::redirect keeps route:cache working; no closure)
+        Route::redirect('/', '/dashboard')->name('index');
         Route::post('onboarding/dismiss', [DashboardController::class, 'dismissOnboarding'])->name('onboarding.dismiss');
 
         // Resource routes with automatic permission checks

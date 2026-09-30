@@ -60,7 +60,6 @@ class CreateAdminUser extends Command
         $this->info('Successfully created admin user:');
         $this->info("Name: {$user->name}");
         $this->info("Email: {$user->email}");
-        $this->info("Password: {$password}");
         $this->info('Role: Admin');
 
         return 0;

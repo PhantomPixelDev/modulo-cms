@@ -6,6 +6,6 @@ return [
     'rate_limit' => (int) env('MODULO_API_RATE_LIMIT', 120),
 
     // Largest page size a client may ask for.
-    'max_per_page' => 100,
+    'max_per_page' => (int) env('MODULO_API_MAX_PER_PAGE', 100),
 
 ];

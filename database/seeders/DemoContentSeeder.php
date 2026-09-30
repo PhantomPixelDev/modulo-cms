@@ -18,6 +18,14 @@ class DemoContentSeeder extends Seeder
 {
     public function run(): void
     {
+        // Defense in depth: DatabaseSeeder already skips demo content in
+        // production, but this entry point must refuse there too.
+        if (app()->isProduction()) {
+            $this->command?->warn('DemoContentSeeder refuses to run in production.');
+
+            return;
+        }
+
         $this->call([
             DefaultUsersSeeder::class,
             DefaultPagesSeeder::class,

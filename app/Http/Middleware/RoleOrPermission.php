@@ -27,8 +27,8 @@ class RoleOrPermission
             ->values();
 
         if ($tokens->isEmpty()) {
-            // No restrictions specified; allow
-            return $next($request);
+            // No restrictions specified; deny rather than fail open.
+            abort(403, 'Forbidden');
         }
 
         // Check if user has ANY of the roles OR ANY of the permissions

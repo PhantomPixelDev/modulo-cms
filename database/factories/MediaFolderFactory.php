@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
-use App\Models\MediaFolder;
+use App\Models\MediaBucket;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class MediaFolderFactory extends Factory
 {
-    protected $model = MediaFolder::class;
+    protected $model = MediaBucket::class;
 
     public function definition()
     {

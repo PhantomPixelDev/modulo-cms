@@ -187,7 +187,9 @@ return [
          * When permissions or roles are updated the cache is flushed automatically.
          */
 
-        'expiration_time' => DateInterval::createFromDateString('24 hours'),
+        // Seconds, not a DateInterval: the value must survive var_export
+        // or `config:cache` fails to build.
+        'expiration_time' => 86400,
 
         /*
          * The cache key used to store all permissions.

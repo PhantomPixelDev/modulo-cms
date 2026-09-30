@@ -10,6 +10,15 @@ class DefaultUsersSeeder extends Seeder
 {
     public function run(): void
     {
+        // Defense in depth: DatabaseSeeder already skips demo content in
+        // production, but this seeder creates documented-password accounts
+        // and must refuse to run there even when invoked directly.
+        if (app()->isProduction()) {
+            $this->command?->warn('DefaultUsersSeeder refuses to run in production.');
+
+            return;
+        }
+
         // Create super admin user
         User::firstOrCreate(
             ['email' => 'admin@example.com'],
