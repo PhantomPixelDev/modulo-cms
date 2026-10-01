@@ -1,6 +1,6 @@
 # Dev-focused images for Modulo CMS
 
-FROM php:8.4-fpm AS app
+FROM php:8.5-fpm AS app
 WORKDIR /var/www/html
 
 RUN set -eux; \
@@ -32,7 +32,7 @@ ENTRYPOINT ["/bin/sh","/usr/local/bin/app-entrypoint"]
 CMD ["php-fpm"]
 
 
-FROM node:25-bookworm-slim AS vite
+FROM node:26-bookworm-slim AS vite
 WORKDIR /app
 
 RUN set -eux; \

@@ -18,7 +18,7 @@ RUN composer dump-autoload --no-dev --optimize --no-scripts
 
 
 # --- Frontend build ------------------------------------------------------------
-FROM --platform=$BUILDPLATFORM node:25-bookworm-slim AS assets
+FROM --platform=$BUILDPLATFORM node:26-bookworm-slim AS assets
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -29,7 +29,7 @@ RUN npm run build
 
 
 # --- PHP-FPM application -------------------------------------------------------
-FROM php:8.4-fpm AS app
+FROM php:8.5-fpm AS app
 WORKDIR /var/www/html
 
 RUN set -eux; \
@@ -82,7 +82,7 @@ CMD ["php-fpm"]
 
 
 # --- nginx ---------------------------------------------------------------------
-FROM nginx:1.29-alpine AS web
+FROM nginx:1.31-alpine AS web
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/nginx-entrypoint.sh /usr/local/bin/modulo-nginx-entrypoint
