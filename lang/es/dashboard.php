@@ -1250,23 +1250,6 @@ return [
         'confirm_delete' => 'Delete template ":name"?',
     ],
 
-    // SEO
-    'seo' => [
-        'title' => 'SEO Settings',
-        'meta_title' => 'Meta Title',
-        'meta_description' => 'Meta Description',
-        'meta_keywords' => 'Meta Keywords',
-        'og_title' => 'Open Graph Title',
-        'og_description' => 'Open Graph Description',
-        'og_image' => 'Open Graph Image',
-        'canonical_url' => 'Canonical URL',
-        'robots' => 'Robots',
-        'index' => 'Index',
-        'noindex' => 'No Index',
-        'follow' => 'Follow',
-        'nofollow' => 'No Follow',
-    ],
-
     'comments' => [
         'title' => 'Comentarios',
         'description' => 'Aprueba, oculta o elimina los comentarios de los visitantes.',

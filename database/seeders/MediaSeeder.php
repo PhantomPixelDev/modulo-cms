@@ -13,7 +13,7 @@ class MediaSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('Seeding media files...');
+        $this->command?->info('Seeding media files...');
 
         // Ensure storage directories exist
         $publicStoragePath = storage_path('app/public');
@@ -82,7 +82,7 @@ class MediaSeeder extends Seeder
 
                 if (! File::exists($dirPath)) {
                     File::makeDirectory($dirPath, 0755, true);
-                    $this->command->info("Created directory: storage/app/public/{$dir}");
+                    $this->command?->info("Created directory: storage/app/public/{$dir}");
                 }
 
                 foreach ($files as $filename) {
@@ -91,12 +91,12 @@ class MediaSeeder extends Seeder
                     if (! File::exists($filePath)) {
                         File::copy($placeholderPath, $filePath);
                         File::chmod($filePath, 0644);
-                        $this->command->info("Created media file: {$dir}/{$filename}");
+                        $this->command?->info("Created media file: {$dir}/{$filename}");
                     }
                 }
             }
         } else {
-            $this->command->warn('Placeholder image not found, skipping media file creation');
+            $this->command?->warn('Placeholder image not found, skipping media file creation');
         }
 
         // Create some additional sample files with different extensions
@@ -134,11 +134,11 @@ class MediaSeeder extends Seeder
                     // Create empty files for different types
                     File::put($filePath, 'Sample '.$type.' file content');
                     File::chmod($filePath, 0644);
-                    $this->command->info("Created {$type} file: {$type}/{$filename}");
+                    $this->command?->info("Created {$type} file: {$type}/{$filename}");
                 }
             }
         }
 
-        $this->command->info('Media seeding completed!');
+        $this->command?->info('Media seeding completed!');
     }
 }

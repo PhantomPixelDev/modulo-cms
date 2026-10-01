@@ -570,7 +570,7 @@ export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorPr
                                 try {
                                     const nodes = viewMode === 'html' ? deserialize(previewText) : parseMarkdown(previewText);
                                     setEditorContent(nodes);
-                                } catch (e) {
+                                } catch {
                                     // silently ignore parse errors to avoid disrupting typing
                                 }
                             }}

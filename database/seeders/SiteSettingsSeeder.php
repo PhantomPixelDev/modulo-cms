@@ -14,6 +14,6 @@ class SiteSettingsSeeder extends Seeder
     {
         SiteSetting::seedDefaults();
 
-        $this->command->info('Site settings seeded successfully.');
+        $this->command?->info('Site settings seeded successfully.');
     }
 }

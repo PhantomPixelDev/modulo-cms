@@ -9,6 +9,7 @@ use App\Models\TaxonomyTerm;
 use App\Services\MenuService;
 use App\Services\SiteSettingsService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 /**
  * Site-wide data a headless front end needs: settings, content types,
@@ -77,5 +78,10 @@ class SiteController extends Controller
         abort_if($items === [], 404, 'No menu at that location.');
 
         return response()->json(['data' => $items]);
+    }
+
+    public function openapi(): Response
+    {
+        return response((string) file_get_contents(resource_path('api/openapi.json')), 200, ['Content-Type' => 'application/json']);
     }
 }

@@ -77,9 +77,9 @@ class ShortcodeService
 
         // [columns] shortcode
         $this->register('columns', function ($attrs, $content) {
-            $cols = $attrs['count'] ?? 2;
+            $cols = max(1, min(12, (int) ($attrs['count'] ?? 2)));
 
-            return sprintf('<div class="grid grid-cols-%s gap-4">%s</div>', (int) $cols, $content);
+            return sprintf('<div class="grid grid-cols-%s gap-4">%s</div>', $cols, $content);
         });
 
         // [column] shortcode

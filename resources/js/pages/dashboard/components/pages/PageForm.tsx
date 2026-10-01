@@ -109,7 +109,7 @@ export function PageForm({
                         } else {
                             initialContent = page.content; // Use as is (might be HTML)
                         }
-                    } catch (e) {
+                    } catch {
                         // If it's not valid JSON, use as is (might be HTML)
                         initialContent = page.content;
                     }

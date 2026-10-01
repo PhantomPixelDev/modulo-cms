@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Cache;
 
 class PostTypeService
 {
+    /**
+     * Bumping this version invalidates every cached post type lookup at
+     * once, so renamed slugs and prefixes can never go stale.
+     */
+    protected const VERSION_KEY = 'post_types:cache_version';
+
     protected int $ttl;
 
     public function __construct(int $ttl = 300)
@@ -20,7 +26,7 @@ class PostTypeService
             return collect();
         }
 
-        return Cache::remember('post_types:public', $this->ttl, function () {
+        return Cache::remember('post_types:v'.$this->cacheVersion().':public', $this->ttl, function () {
             return PostType::where('is_public', true)->orderBy('label')->get();
         });
     }
@@ -31,7 +37,7 @@ class PostTypeService
             return null;
         }
 
-        return Cache::remember('post_types:id:'.$id, $this->ttl, function () use ($id) {
+        return Cache::remember('post_types:v'.$this->cacheVersion().':id:'.$id, $this->ttl, function () use ($id) {
             return PostType::find($id);
         });
     }
@@ -41,7 +47,7 @@ class PostTypeService
         if (! schema_has_table('post_types')) {
             return null;
         }
-        $key = 'post_types:route_prefix:'.($prefix ?: 'root');
+        $key = 'post_types:v'.$this->cacheVersion().':route_prefix:'.($prefix ?: 'root');
 
         return Cache::remember($key, $this->ttl, function () use ($prefix) {
             return PostType::where(function ($q) use ($prefix) {
@@ -56,7 +62,11 @@ class PostTypeService
 
     public function clearCaches(): void
     {
-        Cache::forget('post_types:public');
-        // Note: specific id/route_prefix entries can't be enumerated; rely on TTL or call site to forget keys when known
+        Cache::forever(self::VERSION_KEY, $this->cacheVersion() + 1);
+    }
+
+    protected function cacheVersion(): int
+    {
+        return (int) Cache::get(self::VERSION_KEY, 1);
     }
 }

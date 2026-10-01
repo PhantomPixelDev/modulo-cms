@@ -31,22 +31,28 @@ class ExampleContentSeeder extends Seeder
             return;
         }
 
-        // Categories and tags - get additional ones from ContentSeeder
-        $business = TaxonomyTerm::where('slug', 'business')->first();
+        // Categories and tags - get additional ones from ContentSeeder.
+        $categoryTax = Taxonomy::where('name', 'category')->first();
+        $tagTax = Taxonomy::where('name', 'post_tag')->first();
+        // Lookups are scoped by taxonomy: slugs are only unique per
+        // taxonomy, so an unscoped lookup could attach the wrong term.
+        // Falls back to slug-only when the taxonomy itself is missing.
+        $termIn = fn (string $slug, ?Taxonomy $taxonomy) => TaxonomyTerm::where('slug', $slug)
+            ->when($taxonomy !== null, fn ($q) => $q->where('taxonomy_id', $taxonomy->id))
+            ->first();
+        $business = $termIn('business', $categoryTax);
         $lifestyle = TaxonomyTerm::where('slug', 'lifestyle')->first();
         $travel = TaxonomyTerm::where('slug', 'travel')->first();
         $food = TaxonomyTerm::where('slug', 'food')->first();
         $health = TaxonomyTerm::where('slug', 'health')->first();
-        $categoryTax = Taxonomy::where('name', 'category')->first();
-        $tagTax = Taxonomy::where('name', 'post_tag')->first();
-        $uncat = TaxonomyTerm::where('slug', 'uncategorized')->first();
-        $tech = TaxonomyTerm::where('slug', 'technology')->first();
-        $design = TaxonomyTerm::where('slug', 'design')->first();
-        $laravel = TaxonomyTerm::where('slug', 'laravel')->first();
-        $react = TaxonomyTerm::where('slug', 'react')->first();
+        $uncat = $termIn('uncategorized', $categoryTax);
+        $tech = $termIn('technology', $categoryTax);
+        $design = $termIn('design', $categoryTax);
+        $laravel = $termIn('laravel', $tagTax);
+        $react = $termIn('react', $tagTax);
 
-        $php = TaxonomyTerm::where('slug', 'php')->first();
-        $javascript = TaxonomyTerm::where('slug', 'javascript')->first();
+        $php = $termIn('php', $tagTax);
+        $javascript = $termIn('javascript', $tagTax);
         $typescript = TaxonomyTerm::where('slug', 'typescript')->first();
         $tailwindcss = TaxonomyTerm::where('slug', 'tailwindcss')->first();
         $docker = TaxonomyTerm::where('slug', 'docker')->first();
@@ -69,7 +75,7 @@ class ExampleContentSeeder extends Seeder
         $ecommerce = TaxonomyTerm::where('slug', 'ecommerce')->first();
         $apiintegration = TaxonomyTerm::where('slug', 'api-integration')->first();
         $uxui = TaxonomyTerm::where('slug', 'ux-ui')->first();
-        $webdev = TaxonomyTerm::where('slug', 'web-development')->first();
+        $webdev = $termIn('web-development', $tagTax);
         $fullstack = TaxonomyTerm::where('slug', 'full-stack')->first();
         $backend = TaxonomyTerm::where('slug', 'backend')->first();
         $portfolio = TaxonomyTerm::where('slug', 'portfolio')->first();
@@ -402,21 +408,6 @@ class ExampleContentSeeder extends Seeder
             ],
         ];
 
-        foreach ($pages as $p) {
-            $slug = Str::slug($p['title']);
-            $post = Post::updateOrCreate(
-                ['slug' => $slug, 'post_type_id' => $pageType->id],
-                [
-                    'author_id' => $authorId,
-                    'title' => $p['title'],
-                    'content' => $p['content'],
-                    'status' => 'published',
-                    'published_at' => now()->subDays(rand(1, 60)),
-                ]
-            );
-            $createdPages[$p['title']] = $post;
-        }
-
         // Example info items - greatly expanded
         $infoItems = [
             [
@@ -477,7 +468,7 @@ class ExampleContentSeeder extends Seeder
                 'title' => 'Mobile-First Design Principles',
                 'excerpt' => 'Design for mobile devices first, then enhance for larger screens.',
                 'content' => '<p>Mobile-first design ensures great user experience on all devices. Here are the key principles to follow.</p><p><strong>Progressive Enhancement:</strong></p><ul><li>Start with core functionality</li><li>Add enhancements for larger screens</li><li>Test on actual devices</li><li>Optimize for touch interactions</li></ul>',
-                'terms' => [$design?->id, null, $bestpractices?->id],
+                'terms' => [$design?->id, $bestpractices?->id],
             ],
         ];
 
@@ -517,7 +508,7 @@ class ExampleContentSeeder extends Seeder
         }
 
         // Optional: child page under About
-        if (isset($createdPages['About'])) {
+        if (isset($createdPages['About Us'])) {
             $team = Post::updateOrCreate(
                 ['slug' => 'team', 'post_type_id' => $pageType->id],
                 [

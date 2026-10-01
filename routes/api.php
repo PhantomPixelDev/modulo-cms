@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->name('api.v1.')->middleware(['api.token:optional', 'throttle:api-v1'])->group(function () {
-    Route::get('openapi.json', fn () => response((string) file_get_contents(resource_path('api/openapi.json')), 200, ['Content-Type' => 'application/json']))->name('openapi');
+    Route::get('openapi.json', [SiteController::class, 'openapi'])->name('openapi');
 
     Route::get('site', [SiteController::class, 'site'])->name('site');
     Route::get('post-types', [SiteController::class, 'postTypes'])->name('post-types');

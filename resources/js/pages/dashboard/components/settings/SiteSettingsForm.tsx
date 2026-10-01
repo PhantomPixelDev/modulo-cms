@@ -891,17 +891,6 @@ export function SiteSettingsForm({
         </div>
     );
 
-    const handleClearCache = () => {
-        if (!canEdit) return;
-        router.post(
-            '/dashboard/admin/settings/clear-cache',
-            {},
-            {
-                onSuccess: () => showSuccess(t('dashboard.settings.cache_cleared')),
-            },
-        );
-    };
-
     const groups: SettingsGroup[] = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced'];
 
     return (

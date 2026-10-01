@@ -169,6 +169,6 @@ class DefaultUsersSeeder extends Seeder
             }
         }
 
-        $this->command->info('Created '.(count($additionalUsers) + 3).' users for testing');
+        $this->command?->info('Created '.(count($additionalUsers) + 3).' users for testing');
     }
 }
