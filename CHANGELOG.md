@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.1](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.3.0...v0.3.1) (2026-10-01)
+
+
+### Bug Fixes
+
+* drop trailing whitespace flagged by Prettier ([df85a85](https://github.com/PhantomPixelDev/modulo-cms/commit/df85a857db9ea3427aba881bbf4185dc3ef70451))
+* drop unused Inertia import in settings routes ([ae6d4d1](https://github.com/PhantomPixelDev/modulo-cms/commit/ae6d4d16464640474d7ef6efbe766957b3f30bf7))
+* guard async state updates on unmount and drop unused slug helper ([c15fdc1](https://github.com/PhantomPixelDev/modulo-cms/commit/c15fdc15b9127bb46394f3f686509c2d6d7bc433))
+* resolve Pint style issues in touched files ([eeadccd](https://github.com/PhantomPixelDev/modulo-cms/commit/eeadccd765d3997c473cc824940928f68e874f23))
+* resolve remaining Pint issues in touched files ([e9689f2](https://github.com/PhantomPixelDev/modulo-cms/commit/e9689f2094db40a124da864f7b95f5f59f61ec8b))
+* revert audit changes that broke installer, crud and lint suites ([5edd194](https://github.com/PhantomPixelDev/modulo-cms/commit/5edd194f702abca3e4e3b590ab798b3256598f43))
+* round-3 verified findings across seeders, services, routes and lang ([83815d9](https://github.com/PhantomPixelDev/modulo-cms/commit/83815d9e44377695d53187885b942019fe506f70))
+* satisfy PHPStan for the translation fast-path and Meta queries ([693acda](https://github.com/PhantomPixelDev/modulo-cms/commit/693acdaeafa1543b42900af253656ae83a25998a))
+* **security:** harden defaults and close mass-assignment, XSS and info-disclosure gaps ([7476c24](https://github.com/PhantomPixelDev/modulo-cms/commit/7476c24ba0e249636eabb47544fc141603882115))
+* verified round-2 audit findings across policies, factories, config and routes ([4c894b4](https://github.com/PhantomPixelDev/modulo-cms/commit/4c894b43601936b110868e1304862ca2d97fa374))
+
 ## [0.3.0](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.2.0...v0.3.0) (2026-09-26)
 
 
