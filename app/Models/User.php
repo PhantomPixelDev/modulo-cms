@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -75,19 +76,24 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function verifyTwoFactorCode(string $code): bool
     {
-        if ($this->two_factor_secret === null) {
-            return false;
-        }
+        return DB::transaction(function () use ($code): bool {
+            // Other challenges may have consumed the code or changed the secret
+            // since this request loaded its user. Serialize the check and write.
+            $user = $this->newQuery()->lockForUpdate()->find($this->getKey());
+            if ($user === null || $user->two_factor_secret === null) {
+                return false;
+            }
 
-        $step = Totp::verify($this->two_factor_secret, $code);
+            $step = Totp::verify($user->two_factor_secret, $code);
+            if ($step === null || ($user->two_factor_last_step !== null && $step <= $user->two_factor_last_step)) {
+                return false;
+            }
 
-        if ($step === null || ($this->two_factor_last_step !== null && $step <= $this->two_factor_last_step)) {
-            return false;
-        }
+            $user->forceFill(['two_factor_last_step' => $step])->save();
+            $this->setRawAttributes($user->getAttributes(), true);
 
-        $this->forceFill(['two_factor_last_step' => $step])->save();
-
-        return true;
+            return true;
+        });
     }
 
     /**
@@ -96,24 +102,32 @@ class User extends Authenticatable implements MustVerifyEmail
     public function useRecoveryCode(string $code): bool
     {
         $code = strtoupper(trim($code));
-        $remaining = [];
-        $matched = false;
 
-        foreach ((array) $this->two_factor_recovery_codes as $candidate) {
-            if (! $matched && hash_equals((string) $candidate, $code)) {
-                $matched = true;
-
-                continue;
+        return DB::transaction(function () use ($code): bool {
+            $user = $this->newQuery()->lockForUpdate()->find($this->getKey());
+            if ($user === null || ! $user->hasTwoFactorEnabled()) {
+                return false;
             }
 
-            $remaining[] = $candidate;
-        }
+            $remaining = [];
+            $matched = false;
+            foreach ((array) $user->two_factor_recovery_codes as $candidate) {
+                if (! $matched && hash_equals((string) $candidate, $code)) {
+                    $matched = true;
 
-        if ($matched) {
-            $this->forceFill(['two_factor_recovery_codes' => $remaining])->save();
-        }
+                    continue;
+                }
 
-        return $matched;
+                $remaining[] = $candidate;
+            }
+
+            if ($matched) {
+                $user->forceFill(['two_factor_recovery_codes' => $remaining])->save();
+                $this->setRawAttributes($user->getAttributes(), true);
+            }
+
+            return $matched;
+        });
     }
 
     /**

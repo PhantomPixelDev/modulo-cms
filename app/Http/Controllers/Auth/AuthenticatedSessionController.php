@@ -52,6 +52,8 @@ class AuthenticatedSessionController extends Controller
             $request->session()->put([
                 'login.id' => $pending->getKey(),
                 'login.remember' => $request->boolean('remember'),
+                'login.expires_at' => now()->addMinutes(10)->timestamp,
+                'login.fingerprint' => hash('sha256', $pending->getAuthPassword().'|'.$pending->two_factor_secret),
             ]);
 
             return Inertia::location(route('two-factor.login'));

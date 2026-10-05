@@ -64,7 +64,7 @@ class PostPresenter
                 'slug' => 'post',
                 'route_prefix' => 'posts',
             ],
-            'terms' => $post->taxonomyTerms ? $post->taxonomyTerms->map(function ($term) {
+            'terms' => $post->taxonomyTerms ? $post->taxonomyTerms->filter(fn ($term) => $term->taxonomy?->is_public)->map(function ($term) {
                 return [
                     'id' => $term->id ?? 0,
                     'name' => $term->name ?? '',
@@ -77,7 +77,7 @@ class PostPresenter
                         'label' => '',
                     ],
                 ];
-            })->toArray() : [],
+            })->values()->toArray() : [],
             'comments' => $commentsEnabled ? $this->presentComments($post) : [],
             'allow_comments' => $commentsEnabled,
             // The post type's custom fields, by key

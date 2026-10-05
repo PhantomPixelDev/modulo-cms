@@ -15,7 +15,7 @@ class CommentController extends Controller
     public function store(Request $request, Post $post): RedirectResponse
     {
         // Drafts and scheduled posts are not public, so they take no comments
-        abort_unless(Post::whereKey($post->id)->published()->exists(), 404);
+        abort_unless(Post::whereKey($post->id)->publiclyVisible()->exists(), 404);
 
         if (! $this->commentsEnabled($post)) {
             abort(403, 'Comments are disabled for this content.');

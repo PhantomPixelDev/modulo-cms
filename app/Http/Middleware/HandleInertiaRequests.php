@@ -68,10 +68,10 @@ class HandleInertiaRequests extends Middleware
         try {
             // Get categories with post counts
             $categories = TaxonomyTerm::whereHas('taxonomy', function ($q) {
-                $q->where('slug', 'categories');
+                $q->where('slug', 'categories')->where('is_public', true);
             })
                 ->withCount(['posts' => function ($q) {
-                    $q->where('status', 'published');
+                    $q->publiclyVisible();
                 }])
                 ->get()
                 ->map(function ($term) {
@@ -85,7 +85,7 @@ class HandleInertiaRequests extends Middleware
 
             // Get tags
             $tags = TaxonomyTerm::whereHas('taxonomy', function ($q) {
-                $q->where('slug', 'tags');
+                $q->where('slug', 'tags')->where('is_public', true);
             })
                 ->get()
                 ->map(function ($term) {

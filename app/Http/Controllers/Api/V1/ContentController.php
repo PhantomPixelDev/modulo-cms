@@ -121,7 +121,12 @@ class ContentController extends Controller
         $query = $this->baseQuery($request, $pages, $filters['status'] ?? null)
             ->with(['postType', 'author', 'taxonomyTerms.taxonomy'])
             ->when(! $pages && ($filters['type'] ?? null), fn (Builder $q) => $q->whereHas('postType', fn ($t) => $t->where('name', $filters['type'])->orWhere('slug', $filters['type'])))
-            ->when($filters['term'] ?? null, fn (Builder $q, $term) => $q->whereHas('taxonomyTerms', fn ($t) => $t->where('slug', $term)))
+            ->when($filters['term'] ?? null, fn (Builder $q, $term) => $q->whereHas('taxonomyTerms', function ($t) use ($request, $term) {
+                $t->where('slug', $term);
+                if (! ($request->attributes->get('api_token')?->can('read') && $request->user()?->can('view posts'))) {
+                    $t->whereHas('taxonomy', fn ($taxonomy) => $taxonomy->where('is_public', true));
+                }
+            }))
             ->when($filters['search'] ?? null, fn (Builder $q, $search) => $q->where(fn ($w) => $w
                 ->where('title', 'like', '%'.$search.'%')
                 ->orWhere('excerpt', 'like', '%'.$search.'%')));

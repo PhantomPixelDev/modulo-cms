@@ -93,7 +93,7 @@ class PostController extends BaseFrontendController
             'author',
             'taxonomyTerms.taxonomy',
         ])
-            ->published()
+            ->publiclyVisible()
             ->orderBy('published_at', 'desc');
 
         $routeName = $request->route()->getName();

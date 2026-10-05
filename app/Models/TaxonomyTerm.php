@@ -49,6 +49,9 @@ class TaxonomyTerm extends Model
         return $this->hasMany(TaxonomyTerm::class, 'parent_id');
     }
 
+    /**
+     * @return BelongsToMany<Post, $this>
+     */
     public function posts(): BelongsToMany
     {
         return $this->belongsToMany(Post::class, 'post_taxonomy_terms')

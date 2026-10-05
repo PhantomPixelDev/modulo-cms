@@ -169,6 +169,15 @@ class Post extends Model
             ->where('published_at', '<=', now());
     }
 
+    /**
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query->published()->whereHas('postType', fn (Builder $type) => $type->where('is_public', true));
+    }
+
     public function scopeByPostType($query, $postTypeId)
     {
         return $query->where('post_type_id', $postTypeId);

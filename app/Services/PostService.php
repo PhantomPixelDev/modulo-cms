@@ -98,7 +98,7 @@ class PostService
 
         // Only published posts for non-authenticated users
         if (! auth()->check()) {
-            $query->published();
+            $query->publiclyVisible();
         }
 
         return $query->orderBy($orderBy, $orderDirection)
@@ -114,7 +114,7 @@ class PostService
             'parent',
             'children',
             'translations',
-        ])->published();
+        ])->publiclyVisible();
     }
 
     /**

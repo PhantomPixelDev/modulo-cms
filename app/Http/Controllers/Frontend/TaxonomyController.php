@@ -43,9 +43,9 @@ class TaxonomyController extends BaseFrontendController
             ->firstOrFail();
 
         $posts = $term->posts()
-            ->published()
+            ->publiclyVisible()
             ->orderBy('published_at', 'desc')
-            ->with(['author', 'postType', 'taxonomyTerms'])
+            ->with(['author', 'postType', 'taxonomyTerms.taxonomy'])
             ->paginate($this->getPerPage());
 
         $presented = $this->postPresenter->presentPaginator($posts);
