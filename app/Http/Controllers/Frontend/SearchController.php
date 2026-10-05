@@ -16,7 +16,8 @@ class SearchController extends BaseFrontendController
             return $resp;
         }
 
-        $query = $request->get('q', '');
+        $data = $request->validate(['q' => ['nullable', 'string', 'max:1000']]);
+        $query = $data['q'] ?? '';
 
         if (empty(trim($query))) {
             return $this->reactRenderer->render($this->templateResolver->searchTemplate(), [

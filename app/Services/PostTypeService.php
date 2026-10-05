@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\PostType;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class PostTypeService
 {
@@ -62,11 +63,11 @@ class PostTypeService
 
     public function clearCaches(): void
     {
-        Cache::forever(self::VERSION_KEY, $this->cacheVersion() + 1);
+        Cache::forever(self::VERSION_KEY, (string) Str::uuid());
     }
 
-    protected function cacheVersion(): int
+    protected function cacheVersion(): string
     {
-        return (int) Cache::get(self::VERSION_KEY, 1);
+        return (string) Cache::get(self::VERSION_KEY, '1');
     }
 }

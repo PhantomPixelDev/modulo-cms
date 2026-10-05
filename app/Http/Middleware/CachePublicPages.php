@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -19,7 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
  * the request is personal: no user, no flash message, no validation errors.
  *
  * Invalidation is by version, not by guessing which pages a change affects:
- * any database write through a model, and every PostService cache flush,
+ * any content change through a model, and every PostService cache flush,
  * bumps the site version (see bumpVersion()), which is part of every key.
  * A new frontend build changes the key too, so cached pages never point at
  * asset files a deploy removed.
@@ -41,7 +42,8 @@ class CachePublicPages
     public static function bumpVersion(): void
     {
         try {
-            Cache::forever(self::VERSION_KEY, (int) Cache::get(self::VERSION_KEY, 0) + 1);
+            // Unique generations avoid lost invalidations from concurrent read/increment/write operations.
+            Cache::forever(self::VERSION_KEY, (string) Str::uuid());
         } catch (\Throwable) {
             // No cache store (install, maintenance): nothing cached to invalidate
         }
@@ -91,6 +93,11 @@ class CachePublicPages
             return false;
         }
 
+        // Plugins may add cart/customer data to otherwise public pages.
+        if ($request->hasSession() && array_diff(array_keys($request->session()->all()), ['_token', '_previous', '_flash', 'locale']) !== []) {
+            return false;
+        }
+
         // Pagination only: arbitrary parameters would each fill the cache with a copy
         if (array_diff(array_keys($request->query()), ['page']) !== []) {
             return false;
@@ -102,17 +109,22 @@ class CachePublicPages
     protected function storable(Request $request, Response $response): bool
     {
         return $request->attributes->get(self::CACHEABLE) === true
+            && $this->eligible($request)
             && $response->getStatusCode() === 200
+            && ! $response->headers->hasCacheControlDirective('no-store')
+            && $response->headers->getCookies() === []
             && str_contains((string) $response->headers->get('Content-Type'), 'text/html');
     }
 
     protected function key(Request $request): string
     {
         return 'page-cache:'.sha1(implode('|', [
-            (int) Cache::get(self::VERSION_KEY, 0),
+            (string) Cache::get(self::VERSION_KEY, '0'),
             $this->assetVersion(),
             $request->getSchemeAndHttpHost(),
             $request->getRequestUri(),
+            app()->getLocale(),
+            ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true' ? 'open' : 'closed',
         ]));
     }
 

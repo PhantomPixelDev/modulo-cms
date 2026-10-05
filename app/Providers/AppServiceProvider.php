@@ -4,7 +4,11 @@ namespace App\Providers;
 
 use App\Http\Middleware\CachePublicPages;
 use App\Listeners\RecordActivity;
+use App\Models\Activity;
+use App\Models\ApiToken;
 use App\Models\Post;
+use App\Models\PostAutosave;
+use App\Models\PostRevision;
 use App\Models\PostTranslation;
 use App\Models\User;
 use App\Observers\PostObserver;
@@ -60,8 +64,13 @@ class AppServiceProvider extends ServiceProvider
         $applyMail();
         Queue::before($applyMail);
 
-        // Any content change through a model makes every cached public page stale
-        Event::listen(['eloquent.saved: *', 'eloquent.deleted: *', 'eloquent.restored: *'], fn () => CachePublicPages::bumpVersion());
+        // Invalidate for core and plugin content, but not bookkeeping or unsaved drafts.
+        Event::listen(['eloquent.saved: *', 'eloquent.deleted: *', 'eloquent.restored: *'], function (string $event, array $payload): void {
+            $model = $payload[0] ?? null;
+            if ($model !== null && ! in_array($model::class, [Activity::class, ApiToken::class, PostAutosave::class, PostRevision::class], true)) {
+                CachePublicPages::bumpVersion();
+            }
+        });
 
         // Every password rule in the app uses Password::defaults(). Production
         // asks for a real password; elsewhere (tests, local) the framework's

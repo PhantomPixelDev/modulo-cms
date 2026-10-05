@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MediaUploadRequest;
 use App\Models\MediaBucket;
+use App\Services\SvgValidator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -214,7 +215,7 @@ class MediaController extends Controller
         // SVG is active content: reject anything that can run script
         if ($uploaded && $uploaded->getMimeType() === 'image/svg+xml') {
             $contents = @file_get_contents($uploaded->getRealPath());
-            if ($contents === false || $this->svgLooksUnsafe($contents)) {
+            if ($contents === false || ! app(SvgValidator::class)->isSafe($contents)) {
                 return back()->with('error', 'Unsafe SVG content detected.');
             }
         }
@@ -435,13 +436,5 @@ class MediaController extends Controller
             return;
         }
         abort(403);
-    }
-
-    protected function svgLooksUnsafe(string $svg): bool
-    {
-        return (bool) preg_match(
-            '/<\s*(script|foreignObject|iframe|embed|object)\b|\bon[a-z]+\s*=|(?:href|src)\s*=\s*["\']?\s*(?:javascript|data|vbscript):|<!ENTITY/i',
-            $svg
-        );
     }
 }

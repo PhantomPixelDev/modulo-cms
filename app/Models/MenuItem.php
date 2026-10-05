@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\HtmlSanitizer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -92,7 +93,7 @@ class MenuItem extends Model
     {
         $localizedUrl = $this->getLocalizedUrl($locale);
         if (! empty($localizedUrl)) {
-            return $localizedUrl;
+            return HtmlSanitizer::isSafeUrl($localizedUrl) ? $localizedUrl : '#';
         }
 
         if (! empty($this->page_slug)) {

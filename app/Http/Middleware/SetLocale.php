@@ -42,14 +42,14 @@ class SetLocale
     {
         // 1. Query parameter (for switching languages)
         if ($queryLocale = $request->query('lang')) {
-            if (Locale::isValidCode($queryLocale)) {
+            if (is_string($queryLocale) && Locale::isValidCode($queryLocale)) {
                 return $queryLocale;
             }
         }
 
         // 2. Session value
         if ($sessionLocale = Session::get('locale')) {
-            if (Locale::isValidCode($sessionLocale)) {
+            if (is_string($sessionLocale) && Locale::isValidCode($sessionLocale)) {
                 return $sessionLocale;
             }
         }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\TaxonomyTerm;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,7 @@ class TaxonomyTermRequest extends FormRequest
 
     public function rules(): array
     {
-        $term = $this->route('taxonomyTerm') ?? $this->route('term');
+        $term = $this->currentTerm();
         $id = is_object($term) ? ($term->id ?? null) : null;
 
         return [
@@ -40,9 +41,19 @@ class TaxonomyTermRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
             $taxonomyId = (int) $this->input('taxonomy_id');
-            $parentId = $this->input('parent_id');
-            $term = $this->route('taxonomyTerm') ?? $this->route('term');
+            $term = $this->currentTerm();
+            $parentId = $this->input('parent_id', $term?->parent_id);
+
+            if ($term && $taxonomyId !== (int) $term->taxonomy_id && $term->children()->exists()) {
+                $validator->errors()->add('taxonomy_id', 'A term with children must stay in its taxonomy.');
+
+                return;
+            }
 
             // parent must belong to same taxonomy
             if ($parentId) {
@@ -50,10 +61,26 @@ class TaxonomyTermRequest extends FormRequest
                 if ($parent && (int) $parent->taxonomy_id !== $taxonomyId) {
                     $validator->errors()->add('parent_id', 'Parent term must belong to the same taxonomy.');
                 }
-                if ($term && (int) $term->id === (int) $parentId) {
-                    $validator->errors()->add('parent_id', 'A term cannot be its own parent.');
+                if ($term) {
+                    $parents = DB::table('taxonomy_terms')->where('taxonomy_id', $taxonomyId)->pluck('parent_id', 'id')->all();
+                    $seen = [$term->id => true];
+                    for ($at = (int) $parentId; $at !== null; $at = $parents[$at] ?? null) {
+                        if (isset($seen[$at])) {
+                            $validator->errors()->add('parent_id', 'A term cannot be moved into itself or a descendant.');
+
+                            return;
+                        }
+                        $seen[$at] = true;
+                    }
                 }
             }
         });
+    }
+
+    protected function currentTerm(): ?TaxonomyTerm
+    {
+        $term = $this->route('taxonomyTerm') ?? $this->route('taxonomy_term') ?? $this->route('term');
+
+        return $term instanceof TaxonomyTerm ? $term : null;
     }
 }

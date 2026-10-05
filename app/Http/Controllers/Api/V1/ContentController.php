@@ -45,8 +45,10 @@ class ContentController extends Controller
     {
         $this->authorize('create', Post::class);
 
-        $data = $this->validated($request);
-        $type = PostType::where('name', $data['type'] ?? 'post')->orWhere('slug', $data['type'] ?? 'post')->firstOrFail();
+        $typeData = $request->validate(['type' => ['sometimes', 'string', 'max:100']]);
+        $typeName = $typeData['type'] ?? 'post';
+        $type = PostType::where('name', $typeName)->orWhere('slug', $typeName)->firstOrFail();
+        $data = $this->validated($request, type: $type);
 
         $post = Post::create([
             'post_type_id' => $type->id,
@@ -145,10 +147,16 @@ class ContentController extends Controller
      */
     protected function baseQuery(Request $request, bool $pages, ?string $status): Builder
     {
-        $query = Post::query()->whereHas('postType', fn ($t) => $pages ? $t->where('name', 'page') : $t->where('name', '!=', 'page'));
-
         // Unpublished content only for a token whose user may see it.
-        $privileged = $request->user() !== null && $request->user()->can('view posts');
+        $token = $request->attributes->get('api_token');
+        $privileged = $token?->can('read') && $request->user()?->can('view posts');
+
+        $query = Post::query()->whereHas('postType', function ($t) use ($pages, $privileged) {
+            $t->where('name', $pages ? '=' : '!=', 'page');
+            if (! $privileged) {
+                $t->where('is_public', true);
+            }
+        });
 
         if (! $privileged || $status === null || $status === 'published') {
             return $query->published();
@@ -164,7 +172,7 @@ class ContentController extends Controller
     /**
      * @return array<string, mixed>
      */
-    protected function validated(Request $request, ?Post $post = null): array
+    protected function validated(Request $request, ?Post $post = null, ?PostType $type = null): array
     {
         $required = $post === null ? 'required' : 'sometimes';
 
@@ -177,7 +185,7 @@ class ContentController extends Controller
             'status' => ['sometimes', Rule::in(['draft', 'published', 'private', 'archived']), new CanPublish(
                 $request->user(),
                 $post,
-                isPage: ($post?->postType->name ?? $request->input('type', 'post')) === 'page',
+                isPage: ($post?->postType->name ?? $type?->name) === 'page',
             )],
             'published_at' => ['sometimes', 'nullable', 'date'],
             'featured_image' => ['sometimes', 'nullable', 'string', 'max:1000', 'regex:#^(/|https?://)#i'],
