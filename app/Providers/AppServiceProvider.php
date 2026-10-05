@@ -139,7 +139,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Stricter limits for auth-related endpoints to mitigate brute force
         RateLimiter::for('auth', function (Request $request) {
-            $key = strtolower((string) $request->input('email')).'|'.$request->ip();
+            $email = $request->input('email');
+            $key = (is_string($email) ? strtolower($email) : '').'|'.$request->ip();
 
             return [
                 Limit::perMinute(10)->by($key),
