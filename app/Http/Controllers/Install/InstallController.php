@@ -61,6 +61,13 @@ class InstallController extends Controller
             return back()->withErrors(['install' => 'Resolve the environment problems above first.']);
         }
 
+        // Migrations legitimately run before any account exists. If users are
+        // already here, someone else got here first: refuse rather than let
+        // an unauthenticated visitor re-run setup steps.
+        if (schema_has_table('users') && User::query()->exists()) {
+            return back()->withErrors(['install' => 'This site is already initialized. Sign in instead.']);
+        }
+
         try {
             $this->installer->runMigrations();
             $this->installer->seedBootstrap();

@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\NewPasswordRequest;
+use App\Models\ApiToken;
 use App\Models\User;
 use App\Services\ReactTemplateRenderer;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -62,6 +64,13 @@ class NewPasswordController extends Controller
                     'password' => Hash::make($data['password']),
                     'remember_token' => Str::random(60),
                 ])->save();
+
+                // A reset means the old credentials may be compromised: drop
+                // every session and API token so only the new password works.
+                if (schema_has_table('sessions')) {
+                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                }
+                ApiToken::where('user_id', $user->id)->delete();
 
                 event(new PasswordReset($user));
             }
