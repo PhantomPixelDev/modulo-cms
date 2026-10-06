@@ -44,6 +44,13 @@ it('checks page publishing permission even when the API receives the type slug',
 
     $this->postJson('/api/v1/posts', ['type' => 'pages', 'title' => 'Page', 'status' => 'published'], [
         'Authorization' => 'Bearer '.$plain,
+    ])->assertForbidden();
+    expect(Post::count())->toBe(0);
+
+    // With page creation rights but no page publish right, CanPublish rejects it.
+    $user->givePermissionTo('create pages');
+    $this->postJson('/api/v1/posts', ['type' => 'pages', 'title' => 'Page', 'status' => 'published'], [
+        'Authorization' => 'Bearer '.$plain,
     ])->assertUnprocessable()->assertJsonValidationErrors('status');
     expect(Post::count())->toBe(0);
 });

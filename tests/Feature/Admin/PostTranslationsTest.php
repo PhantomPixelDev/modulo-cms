@@ -112,7 +112,7 @@ it('falls back to the default locale for an unknown locale', function () {
 it('saves a page translation without touching the base page', function () {
     seedLocales();
     $page = makePublishedPage(['title' => 'About', 'slug' => 'about']);
-    $this->actingAs(makeAdminUserWithPermissions(['edit posts']));
+    $this->actingAs(makeAdminUserWithPermissions(['edit pages']));
 
     $this->put(route('dashboard.admin.pages.update', $page), [
         'title' => 'Acerca de',

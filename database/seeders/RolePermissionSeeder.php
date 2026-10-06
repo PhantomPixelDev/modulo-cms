@@ -51,6 +51,7 @@ class RolePermissionSeeder extends Seeder
             'edit posts',
             'delete posts',
             'publish posts',
+            'assign posts author',
 
             // Page management (separate from posts)
             'view pages',
@@ -136,7 +137,6 @@ class RolePermissionSeeder extends Seeder
                 'view roles', 'create roles', 'edit roles', 'assign permissions',
                 'view content', 'create content', 'edit content', 'delete content', 'publish content', 'approve content', 'moderate comments',
                 'view posts', 'create posts', 'edit posts', 'delete posts', 'publish posts', 'assign posts author',
-            'assign posts author',
                 'view pages', 'create pages', 'edit pages', 'delete pages',
                 'view post types', 'create post types', 'edit post types', 'delete post types',
                 'view taxonomies', 'create taxonomies', 'edit taxonomies', 'delete taxonomies',
