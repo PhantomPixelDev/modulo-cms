@@ -26,18 +26,18 @@ function pageUser(array $perms = []): User
 
 it('denies pages index without permission', function () {
     // Ensure permission exists but is not granted
-    Permission::findOrCreate('view posts', 'web');
+    Permission::findOrCreate('view pages', 'web');
     $u = pageUser();
     $this->actingAs($u)->get(route('dashboard.admin.pages.index'))->assertForbidden();
 });
 
 it('allows pages index with permission', function () {
-    $u = pageUser(['view posts']); // pages use posts permissions per routes
+    $u = pageUser(['view pages']);
     $this->actingAs($u)->get(route('dashboard.admin.pages.index'))->assertOk();
 });
 
 it('creates, updates and deletes a page with permissions', function () {
-    $u = pageUser(['create posts', 'edit posts', 'delete posts', 'publish content']);
+    $u = pageUser(['create pages', 'edit pages', 'delete pages', 'publish content']);
     $this->actingAs($u);
 
     // Create
@@ -72,7 +72,7 @@ it('creates, updates and deletes a page with permissions', function () {
 
 it('denies create and store without permission', function () {
     // Ensure permission exists but is not granted
-    Permission::findOrCreate('create posts', 'web');
+    Permission::findOrCreate('create pages', 'web');
     $u = pageUser();
     $this->actingAs($u);
 
@@ -103,10 +103,10 @@ it('denies edit/update/destroy without respective permissions', function () {
     ]);
 
     // Ensure permissions exist but are not granted (except view)
-    foreach (['edit posts', 'delete posts'] as $p) {
+    foreach (['edit pages', 'delete pages'] as $p) {
         Permission::findOrCreate($p, 'web');
     }
-    $u = pageUser(['view posts']);
+    $u = pageUser(['view pages']);
     $this->actingAs($u);
 
     $page = Page::create([
@@ -149,7 +149,7 @@ it('allows show/edit with proper permissions', function () {
         'menu_position' => 6,
     ]);
 
-    $u = pageUser(['view posts', 'edit posts']);
+    $u = pageUser(['view pages', 'edit pages']);
     $this->actingAs($u);
 
     $page = Page::create([

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckPermission
@@ -32,9 +33,14 @@ class CheckPermission
 
             $hasAny = false;
             foreach ($alternatives as $alt) {
-                if ($request->user()->hasPermissionTo($alt)) {
-                    $hasAny = true;
-                    break;
+                try {
+                    if ($request->user()->hasPermissionTo($alt)) {
+                        $hasAny = true;
+                        break;
+                    }
+                } catch (PermissionDoesNotExist) {
+                    // A permission that was never seeded is held by nobody:
+                    // deny the request instead of crashing with a 500.
                 }
             }
 

@@ -70,7 +70,13 @@ it('approves, flags and deletes comments', function () {
 });
 
 it('holds new visitor comments when moderation is enabled', function () {
+    // Flipping the global switch needs the settings permission; moderating
+    // alone is not enough.
     $this->actingAs(moderator())
+        ->put(route('dashboard.admin.comments.settings'), ['comment_moderation' => true])
+        ->assertForbidden();
+
+    $this->actingAs(makeAdminUserWithPermissions(['moderate comments', 'edit settings']))
         ->put(route('dashboard.admin.comments.settings'), ['comment_moderation' => true])
         ->assertRedirect();
     expect(SiteSetting::get('comment_moderation'))->toBeTrue();

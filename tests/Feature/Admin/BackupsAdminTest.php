@@ -20,7 +20,7 @@ afterEach(fn () => File::deleteDirectory($this->work));
 
 function backupAdmin(): User
 {
-    $user = makeAdminUserWithPermissions();
+    $user = makeAdminUserWithPermissions(['view backups', 'create backups', 'delete backups', 'restore backups']);
     $user->assignRole(Role::findOrCreate('admin', 'web'));
 
     return $user;

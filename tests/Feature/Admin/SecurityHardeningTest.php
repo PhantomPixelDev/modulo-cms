@@ -17,6 +17,17 @@ function hardeningLocales(): void
     Locale::clearCache();
 }
 
+/**
+ * Spatie throws (500) instead of denying (403) when the permission row does
+ * not exist at all. Tests asserting a 403 must ensure the row exists first.
+ */
+function ensurePermissions(array $perms): void
+{
+    foreach ($perms as $perm) {
+        \Spatie\Permission\Models\Permission::findOrCreate($perm, 'web');
+    }
+}
+
 it('refuses registration when registration is disabled', function () {
     SiteSetting::set('registration_enabled', false, 'advanced', 'boolean');
 
@@ -58,6 +69,7 @@ it('revokes API tokens on logout', function () {
 });
 
 it('keeps page editors out of posts and post editors out of pages', function () {
+    ensurePermissions(['edit posts', 'edit pages']);
     $post = Post::factory()->create(['title' => 'Post', 'slug' => 'post-one']);
     $page = makePublishedPage(['title' => 'Page', 'slug' => 'page-one']);
     $this->actingAs(makeAdminUserWithPermissions(['edit posts']));
@@ -81,6 +93,7 @@ it('keeps page editors out of posts and post editors out of pages', function () 
 });
 
 it('lets comment moderators moderate but not change global settings', function () {
+    ensurePermissions(['moderate comments', 'edit settings']);
     $this->actingAs(makeAdminUserWithPermissions(['moderate comments']));
 
     $this->put(route('dashboard.admin.comments.settings'), ['comment_moderation' => true])->assertForbidden();

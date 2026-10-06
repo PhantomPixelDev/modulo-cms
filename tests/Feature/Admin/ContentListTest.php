@@ -69,7 +69,7 @@ it('searches pages beyond the first page too', function () {
     Post::factory()->count(4)->create(['post_type_id' => $type->id]);
     Post::factory()->create(['post_type_id' => $type->id, 'title' => 'About us', 'slug' => 'about', 'created_at' => now()->subYear()]);
 
-    $this->actingAs(makeAdminUserWithPermissions(['view posts']))
+    $this->actingAs(makeAdminUserWithPermissions(['view posts', 'view pages']))
         ->get(route('dashboard.admin.pages.index', ['search' => 'about']))
         ->assertInertia(fn (Assert $page) => $page
             ->where('posts.total', 1)
