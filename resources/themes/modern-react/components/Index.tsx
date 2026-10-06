@@ -96,12 +96,17 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
                         </h2>
                     </div>
                     <div className="mt-12 grid gap-4 md:grid-cols-3">
-                        {features.map(({ icon: Icon, title, description }) => (
-                            <div key={title} className="rounded-2xl border bg-card p-6 shadow-xs transition-shadow hover:shadow-md">
-                                <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                    <Icon className="size-5" />
+                        {features.map(({ icon: Icon, title, description }, index) => (
+                            <div key={title} className="flex flex-col rounded-2xl border bg-card p-6 shadow-xs transition-shadow hover:shadow-md">
+                                <div className="flex items-center justify-between">
+                                    <span className="flex size-11 items-center justify-center rounded-xl border bg-background text-foreground shadow-xs">
+                                        <Icon className="size-5" />
+                                    </span>
+                                    <span className="text-xs font-semibold tracking-[0.2em] text-muted-foreground/60 tabular-nums">
+                                        {String(index + 1).padStart(2, '0')}
+                                    </span>
                                 </div>
-                                <h3 className="font-semibold text-foreground">{title}</h3>
+                                <h3 className="mt-5 font-semibold text-foreground">{title}</h3>
                                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
                             </div>
                         ))}

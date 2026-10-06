@@ -1,9 +1,31 @@
+import { useAppearance } from '@/hooks/use-appearance';
 import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
-import { ChevronDown, LayoutDashboard, LogOut, Menu as MenuIcon, ShoppingCart, X } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, LogOut, Menu as MenuIcon, Moon, ShoppingCart, Sun, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { MiniCart } from './MiniCart';
 import { buttonClass, Container, isExternalUrl, normalizeMenuItems, useThemeT, type MenuItem } from './ui';
+
+function ThemeToggle({ className }: { className?: string }) {
+    const { appearance, updateAppearance } = useAppearance();
+    const isDark =
+        appearance === 'dark' ||
+        (appearance === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    return (
+        <button
+            type="button"
+            onClick={() => updateAppearance(isDark ? 'light' : 'dark')}
+            aria-label="Toggle color theme"
+            className={cn(
+                'inline-flex size-9 items-center justify-center rounded-full border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+                className,
+            )}
+        >
+            {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </button>
+    );
+}
 
 interface NavigationProps {
     className?: string;
@@ -149,6 +171,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 </nav>
 
                 <div className="hidden items-center gap-2 md:flex">
+                    <ThemeToggle />
                     {shopActive && <MiniCart count={cartCount} />}
                     {auth?.user ? (
                         <>
@@ -179,16 +202,19 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 </div>
 
                 {/* Mobile menu button */}
-                <button
-                    type="button"
-                    onClick={() => setIsMenuOpen((open) => !open)}
-                    className={cn(buttonClass('ghost', 'sm'), 'md:hidden')}
-                    aria-expanded={isMenuOpen}
-                    aria-controls="mobile-menu"
-                    aria-label="Toggle navigation"
-                >
-                    {isMenuOpen ? <X /> : <MenuIcon />}
-                </button>
+                <div className="flex items-center gap-2 md:hidden">
+                    <ThemeToggle />
+                    <button
+                        type="button"
+                        onClick={() => setIsMenuOpen((open) => !open)}
+                        className={cn(buttonClass('ghost', 'sm'))}
+                        aria-expanded={isMenuOpen}
+                        aria-controls="mobile-menu"
+                        aria-label="Toggle navigation"
+                    >
+                        {isMenuOpen ? <X /> : <MenuIcon />}
+                    </button>
+                </div>
             </Container>
 
             {/* Mobile navigation */}
