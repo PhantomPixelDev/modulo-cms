@@ -1,4 +1,4 @@
-import { ArrowRight, Blocks, PenLine, ShieldCheck, Star } from 'lucide-react';
+import { ArrowRight, Blocks, PenLine, ShieldCheck } from 'lucide-react';
 import Layout from './Layout';
 import PostCard from './partials/PostCard';
 import { ButtonLink, Container, useThemeT } from './partials/ui';
@@ -60,8 +60,7 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
                 <Container className="relative py-24 text-center sm:py-32">
                     <div className="mx-auto max-w-3xl">
                         <p className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3.5 py-1 text-xs font-medium text-muted-foreground shadow-xs">
-                            <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                            {tt('home.hero.badge', 'Trusted by thousands of teams')}
+                            {tt('home.hero.badge', 'Free & open source CMS')}
                         </p>
                         <h1 className="mt-6 text-4xl font-semibold tracking-tight text-balance text-foreground sm:text-6xl">
                             {safeSite?.tagline || tt('home.hero.title', 'The content platform that ships with you.')}
@@ -80,7 +79,7 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
                             </ButtonLink>
                         </div>
                         <p className="mt-6 text-sm text-muted-foreground">
-                            {tt('home.hero.trust', '★★★★★ 4.7/5 rating · Free to start, no card required')}
+                            {tt('home.hero.trust', 'Open source · Self-host it · Free forever, no account needed')}
                         </p>
                     </div>
                 </Container>
