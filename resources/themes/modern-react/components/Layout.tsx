@@ -2,11 +2,13 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { cn } from '@/lib/utils';
 import { Head, usePage } from '@inertiajs/react';
 import React from 'react';
+import { Toaster } from 'sonner';
 import '../assets/css/theme.css';
 import Footer from './Footer';
 import Navigation from './partials/Navigation';
 import Sidebar from './partials/Sidebar';
 import { Container, normalizeMenuItems } from './partials/ui';
+import { useShortcodeCart } from './Shop/useShortcodeCart';
 import ErrorBoundary from './util/ErrorBoundary';
 
 interface LayoutProps {
@@ -118,6 +120,9 @@ export default function Layout({
         .join(' ');
 
     useDocumentTitle(pageTitle);
+
+    // Shortcode buttons ([add_to_cart], embedded product cards) are plain HTML.
+    useShortcodeCart();
 
     // Enhanced SEO data based on content type
     const isArticle = post && post.id;
@@ -234,6 +239,8 @@ export default function Layout({
                 <ErrorBoundary name="Footer">
                     <Footer site={safeSite} menu={footerMenuItems} />
                 </ErrorBoundary>
+                {/* Storefront toasts (cart, …). Portal — safe to mount once per page. */}
+                <Toaster richColors position="bottom-right" closeButton />
             </div>
         </>
     );

@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronDown, LayoutDashboard, LogOut, Menu as MenuIcon, Moon, ShoppingCart, Sun, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { subscribeCartUpdated } from '../Shop/shopCart';
 import { MiniCart } from './MiniCart';
 import { buttonClass, Container, isExternalUrl, normalizeMenuItems, useThemeT, type MenuItem } from './ui';
 
@@ -98,10 +99,13 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
 
         fetchCartCount();
         const interval = window.setInterval(fetchCartCount, 30000);
+        // Instant update after any add-to-cart (toast flows dispatch this).
+        const unsubscribe = subscribeCartUpdated(setCartCount);
 
         return () => {
             isMounted = false;
             window.clearInterval(interval);
+            unsubscribe();
         };
     }, [shopActive]);
 

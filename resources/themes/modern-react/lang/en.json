@@ -30,6 +30,12 @@
         "previous": "Previous",
         "next": "Next"
     },
+    "shop": {
+        "added_to_cart": "Added to cart: :title",
+        "added_to_cart_generic": "Added to cart!",
+        "add_failed": "Failed to add to cart",
+        "view_cart": "View cart"
+    },
     "statuses": {
         "in_stock": "In Stock",
         "out_of_stock": "Out of Stock",

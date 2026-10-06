@@ -1,7 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
-import { Check, ChevronRight, Heart, Minus, Plus, RotateCcw, Shield, ShoppingCart, Truck } from 'lucide-react';
+import { ChevronRight, Heart, Minus, Plus, RotateCcw, Shield, ShoppingCart, Truck } from 'lucide-react';
 import { useState } from 'react';
 import Layout from '../Layout';
+import { useThemeT } from '../partials/ui';
+import { cartCountFromAddResponse, fetchCartCount, notifyCartUpdated, shopAddToCart, toastAddedToCart, toastCartError } from './shopCart';
 import { configureMoney, formatMoney, type MoneyFormat } from './totals';
 
 interface Product {
@@ -49,6 +51,7 @@ interface ShopSingleProps {
 
 export default function Single({ product, relatedProducts, site, theme, menus, money }: ShopSingleProps) {
     configureMoney(money);
+    const tt = useThemeT();
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -58,7 +61,6 @@ export default function Single({ product, relatedProducts, site, theme, menus, m
     const [selectedImage, setSelectedImage] = useState(product?.featured_image || '');
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
-    const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [variantId, setVariantId] = useState('');
 
     if (!product) {
@@ -78,25 +80,17 @@ export default function Single({ product, relatedProducts, site, theme, menus, m
 
     const addToCart = async () => {
         setAddingToCart(true);
-        setCartMessage(null);
         try {
-            const response = await fetch('/shop/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({ product_id: product.id, quantity, variant_id: variantId || null }),
-            });
-            const data = await response.json();
+            const { data } = await shopAddToCart(product.id, quantity, variantId || null);
             if (data.success) {
-                setCartMessage({ type: 'success', text: 'Added to cart!' });
-                setTimeout(() => setCartMessage(null), 3000);
+                const count = cartCountFromAddResponse(data) ?? (await fetchCartCount());
+                if (typeof count === 'number') notifyCartUpdated(count);
+                toastAddedToCart(tt('shop.added_to_cart', 'Added to cart: :title', { title: product.title }), tt('shop.view_cart', 'View cart'));
             } else {
-                setCartMessage({ type: 'error', text: data.message || 'Failed to add to cart' });
+                toastCartError(data.message || tt('shop.add_failed', 'Failed to add to cart'));
             }
-        } catch (error) {
-            setCartMessage({ type: 'error', text: 'Failed to add to cart' });
+        } catch {
+            toastCartError(tt('shop.add_failed', 'Failed to add to cart'));
         }
         setAddingToCart(false);
     };
@@ -319,21 +313,6 @@ export default function Single({ product, relatedProducts, site, theme, menus, m
                                         <span className="font-medium text-foreground">{value}</span>
                                     </div>
                                 ))}
-                            </div>
-                        )}
-
-                        {/* Cart Message */}
-                        {cartMessage && (
-                            <div
-                                className={`flex items-center gap-3 rounded-xl p-4 ${cartMessage.type === 'success' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}
-                            >
-                                {cartMessage.type === 'success' ? <Check className="h-5 w-5" /> : null}
-                                {cartMessage.text}
-                                {cartMessage.type === 'success' && (
-                                    <Link href="/shop/cart" className="ml-auto text-sm font-medium underline">
-                                        View Cart
-                                    </Link>
-                                )}
                             </div>
                         )}
 

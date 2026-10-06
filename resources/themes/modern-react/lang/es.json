@@ -30,6 +30,12 @@
         "previous": "Anterior",
         "next": "Siguiente"
     },
+    "shop": {
+        "added_to_cart": "Agregado al carrito: :title",
+        "added_to_cart_generic": "¡Agregado al carrito!",
+        "add_failed": "No se pudo agregar al carrito",
+        "view_cart": "Ver carrito"
+    },
     "statuses": {
         "in_stock": "Disponible",
         "out_of_stock": "Agotado",
