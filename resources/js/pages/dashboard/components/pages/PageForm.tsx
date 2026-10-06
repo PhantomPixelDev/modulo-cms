@@ -37,7 +37,7 @@ export interface PageFormProps {
     fields?: CustomFieldDefinition[];
     locales?: LocaleOption[];
     currentLocale?: string;
-    translation?: any;
+    translation?: unknown;
     onLocaleChange?: (code: string) => void;
     /** Fully built translation-delete URL; enables the delete item. */
     deleteTranslationRoute?: string;
