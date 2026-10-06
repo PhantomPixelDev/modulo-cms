@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CommentPending;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Models\SiteSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class CommentController extends Controller
@@ -74,6 +76,14 @@ class CommentController extends Controller
 
         $comment->save();
         do_action('comment_posted', $comment, $post);
+
+        if ($held && ($adminEmail = SiteSetting::get('admin_email', config('mail.admin_address')))) {
+            try {
+                Mail::to($adminEmail)->queue(new CommentPending($comment, $post));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         return back()->with('success', $held ? 'Thanks! Your comment will appear once it has been approved.' : 'Thanks! Your comment has been posted.');
     }
