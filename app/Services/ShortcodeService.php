@@ -90,7 +90,7 @@ class ShortcodeService
         // [youtube] shortcode
         $this->register('youtube', function ($attrs) {
             $id = $attrs['id'] ?? '';
-            if (! $id) {
+            if (! is_string($id) || ! preg_match('/^[A-Za-z0-9_-]{11}$/', $id)) {
                 return '';
             }
 

@@ -56,7 +56,7 @@ class PostTranslation extends Model
     public static function generateUniqueSlug(string $baseSlug, string $locale, ?int $excludeId = null): string
     {
         $slug = $baseSlug;
-        $counter = 1;
+        $counter = 2;
 
         while (true) {
             $query = static::where('locale', $locale)->where('slug', $slug);

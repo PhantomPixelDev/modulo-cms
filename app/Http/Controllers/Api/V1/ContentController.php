@@ -8,6 +8,7 @@ use App\Models\Page;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Rules\CanPublish;
+use App\Support\LikeEscape;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -128,8 +129,8 @@ class ContentController extends Controller
                 }
             }))
             ->when($filters['search'] ?? null, fn (Builder $q, $search) => $q->where(fn ($w) => $w
-                ->where('title', 'like', '%'.$search.'%')
-                ->orWhere('excerpt', 'like', '%'.$search.'%')));
+                ->whereRaw("title LIKE ? ESCAPE '!'", [LikeEscape::contains($search)])
+                ->orWhereRaw("excerpt LIKE ? ESCAPE '!'", [LikeEscape::contains($search)])));
 
         $sort = $filters['sort'] ?? '-published_at';
         $query->orderBy(ltrim($sort, '-'), str_starts_with($sort, '-') ? 'desc' : 'asc')->orderByDesc('id');

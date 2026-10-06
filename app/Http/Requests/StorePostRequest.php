@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
+use App\Rules\AssignAuthor;
 use App\Rules\CanPublish;
 use App\Support\CustomFields;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -49,6 +50,7 @@ class StorePostRequest extends FormRequest
             'published_at' => ['nullable', 'date'],
             'featured_image' => ['nullable', 'string', 'max:255'],
             'post_type_id' => ['required', 'exists:post_types,id'],
+            'author_id' => ['nullable', 'exists:users,id', new AssignAuthor],
             'taxonomy_terms' => ['nullable', 'array'],
             'taxonomy_terms.*' => ['exists:taxonomy_terms,id'],
             'meta_title' => ['nullable', 'string', 'max:255'],

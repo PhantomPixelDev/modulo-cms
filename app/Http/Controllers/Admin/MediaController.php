@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\MediaUploadRequest;
 use App\Models\MediaBucket;
 use App\Services\SvgValidator;
+use App\Support\LikeEscape;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -50,9 +51,10 @@ class MediaController extends Controller
             $query = $this->libraryQuery()->where('model_id', $bucket->id);
 
             if ($q !== '') {
-                $query->where(function ($sub) use ($q) {
-                    $sub->where('name', 'like', "%$q%")
-                        ->orWhere('file_name', 'like', "%$q%");
+                $term = LikeEscape::contains($q);
+                $query->where(function ($sub) use ($term) {
+                    $sub->whereRaw("name LIKE ? ESCAPE '!'", [$term])
+                        ->orWhereRaw("file_name LIKE ? ESCAPE '!'", [$term]);
                 });
             }
             if ($type !== '') {

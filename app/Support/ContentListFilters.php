@@ -36,8 +36,8 @@ class ContentListFilters
     public static function apply(Builder $query, array $filters): Builder
     {
         if (isset($filters['search'])) {
-            $term = '%'.mb_strtolower((string) $filters['search']).'%';
-            $query->where(fn ($q) => $q->whereRaw('LOWER(title) LIKE ?', [$term])->orWhereRaw('LOWER(slug) LIKE ?', [$term]));
+            $term = LikeEscape::contains(mb_strtolower((string) $filters['search']));
+            $query->where(fn ($q) => $q->whereRaw("LOWER(title) LIKE ? ESCAPE '!'", [$term])->orWhereRaw("LOWER(slug) LIKE ? ESCAPE '!'", [$term]));
         }
 
         // "Scheduled" is not a stored status: published with a date still to come

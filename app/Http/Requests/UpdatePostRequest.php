@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
+use App\Rules\AssignAuthor;
 use App\Rules\CanPublish;
 use App\Support\CustomFields;
 use Illuminate\Foundation\Http\FormRequest;
@@ -47,7 +48,7 @@ class UpdatePostRequest extends FormRequest
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'published_at' => ['nullable', 'date'],
-            'author_id' => ['nullable', 'exists:users,id'],
+            'author_id' => ['nullable', 'exists:users,id', new AssignAuthor],
             'parent_id' => ['nullable', 'exists:posts,id'],
             'menu_order' => ['nullable', 'integer'],
             'meta_data' => ['nullable', 'array'],

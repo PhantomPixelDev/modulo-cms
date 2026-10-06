@@ -7,6 +7,7 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Models\Locale;
 use App\Models\Post;
+use App\Models\PostTranslation;
 use App\Models\PostType;
 use App\Models\SiteSetting;
 use App\Models\TaxonomyTerm;
@@ -469,7 +470,11 @@ class PostController extends Controller
 
             $post->setTranslation($locale, [
                 'title' => $request->title,
-                'slug' => Str::slug($request->slug ?: $request->title),
+                'slug' => PostTranslation::generateUniqueSlug(
+                    Str::slug($request->slug ?: $request->title),
+                    $locale,
+                    $post->translation($locale)?->id
+                ),
                 'excerpt' => $request->excerpt,
                 'content' => $request->content,
                 'seo_title' => $request->meta_title,

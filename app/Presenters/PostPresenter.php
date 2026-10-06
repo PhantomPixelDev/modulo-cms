@@ -109,12 +109,8 @@ class PostPresenter
             }
         }
 
-        // Slate output is escaped while rendering; raw HTML must be sanitized
-        // before shortcodes inject their own trusted markup.
-        if (is_string($content) && ! $isSlate) {
-            $content = app(HtmlSanitizer::class)->sanitize($content);
-        }
-
+        // Slate output is escaped while rendering. Shortcodes run first so the
+        // sanitizer also covers what shortcode wrappers interpolate.
         if (is_string($content)) {
             try {
                 $content = app(ShortcodeService::class)->parse($content);
@@ -124,6 +120,10 @@ class PostPresenter
                     'error' => $e->getMessage(),
                 ]);
             }
+        }
+
+        if (is_string($content) && ! $isSlate) {
+            $content = app(HtmlSanitizer::class)->sanitize($content);
         }
 
         return is_string($content) ? $this->lazyImages($content) : '';

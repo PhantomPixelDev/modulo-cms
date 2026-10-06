@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Content;
 use App\Http\Controllers\Controller;
 use App\Models\Locale;
 use App\Models\Post;
+use App\Models\PostTranslation;
 use App\Models\PostType;
 use App\Models\User;
 use App\Rules\CanPublish;
@@ -247,7 +248,11 @@ class PagesController extends Controller
 
         $page->setTranslation($locale, [
             'title' => $data['title'],
-            'slug' => Str::slug($data['slug'] ?: $data['title']),
+            'slug' => PostTranslation::generateUniqueSlug(
+                Str::slug($data['slug'] ?: $data['title']),
+                $locale,
+                $page->translation($locale)?->id
+            ),
             'excerpt' => $data['excerpt'] ?? '',
             'content' => $data['content'],
             'seo_title' => $data['meta_title'] ?? null,
