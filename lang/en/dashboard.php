@@ -1456,4 +1456,8 @@ return [
             'has_content' => ':name still has content. Switch it off instead, or delete its translations first.',
         ],
     ],
+    'redirects' => [
+        'edit' => 'Edit redirect',
+        'update' => 'Save changes',
+    ],
 ];

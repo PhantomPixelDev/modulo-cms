@@ -42,4 +42,14 @@ class UserPolicy
 
         return $user->can('delete users');
     }
+
+    public function assignRole(User $user, User $model): bool
+    {
+        // Only super-admins may change the roles of a super-admin account.
+        if ($model->hasRole('super-admin') && ! $user->hasRole('super-admin')) {
+            return false;
+        }
+
+        return $user->can('assign roles');
+    }
 }

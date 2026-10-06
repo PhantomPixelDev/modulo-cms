@@ -79,7 +79,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::put('menus/{menu}/order', [MenuController::class, 'reorder'])->name('menus.reorder');
         Route::post('menus/{menu}/pages', [MenuController::class, 'addPages'])->name('menus.add-pages');
         Route::resource('menus', MenuController::class);
-        Route::resource('menu-items', MenuItemController::class);
+        Route::resource('menu-items', MenuItemController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('taxonomies', TaxonomyController::class);
         Route::get('taxonomy-terms', [TaxonomyTermController::class, 'index'])->name('taxonomy-terms.index');
         Route::resource('taxonomy-terms', TaxonomyTermController::class)->except(['index']);
@@ -127,8 +127,10 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
         // User & Role Management
-        Route::resource('users', UserController::class);
-        Route::resource('roles', RoleController::class);
+        Route::resource('users', UserController::class)->except(['show']);
+        Route::resource('roles', RoleController::class)->except(['show']);
+        Route::post('users/{user}/roles/{role}/assign', [UserController::class, 'assign'])->name('users.roles.assign');
+        Route::post('users/{user}/roles/{role}/remove', [UserController::class, 'remove'])->name('users.roles.remove');
 
         // Sitemap
         Route::get('/sitemap', [SitemapController::class, 'index'])->name('sitemap.index');
