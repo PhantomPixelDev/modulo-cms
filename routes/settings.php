@@ -43,7 +43,7 @@ Route::middleware('auth')->group(function () {
     // Asked when the page opens, so creating a token does not bounce through it.
     Route::get('settings/api-tokens', [ApiTokenController::class, 'index'])->middleware('password.confirm')->name('api-tokens.index');
     Route::post('settings/api-tokens', [ApiTokenController::class, 'store'])->middleware('password.confirm')->name('api-tokens.store');
-    Route::delete('settings/api-tokens/{id}', [ApiTokenController::class, 'destroy'])->whereNumber('id')->name('api-tokens.destroy');
+    Route::delete('settings/api-tokens/{id}', [ApiTokenController::class, 'destroy'])->middleware('password.confirm')->whereNumber('id')->name('api-tokens.destroy');
 
     Route::get('settings/appearance', AppearanceController::class)->name('appearance');
 });

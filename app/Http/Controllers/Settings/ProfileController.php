@@ -51,6 +51,15 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // Mirror UserController: super-admins cannot delete themselves here,
+        // and the last remaining administrator cannot self-brick the site.
+        if ($user->hasRole('super-admin')) {
+            return back()->withErrors(['password' => 'Super administrators cannot delete their own account.']);
+        }
+        if ($user->hasRole('admin') && \App\Models\User::role('admin')->whereKeyNot($user->id)->doesntExist()) {
+            return back()->withErrors(['password' => 'You are the last administrator and cannot delete this account.']);
+        }
+
         Auth::logout();
 
         $user->delete();

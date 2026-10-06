@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\ApiToken;
 use App\Services\ReactTemplateRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
@@ -72,7 +74,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): SymfonyResponse
     {
+        $user = $request->user();
         Auth::guard('web')->logout();
+
+        if ($user) {
+            // A copied remember-cookie or API token must not survive logout.
+            $user->forceFill(['remember_token' => Str::random(60)])->save();
+            ApiToken::where('user_id', $user->id)->delete();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

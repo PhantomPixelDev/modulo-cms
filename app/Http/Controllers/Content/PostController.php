@@ -243,6 +243,7 @@ class PostController extends Controller
      */
     public function store(StorePostRequest $request)
     {
+        $this->authorize('create', Post::class);
 
         // Determine published_at
         $publishedAt = null;
@@ -412,6 +413,7 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, Post $post)
     {
+        $this->authorize('update', $post);
         $defaultLocale = Locale::getDefault()?->code ?? 'en';
         $locale = $request->input('locale', $defaultLocale);
         // Never trust the client blindly: an unknown locale falls back to the

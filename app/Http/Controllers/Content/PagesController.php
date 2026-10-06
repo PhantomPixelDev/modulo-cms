@@ -25,10 +25,10 @@ class PagesController extends Controller
         protected SiteSettingsService $settings
     ) {
         // Pages are posts of the "page" type and share their permissions
-        $this->middleware('permission:view posts')->only(['index', 'show']);
-        $this->middleware('permission:create posts')->only(['create', 'store']);
-        $this->middleware('permission:edit posts')->only(['edit', 'update']);
-        $this->middleware('permission:delete posts')->only(['destroy']);
+        $this->middleware('permission:view pages')->only(['index', 'show']);
+        $this->middleware('permission:create pages')->only(['create', 'store']);
+        $this->middleware('permission:edit pages')->only(['edit', 'update']);
+        $this->middleware('permission:delete pages')->only(['destroy']);
     }
 
     private function resolvePageType(): PostType

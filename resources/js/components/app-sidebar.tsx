@@ -297,7 +297,7 @@ export function AppSidebar() {
                             show: can('edit settings'),
                         },
                         { label: t('dashboard.nav.activity'), href: '/dashboard/admin/system/activity', icon: History, show: isAdmin() },
-                        { label: t('dashboard.nav.backups'), href: '/dashboard/admin/system/backups', icon: Archive, show: isAdmin() },
+                        { label: t('dashboard.nav.backups'), href: '/dashboard/admin/system/backups', icon: Archive, show: can('view backups') },
                     ]}
                 />
             </SidebarContent>

@@ -98,7 +98,7 @@ export function getPagesSections({
             title={t('dashboard.pages.title')}
             description={t('dashboard.pages.list_description')}
             actions={
-                can('create posts') ? (
+                can('create pages') ? (
                     <Button size="sm" onClick={() => router.visit(ROUTE.pages.create())}>
                         {t('dashboard.pages.actions.new')}
                     </Button>
@@ -111,8 +111,8 @@ export function getPagesSections({
                 authors={authors}
                 showTypeFilter={false}
                 locales={locales}
-                canEdit={can('edit posts')}
-                canDelete={can('delete posts')}
+                canEdit={can('edit pages')}
+                canDelete={can('delete pages')}
                 canPublish={can('publish content')}
                 editHref={(item) => ROUTE.pages.edit(item.id)}
                 viewHref={(item) => (item.status === 'published' && !item.is_scheduled && item.slug ? `/${item.slug}` : null)}
@@ -155,7 +155,7 @@ export function getPagesSections({
             description={t('dashboard.pages.edit_description')}
             actions={
                 <div className="flex gap-2">
-                    {can('delete posts') && (
+                    {can('delete pages') && (
                         <Button variant="destructive" size="sm" onClick={() => handleDeletePage((post as any) || (editPost as any))}>
                             {t('dashboard.pages.actions.delete')}
                         </Button>

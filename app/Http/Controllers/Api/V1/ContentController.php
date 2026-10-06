@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\PostResource;
+use App\Models\Page;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Rules\CanPublish;
@@ -43,11 +44,10 @@ class ContentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $this->authorize('create', Post::class);
-
         $typeData = $request->validate(['type' => ['sometimes', 'string', 'max:100']]);
         $typeName = $typeData['type'] ?? 'post';
         $type = PostType::where('name', $typeName)->orWhere('slug', $typeName)->firstOrFail();
+        $this->authorize('create', $type->name === 'page' ? Page::class : Post::class);
         $data = $this->validated($request, type: $type);
 
         $post = Post::create([
@@ -75,7 +75,7 @@ class ContentController extends Controller
     public function update(Request $request, int $id): PostResource
     {
         $post = Post::findOrFail($id);
-        $this->authorize('update', $post);
+        $this->authorizePost($post, 'update');
 
         $data = $this->validated($request, $post);
         $changes = collect($data)->only(['title', 'excerpt', 'content', 'status', 'featured_image', 'meta_title', 'meta_description'])->all();
@@ -100,7 +100,7 @@ class ContentController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $post = Post::findOrFail($id);
-        $this->authorize('delete', $post);
+        $this->authorizePost($post, 'delete');
 
         $post->delete();
 
@@ -154,7 +154,7 @@ class ContentController extends Controller
     {
         // Unpublished content only for a token whose user may see it.
         $token = $request->attributes->get('api_token');
-        $privileged = $token?->can('read') && $request->user()?->can('view posts');
+        $privileged = $token?->can('read') && $request->user()?->can($pages ? 'view pages' : 'view posts');
 
         $query = Post::query()->whereHas('postType', function ($t) use ($pages, $privileged) {
             $t->where('name', $pages ? '=' : '!=', 'page');
@@ -172,6 +172,19 @@ class ContentController extends Controller
             'scheduled' => $query->where('status', 'published')->where('published_at', '>', now()),
             default => $query->where('status', $status),
         };
+    }
+
+    /**
+     * Authorize against the page policy for pages, the post policy otherwise.
+     */
+    protected function authorizePost(Post $post, string $ability): void
+    {
+        if ($post->postType->name === 'page') {
+            $this->authorize($ability, Page::findOrFail($post->id));
+
+            return;
+        }
+        $this->authorize($ability, $post);
     }
 
     /**
