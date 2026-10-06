@@ -515,7 +515,7 @@ class ExampleContentSeeder extends Seeder
                     'author_id' => $authorId,
                     'title' => 'Team',
                     'content' => '<p>Meet the team behind Modulo CMS.</p>',
-                    'parent_id' => $createdPages['About']->id,
+                    'parent_id' => $createdPages['About Us']->id,
                     'status' => 'published',
                     'published_at' => now(),
                 ]
