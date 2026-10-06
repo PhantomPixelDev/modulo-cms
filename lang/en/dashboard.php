@@ -319,6 +319,7 @@ return [
             'add' => 'Add translation',
             'edit' => 'Edit translation',
             'delete' => 'Delete translation',
+            'delete_confirm' => 'Delete this translation? The default-language content is kept.',
             'switch_locale' => 'Switch language',
             'current' => 'Current language',
             'available' => 'Available translations',

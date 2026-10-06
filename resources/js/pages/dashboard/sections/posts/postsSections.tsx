@@ -52,11 +52,14 @@ export function getPostsSections({
         try {
             const url = editId ? ROUTE.posts.update(editId) : ROUTE.posts.store();
             const method = editId ? 'put' : 'post';
+            const locale = typeof formData?.locale === 'string' && formData.locale ? formData.locale : currentLocale || 'en';
             await router[method](url, formData, {
                 preserveScroll: true,
                 onSuccess: () => {
                     showSuccess(t(editId ? 'dashboard.posts.messages.updated' : 'dashboard.posts.messages.created'));
-                    router.visit(ROUTE.posts.index());
+                    // Stay on the edit page in the same locale so translators
+                    // can keep working instead of being dropped to the list.
+                    router.visit(editId ? `${ROUTE.posts.edit(editId)}?locale=${encodeURIComponent(locale)}` : ROUTE.posts.index());
                 },
                 onError: (errors) => {
                     console.error('Validation errors:', errors);
@@ -113,6 +116,7 @@ export function getPostsSections({
             }
         >
             <PostForm
+                key={`new-${currentLocale || 'en'}`}
                 isEditing={false}
                 postTypes={(postTypes as any) || []}
                 groupedTerms={(groupedTerms as any) || {}}
@@ -121,7 +125,7 @@ export function getPostsSections({
                 locales={locales}
                 currentLocale={currentLocale || 'en'}
                 canEditAuthor={canEditAuthorFlag}
-                onSubmit={handlePostSubmit}
+                onSubmit={(data) => handlePostSubmit({ ...data, locale: currentLocale || 'en' })}
                 onCancel={() => router.visit(ROUTE.posts.index())}
                 onLocaleChange={handleLocaleChange}
             />
@@ -139,6 +143,7 @@ export function getPostsSections({
             }
         >
             <PostForm
+                key={`${(editPost as any)?.id ?? 'new'}-${currentLocale || 'en'}`}
                 post={editPost as any}
                 translation={translation}
                 postTypes={(postTypes as any) || []}
@@ -149,7 +154,7 @@ export function getPostsSections({
                 currentLocale={currentLocale || 'en'}
                 canEditAuthor={canEditAuthorFlag}
                 isEditing={true}
-                onSubmit={(data) => handlePostSubmit(data, (editPost as any)?.id)}
+                onSubmit={(data) => handlePostSubmit({ ...data, locale: currentLocale || 'en' }, (editPost as any)?.id)}
                 onCancel={() => router.visit(ROUTE.posts.index())}
                 onLocaleChange={handleLocaleChange}
             />

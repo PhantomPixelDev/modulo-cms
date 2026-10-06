@@ -30,6 +30,7 @@ use App\Http\Controllers\Content\TemplateController;
 use App\Http\Controllers\Content\ThemeController;
 use App\Http\Controllers\Content\TrashController;
 use App\Http\Controllers\DashboardController;
+use App\Models\Post;
 use Illuminate\Support\Facades\Route;
 
 // All admin routes are protected by auth, verified, and admin role check
@@ -60,13 +61,20 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::post('content/{postId}/preview-link', [AutosaveController::class, 'previewLink'])->whereNumber('postId')->name('preview.link');
 
         Route::post('posts/bulk', [PostController::class, 'bulk'])->middleware('throttle:6,1')->name('posts.bulk');
-        Route::resource('posts', PostController::class)
-            ->scoped(['post' => 'slug']);
+        // The editor saves by numeric ID while list links use slugs (and a
+        // translation slug may differ from the base slug), so {post} resolves
+        // either. This also covers the translations sub-routes below.
+        Route::bind('post', fn ($value) => ctype_digit((string) $value)
+            ? Post::findOrFail($value)
+            : Post::where('slug', $value)->firstOrFail());
+        Route::resource('posts', PostController::class);
         // Specific route for listing posts by post type
         Route::get('posts/type/{postType}', [PostController::class, 'indexByType'])->name('posts.byType');
         // Post translation routes
         Route::post('posts/{post}/translations', [PostTranslationController::class, 'store'])->name('posts.translations.store');
         Route::delete('posts/{post}/translations/{locale}', [PostTranslationController::class, 'destroy'])->name('posts.translations.destroy');
+        // Pages are posts too, so the generic translation endpoints serve them
+        Route::delete('pages/{post}/translations/{locale}', [PostTranslationController::class, 'destroy'])->name('pages.translations.destroy');
         Route::resource('post-types', PostTypeController::class);
         Route::put('menus/{menu}/order', [MenuController::class, 'reorder'])->name('menus.reorder');
         Route::post('menus/{menu}/pages', [MenuController::class, 'addPages'])->name('menus.add-pages');

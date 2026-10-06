@@ -414,6 +414,11 @@ class PostController extends Controller
     {
         $defaultLocale = Locale::getDefault()?->code ?? 'en';
         $locale = $request->input('locale', $defaultLocale);
+        // Never trust the client blindly: an unknown locale falls back to the
+        // default instead of scattering translations under typos.
+        if (! Locale::getActive()->contains('code', $locale)) {
+            $locale = $defaultLocale;
+        }
         $isDefaultLocale = $locale === $defaultLocale;
 
         // Determine published_at based on input or status transition

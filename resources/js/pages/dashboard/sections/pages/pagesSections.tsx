@@ -16,6 +16,9 @@ export function getPagesSections({
     pageFields,
     defaultStatus,
     canEditAuthorFlag,
+    locales,
+    currentLocale,
+    translation,
     can,
     showSuccess,
     showError,
@@ -31,6 +34,9 @@ export function getPagesSections({
     pageFields?: CustomFieldDefinition[];
     defaultStatus?: string;
     canEditAuthorFlag?: boolean;
+    locales?: any[];
+    currentLocale?: string;
+    translation?: any;
     can: (perm: string) => boolean;
     showSuccess: (msg: string) => void;
     showError: (msg: string) => void;
@@ -40,12 +46,15 @@ export function getPagesSections({
     const handlePageSubmit = async (formData: any, editId?: number) => {
         const url = editId ? ROUTE.pages.update(editId) : ROUTE.pages.store();
         const method = editId ? 'put' : 'post';
+        const locale = currentLocale || 'en';
         try {
-            router[method](url, formData, {
+            router[method](url, { ...formData, locale }, {
                 preserveScroll: true,
                 onSuccess: () => {
                     showSuccess(t(editId ? 'dashboard.pages.messages.updated' : 'dashboard.pages.messages.created'));
-                    router.visit(ROUTE.pages.index());
+                    // Stay on the edit page in the same locale so translators
+                    // can keep working instead of being dropped to the list.
+                    router.visit(editId ? `${ROUTE.pages.edit(editId)}?locale=${encodeURIComponent(locale)}` : ROUTE.pages.index());
                 },
                 onError: (errors) => {
                     console.error('Validation errors:', errors);
@@ -76,6 +85,10 @@ export function getPagesSections({
         }
     };
 
+    const handleLocaleChange = (locale: string) => {
+        router.visit(`${window.location.pathname}?locale=${encodeURIComponent(locale)}`);
+    };
+
     const renderPagesList = () => (
         <SectionWrapper
             title={t('dashboard.pages.title')}
@@ -93,6 +106,7 @@ export function getPagesSections({
                 filters={filters}
                 authors={authors}
                 showTypeFilter={false}
+                locales={locales}
                 canEdit={can('edit posts')}
                 canDelete={can('delete posts')}
                 canPublish={can('publish content')}
@@ -115,12 +129,16 @@ export function getPagesSections({
             }
         >
             <PageForm
+                key={`new-page-${currentLocale || 'en'}`}
                 isEditing={false}
                 parents={pageParents}
                 fields={pageFields}
                 authors={authors}
                 canEditAuthor={canEditAuthorFlag}
                 defaultStatus={defaultStatus}
+                locales={locales}
+                currentLocale={currentLocale || 'en'}
+                onLocaleChange={handleLocaleChange}
                 onSubmit={(data) => handlePageSubmit(data)}
                 onCancel={() => router.visit(ROUTE.pages.index())}
             />
@@ -145,12 +163,25 @@ export function getPagesSections({
             }
         >
             <PageForm
+                key={`page-${((post as any) || (editPost as any))?.id ?? 'new'}-${currentLocale || 'en'}`}
                 page={(post as any) || (editPost as any)}
                 isEditing={true}
                 parents={pageParents}
                 fields={pageFields}
                 authors={authors}
                 canEditAuthor={canEditAuthorFlag}
+                locales={locales}
+                currentLocale={currentLocale || 'en'}
+                translation={translation}
+                onLocaleChange={handleLocaleChange}
+                deleteTranslationRoute={
+                    translation && ((post as any) || (editPost as any))?.id
+                        ? route('dashboard.admin.pages.translations.destroy', {
+                              post: ((post as any) || (editPost as any)).id,
+                              locale: currentLocale || 'en',
+                          })
+                        : undefined
+                }
                 onSubmit={(data) => handlePageSubmit(data, ((post as any) || (editPost as any))?.id)}
                 onCancel={() => router.visit(ROUTE.pages.index())}
             />

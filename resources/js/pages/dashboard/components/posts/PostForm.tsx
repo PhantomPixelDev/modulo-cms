@@ -1,14 +1,12 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown, Globe, Image as ImageIcon, Loader2, X } from 'lucide-react';
+import { Image as ImageIcon, Loader2, X } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 
 import { useTranslation } from '@/hooks/useTranslation';
@@ -17,6 +15,7 @@ import { AutosaveStatus, PreviewButton, RecoverAutosave, useAutosave, type Autos
 import { RevisionsDialog } from '../common/RevisionsDialog';
 import MediaPickerDialog from '../media/MediaPickerDialog';
 import { CustomFieldInputs } from './CustomFieldInputs';
+import { LocaleDropdown } from './LocaleDropdown';
 import { MetaDataSection } from './MetaDataSection';
 import { PostTaxonomySection } from './PostTaxonomySection';
 import SlateEditor from './SlateEditor';
@@ -108,6 +107,9 @@ export function PostForm({
     const [activeTab, setActiveTab] = useState('content');
     const formRef = useRef<HTMLFormElement | null>(null);
 
+    const deleteTranslationRoute =
+        isEditing && post?.id && translation ? route('dashboard.admin.posts.translations.destroy', { post: post.id, locale: currentLocale }) : undefined;
+
     const statusOptions = useMemo(
         () => [
             { value: 'draft', label: t('common.status.draft') },
@@ -132,32 +134,13 @@ export function PostForm({
                                 <p className="mt-1 text-sm text-muted-foreground">{t('dashboard.posts.form.description')}</p>
                             </div>
                             {hasMultipleLocales && (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm" className="gap-2">
-                                            <Globe className="h-4 w-4" />
-                                            <span className="font-medium">{currentLocale.toUpperCase()}</span>
-                                            <ChevronDown className="h-3 w-3 opacity-50" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start">
-                                        {locales.map((locale) => (
-                                            <DropdownMenuItem
-                                                key={locale.code}
-                                                onClick={() => onLocaleChange?.(locale.code)}
-                                                className={currentLocale === locale.code ? 'bg-accent' : ''}
-                                            >
-                                                <span className="mr-2 font-medium">{locale.code.toUpperCase()}</span>
-                                                <span className="text-muted-foreground">{locale.native_name || locale.name}</span>
-                                                {locale.is_default && (
-                                                    <Badge variant="secondary" className="ml-2 text-xs">
-                                                        Default
-                                                    </Badge>
-                                                )}
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <LocaleDropdown
+                                    locales={locales}
+                                    currentLocale={currentLocale}
+                                    onLocaleChange={onLocaleChange}
+                                    hasTranslation={Boolean(translation)}
+                                    deleteRoute={deleteTranslationRoute}
+                                />
                             )}
                         </div>
                         <div className="flex w-full items-center space-x-3 sm:w-auto">

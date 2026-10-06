@@ -20,6 +20,7 @@ import { CustomFieldInputs, type CustomFieldValues } from '../posts/CustomFieldI
 import type { FeaturedImagePreview } from '../posts/types';
 
 import MediaPickerDialog from '../media/MediaPickerDialog';
+import { LocaleDropdown, type LocaleOption } from '../posts/LocaleDropdown';
 import SlateEditor from '../posts/SlateEditor';
 
 export interface PageFormProps {
@@ -34,6 +35,12 @@ export interface PageFormProps {
     parents?: Array<{ id: number; title: string }>;
     /** The page type's custom fields */
     fields?: CustomFieldDefinition[];
+    locales?: LocaleOption[];
+    currentLocale?: string;
+    translation?: any;
+    onLocaleChange?: (code: string) => void;
+    /** Fully built translation-delete URL; enables the delete item. */
+    deleteTranslationRoute?: string;
 }
 
 const slugify = (text: string) => {
@@ -79,6 +86,11 @@ export function PageForm({
     defaultStatus = 'draft',
     parents = [],
     fields = [],
+    locales = [],
+    currentLocale = 'en',
+    translation,
+    onLocaleChange,
+    deleteTranslationRoute,
     onSubmit,
     onCancel,
 }: PageFormProps) {
@@ -142,7 +154,14 @@ export function PageForm({
         };
     });
 
-    const autosave = useAutosave(page?.id, { title: form.title, excerpt: form.excerpt, content: form.content }, Boolean(isEditing));
+    const currentLocaleData = locales.find((l) => l.code === currentLocale);
+    // Autosave holds the default-locale text; disable it while translating so
+    // a translation draft never overwrites it.
+    const autosave = useAutosave(
+        page?.id,
+        { title: form.title, excerpt: form.excerpt, content: form.content },
+        Boolean(isEditing) && (!currentLocaleData || Boolean(currentLocaleData.is_default)),
+    );
     const [editorKey, setEditorKey] = useState(0);
     const restoreAutosave = (fields: AutosaveFields) => {
         setForm((prev) => ({ ...prev, title: fields.title ?? '', excerpt: fields.excerpt ?? '', content: fields.content ?? '' }));
@@ -248,7 +267,16 @@ export function PageForm({
                     </ul>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    {isEditing && <AutosaveStatus status={autosave.status} savedAt={autosave.savedAt} />}
+                    {isEditing && (!currentLocaleData || currentLocaleData.is_default) && (
+                        <AutosaveStatus status={autosave.status} savedAt={autosave.savedAt} />
+                    )}
+                    <LocaleDropdown
+                        locales={locales}
+                        currentLocale={currentLocale}
+                        onLocaleChange={onLocaleChange}
+                        hasTranslation={Boolean(translation)}
+                        deleteRoute={deleteTranslationRoute}
+                    />
                     <Select value={form.status} onValueChange={(status) => setForm((f) => ({ ...f, status }))}>
                         <SelectTrigger className="h-9 w-36" aria-label={t('dashboard.pages.form.fields.status')}>
                             <SelectValue />

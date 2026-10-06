@@ -378,6 +378,7 @@ return [
             'add' => 'Añadir traducción',
             'edit' => 'Editar traducción',
             'delete' => 'Eliminar traducción',
+            'delete_confirm' => '¿Eliminar esta traducción? Se conserva el contenido del idioma principal.',
             'switch_locale' => 'Cambiar idioma',
             'current' => 'Idioma actual',
             'available' => 'Traducciones disponibles',

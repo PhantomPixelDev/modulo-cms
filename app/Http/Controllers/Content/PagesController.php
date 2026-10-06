@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
+use App\Models\Locale;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\User;
@@ -115,6 +116,8 @@ class PagesController extends Controller
         return Inertia::render('Dashboard', [
             'adminSection' => 'pages.create',
             'defaultStatus' => $defaultStatus,
+            'locales' => Locale::getActive(),
+            'currentLocale' => $request->query('locale', Locale::getDefault()?->code ?? 'en'),
         ] + $this->formProps());
     }
 
@@ -157,15 +160,33 @@ class PagesController extends Controller
             ->with('success', __('dashboard.pages.messages.created'));
     }
 
-    public function edit(Post $page)
+    public function edit(Request $request, Post $page)
     {
         // Ensure it's a page
         $pageType = $this->resolvePageType();
         abort_unless($page->post_type_id === $pageType->id, 404);
 
+        $page->loadMissing('translations');
+        $currentLocale = $request->query('locale', Locale::getDefault()?->code ?? 'en');
+        $translation = $page->translations->firstWhere('locale', $currentLocale);
+        if ($translation) {
+            // In memory only: the editor works on the translation's text
+            $page->forceFill([
+                'title' => $translation->title,
+                'slug' => $translation->slug,
+                'excerpt' => $translation->excerpt,
+                'content' => $translation->content,
+                'meta_title' => $translation->seo_title,
+                'meta_description' => $translation->seo_description,
+            ]);
+        }
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'pages.edit',
             'post' => $page,
+            'locales' => Locale::getActive(),
+            'currentLocale' => $currentLocale,
+            'translation' => $translation,
         ] + $this->formProps($page));
     }
 
@@ -175,6 +196,13 @@ class PagesController extends Controller
         abort_unless($page->post_type_id === $pageType->id, 404);
 
         $data = $request->validate($this->rules($request, $page), [], CustomFields::attributes($this->resolvePageType()));
+
+        $defaultLocale = Locale::getDefault()?->code ?? 'en';
+        $locale = $request->input('locale', $defaultLocale);
+        if (! Locale::getActive()->contains('code', $locale)) {
+            $locale = $defaultLocale;
+        }
+        $isDefaultLocale = $locale === $defaultLocale;
 
         // Ensure content is properly formatted as JSON string
         if (is_array($data['content']) || is_object($data['content'])) {
@@ -189,19 +217,35 @@ class PagesController extends Controller
         $data['slug'] = Post::uniqueSlug(Str::slug(empty($data['slug']) ? $data['title'] : $data['slug']), $page->id);
 
         // Update the page
-        $page->update([
-            'title' => $data['title'],
-            'slug' => $data['slug'],
-            'content' => $data['content'],
-            'excerpt' => $data['excerpt'] ?? '',
+        $pageUpdate = [
             'status' => $data['status'],
             'published_at' => $data['published_at'] ?? $page->published_at,
             'featured_image' => $data['featured_image'] ?? $page->featured_image,
-            'meta_title' => $data['meta_title'] ?? $page->meta_title,
-            'meta_description' => $data['meta_description'] ?? $page->meta_description,
             'author_id' => $data['author_id'] ?? $page->author_id,
             'parent_id' => array_key_exists('parent_id', $data) ? $data['parent_id'] : $page->parent_id,
             'meta_data' => $request->has('meta_data') ? (array) $request->input('meta_data') : $page->meta_data,
+        ];
+
+        if ($isDefaultLocale) {
+            $pageUpdate = array_merge($pageUpdate, [
+                'title' => $data['title'],
+                'slug' => $data['slug'],
+                'content' => $data['content'],
+                'excerpt' => $data['excerpt'] ?? '',
+                'meta_title' => $data['meta_title'] ?? $page->meta_title,
+                'meta_description' => $data['meta_description'] ?? $page->meta_description,
+            ]);
+        }
+
+        $page->update($pageUpdate);
+
+        $page->setTranslation($locale, [
+            'title' => $data['title'],
+            'slug' => Str::slug($data['slug'] ?: $data['title']),
+            'excerpt' => $data['excerpt'] ?? '',
+            'content' => $data['content'],
+            'seo_title' => $data['meta_title'] ?? null,
+            'seo_description' => $data['meta_description'] ?? null,
         ]);
 
         return redirect()->route('dashboard.admin.pages.index')
