@@ -9,6 +9,8 @@ use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 function hardeningLocales(): void
 {
@@ -24,7 +26,7 @@ function hardeningLocales(): void
 function ensurePermissions(array $perms): void
 {
     foreach ($perms as $perm) {
-        \Spatie\Permission\Models\Permission::findOrCreate($perm, 'web');
+        Permission::findOrCreate($perm, 'web');
     }
 }
 
@@ -102,8 +104,8 @@ it('lets comment moderators moderate but not change global settings', function (
 it('seeds media permissions and enforces backup permissions', function () {
     $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class]);
 
-    expect(\Spatie\Permission\Models\Permission::where('name', 'upload media')->exists())->toBeTrue();
-    expect(\Spatie\Permission\Models\Permission::where('name', 'view backups')->exists())->toBeTrue();
+    expect(Permission::where('name', 'upload media')->exists())->toBeTrue();
+    expect(Permission::where('name', 'view backups')->exists())->toBeTrue();
 
     // Backup viewer without restore rights can list but not restore.
     $this->actingAs(makeAdminUserWithPermissions(['view backups']));
@@ -207,7 +209,7 @@ it('treats LIKE wildcards literally in admin search', function () {
 it('assigns and removes roles through the new endpoints', function () {
     $boss = makeAdminUserWithPermissions(['assign roles', 'view users']);
     $user = User::factory()->create();
-    $role = \Spatie\Permission\Models\Role::findOrCreate('editor', 'web');
+    $role = Role::findOrCreate('editor', 'web');
     $this->actingAs($boss);
 
     $this->post(route('dashboard.admin.users.roles.assign', [$user->id, $role->id]))->assertRedirect();
@@ -220,7 +222,7 @@ it('assigns and removes roles through the new endpoints', function () {
 it('refuses handing super-admin to non-super-admins', function () {
     $boss = makeAdminUserWithPermissions(['assign roles', 'view users']);
     $user = User::factory()->create();
-    $super = \Spatie\Permission\Models\Role::findOrCreate('super-admin', 'web');
+    $super = Role::findOrCreate('super-admin', 'web');
     $this->actingAs($boss);
 
     $this->post(route('dashboard.admin.users.roles.assign', [$user->id, $super->id]))->assertRedirect();

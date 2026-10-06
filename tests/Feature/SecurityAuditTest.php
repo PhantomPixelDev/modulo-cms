@@ -17,6 +17,7 @@ use App\Support\ActivityLog;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\Permission\Models\Permission;
 
 it('keeps published content of private post types out of anonymous API reads', function () {
     $type = PostType::factory()->create(['is_public' => false]);
@@ -48,7 +49,7 @@ it('checks page publishing permission even when the API receives the type slug',
     expect(Post::count())->toBe(0);
 
     // With page creation rights but no page publish right, CanPublish rejects it.
-    \Spatie\Permission\Models\Permission::findOrCreate('create pages', 'web');
+    Permission::findOrCreate('create pages', 'web');
     $user->givePermissionTo('create pages');
     $this->postJson('/api/v1/posts', ['type' => 'pages', 'title' => 'Page', 'status' => 'published'], [
         'Authorization' => 'Bearer '.$plain,

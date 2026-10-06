@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,7 +57,7 @@ class ProfileController extends Controller
         if ($user->hasRole('super-admin')) {
             return back()->withErrors(['password' => 'Super administrators cannot delete their own account.']);
         }
-        if ($user->hasRole('admin') && \App\Models\User::role('admin')->whereKeyNot($user->id)->doesntExist()) {
+        if ($user->hasRole('admin') && User::role('admin')->whereKeyNot($user->id)->doesntExist()) {
             return back()->withErrors(['password' => 'You are the last administrator and cannot delete this account.']);
         }
 
