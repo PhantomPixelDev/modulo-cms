@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Plugins\ModuloShop\database\seeders\ShopDemoSeeder;
 
 /**
  * Sample users and content for development and for trying the CMS out.
@@ -34,5 +35,11 @@ class DemoContentSeeder extends Seeder
             MenuSeeder::class,
             MediaSeeder::class,
         ]);
+
+        // Shop demo products live in the shop plugin, not core. Include them
+        // when the plugin is installed so one command seeds the whole demo.
+        if (class_exists(ShopDemoSeeder::class)) {
+            $this->call([ShopDemoSeeder::class]);
+        }
     }
 }
