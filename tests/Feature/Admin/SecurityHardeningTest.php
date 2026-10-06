@@ -4,8 +4,10 @@ use App\Mail\CommentPending;
 use App\Models\ApiToken;
 use App\Models\Locale;
 use App\Models\Post;
+use App\Models\PostType;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Presenters\PostPresenter;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
@@ -164,7 +166,7 @@ it('sanitizes shortcode output and rejects bad youtube ids', function () {
         'content' => '[alert]<script>alert(1)</script>[/alert] [youtube id="evil\" onload=\"x"]',
     ]);
 
-    $html = app(App\Presenters\PostPresenter::class)->renderContent($post);
+    $html = app(PostPresenter::class)->renderContent($post);
 
     expect($html)->not->toContain('<script>');
     expect($html)->not->toContain('youtube.com/embed');
@@ -175,7 +177,7 @@ it('stops contributors from spoofing authorship', function () {
     $me = makeAdminUserWithPermissions(['create posts']);
     $this->actingAs($me);
 
-    $type = App\Models\PostType::factory()->create();
+    $type = PostType::factory()->create();
     $this->post(route('dashboard.admin.posts.store'), [
         'post_type_id' => $type->id,
         'title' => 'Mine',
