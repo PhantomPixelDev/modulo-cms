@@ -65,7 +65,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ eyebrow, title, description, actions, className }: PageHeaderProps) {
     return (
-        <header className={cn('mb-10 flex flex-col gap-4 border-b pb-8 sm:flex-row sm:items-end sm:justify-between', className)}>
+        <header className={cn('mb-10 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between', className)}>
             <div className="max-w-2xl space-y-2">
                 {eyebrow && <p className="text-sm font-medium text-primary">{eyebrow}</p>}
                 <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{title}</h1>
@@ -77,7 +77,7 @@ export function PageHeader({ eyebrow, title, description, actions, className }: 
 }
 
 const buttonVariants = {
-    primary: 'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90',
+    primary: 'bg-foreground text-background shadow-sm hover:bg-foreground/85',
     outline: 'border border-input bg-background text-foreground shadow-xs hover:bg-accent',
     ghost: 'text-foreground hover:bg-accent',
 } as const;
@@ -90,7 +90,7 @@ const buttonSizes = {
 
 export function buttonClass(variant: keyof typeof buttonVariants = 'primary', size: keyof typeof buttonSizes = 'md', className?: string | false) {
     return cn(
-        'inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
+        'inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
         buttonVariants[variant],
         buttonSizes[size],
         className,
@@ -136,7 +136,7 @@ export function Badge({
     return (
         <span
             className={cn(
-                'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap',
+                'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap',
                 badgeVariants[variant],
                 className,
             )}

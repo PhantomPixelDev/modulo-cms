@@ -202,7 +202,7 @@ export default function Layout({
                 {themeOverrides && <style>{`:root { ${themeOverrides} }`}</style>}
             </Head>
 
-            <div className="flex min-h-screen flex-col bg-background text-foreground">
+            <div className="theme-frontend flex min-h-screen flex-col bg-background text-foreground">
                 {/* First thing a keyboard or screen reader user reaches: past the navigation */}
                 <a
                     href="#main"

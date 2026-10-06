@@ -1,4 +1,4 @@
-import { ArrowRight, Blocks, PenLine, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Blocks, PenLine, ShieldCheck, Star } from 'lucide-react';
 import Layout from './Layout';
 import PostCard from './partials/PostCard';
 import { ButtonLink, Container, useThemeT } from './partials/ui';
@@ -51,16 +51,26 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
             <section className="relative overflow-hidden border-b">
                 <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle_at_1px_1px,var(--border)_1px,transparent_0)] [mask-image:linear-gradient(to_bottom,black,transparent)] [background-size:24px_24px]"
+                    className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle_at_1px_1px,var(--border)_1px,transparent_0)] [mask-image:linear-gradient(to_bottom,black,transparent_80%)] [background-size:24px_24px]"
                 />
-                <Container className="relative py-20 sm:py-28">
-                    <div className="max-w-3xl">
-                        <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-6xl">{safeSite?.name || 'Modulo CMS'}</h1>
-                        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                            {safeSite?.tagline ||
+                <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(60%_100%_at_50%_0%,color-mix(in_oklab,var(--primary)_12%,transparent),transparent)]"
+                />
+                <Container className="relative py-24 text-center sm:py-32">
+                    <div className="mx-auto max-w-3xl">
+                        <p className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3.5 py-1 text-xs font-medium text-muted-foreground shadow-xs">
+                            <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                            {tt('home.hero.badge', 'Trusted by thousands of teams')}
+                        </p>
+                        <h1 className="mt-6 text-4xl font-semibold tracking-tight text-balance text-foreground sm:text-6xl">
+                            {safeSite?.tagline || tt('home.hero.title', 'The content platform that ships with you.')}
+                        </h1>
+                        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+                            {safeSite?.description ||
                                 tt('home.hero.tagline', 'A powerful, modern content management system built with Laravel and React.')}
                         </p>
-                        <div className="mt-8 flex flex-wrap gap-3">
+                        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
                             <ButtonLink href="/posts" size="lg">
                                 {tt('home.hero.primary_cta', 'Browse Content')}
                                 <ArrowRight />
@@ -69,6 +79,9 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
                                 {tt('home.hero.secondary_cta', 'Admin Dashboard')}
                             </ButtonLink>
                         </div>
+                        <p className="mt-6 text-sm text-muted-foreground">
+                            {tt('home.hero.trust', '★★★★★ 4.7/5 rating · Free to start, no card required')}
+                        </p>
                     </div>
                 </Container>
             </section>
@@ -76,12 +89,15 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
             {/* Features */}
             <section className="py-16 sm:py-20">
                 <Container>
-                    <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                        {tt('home.features.title', 'Powerful Features')}
-                    </h2>
-                    <div className="mt-8 grid gap-4 md:grid-cols-3">
+                    <div className="mx-auto max-w-2xl text-center">
+                        <p className="text-sm font-medium text-primary">{tt('home.features.eyebrow', 'Why Modulo')}</p>
+                        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
+                            {tt('home.features.title', 'Powerful Features')}
+                        </h2>
+                    </div>
+                    <div className="mt-12 grid gap-4 md:grid-cols-3">
                         {features.map(({ icon: Icon, title, description }) => (
-                            <div key={title} className="rounded-xl border bg-card p-6 shadow-xs">
+                            <div key={title} className="rounded-2xl border bg-card p-6 shadow-xs transition-shadow hover:shadow-md">
                                 <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                                     <Icon className="size-5" />
                                 </div>
@@ -118,10 +134,10 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
             {/* Call to action */}
             <section className="pb-20">
                 <Container>
-                    <div className="flex flex-col gap-6 rounded-2xl border bg-muted/40 p-8 sm:p-12 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col gap-6 rounded-3xl bg-foreground p-8 text-background sm:p-12 md:flex-row md:items-center md:justify-between">
                         <div className="max-w-xl">
-                            <h2 className="text-2xl font-semibold tracking-tight text-foreground">{tt('home.cta.title', 'Ready to Get Started?')}</h2>
-                            <p className="mt-2 text-muted-foreground">
+                            <h2 className="text-2xl font-semibold tracking-tight">{tt('home.cta.title', 'Ready to Get Started?')}</h2>
+                            <p className="mt-2 text-background/70">
                                 {tt(
                                     'home.cta.description',
                                     'Explore the admin dashboard to manage your content, or browse our documentation to learn more.',
@@ -129,12 +145,15 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-3">
-                            <ButtonLink href="/dashboard">{tt('home.cta.primary', 'Go to Dashboard')}</ButtonLink>
+                            <ButtonLink href="/dashboard" className="bg-background text-foreground hover:bg-background/85">
+                                {tt('home.cta.primary', 'Go to Dashboard')}
+                            </ButtonLink>
                             <ButtonLink
                                 href="https://github.com/PhantomPixelDev/modulo-cms"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 variant="outline"
+                                className="border-background/20 bg-transparent text-background hover:bg-background/10"
                             >
                                 {tt('home.cta.secondary', 'View on GitHub')}
                             </ButtonLink>

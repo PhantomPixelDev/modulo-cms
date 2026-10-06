@@ -50,7 +50,7 @@ export default function PostCard({ post, className }: PostCardProps) {
     return (
         <article
             className={cn(
-                'group relative flex flex-col overflow-hidden rounded-xl border bg-card shadow-xs transition-[border-color,box-shadow] hover:border-input hover:shadow-md has-[a:focus-visible]:ring-[3px] has-[a:focus-visible]:ring-ring/40',
+                'group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-xs transition-[border-color,box-shadow] hover:border-input hover:shadow-md has-[a:focus-visible]:ring-[3px] has-[a:focus-visible]:ring-ring/40',
                 className,
             )}
         >
