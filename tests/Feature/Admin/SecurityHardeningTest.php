@@ -107,7 +107,7 @@ it('seeds media permissions and enforces backup permissions', function () {
 
     // Backup viewer without restore rights can list but not restore.
     $this->actingAs(makeAdminUserWithPermissions(['view backups']));
-    $this->get(route('dashboard.admin.system.backups.index'))->assertOk();
+    $this->get(route('dashboard.admin.system.backups'))->assertOk();
     $this->post(route('dashboard.admin.system.backups.store'))->assertForbidden();
 });
 
