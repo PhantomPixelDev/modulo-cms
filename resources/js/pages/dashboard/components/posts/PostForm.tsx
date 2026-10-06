@@ -108,7 +108,9 @@ export function PostForm({
     const formRef = useRef<HTMLFormElement | null>(null);
 
     const deleteTranslationRoute =
-        isEditing && post?.id && translation ? route('dashboard.admin.posts.translations.destroy', { post: post.id, locale: currentLocale }) : undefined;
+        isEditing && post?.id && translation
+            ? route('dashboard.admin.posts.translations.destroy', { post: post.id, locale: currentLocale })
+            : undefined;
 
     const statusOptions = useMemo(
         () => [

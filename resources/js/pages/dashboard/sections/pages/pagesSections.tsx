@@ -48,19 +48,23 @@ export function getPagesSections({
         const method = editId ? 'put' : 'post';
         const locale = currentLocale || 'en';
         try {
-            router[method](url, { ...formData, locale }, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    showSuccess(t(editId ? 'dashboard.pages.messages.updated' : 'dashboard.pages.messages.created'));
-                    // Stay on the edit page in the same locale so translators
-                    // can keep working instead of being dropped to the list.
-                    router.visit(editId ? `${ROUTE.pages.edit(editId)}?locale=${encodeURIComponent(locale)}` : ROUTE.pages.index());
+            router[method](
+                url,
+                { ...formData, locale },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        showSuccess(t(editId ? 'dashboard.pages.messages.updated' : 'dashboard.pages.messages.created'));
+                        // Stay on the edit page in the same locale so translators
+                        // can keep working instead of being dropped to the list.
+                        router.visit(editId ? `${ROUTE.pages.edit(editId)}?locale=${encodeURIComponent(locale)}` : ROUTE.pages.index());
+                    },
+                    onError: (errors) => {
+                        console.error('Validation errors:', errors);
+                        showError(t(editId ? 'dashboard.pages.messages.update_failed' : 'dashboard.pages.messages.create_failed'));
+                    },
                 },
-                onError: (errors) => {
-                    console.error('Validation errors:', errors);
-                    showError(t(editId ? 'dashboard.pages.messages.update_failed' : 'dashboard.pages.messages.create_failed'));
-                },
-            });
+            );
         } catch (error) {
             console.error('Error saving page:', error);
             showError(t(editId ? 'dashboard.pages.messages.update_failed' : 'dashboard.pages.messages.create_failed'));
