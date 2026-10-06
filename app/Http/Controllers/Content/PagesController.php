@@ -109,15 +109,18 @@ class PagesController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $defaultStatus = $this->settings->get('default_post_status', 'draft');
+
+        $default = Locale::getDefault();
+        $defaultLocale = $default ? $default->code : 'en';
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'pages.create',
             'defaultStatus' => $defaultStatus,
             'locales' => Locale::getActive(),
-            'currentLocale' => $request->query('locale', Locale::getDefault()?->code ?? 'en'),
+            'currentLocale' => $request->query('locale', $defaultLocale),
         ] + $this->formProps());
     }
 
@@ -167,8 +170,10 @@ class PagesController extends Controller
         abort_unless($page->post_type_id === $pageType->id, 404);
 
         $page->loadMissing('translations');
-        $currentLocale = $request->query('locale', Locale::getDefault()?->code ?? 'en');
-        $translation = $page->translations->firstWhere('locale', $currentLocale);
+        $default = Locale::getDefault();
+        $defaultLocale = $default ? $default->code : 'en';
+        $currentLocale = (string) $request->query('locale', $defaultLocale);
+        $translation = $page->translation($currentLocale);
         if ($translation) {
             // In memory only: the editor works on the translation's text
             $page->forceFill([
@@ -197,8 +202,9 @@ class PagesController extends Controller
 
         $data = $request->validate($this->rules($request, $page), [], CustomFields::attributes($this->resolvePageType()));
 
-        $defaultLocale = Locale::getDefault()?->code ?? 'en';
-        $locale = $request->input('locale', $defaultLocale);
+        $default = Locale::getDefault();
+        $defaultLocale = $default ? $default->code : 'en';
+        $locale = (string) $request->input('locale', $defaultLocale);
         if (! Locale::getActive()->contains('code', $locale)) {
             $locale = $defaultLocale;
         }
