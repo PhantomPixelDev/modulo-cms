@@ -36,13 +36,19 @@ class SeedDemoCommand extends Command
 
         $this->warn('Demo content includes accounts with publicly documented passwords.');
 
+        $previous = config('demo.seeding_authorized', false);
         config(['demo.seeding_authorized' => true]);
-        $this->call('db:seed', [
-            '--class' => DemoContentSeeder::class,
-            '--force' => true,
-        ]);
-
-        config(['demo.seeding_authorized' => false]);
+        try {
+            $exitCode = $this->call('db:seed', [
+                '--class' => DemoContentSeeder::class,
+                '--force' => true,
+            ]);
+        } finally {
+            config(['demo.seeding_authorized' => $previous]);
+        }
+        if ($exitCode !== self::SUCCESS) {
+            return $exitCode;
+        }
         $this->info('Demo content seeded.');
 
         return self::SUCCESS;

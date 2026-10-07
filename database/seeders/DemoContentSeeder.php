@@ -21,7 +21,7 @@ class DemoContentSeeder extends Seeder
     {
         // Defense in depth: DatabaseSeeder already skips demo content in
         // production, but this entry point must refuse there too.
-        if (app()->isProduction()) {
+        if (app()->isProduction() && (! config('demo.enabled') || ! config('demo.seeding_authorized'))) {
             $this->command?->warn('DemoContentSeeder refuses to run in production.');
 
             return;

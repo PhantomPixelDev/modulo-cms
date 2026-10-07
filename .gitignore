@@ -54,6 +54,7 @@ coverage.xml
 # Local tooling
 .omo/
 .playwright-mcp/
+.playwright-cli/
 
 # Plugins are installed per site (from the registry), never part of core
 /plugins/*

@@ -3,6 +3,8 @@
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SiteSetting;
+use App\Models\User;
+use Database\Seeders\BootstrapSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -39,4 +41,13 @@ it('refuses production demo seeding without both explicit guards', function () {
     $this->artisan('modulo:seed-demo', ['--force' => true])->assertFailed();
     config(['demo.enabled' => true]);
     $this->artisan('modulo:seed-demo')->assertFailed();
+});
+
+it('seeds the disposable production demo only through the authorized command', function () {
+    $this->seed(BootstrapSeeder::class);
+    app()->detectEnvironment(fn () => 'production');
+    config(['demo.enabled' => true]);
+    $this->artisan('modulo:seed-demo', ['--force' => true])->assertSuccessful();
+    expect(User::where('email', 'admin@example.com')->exists())->toBeTrue()
+        ->and(config('demo.seeding_authorized'))->toBeFalse();
 });

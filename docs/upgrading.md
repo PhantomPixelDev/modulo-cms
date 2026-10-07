@@ -24,7 +24,7 @@ cannot be made safe by retrying.
 **Orphaned parent references.** `align_parent_ids_to_bigint` converts
 `posts.parent_id` and `taxonomy_terms.parent_id` to BIGINT and then adds
 self-referencing foreign keys, with no cleanup step. A row pointing at an id that no
-longer exists makes `ADD CONSTRAINT` fail *after* the column type has already been
+longer exists makes `ADD CONSTRAINT` fail _after_ the column type has already been
 rewritten, leaving a schema that matches neither version: the column converted, the
 constraint absent, and the migration unrecorded so it will be retried.
 
@@ -189,4 +189,4 @@ permissions a role is missing and never removes ones you added, never deletes lo
 and never overwrites content.
 
 `DemoContentSeeder` is the opposite and must never touch a live site. `modulo:seed-demo`
-refuses to run in production without `--force`.
+refuses to run in production without both `MODULO_DEMO=true` and `--force`.

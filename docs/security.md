@@ -7,7 +7,7 @@ about running the thing safely.
 
 - **Never seed demo content on a live site.** Those accounts have passwords
   published in the README. `modulo:seed-demo` refuses production without
-  `--force`, and the installer leaves the box unchecked.
+  both `MODULO_DEMO=true` and `--force`, and the installer leaves the box unchecked.
 - **Unique `APP_KEY` per install.** It encrypts sessions and cookies. Never
   copy one between environments.
 - **`APP_DEBUG=false`, `APP_ENV=production`.** Debug mode exposes configuration
@@ -62,20 +62,19 @@ npm audit --audit-level=high
 Dependabot raises updates weekly. Majors are grouped by toolchain, because
 packages with peer dependencies on each other cannot be upgraded one at a time.
 
-
 ## Security headers
 
 The application sends these on every web response, so a bare-metal or tarball
 install is covered without web server configuration:
 
-| Header | Value |
-|---|---|
-| `X-Content-Type-Options` | `nosniff` |
-| `X-Frame-Options` | `SAMEORIGIN` |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `Permissions-Policy` | camera, microphone, geolocation off |
-| `Cross-Origin-Opener-Policy` | `same-origin` |
-| `Strict-Transport-Security` | on HTTPS responses, 180 days (`MODULO_HSTS_MAX_AGE`, 0 = off) |
+| Header                       | Value                                                         |
+| ---------------------------- | ------------------------------------------------------------- |
+| `X-Content-Type-Options`     | `nosniff`                                                     |
+| `X-Frame-Options`            | `SAMEORIGIN`                                                  |
+| `Referrer-Policy`            | `strict-origin-when-cross-origin`                             |
+| `Permissions-Policy`         | camera, microphone, geolocation off                           |
+| `Cross-Origin-Opener-Policy` | `same-origin`                                                 |
+| `Strict-Transport-Security`  | on HTTPS responses, 180 days (`MODULO_HSTS_MAX_AGE`, 0 = off) |
 
 **Content-Security-Policy** is nonce-based: every inline script the core emits (Ziggy
 routes, the plugin import map, Google Tag Manager/Analytics) carries a per-request

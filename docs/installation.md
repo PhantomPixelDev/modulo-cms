@@ -2,6 +2,19 @@
 
 Three ways in. Pick one.
 
+Normal installations keep `MODULO_DEMO=false` (the default). The bundled homepage
+shows your site's identity and published articles; a configured front page takes
+precedence. Set `MODULO_DEMO=true` only for a disposable public demo to enable CMS
+promotion and documented demo credentials. Production demo seeding additionally
+requires the explicit `php artisan modulo:seed-demo --force` command.
+
+Run the scheduler and a queue worker for scheduled publication, recovery pruning
+and asynchronous jobs. Dashboard diagnostics show missing or stale heartbeats
+after three minutes; synchronous queues report inline processing. `/health`
+checks web readiness independently of those background services. Docker uptime
+comes from the application container's startup timestamp; other installations
+show Unavailable when no reliable timestamp exists.
+
 ## Docker, with the installer script
 
 The shortest path if you have Docker or Podman.
@@ -94,7 +107,7 @@ Both run the same code.
 
 **Demo content is off by default** and should stay off on a real site: it
 creates accounts whose passwords are published in the README. `modulo:seed-demo`
-refuses to run in production without `--force`.
+refuses to run in production without both `MODULO_DEMO=true` and `--force`.
 
 ## After installing
 

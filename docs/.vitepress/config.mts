@@ -33,6 +33,7 @@ export default defineConfig({
                 text: 'Content',
                 items: [
                     { text: 'Guide for editors', link: '/editor-guide' },
+                    { text: 'Saving and recovering work', link: '/editing' },
                     { text: 'Working with content', link: '/content' },
                 ],
             },
