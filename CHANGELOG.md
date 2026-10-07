@@ -1,5 +1,50 @@
 # Changelog
 
+## [0.4.0](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.3.0...v0.4.0) (2026-10-07)
+
+
+### Features
+
+* **admin:** unify editor actions and simplify navigation ([8858f4f](https://github.com/PhantomPixelDev/modulo-cms/commit/8858f4f559ab2f5c55ab316213bc287b86d95734))
+* **core:** add revisioned editor recovery and truthful service checks ([b4a3429](https://github.com/PhantomPixelDev/modulo-cms/commit/b4a3429768d8ce74a880f7c557cb97b8dd766c3b))
+* **pages:** show language badges in pages list ([cf893d5](https://github.com/PhantomPixelDev/modulo-cms/commit/cf893d5ce5d93c19616aa05d99f630b976c6ccf8))
+* **seeder:** include shop demo products in demo content when plugin present ([bbc92f6](https://github.com/PhantomPixelDev/modulo-cms/commit/bbc92f6899a6caac498ceccf71836d706dcdf0c5))
+* **site:** default to published content and guard public demo mode ([5f7f76c](https://github.com/PhantomPixelDev/modulo-cms/commit/5f7f76c6dcddef5984bd542d4f66bec66575a3f0))
+* **theme:** cart toast with View cart action and live count badge ([2cd6382](https://github.com/PhantomPixelDev/modulo-cms/commit/2cd6382611064e8a693f7759a4155e858948c1a2))
+* **theme:** full features grid, tech strip, registry band; rewrite README for non-programmers ([4b36d97](https://github.com/PhantomPixelDev/modulo-cms/commit/4b36d97e4a21d420177b8d21dde4e37073047f4b))
+* **theme:** homepage demo-account section; seeder restores documented passwords ([6834cad](https://github.com/PhantomPixelDev/modulo-cms/commit/6834cad7f600551c5c8f08536aebfc1e0a7b5cd7))
+
+
+### Bug Fixes
+
+* **admin:** wire role assign/remove, redirects edit UI, constrain dead routes, validate reading settings ([5bd6e51](https://github.com/PhantomPixelDev/modulo-cms/commit/5bd6e51f03e5b94427f83665dc9877699018446b))
+* **auth:** validate malformed limiter email input ([1370608](https://github.com/PhantomPixelDev/modulo-cms/commit/1370608051637a68ad9c279be4cb96331860437f))
+* drop trailing whitespace flagged by Prettier ([df85a85](https://github.com/PhantomPixelDev/modulo-cms/commit/df85a857db9ea3427aba881bbf4185dc3ef70451))
+* drop unused Inertia import in settings routes ([ae6d4d1](https://github.com/PhantomPixelDev/modulo-cms/commit/ae6d4d16464640474d7ef6efbe766957b3f30bf7))
+* guard async state updates on unmount and drop unused slug helper ([c15fdc1](https://github.com/PhantomPixelDev/modulo-cms/commit/c15fdc15b9127bb46394f3f686509c2d6d7bc433))
+* **i18n:** satisfy phpstan in pages translation flow ([db67faa](https://github.com/PhantomPixelDev/modulo-cms/commit/db67faa8aac2e7e44963a095767ca4c1884fa474))
+* **i18n:** save translations by post ID, add locale to editors and pages ([bfddbd7](https://github.com/PhantomPixelDev/modulo-cms/commit/bfddbd7a86216d06c80f3fc4767889f8b7ed68e2))
+* **parity:** numeric route params, validated FK inputs, case-insensitive search/slugs, queued mail, health exemptions, after-commit queue ([d056359](https://github.com/PhantomPixelDev/modulo-cms/commit/d0563596c7c8d2e5094c663f13088dc4850bc07c))
+* resolve Pint style issues in touched files ([eeadccd](https://github.com/PhantomPixelDev/modulo-cms/commit/eeadccd765d3997c473cc824940928f68e874f23))
+* resolve remaining Pint issues in touched files ([e9689f2](https://github.com/PhantomPixelDev/modulo-cms/commit/e9689f2094db40a124da864f7b95f5f59f61ec8b))
+* revert audit changes that broke installer, crud and lint suites ([5edd194](https://github.com/PhantomPixelDev/modulo-cms/commit/5edd194f702abca3e4e3b590ab798b3256598f43))
+* round-3 verified findings across seeders, services, routes and lang ([83815d9](https://github.com/PhantomPixelDev/modulo-cms/commit/83815d9e44377695d53187885b942019fe506f70))
+* **routes:** keep slug-based lookups unconstrained ([614efe5](https://github.com/PhantomPixelDev/modulo-cms/commit/614efe50714a96bb7b7668eb7cbd324b00e9fe90))
+* **routing:** register post binder in provider so it survives route cache ([da1d684](https://github.com/PhantomPixelDev/modulo-cms/commit/da1d684a50c0ced5ee4029a2414ffc6f55bcf01f))
+* satisfy PHPStan for the translation fast-path and Meta queries ([693acda](https://github.com/PhantomPixelDev/modulo-cms/commit/693acdaeafa1543b42900af253656ae83a25998a))
+* **security:** close registration bypass, session fixation, reset token lifetime, installer and 2FA throttle gaps ([7eec007](https://github.com/PhantomPixelDev/modulo-cms/commit/7eec007e2d574b9ef7a0c6a5478c323ae6fab39d))
+* **security:** comment moderation emails, media bulk validation and move-to-root ([ba59bbe](https://github.com/PhantomPixelDev/modulo-cms/commit/ba59bbea950cc4f3bced37baa2d5c2dcaed71be7))
+* **security:** enforce page/media/backup permissions, verified gates, session hygiene ([ecd1944](https://github.com/PhantomPixelDev/modulo-cms/commit/ecd19447db9010f1131ecb1493be0d7e175f0c67))
+* **security:** fail closed on unseeded permissions; align tests with page/backup permission model ([6428db6](https://github.com/PhantomPixelDev/modulo-cms/commit/6428db620f792940ed022ab109e4d80d6c405436))
+* **security:** harden API, uploads, hierarchies and public caching ([7c287dd](https://github.com/PhantomPixelDev/modulo-cms/commit/7c287ddb461268c8eb659445024a0e4b245bebc4))
+* **security:** harden defaults and close mass-assignment, XSS and info-disclosure gaps ([7476c24](https://github.com/PhantomPixelDev/modulo-cms/commit/7476c24ba0e249636eabb47544fc141603882115))
+* **security:** prevent 2FA replay and private content disclosure ([dce060e](https://github.com/PhantomPixelDev/modulo-cms/commit/dce060e07bf20ea6eed5347f3398fb4a0c4d72ba))
+* **security:** seed assign-posts-author permission; align tests with page permission model ([77917cb](https://github.com/PhantomPixelDev/modulo-cms/commit/77917cbe6b8c27f0b89465efa44354175383df71))
+* **security:** translation slugs, comment sanitizer, shortcode order, theme SVG, author rule, LIKE escaping ([3185149](https://github.com/PhantomPixelDev/modulo-cms/commit/31851499c3ebbc9ea16b9fd64d12f05f544c071a))
+* **seeders:** use correct About Us page key for team page parent ([7ff8b09](https://github.com/PhantomPixelDev/modulo-cms/commit/7ff8b09de67d8489de68a8a85334872e0c81edec))
+* **tests:** create permission rows before granting; correct backups route name ([47b0e6c](https://github.com/PhantomPixelDev/modulo-cms/commit/47b0e6c8b2df5bcdd05fe9d3ce395c8d1b3ee3e8))
+* verified round-2 audit findings across policies, factories, config and routes ([4c894b4](https://github.com/PhantomPixelDev/modulo-cms/commit/4c894b43601936b110868e1304862ca2d97fa374))
+
 ## [0.3.0](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.2.0...v0.3.0) (2026-09-26)
 
 
