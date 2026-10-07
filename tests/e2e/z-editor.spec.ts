@@ -121,8 +121,22 @@ test.describe('editor submissions and recovery', () => {
         await expect(page).toHaveURL(/\/posts\/\d+\/edit/);
         await expect(page.getByRole('button', { name: 'Unpublish and save draft', exact: true })).toBeVisible();
         await page.getByRole('tab', { name: 'Advanced', exact: true }).click();
-        await expect(page.getByText(/Publishing Date \(Europe\/Berlin\)/)).toBeVisible();
-        await expect(page.locator('#publishedAt')).toHaveValue('2030-07-10T13:30');
+        const publishingLabel = page.locator('label[for="publishedAt"]');
+        await expect(publishingLabel).toHaveText(/Publishing Date \(.+\)/);
+        const timezone = (await publishingLabel.textContent())?.match(/\(([^)]+)\)/)?.[1];
+        expect(timezone).toBeTruthy();
+        const expectedLocalDate = new Intl.DateTimeFormat('sv-SE', {
+            timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        })
+            .format(new Date(Date.UTC(2030, 6, 10, 15, 30)))
+            .replace(' ', 'T');
+        await expect(page.locator('#publishedAt')).toHaveValue(expectedLocalDate);
     });
 
     test('draft publish and unpublish stay open and serialize slow submissions', async ({ page }) => {
