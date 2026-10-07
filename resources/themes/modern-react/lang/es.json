@@ -56,15 +56,39 @@
                     "title": "Tipos de contenido flexibles",
                     "description": "Crea tipos de publicación y taxonomías personalizados para organizar tu contenido a tu manera."
                 },
+                "multilingual": {
+                    "title": "Contenido multilingüe",
+                    "description": "Traduce entradas, páginas, menús y ajustes por idioma, con un editor por idioma."
+                },
                 "roles": {
                     "title": "Acceso por roles",
                     "description": "Sistema de permisos granular para controlar quién puede crear, editar y publicar contenido."
                 },
-                "modern": {
-                    "title": "UI/UX moderna",
-                    "description": "Interfaz hermosa y responsiva construida con React, TypeScript y Tailwind CSS."
+                "themes": {
+                    "title": "Temas",
+                    "description": "Componentes React por tema, con un diseño base limpio que puedes cambiar."
+                },
+                "plugins": {
+                    "title": "Plugins y hooks",
+                    "description": "Extiende todo con hooks al estilo WordPress. Incluye formulario de contacto y tienda."
+                },
+                "operations": {
+                    "title": "Operación segura",
+                    "description": "Chequeos de salud, copias nocturnas, actualizaciones en un clic y cola de trabajos."
                 }
             }
+        },
+        "stack": {
+            "eyebrow": "Bajo el capó",
+            "title": "Tecnología sólida",
+            "description": "Herramientas modernas y fiables — las mismas que usan algunos de los sitios más visitados."
+        },
+        "registry": {
+            "eyebrow": "Amplíalo",
+            "title": "Un registro lleno de plugins",
+            "description": "Tienda, formularios y más se instalan desde el panel — cada paquete verificado antes de desempaquetar.",
+            "primary": "Ver plugins en el panel",
+            "secondary": "Ver el registro"
         },
         "latest": {
             "title": "Últimas novedades",

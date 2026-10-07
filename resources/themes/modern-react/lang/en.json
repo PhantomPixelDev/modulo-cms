@@ -56,15 +56,39 @@
                     "title": "Flexible Content Types",
                     "description": "Create custom post types and taxonomies to organize your content exactly how you need it."
                 },
+                "multilingual": {
+                    "title": "Multi-Language Content",
+                    "description": "Translate posts, pages, menus and settings per locale, with a per-language editor."
+                },
                 "roles": {
                     "title": "Role-Based Access",
                     "description": "Granular permissions system to control who can create, edit, and publish content."
                 },
-                "modern": {
-                    "title": "Modern UI/UX",
-                    "description": "Beautiful, responsive interface built with React, TypeScript, and Tailwind CSS."
+                "themes": {
+                    "title": "Themes",
+                    "description": "React components resolved per theme, with a clean default you can restyle or replace."
+                },
+                "plugins": {
+                    "title": "Plugins & Hooks",
+                    "description": "Extend anything with WordPress-style hooks. Ships with a contact form and a full shop."
+                },
+                "operations": {
+                    "title": "Safe Operations",
+                    "description": "Health checks, nightly backups, one-click updates and a queue worker keep the site running."
                 }
             }
+        },
+        "stack": {
+            "eyebrow": "Under the hood",
+            "title": "Built on solid technology",
+            "description": "Modern, boring-in-a-good-way tools — the same stack running some of the busiest sites on the web."
+        },
+        "registry": {
+            "eyebrow": "Extend it",
+            "title": "A registry full of plugins",
+            "description": "Shop, contact forms and more install straight from the admin panel — every package checksum-verified before a byte is unpacked.",
+            "primary": "Browse plugins in admin",
+            "secondary": "View the registry"
         },
         "latest": {
             "title": "Latest Updates",

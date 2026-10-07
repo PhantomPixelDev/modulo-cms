@@ -1,4 +1,4 @@
-import { ArrowRight, Blocks, PenLine, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Blocks, Languages, Palette, PenLine, ServerCog, ShieldCheck } from 'lucide-react';
 import Layout from './Layout';
 import PostCard from './partials/PostCard';
 import { ButtonLink, Container, useThemeT } from './partials/ui';
@@ -28,6 +28,14 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
             ),
         },
         {
+            icon: Languages,
+            title: tt('home.features.items.multilingual.title', 'Multi-Language Content'),
+            description: tt(
+                'home.features.items.multilingual.description',
+                'Translate posts, pages, menus and settings per locale, with a per-language editor.',
+            ),
+        },
+        {
             icon: ShieldCheck,
             title: tt('home.features.items.roles.title', 'Role-Based Access'),
             description: tt(
@@ -36,14 +44,32 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
             ),
         },
         {
-            icon: Blocks,
-            title: tt('home.features.items.modern.title', 'Modern UI/UX'),
+            icon: Palette,
+            title: tt('home.features.items.themes.title', 'Themes'),
             description: tt(
-                'home.features.items.modern.description',
-                'Beautiful, responsive interface built with React, TypeScript, and Tailwind CSS.',
+                'home.features.items.themes.description',
+                'React components resolved per theme, with a clean default you can restyle or replace.',
+            ),
+        },
+        {
+            icon: Blocks,
+            title: tt('home.features.items.plugins.title', 'Plugins & Hooks'),
+            description: tt(
+                'home.features.items.plugins.description',
+                'Extend anything with WordPress-style hooks. Ships with a contact form and a full shop.',
+            ),
+        },
+        {
+            icon: ServerCog,
+            title: tt('home.features.items.operations.title', 'Safe Operations'),
+            description: tt(
+                'home.features.items.operations.description',
+                'Health checks, nightly backups, one-click updates and a queue worker keep the site running.',
             ),
         },
     ];
+
+    const stack = ['PHP 8.4', 'Laravel 13', 'React 19', 'TypeScript', 'Tailwind CSS', 'PostgreSQL', 'Redis', 'Docker'];
 
     return (
         <Layout title={tt('home.title', 'Home')} description={safeSite?.tagline} site={safeSite} theme={theme} menus={menus} bare>
@@ -165,6 +191,65 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
                                 </ButtonLink>
                             </div>
                         ))}
+                    </div>
+                </Container>
+            </section>
+
+            {/* Technologies */}
+            <section className="border-t py-16 sm:py-20">
+                <Container>
+                    <div className="mx-auto max-w-2xl text-center">
+                        <p className="text-sm font-medium text-primary">{tt('home.stack.eyebrow', 'Under the hood')}</p>
+                        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
+                            {tt('home.stack.title', 'Built on solid technology')}
+                        </h2>
+                        <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
+                            {tt(
+                                'home.stack.description',
+                                'Modern, boring-in-a-good-way tools — the same stack running some of the busiest sites on the web.',
+                            )}
+                        </p>
+                    </div>
+                    <ul className="mx-auto mt-10 flex max-w-3xl flex-wrap items-center justify-center gap-2.5">
+                        {stack.map((name) => (
+                            <li key={name} className="rounded-full border bg-card px-4 py-1.5 text-sm font-medium text-foreground shadow-xs">
+                                {name}
+                            </li>
+                        ))}
+                    </ul>
+                </Container>
+            </section>
+
+            {/* Plugin registry */}
+            <section className="border-t py-16 sm:py-20">
+                <Container>
+                    <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl border bg-card shadow-xs">
+                        <div className="p-8 sm:p-12">
+                            <p className="text-sm font-medium text-primary">{tt('home.registry.eyebrow', 'Extend it')}</p>
+                            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
+                                {tt('home.registry.title', 'A registry full of plugins')}
+                            </h2>
+                            <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                                {tt(
+                                    'home.registry.description',
+                                    'Shop, contact forms and more install straight from the admin panel — every package checksum-verified before a byte is unpacked.',
+                                )}
+                            </p>
+                            <div className="mt-8 flex flex-wrap gap-3">
+                                <ButtonLink href="/dashboard">
+                                    {tt('home.registry.primary', 'Browse plugins in admin')}
+                                    <ArrowRight />
+                                </ButtonLink>
+                                <ButtonLink
+                                    href="https://github.com/PhantomPixelDev/modulo-registry"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    variant="outline"
+                                >
+                                    {tt('home.registry.secondary', 'View the registry')}
+                                </ButtonLink>
+                            </div>
+                        </div>
                     </div>
                 </Container>
             </section>
