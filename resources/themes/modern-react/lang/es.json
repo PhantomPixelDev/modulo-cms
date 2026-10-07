@@ -71,6 +71,19 @@
             "view_all": "Ver todo",
             "badge_fallback": "Entrada"
         },
+        "demo": {
+            "eyebrow": "Pruébalo tú mismo",
+            "title": "Inicia sesión con una cuenta demo",
+            "description": "Esta demo se restablece periódicamente y las contraseñas son públicas a propósito. Elige un rol y explora.",
+            "email": "Correo",
+            "password": "Contraseña",
+            "login": "Iniciar sesión",
+            "roles": {
+                "admin": { "label": "Admin" },
+                "editor": { "label": "Editor" },
+                "user": { "label": "Usuario" }
+            }
+        },
         "cta": {
             "title": "¿Listo para comenzar?",
             "description": "Explora el panel de administración para gestionar tu contenido o consulta la documentación para saber más.",

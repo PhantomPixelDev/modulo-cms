@@ -113,6 +113,62 @@ export default function Index({ posts, site, theme, menus }: IndexProps) {
                 </Container>
             </section>
 
+            {/* Demo accounts */}
+            <section className="border-t py-16 sm:py-20">
+                <Container>
+                    <div className="mx-auto max-w-2xl text-center">
+                        <p className="text-sm font-medium text-primary">{tt('home.demo.eyebrow', 'Try it yourself')}</p>
+                        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
+                            {tt('home.demo.title', 'Log in with a demo account')}
+                        </h2>
+                        <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
+                            {tt(
+                                'home.demo.description',
+                                'This demo resets regularly and the passwords below are public on purpose. Pick a role and explore.',
+                            )}
+                        </p>
+                    </div>
+                    <div className="mx-auto mt-12 grid max-w-4xl gap-4 md:grid-cols-3">
+                        {(
+                            [
+                                { key: 'admin', badge: tt('home.demo.roles.admin.label', 'Admin'), email: 'admin@example.com', password: 'admin123' },
+                                {
+                                    key: 'editor',
+                                    badge: tt('home.demo.roles.editor.label', 'Editor'),
+                                    email: 'editor@example.com',
+                                    password: 'editor123',
+                                },
+                                { key: 'user', badge: tt('home.demo.roles.user.label', 'User'), email: 'user@example.com', password: 'user123' },
+                            ] as const
+                        ).map(({ key, badge, email, password }) => (
+                            <div key={key} className="flex flex-col rounded-2xl border bg-card p-6 shadow-xs">
+                                <span className="inline-flex w-fit items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                                    {badge}
+                                </span>
+                                <dl className="mt-4 space-y-2 text-sm">
+                                    <div>
+                                        <dt className="text-xs text-muted-foreground">{tt('home.demo.email', 'Email')}</dt>
+                                        <dd className="mt-0.5 rounded-md bg-muted px-2 py-1 font-mono text-[13px] break-all text-foreground">
+                                            {email}
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-xs text-muted-foreground">{tt('home.demo.password', 'Password')}</dt>
+                                        <dd className="mt-0.5 rounded-md bg-muted px-2 py-1 font-mono text-[13px] break-all text-foreground">
+                                            {password}
+                                        </dd>
+                                    </div>
+                                </dl>
+                                <ButtonLink href="/login" variant="outline" size="sm" className="mt-5">
+                                    {tt('home.demo.login', 'Log in')}
+                                    <ArrowRight />
+                                </ButtonLink>
+                            </div>
+                        ))}
+                    </div>
+                </Container>
+            </section>
+
             {/* Latest posts */}
             {recentPosts.length > 0 && (
                 <section className="border-t py-16 sm:py-20">

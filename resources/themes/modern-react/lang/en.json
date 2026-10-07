@@ -71,6 +71,19 @@
             "view_all": "View all",
             "badge_fallback": "Post"
         },
+        "demo": {
+            "eyebrow": "Try it yourself",
+            "title": "Log in with a demo account",
+            "description": "This demo resets regularly and the passwords below are public on purpose. Pick a role and explore.",
+            "email": "Email",
+            "password": "Password",
+            "login": "Log in",
+            "roles": {
+                "admin": { "label": "Admin" },
+                "editor": { "label": "Editor" },
+                "user": { "label": "User" }
+            }
+        },
         "cta": {
             "title": "Ready to Get Started?",
             "description": "Explore the admin dashboard to manage your content, or browse our documentation to learn more.",

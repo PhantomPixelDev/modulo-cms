@@ -19,8 +19,10 @@ class DefaultUsersSeeder extends Seeder
             return;
         }
 
-        // Create super admin user
-        User::firstOrCreate(
+        // The three showcased demo accounts always carry their documented
+        // passwords: re-seeding restores them even if someone changed them.
+        // (The extra filler users below stay firstOrCreate on purpose.)
+        User::updateOrCreate(
             ['email' => 'admin@example.com'],
             [
                 'name' => 'Super Admin',
@@ -31,7 +33,7 @@ class DefaultUsersSeeder extends Seeder
         );
 
         // Create regular example user
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['email' => 'user@example.com'],
             [
                 'name' => 'Example User',
@@ -42,7 +44,7 @@ class DefaultUsersSeeder extends Seeder
         );
 
         // Create editor user
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['email' => 'editor@example.com'],
             [
                 'name' => 'Content Editor',
