@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\PhpExecutableFinder;
+use Throwable;
 
 class PluginManager
 {
@@ -200,6 +201,9 @@ class PluginManager
             // Never break boot for a diagnostic.
         }
     }
+
+    /**
+     * Refresh the route cache after plugin state changes.
 
     /**
      * Cache key for the discovery fingerprint.

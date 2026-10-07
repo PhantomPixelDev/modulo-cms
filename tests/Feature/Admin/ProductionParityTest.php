@@ -1,5 +1,6 @@
 <?php
 
+use App\Mail\UserWelcome;
 use App\Models\Post;
 use App\Models\Redirect;
 use App\Models\SiteSetting;
@@ -72,7 +73,7 @@ it('queues registration emails instead of sending inline', function () {
         'password_confirmation' => 'password123',
     ])->assertRedirect();
 
-    Mail::assertQueued(\App\Mail\UserWelcome::class);
+    Mail::assertQueued(UserWelcome::class);
 });
 
 it('keeps health probes answering during maintenance', function () {
