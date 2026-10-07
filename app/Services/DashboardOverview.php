@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Comment;
+use App\Models\EditorDraft;
 use App\Models\MenuItem;
 use App\Models\Post;
 use App\Models\SiteSetting;
@@ -24,6 +25,14 @@ class DashboardOverview
     public function for(User $user): array
     {
         $overview = [];
+        $overview['editorDrafts'] = EditorDraft::where('user_id', $user->id)->latest('updated_at')->get()
+            ->filter(fn (EditorDraft $draft) => $user->can(($draft->post_id ? 'edit ' : 'create ').($draft->content_type === 'page' ? 'pages' : 'posts')))
+            ->take(5)->map(fn (EditorDraft $draft) => [
+                'id' => $draft->id, 'title' => $draft->payload['title'] ?? '', 'locale' => $draft->locale,
+                'url' => route('dashboard.admin.'.($draft->content_type === 'page' ? 'pages' : 'posts').'.'.($draft->post_id ? 'edit' : 'create'),
+                    array_filter(['post' => $draft->content_type === 'post' ? $draft->post_id : null,
+                        'page' => $draft->content_type === 'page' ? $draft->post_id : null, 'locale' => $draft->locale, 'draft' => $draft->id])),
+            ])->values()->all();
 
         if ($user->can('view posts')) {
             $overview['drafts'] = $this->list(

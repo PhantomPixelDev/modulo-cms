@@ -1,8 +1,10 @@
 <?php
 
 use App\Models\Activity;
+use App\Models\EditorDraft;
 use App\Models\Post;
 use App\Models\SiteSetting;
+use App\Services\RuntimeHealth;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
@@ -19,7 +21,8 @@ Schedule::command('modulo:backup')->weeklyOn(0, '03:45')->onOneServer()
     ->when(fn () => (bool) config('backups.schedule'));
 
 // Activity log retention (security.activity_retention_days) and trash purging (content.trash_days)
-Schedule::command('model:prune', ['--model' => [Activity::class, Post::class]])->dailyAt('04:30')->onOneServer();
+Schedule::command('model:prune', ['--model' => [Activity::class, Post::class, EditorDraft::class]])->dailyAt('04:30')->onOneServer();
+Schedule::call(fn () => app(RuntimeHealth::class)->heartbeat('scheduler'))->everyMinute();
 
 // Daily core + plugin update check; admins are mailed once per new set of updates
 Schedule::command('modulo:check-updates')->dailyAt('04:10')->onOneServer()

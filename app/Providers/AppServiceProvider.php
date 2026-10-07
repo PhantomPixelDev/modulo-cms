@@ -6,6 +6,7 @@ use App\Http\Middleware\CachePublicPages;
 use App\Listeners\RecordActivity;
 use App\Models\Activity;
 use App\Models\ApiToken;
+use App\Models\EditorDraft;
 use App\Models\Post;
 use App\Models\PostAutosave;
 use App\Models\PostRevision;
@@ -18,6 +19,7 @@ use App\Services\MailSettings;
 use App\Services\MenuService;
 use App\Services\PostService;
 use App\Services\ResponsiveImages;
+use App\Services\RuntimeHealth;
 use App\Services\ShortcodeService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -72,11 +74,12 @@ class AppServiceProvider extends ServiceProvider
         };
         $applyMail();
         Queue::before($applyMail);
+        Queue::looping(fn () => app(RuntimeHealth::class)->heartbeat('queue'));
 
         // Invalidate for core and plugin content, but not bookkeeping or unsaved drafts.
         Event::listen(['eloquent.saved: *', 'eloquent.deleted: *', 'eloquent.restored: *'], function (string $event, array $payload): void {
             $model = $payload[0] ?? null;
-            if ($model !== null && ! in_array($model::class, [Activity::class, ApiToken::class, PostAutosave::class, PostRevision::class], true)) {
+            if ($model !== null && ! in_array($model::class, [Activity::class, ApiToken::class, EditorDraft::class, PostAutosave::class, PostRevision::class], true)) {
                 CachePublicPages::bumpVersion();
             }
         });

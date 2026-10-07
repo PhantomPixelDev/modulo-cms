@@ -62,4 +62,8 @@ else
   php artisan config:cache >/dev/null
 fi
 
+if [ "${CONTAINER_ROLE:-app}" = "app" ]; then
+  date +%s > /tmp/modulo-app-started-at
+fi
+
 exec "$@"

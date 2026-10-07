@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\UpdateCenterController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Content\AutosaveController;
+use App\Http\Controllers\Content\EditorDraftController;
 use App\Http\Controllers\Content\MenuController;
 use App\Http\Controllers\Content\MenuItemController;
 use App\Http\Controllers\Content\PagesController;
@@ -40,6 +41,10 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Dashboard (Route::redirect keeps route:cache working; no closure)
         Route::redirect('/', '/dashboard')->name('index');
         Route::post('onboarding/dismiss', [DashboardController::class, 'dismissOnboarding'])->name('onboarding.dismiss');
+        Route::get('editor-drafts', [EditorDraftController::class, 'index'])->name('editor-drafts.index');
+        Route::post('editor-drafts', [EditorDraftController::class, 'store'])->name('editor-drafts.store');
+        Route::get('editor-drafts/{draft}', [EditorDraftController::class, 'show'])->whereUuid('draft')->name('editor-drafts.show');
+        Route::delete('editor-drafts/{draft}', [EditorDraftController::class, 'destroy'])->whereUuid('draft')->name('editor-drafts.destroy');
 
         // Resource routes with automatic permission checks
         Route::resource('pages', PagesController::class)->except(['show'])->where(['page' => '[0-9]+']);

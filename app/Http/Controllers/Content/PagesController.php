@@ -12,6 +12,7 @@ use App\Rules\CanPublish;
 use App\Services\SiteSettingsService;
 use App\Support\ContentListFilters;
 use App\Support\CustomFields;
+use App\Support\EditorSave;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -128,6 +129,12 @@ class PagesController extends Controller
 
     public function store(Request $request)
     {
+        return EditorSave::transaction($request, fn () => $this->storeContent($request));
+    }
+
+    private function storeContent(Request $request)
+    {
+        EditorSave::prepare($request);
         $data = $request->validate($this->rules($request), [], CustomFields::attributes($this->resolvePageType()));
 
         // Ensure content is properly formatted as JSON string
@@ -160,6 +167,12 @@ class PagesController extends Controller
             // Validated above; validated() would keep only the keys with rules of their own
             'meta_data' => (array) $request->input('meta_data', []),
         ]);
+
+        EditorSave::clearRecovery($request);
+        if ($request->has('editor_action')) {
+            return redirect()->route('dashboard.admin.pages.edit', ['page' => $page->id, 'locale' => $request->input('locale', Locale::defaultCode())])
+                ->with('success', __('dashboard.pages.messages.created'));
+        }
 
         return redirect()->route('dashboard.admin.pages.index')
             ->with('success', __('dashboard.pages.messages.created'));
@@ -199,6 +212,12 @@ class PagesController extends Controller
 
     public function update(Request $request, Post $page)
     {
+        return EditorSave::transaction($request, fn () => $this->updateContent($request, $page));
+    }
+
+    private function updateContent(Request $request, Post $page)
+    {
+        EditorSave::prepare($request, $page);
         $pageType = $this->resolvePageType();
         abort_unless($page->post_type_id === $pageType->id, 404);
 
@@ -227,7 +246,7 @@ class PagesController extends Controller
         // Update the page
         $pageUpdate = [
             'status' => $data['status'],
-            'published_at' => $data['published_at'] ?? $page->published_at,
+            'published_at' => $request->input('editor_action') === 'draft' ? null : $data['published_at'],
             'featured_image' => $data['featured_image'] ?? $page->featured_image,
             'author_id' => $data['author_id'] ?? $page->author_id,
             'parent_id' => array_key_exists('parent_id', $data) ? $data['parent_id'] : $page->parent_id,
@@ -259,6 +278,12 @@ class PagesController extends Controller
             'seo_title' => $data['meta_title'] ?? null,
             'seo_description' => $data['meta_description'] ?? null,
         ]);
+
+        EditorSave::clearRecovery($request);
+        if ($request->has('editor_action')) {
+            return redirect()->route('dashboard.admin.pages.edit', ['page' => $page->id, 'locale' => $request->input('locale', Locale::defaultCode())])
+                ->with('success', __('dashboard.pages.messages.updated'));
+        }
 
         return redirect()->route('dashboard.admin.pages.index')
             ->with('success', __('dashboard.pages.messages.updated'));

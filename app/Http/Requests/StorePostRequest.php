@@ -8,6 +8,7 @@ use App\Models\TaxonomyTerm;
 use App\Rules\AssignAuthor;
 use App\Rules\CanPublish;
 use App\Support\CustomFields;
+use App\Support\EditorSave;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -91,6 +92,7 @@ class StorePostRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
+        EditorSave::prepare($this);
         // Generate slug from title if not provided
         if (! $this->filled('slug') && $this->filled('title')) {
             $this->merge([

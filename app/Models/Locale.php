@@ -60,6 +60,11 @@ class Locale extends Model
             ?? static::getActive()->first();
     }
 
+    public static function defaultCode(): string
+    {
+        return (string) data_get(static::getDefault(), 'code', 'en');
+    }
+
     /**
      * Get locale by code
      */

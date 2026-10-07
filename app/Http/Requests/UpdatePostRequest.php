@@ -8,6 +8,7 @@ use App\Models\TaxonomyTerm;
 use App\Rules\AssignAuthor;
 use App\Rules\CanPublish;
 use App\Support\CustomFields;
+use App\Support\EditorSave;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -82,6 +83,7 @@ class UpdatePostRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        EditorSave::prepare($this, $this->route('post'));
         if (! $this->has('slug') && $this->has('title')) {
             $this->merge([
                 'slug' => Str::slug($this->title),

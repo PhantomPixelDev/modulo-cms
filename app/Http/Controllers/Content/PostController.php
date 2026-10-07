@@ -16,6 +16,7 @@ use App\Presenters\PostPresenter;
 use App\Rules\CanPublish;
 use App\Services\SiteSettingsService;
 use App\Support\ContentListFilters;
+use App\Support\EditorSave;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -225,7 +226,7 @@ class PostController extends Controller
             'selected_terms' => [],
         ];
 
-        $currentLocale = $request->query('locale', Locale::getDefault()?->code ?? 'en');
+        $currentLocale = $request->query('locale', Locale::defaultCode());
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'posts.create',
@@ -243,6 +244,11 @@ class PostController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(StorePostRequest $request)
+    {
+        return EditorSave::transaction($request, fn () => $this->storeContent($request));
+    }
+
+    private function storeContent(StorePostRequest $request)
     {
         $this->authorize('create', Post::class);
 
@@ -281,6 +287,12 @@ class PostController extends Controller
             $post->taxonomyTerms()->attach($request->taxonomy_terms);
         }
 
+        EditorSave::clearRecovery($request);
+        if ($request->has('editor_action')) {
+            return redirect()->route('dashboard.admin.posts.edit', ['post' => $post->id, 'locale' => $request->input('locale', Locale::defaultCode())])
+                ->with('success', 'Post saved successfully.');
+        }
+
         return redirect()->route('dashboard.admin.posts.index')->with('success', 'Post created successfully.');
     }
 
@@ -301,7 +313,7 @@ class PostController extends Controller
             'content_html' => app(PostPresenter::class)->renderContent($post),
             'status' => $post->status,
             'featured_image' => $post->featured_image,
-            'published_at' => $post->published_at?->format('Y-m-d H:i:s'),
+            'published_at' => $post->published_at?->toIso8601String(),
             'created_at' => $post->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $post->updated_at->format('Y-m-d H:i:s'),
             'meta_title' => $post->meta_title,
@@ -343,7 +355,7 @@ class PostController extends Controller
     {
         $this->authorize('update', $post);
         $post->load(['postType', 'author', 'taxonomyTerms.taxonomy', 'translations']);
-        $currentLocale = $request->query('locale', Locale::getDefault()?->code ?? 'en');
+        $currentLocale = $request->query('locale', Locale::defaultCode());
         $translation = $post->translations->firstWhere('locale', $currentLocale);
         // Exclude 'page' from Posts edit form options
         $postTypes = PostType::where('name', '!=', 'page')->get();
@@ -369,7 +381,7 @@ class PostController extends Controller
             'content' => $translation?->content ?? $post->content,
             'status' => $post->status,
             'featured_image' => $post->featured_image,
-            'published_at' => $post->published_at?->format('Y-m-d H:i:s'),
+            'published_at' => $post->published_at?->toIso8601String(),
             'created_at' => $post->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $post->updated_at->format('Y-m-d H:i:s'),
             'meta_title' => $translation?->seo_title ?? $post->meta_title,
@@ -414,8 +426,13 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, Post $post)
     {
+        return EditorSave::transaction($request, fn () => $this->updateContent($request, $post));
+    }
+
+    private function updateContent(UpdatePostRequest $request, Post $post)
+    {
         $this->authorize('update', $post);
-        $defaultLocale = Locale::getDefault()?->code ?? 'en';
+        $defaultLocale = Locale::defaultCode();
         $locale = $request->input('locale', $defaultLocale);
         // Never trust the client blindly: an unknown locale falls back to the
         // default instead of scattering translations under typos.
@@ -481,6 +498,12 @@ class PostController extends Controller
                 'seo_description' => $request->meta_description,
             ]);
         });
+
+        EditorSave::clearRecovery($request);
+        if ($request->has('editor_action')) {
+            return redirect()->route('dashboard.admin.posts.edit', ['post' => $post->id, 'locale' => $request->input('locale', Locale::defaultCode())])
+                ->with('success', 'Post saved successfully.');
+        }
 
         return redirect()->route('dashboard.admin.posts.index')->with('success', 'Post updated successfully.');
     }
