@@ -24,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -52,6 +53,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // {post} resolves by numeric ID or slug. The editor saves by ID while
+        // list links use slugs (and a translation slug may differ from the
+        // base slug). Registered here — not in a route file — so it also
+        // applies when the route table is cached and route files never load.
+        Route::bind('post', fn ($value) => ctype_digit((string) $value)
+            ? Post::findOrFail($value)
+            : Post::where('slug', $value)->firstOrFail());
+
         // Email settings from the admin (System -> Email) override .env; a worker
         // re-reads them before each job so it doesn't keep sending the old way
         $applyMail = function () {

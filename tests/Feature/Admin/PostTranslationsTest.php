@@ -2,6 +2,7 @@
 
 use App\Models\Locale;
 use App\Models\Post;
+use Illuminate\Support\Facades\Artisan;
 
 function translationPayload(): array
 {
@@ -134,4 +135,31 @@ it('deletes a page translation through the pages route', function () {
     $this->delete(route('dashboard.admin.pages.translations.destroy', [$page->id, 'es']))->assertRedirect();
 
     expect($page->translations()->where('locale', 'es')->exists())->toBeFalse();
+});
+
+it('resolves the post editor by slug and saves by ID with cached routes', function () {
+    seedLocales();
+    $post = Post::factory()->create(['title' => 'Cache Proof', 'slug' => 'cache-proof']);
+    $this->actingAs(makeAdminUserWithPermissions(['edit posts']));
+
+    // Production boots with a cached route table, which means route files
+    // never load. Bindings registered there silently stop working (the edit
+    // page 500s on Postgres, which unlike SQLite will not compare bigint to
+    // text). The binding must live where it always runs.
+    Artisan::call('route:cache');
+    try {
+        $this->get(route('dashboard.admin.posts.edit', $post->slug).'?locale=es')->assertOk();
+        $this->put(route('dashboard.admin.posts.update', $post->id), [
+            'post_type_id' => $post->post_type_id,
+            'title' => 'Prueba',
+            'slug' => 'prueba',
+            'content' => 'Cuerpo',
+            'status' => 'draft',
+            'locale' => 'es',
+        ])->assertRedirect();
+
+        expect($post->translations()->where('locale', 'es')->value('title'))->toBe('Prueba');
+    } finally {
+        Artisan::call('route:clear');
+    }
 });

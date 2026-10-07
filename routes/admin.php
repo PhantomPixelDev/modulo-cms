@@ -30,7 +30,6 @@ use App\Http\Controllers\Content\TemplateController;
 use App\Http\Controllers\Content\ThemeController;
 use App\Http\Controllers\Content\TrashController;
 use App\Http\Controllers\DashboardController;
-use App\Models\Post;
 use Illuminate\Support\Facades\Route;
 
 // All admin routes are protected by auth, verified, and admin role check
@@ -61,12 +60,6 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::post('content/{postId}/preview-link', [AutosaveController::class, 'previewLink'])->whereNumber('postId')->name('preview.link');
 
         Route::post('posts/bulk', [PostController::class, 'bulk'])->middleware('throttle:6,1')->name('posts.bulk');
-        // The editor saves by numeric ID while list links use slugs (and a
-        // translation slug may differ from the base slug), so {post} resolves
-        // either. This also covers the translations sub-routes below.
-        Route::bind('post', fn ($value) => ctype_digit((string) $value)
-            ? Post::findOrFail($value)
-            : Post::where('slug', $value)->firstOrFail());
         Route::resource('posts', PostController::class);
         // Specific route for listing posts by post type
         Route::get('posts/type/{postType}', [PostController::class, 'indexByType'])->name('posts.byType');
