@@ -57,6 +57,7 @@ class HomeController extends BaseFrontendController
         $presented = $this->postPresenter->presentPaginator($posts);
 
         return $this->reactRenderer->render($this->templateResolver->indexTemplate(), [
+            'demo' => ['enabled' => (bool) config('demo.enabled')],
             'posts' => [
                 'data' => $presented['data'],
             ],

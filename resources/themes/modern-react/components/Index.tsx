@@ -1,9 +1,10 @@
 import { ArrowRight, Blocks, Languages, Palette, PenLine, ServerCog, ShieldCheck } from 'lucide-react';
 import Layout from './Layout';
 import PostCard from './partials/PostCard';
-import { ButtonLink, Container, useThemeT } from './partials/ui';
+import { ButtonLink, Container, Pagination, useThemeT } from './partials/ui';
 
 interface IndexProps {
+    demo?: { enabled: boolean };
     posts?: {
         data: any[];
     };
@@ -13,10 +14,29 @@ interface IndexProps {
     menus?: any;
 }
 
-export default function Index({ posts, site, theme, menus }: IndexProps) {
+export default function Index({ posts, site, theme, menus, demo, pagination }: IndexProps) {
     const tt = useThemeT();
     const safeSite = site || { name: 'Modulo CMS', tagline: 'Modern Content Management System' };
     const recentPosts = Array.isArray(posts?.data) ? posts.data.slice(0, 3) : [];
+
+    if (!demo?.enabled) {
+        return (
+            <Layout title={tt('home.title', 'Home')} description={safeSite.tagline} site={safeSite} theme={theme} menus={menus}>
+                <Container className="space-y-10 py-12">
+                    <header className="space-y-3">
+                        <h1 className="text-4xl font-semibold tracking-tight">{safeSite.name}</h1>
+                        {safeSite.tagline && <p className="max-w-2xl text-lg text-muted-foreground">{safeSite.tagline}</p>}
+                    </header>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {(posts?.data ?? []).map((post) => (
+                            <PostCard key={post.id} post={post} />
+                        ))}
+                    </div>
+                    <Pagination pagination={pagination} />
+                </Container>
+            </Layout>
+        );
+    }
 
     const features = [
         {

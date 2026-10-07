@@ -19,10 +19,15 @@ class SeedDemoCommand extends Command
 
     protected $signature = 'modulo:seed-demo {--force : Run even in production}';
 
-    protected $description = 'Seed demo users and example content (never for production)';
+    protected $description = 'Seed disposable demo users and example content';
 
     public function handle(): int
     {
+        if (app()->isProduction() && (! config('demo.enabled') || ! $this->option('force'))) {
+            $this->error('Production demo seeding requires MODULO_DEMO=true and --force.');
+
+            return self::FAILURE;
+        }
         // Prompts in production, and refuses outright without --force when
         // there is no terminal to prompt on.
         if (! $this->confirmToProceed()) {
@@ -31,11 +36,13 @@ class SeedDemoCommand extends Command
 
         $this->warn('Demo content includes accounts with publicly documented passwords.');
 
+        config(['demo.seeding_authorized' => true]);
         $this->call('db:seed', [
             '--class' => DemoContentSeeder::class,
             '--force' => true,
         ]);
 
+        config(['demo.seeding_authorized' => false]);
         $this->info('Demo content seeded.');
 
         return self::SUCCESS;

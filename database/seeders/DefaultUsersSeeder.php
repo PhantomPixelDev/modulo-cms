@@ -13,7 +13,7 @@ class DefaultUsersSeeder extends Seeder
         // Defense in depth: DatabaseSeeder already skips demo content in
         // production, but this seeder creates documented-password accounts
         // and must refuse to run there even when invoked directly.
-        if (app()->isProduction()) {
+        if (app()->isProduction() && (! config('demo.enabled') || ! config('demo.seeding_authorized'))) {
             $this->command?->warn('DefaultUsersSeeder refuses to run in production.');
 
             return;
