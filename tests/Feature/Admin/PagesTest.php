@@ -36,6 +36,12 @@ it('allows pages index with permission', function () {
     $this->actingAs($u)->get(route('dashboard.admin.pages.index'))->assertOk();
 });
 
+it('passes locales to the pages list for the language badges', function () {
+    $u = pageUser(['view pages']);
+    $this->actingAs($u)->get(route('dashboard.admin.pages.index'))->assertInertia(fn ($page) => $page
+        ->has('locales'));
+});
+
 it('creates, updates and deletes a page with permissions', function () {
     $u = pageUser(['create pages', 'edit pages', 'delete pages', 'publish content']);
     $this->actingAs($u);

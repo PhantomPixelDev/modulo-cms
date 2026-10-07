@@ -107,6 +107,7 @@ class PagesController extends Controller
             'postTypes' => [],
             'authors' => User::orderBy('name')->get(['id', 'name']),
             'filters' => $filters,
+            'locales' => Locale::getActive(),
         ]);
     }
 
