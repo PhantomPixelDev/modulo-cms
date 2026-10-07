@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class SearchController extends BaseFrontendController
 {
@@ -60,7 +61,7 @@ class SearchController extends BaseFrontendController
      */
     protected function applySearch(Builder $query, string $term): void
     {
-        if (DB::connection()->getDriverName() === 'pgsql') {
+        if (DB::connection()->getDriverName() === 'pgsql' && Schema::hasColumn('posts', 'search_vector')) {
             $query->whereRaw("search_vector @@ websearch_to_tsquery('simple', ?)", [$term])
                 ->orderByRaw("ts_rank(search_vector, websearch_to_tsquery('simple', ?)) DESC", [$term])
                 ->orderBy('published_at', 'desc');

@@ -22,8 +22,8 @@ class RedirectController extends Controller
 
         $redirects = Redirect::query()
             ->when($request->string('q')->toString(), fn ($q, $term) => $q->where(fn ($w) => $w
-                ->whereRaw("from_path LIKE ? ESCAPE '!'", [LikeEscape::contains($term)])
-                ->orWhereRaw("to_url LIKE ? ESCAPE '!'", [LikeEscape::contains($term)])))
+                ->whereRaw("LOWER(from_path) LIKE ? ESCAPE '!'", ['%'.strtolower(LikeEscape::escape($term)).'%'])
+                ->orWhereRaw("LOWER(to_url) LIKE ? ESCAPE '!'", ['%'.strtolower(LikeEscape::escape($term)).'%'])))
             ->orderByDesc('updated_at')
             ->paginate(50)
             ->withQueryString();

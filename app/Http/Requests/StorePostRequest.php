@@ -31,7 +31,7 @@ class StorePostRequest extends FormRequest
     public function rules(): array
     {
         $postTypeId = $this->input('post_type_id');
-        $postType = PostType::find($postTypeId);
+        $postType = is_numeric($postTypeId) ? PostType::find((int) $postTypeId) : null;
 
         $rules = [
             'title' => ['required', 'string', 'max:255'],
@@ -49,10 +49,10 @@ class StorePostRequest extends FormRequest
             'status' => ['required', 'string', Rule::in(['draft', 'published', 'archived']), new CanPublish($this->user())],
             'published_at' => ['nullable', 'date'],
             'featured_image' => ['nullable', 'string', 'max:255'],
-            'post_type_id' => ['required', 'exists:post_types,id'],
-            'author_id' => ['nullable', 'exists:users,id', new AssignAuthor],
+            'post_type_id' => ['required', 'integer', 'exists:post_types,id'],
+            'author_id' => ['nullable', 'integer', 'exists:users,id', new AssignAuthor],
             'taxonomy_terms' => ['nullable', 'array'],
-            'taxonomy_terms.*' => ['exists:taxonomy_terms,id'],
+            'taxonomy_terms.*' => ['integer', 'exists:taxonomy_terms,id'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'meta_data' => ['nullable', 'array'],
@@ -70,7 +70,7 @@ class StorePostRequest extends FormRequest
                     function ($attribute, $value, $fail) use ($postType) {
                         // taxonomies.post_types lists the types a taxonomy applies to
                         // (by name; slugs and ids accepted too). Empty means all.
-                        $term = TaxonomyTerm::with('taxonomy')->find($value);
+                        $term = is_numeric($value) ? TaxonomyTerm::with('taxonomy')->find((int) $value) : null;
                         $allowed = array_map('strval', (array) ($term?->taxonomy->post_types ?? []));
                         if ($term && $allowed !== [] && array_intersect($allowed, [$postType->name, $postType->slug, (string) $postType->id]) === []) {
                             $fail('The selected taxonomy term is invalid for this post type.');
@@ -104,6 +104,9 @@ class StorePostRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return CustomFields::attributes(PostType::find($this->input('post_type_id')));
+        $postTypeId = $this->input('post_type_id');
+        $postType = is_numeric($postTypeId) ? PostType::find((int) $postTypeId) : null;
+
+        return CustomFields::attributes($postType);
     }
 }

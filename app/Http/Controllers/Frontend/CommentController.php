@@ -37,6 +37,7 @@ class CommentController extends Controller
             'content' => ['required', 'string', 'max:2000'],
             'parent_id' => [
                 'nullable',
+                'integer',
                 Rule::exists('comments', 'id')->where(function ($query) use ($post) {
                     return $query->where('post_id', $post->id);
                 }),

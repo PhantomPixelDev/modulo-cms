@@ -68,7 +68,7 @@ class Post extends Model
         $candidate = $base;
         $suffix = 2;
 
-        while (static::withTrashed()->where('slug', $candidate)->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))->exists()) {
+        while (static::withTrashed()->whereRaw('LOWER(slug) = LOWER(?)', [$candidate])->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))->exists()) {
             $candidate = $base.'-'.$suffix++;
         }
 

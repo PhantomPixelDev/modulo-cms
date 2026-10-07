@@ -129,8 +129,8 @@ class ContentController extends Controller
                 }
             }))
             ->when($filters['search'] ?? null, fn (Builder $q, $search) => $q->where(fn ($w) => $w
-                ->whereRaw("title LIKE ? ESCAPE '!'", [LikeEscape::contains($search)])
-                ->orWhereRaw("excerpt LIKE ? ESCAPE '!'", [LikeEscape::contains($search)])));
+                ->whereRaw("LOWER(title) LIKE ? ESCAPE '!'", ['%'.strtolower(LikeEscape::escape($search)).'%'])
+                ->orWhereRaw("LOWER(excerpt) LIKE ? ESCAPE '!'", ['%'.strtolower(LikeEscape::escape($search)).'%'])));
 
         $sort = $filters['sort'] ?? '-published_at';
         $query->orderBy(ltrim($sort, '-'), str_starts_with($sort, '-') ? 'desc' : 'asc')->orderByDesc('id');

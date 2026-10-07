@@ -52,26 +52,26 @@ class MediaController extends Controller
             $query = $this->libraryQuery()->where('model_id', $bucket->id);
 
             if ($q !== '') {
-                $term = LikeEscape::contains($q);
+                $term = '%'.strtolower(LikeEscape::escape($q)).'%';
                 $query->where(function ($sub) use ($term) {
-                    $sub->whereRaw("name LIKE ? ESCAPE '!'", [$term])
-                        ->orWhereRaw("file_name LIKE ? ESCAPE '!'", [$term]);
+                    $sub->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term])
+                        ->orWhereRaw("LOWER(file_name) LIKE ? ESCAPE '!'", [$term]);
                 });
             }
             if ($type !== '') {
                 $type = strtolower($type);
                 $query->where(function ($sub) use ($type) {
                     if (in_array($type, ['image', 'video', 'audio'])) {
-                        $sub->where('mime_type', 'like', $type.'/%');
+                        $sub->whereRaw('LOWER(mime_type) LIKE ?', [$type.'/%']);
                     } elseif ($type === 'doc') {
                         $sub->where(function ($s2) {
-                            $s2->where('mime_type', 'like', 'application/%')
-                                ->orWhere('mime_type', 'like', 'text/%');
+                            $s2->whereRaw('LOWER(mime_type) LIKE ?', ['application/%'])
+                                ->orWhereRaw('LOWER(mime_type) LIKE ?', ['text/%']);
                         });
                     } elseif ($type === 'other') {
                         $s3 = ['image/%', 'video/%', 'audio/%', 'application/%', 'text/%'];
                         foreach ($s3 as $pat) {
-                            $sub->where('mime_type', 'not like', $pat);
+                            $sub->whereRaw('LOWER(mime_type) NOT LIKE ?', [$pat]);
                         }
                     }
                 });

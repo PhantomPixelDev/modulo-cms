@@ -26,8 +26,9 @@ class CheckMaintenanceMode
                 return $next($request);
             }
 
-            // Allow login/logout routes
-            if ($request->is('login') || $request->is('logout') || $request->is('admin*') || $request->is('dashboard*')) {
+            // Probes and auth entry points must answer even in maintenance,
+            // or deploy healthchecks flap and nobody can sign in to fix it.
+            if ($request->is('login') || $request->is('logout') || $request->is('admin*') || $request->is('dashboard*') || $request->is('health') || $request->is('up')) {
                 return $next($request);
             }
 

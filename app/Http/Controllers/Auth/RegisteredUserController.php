@@ -76,9 +76,9 @@ class RegisteredUserController extends Controller
     protected function sendRegistrationEmails(User $user): void
     {
         try {
-            Mail::to($user->email)->send(new UserWelcome($user));
+            Mail::to($user->email)->queue(new UserWelcome($user));
         } catch (\Throwable $e) {
-            logger()->error('Failed to send user welcome email: '.$e->getMessage());
+            logger()->error('Failed to queue user welcome email: '.$e->getMessage());
         }
 
         $adminEmail = SiteSetting::get('admin_email', config('mail.admin_address'))
@@ -86,9 +86,9 @@ class RegisteredUserController extends Controller
 
         if ($adminEmail) {
             try {
-                Mail::to($adminEmail)->send(new AdminNewUser($user));
+                Mail::to($adminEmail)->queue(new AdminNewUser($user));
             } catch (\Throwable $e) {
-                logger()->error('Failed to send admin new user email: '.$e->getMessage());
+                logger()->error('Failed to queue admin new user email: '.$e->getMessage());
             }
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -10,7 +11,7 @@ use Illuminate\Notifications\Notification;
  * Sent by `modulo:check-updates` when something new can be installed, once
  * per distinct set of updates rather than every day until it is applied.
  */
-class UpdatesAvailable extends Notification
+class UpdatesAvailable extends Notification implements ShouldQueue
 {
     use Queueable;
 

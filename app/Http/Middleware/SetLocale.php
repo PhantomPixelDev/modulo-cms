@@ -29,8 +29,12 @@ class SetLocale
         // Set the application locale
         App::setLocale($locale);
 
-        // Store in session for subsequent requests
-        Session::put('locale', $locale);
+        // Store in session for subsequent requests, but only when it changes:
+        // an unconditional put dirties the session on every anonymous hit,
+        // which sets a session cookie and defeats the page cache.
+        if (Session::get('locale') !== $locale) {
+            Session::put('locale', $locale);
+        }
 
         return $next($request);
     }

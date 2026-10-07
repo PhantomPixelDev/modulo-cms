@@ -167,6 +167,38 @@ class PluginManager
 
         $this->discover();
         Cache::forever($cacheKey, $fingerprint);
+
+        $this->warnIfRouteCachePredatesPlugins();
+    }
+
+    /**
+     * A route cache built before the newest plugin state change serves stale
+     * routes (new plugin routes 404, removed ones linger) until the next
+     * rebuild. Anything that flips plugin state outside this manager skips
+     * refreshRouteCache(), so say so loudly instead of failing silently.
+     */
+    protected function warnIfRouteCachePredatesPlugins(): void
+    {
+        try {
+            $cachePath = app()->getCachedRoutesPath();
+            if (! File::exists($cachePath)) {
+                return;
+            }
+
+            $newest = Plugin::query()->max('updated_at');
+            if ($newest === null) {
+                return;
+            }
+
+            if (@filemtime($cachePath) < strtotime((string) $newest)) {
+                Log::warning('Route cache is older than the newest plugin state change; plugin routes may 404 until route:cache rebuilds.', [
+                    'route_cache_built_at' => date('c', (int) @filemtime($cachePath)),
+                    'newest_plugin_change' => $newest,
+                ]);
+            }
+        } catch (Throwable) {
+            // Never break boot for a diagnostic.
+        }
     }
 
     /**

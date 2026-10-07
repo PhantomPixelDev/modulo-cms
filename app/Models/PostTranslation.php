@@ -59,7 +59,7 @@ class PostTranslation extends Model
         $counter = 2;
 
         while (true) {
-            $query = static::where('locale', $locale)->where('slug', $slug);
+            $query = static::where('locale', $locale)->whereRaw('LOWER(slug) = LOWER(?)', [$slug]);
 
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);

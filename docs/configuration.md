@@ -45,6 +45,7 @@ are the templates; copy, do not edit in place.
 | `MODULO_PASSWORD_UNCOMPROMISED` | `true` | Reject breached passwords (production only). |
 | `MODULO_REQUIRE_2FA_FOR_ADMINS` | `false` | Administrators must use two-factor authentication. |
 | `MODULO_ACTIVITY_RETENTION_DAYS` | `180` | Activity log retention; `0` keeps everything. |
+| `TRUSTED_PROXIES` | private ranges | IPs/CIDRs of reverse proxies allowed to set `X-Forwarded-For`. Behind a public load balancer or CDN, set this to its CIDRs: otherwise every visitor shares one IP, one shared rate-limit bucket (the frontend allows 30 requests/min total), and wrong IPs land in the logs. Never `*` on internet-facing installs (lets anyone spoof their IP past the limits). |
 
 ## Build identity
 

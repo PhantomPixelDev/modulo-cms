@@ -87,7 +87,10 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
 
         const fetchCartCount = async () => {
             try {
-                const response = await fetch('/shop/cart/count');
+                // Explicit JSON accept: an auth/session failure answers 401
+                // JSON instead of an HTML page the poller would chase.
+                const response = await fetch('/shop/cart/count', { headers: { Accept: 'application/json' } });
+                if (!response.ok) return;
                 const data = await response.json();
                 if (isMounted && typeof data.count === 'number') {
                     setCartCount(data.count);
