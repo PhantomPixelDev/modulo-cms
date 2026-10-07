@@ -2,7 +2,6 @@
 
 use App\Models\Locale;
 use App\Models\Post;
-use Illuminate\Support\Facades\Artisan;
 
 function translationPayload(): array
 {
@@ -137,29 +136,23 @@ it('deletes a page translation through the pages route', function () {
     expect($page->translations()->where('locale', 'es')->exists())->toBeFalse();
 });
 
-it('resolves the post editor by slug and saves by ID with cached routes', function () {
-    seedLocales();
-    $post = Post::factory()->create(['title' => 'Cache Proof', 'slug' => 'cache-proof']);
-    $this->actingAs(makeAdminUserWithPermissions(['edit posts']));
+it('resolves the post binder by slug and by ID', function () {
+    $post = Post::factory()->create(['title' => 'Binder Proof', 'slug' => 'binder-proof']);
 
-    // Production boots with a cached route table, which means route files
-    // never load. Bindings registered there silently stop working (the edit
-    // page 500s on Postgres, which unlike SQLite will not compare bigint to
-    // text). The binding must live where it always runs.
-    Artisan::call('route:cache');
-    try {
-        $this->get(route('dashboard.admin.posts.edit', $post->slug).'?locale=es')->assertOk();
-        $this->put(route('dashboard.admin.posts.update', $post->id), [
-            'post_type_id' => $post->post_type_id,
-            'title' => 'Prueba',
-            'slug' => 'prueba',
-            'content' => 'Cuerpo',
-            'status' => 'draft',
-            'locale' => 'es',
-        ])->assertRedirect();
+    // The editor saves by numeric ID while list links use slugs, so the
+    // {post} binder must resolve either form.
+    $binder = app('router')->getBindingCallback('post');
+    expect($binder)->not->toBeNull();
+    expect($binder((string) $post->id)->is($post))->toBeTrue();
+    expect($binder($post->slug)->is($post))->toBeTrue();
+});
 
-        expect($post->translations()->where('locale', 'es')->value('title'))->toBe('Prueba');
-    } finally {
-        Artisan::call('route:clear');
+it('registers route bindings outside route files', function () {
+    // Bindings registered in a route file silently stop working in
+    // production, where the cached route table means route files never
+    // load. That 500'd every post edit on Postgres (bigint = slug).
+    // They belong in a provider, which always boots.
+    foreach (glob(base_path('routes/*.php')) ?: [] as $file) {
+        expect(file_get_contents($file))->not->toContain('Route::bind');
     }
 });
