@@ -27,6 +27,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BaseEditor, createEditor, Descendant, Editor, Range, Element as SlateElement, Text, Transforms } from 'slate';
 import { HistoryEditor, withHistory } from 'slate-history';
+import type { RenderElementProps, RenderLeafProps } from 'slate-react';
 import { Editable, ReactEditor, Slate, withReact } from 'slate-react';
 import type { MediaItem } from '../../types';
 import MediaPickerDialog from '../media/MediaPickerDialog';
@@ -110,14 +111,14 @@ function toggleBlock(editor: Editor, type: CustomElement['type']) {
     Transforms.setNodes<SlateElement>(editor, { type: newType } as Partial<SlateElement>);
 
     if (!isActive && isList) {
-        const block: SlateElement = { type, children: [] } as any;
+        const block: NumberedListElement | BulletedListElement = { type: type === 'numbered-list' ? 'numbered-list' : 'bulleted-list', children: [] };
         Transforms.wrapNodes(editor, block);
     }
 }
 
 function isMarkActive(editor: Editor, format: keyof Omit<FormattedText, 'text'>) {
     const marks = Editor.marks(editor) as Partial<FormattedText> | null;
-    return marks ? (marks as any)[format] === true : false;
+    return marks ? marks[format] === true : false;
 }
 
 function toggleMark(editor: Editor, format: keyof Omit<FormattedText, 'text'>) {
@@ -143,7 +144,7 @@ function wrapLink(editor: Editor, url: string) {
     if (isLinkActive(editor)) unwrapLink(editor);
     const { selection } = editor;
     const isCollapsed = selection && Range.isCollapsed(selection);
-    const link: LinkElement = { type: 'link', url, children: isCollapsed ? [{ text: url }] : [] } as any;
+    const link: LinkElement = { type: 'link', url, children: isCollapsed ? [{ text: url }] : [] };
     if (isCollapsed) {
         Transforms.insertNodes(editor, link);
     } else {
@@ -153,7 +154,7 @@ function wrapLink(editor: Editor, url: string) {
 }
 
 function insertImage(editor: Editor, url: string) {
-    const image: ImageElement = { type: 'image', url, children: [{ text: '' }] } as any;
+    const image: ImageElement = { type: 'image', url, children: [{ text: '' }] };
     Transforms.insertNodes(editor, image);
 }
 
@@ -169,7 +170,7 @@ function serializeNode(node: Descendant): string {
         return str;
     }
     const element = node as SlateElement;
-    const align = (element as any).align as Align | undefined;
+    const align = ('align' in element ? element.align : undefined) as Align | undefined;
     const style = align ? ` style="text-align:${align}"` : '';
     const children = (element.children as Descendant[]).map(serializeNode).join('');
     switch (element.type) {
@@ -192,9 +193,9 @@ function serializeNode(node: Descendant): string {
         case 'divider':
             return `<hr/>`;
         case 'link':
-            return `<a href="${(element as any).url}">${children}</a>`;
+            return `<a href="${element.url}">${children}</a>`;
         case 'image':
-            return `<img src="${(element as any).url}" />`;
+            return `<img src="${element.url}" />`;
         default:
             return `<p${style}>${children}</p>`;
     }
@@ -227,30 +228,30 @@ function deserializeElement(el: HTMLElement): Descendant {
     const children = (nodeChildren.length ? nodeChildren : [{ text: '' }]) as Descendant[];
     switch (el.nodeName) {
         case 'H1':
-            return { type: 'heading-one', align, children } as any;
+            return { type: 'heading-one', align, children };
         case 'H2':
-            return { type: 'heading-two', align, children } as any;
+            return { type: 'heading-two', align, children };
         case 'H3':
-            return { type: 'heading-three', align, children } as any;
+            return { type: 'heading-three', align, children };
         case 'BLOCKQUOTE':
-            return { type: 'block-quote', align, children } as any;
+            return { type: 'block-quote', align, children };
         case 'OL':
-            return { type: 'numbered-list', align, children } as any;
+            return { type: 'numbered-list', align, children };
         case 'UL':
-            return { type: 'bulleted-list', align, children } as any;
+            return { type: 'bulleted-list', align, children };
         case 'LI':
-            return { type: 'list-item', align, children } as any;
+            return { type: 'list-item', align, children };
         case 'PRE':
-            return { type: 'code-block', align, children } as any;
+            return { type: 'code-block', align, children };
         case 'HR':
-            return { type: 'divider', children: [{ text: '' }] } as any;
+            return { type: 'divider', children: [{ text: '' }] };
         case 'A':
-            return { type: 'link', url: el.getAttribute('href') || '#', children } as any;
+            return { type: 'link', url: el.getAttribute('href') || '#', children };
         case 'IMG':
-            return { type: 'image', url: el.getAttribute('src') || '', children: [{ text: '' }] } as any;
+            return { type: 'image', url: el.getAttribute('src') || '', children: [{ text: '' }] };
         case 'P':
         default:
-            return { type: 'paragraph', align, children } as any;
+            return { type: 'paragraph', align, children };
     }
 }
 
@@ -288,11 +289,9 @@ function deserializeChild(el: HTMLElement): Descendant {
 }
 
 function wrapMarks(nodes: Descendant[], mark: keyof Omit<FormattedText, 'text'>): Descendant {
-    return nodes.map((n) => {
-        if (Text.isText(n)) return { ...(n as any), [mark]: true } as any;
-        if ((n as any).children) return { ...(n as any), children: (n as any).children.map((c: any) => ({ ...c, [mark]: true })) };
-        return n;
-    })[0];
+    const apply = (node: Descendant): Descendant =>
+        Text.isText(node) ? { ...node, [mark]: true } : ({ ...node, children: node.children.map(apply) } as CustomElement);
+    return nodes.map(apply)[0] ?? { text: '' };
 }
 
 // --- Markdown serialization helpers ---
@@ -302,8 +301,8 @@ function mdPlainText(nodes: Descendant[] | undefined): string {
     const walk = (n: Descendant) => {
         if (Text.isText(n)) {
             parts.push(n.text);
-        } else if ((n as any).children) {
-            (n as any).children.forEach((c: Descendant) => walk(c));
+        } else {
+            n.children.forEach(walk);
         }
     };
     nodes.forEach(walk);
@@ -341,11 +340,17 @@ function mdForNode(node: Descendant): string {
         }
         case 'numbered-list': {
             let i = 1;
-            const items = (el.children as any[]).map((li) => `${i++}. ${mdPlainText(li.children)}`).join('\n');
+            const items = el.children
+                .filter((node): node is CustomElement => SlateElement.isElement(node))
+                .map((li) => `${i++}. ${mdPlainText(li.children)}`)
+                .join('\n');
             return items + '\n\n';
         }
         case 'bulleted-list': {
-            const items = (el.children as any[]).map((li) => `- ${mdPlainText(li.children)}`).join('\n');
+            const items = el.children
+                .filter((node): node is CustomElement => SlateElement.isElement(node))
+                .map((li) => `- ${mdPlainText(li.children)}`)
+                .join('\n');
             return items + '\n\n';
         }
         case 'list-item':
@@ -357,12 +362,12 @@ function mdForNode(node: Descendant): string {
         case 'divider':
             return '---\n\n';
         case 'link': {
-            const url = (el as any).url || '#';
+            const url = el.url || '#';
             const text = mdPlainText(el.children as Descendant[]);
             return `[${text}](${url})`;
         }
         case 'image': {
-            const url = (el as any).url || '';
+            const url = el.url || '';
             return `![](${url})\n\n`;
         }
         default:
@@ -397,13 +402,13 @@ function parseMarkdown(md: string): Descendant[] {
             }
             // skip closing fence
             if (i < lines.length) i++;
-            out.push({ type: 'code-block', children: [{ text: codeLines.join('\n') }] } as any);
+            out.push({ type: 'code-block', children: [{ text: codeLines.join('\n') }] });
             continue;
         }
 
         // divider
         if (/^\s*---+\s*$/.test(line)) {
-            out.push({ type: 'divider', children: [{ text: '' }] } as any);
+            out.push({ type: 'divider', children: [{ text: '' }] });
             i++;
             continue;
         }
@@ -414,7 +419,7 @@ function parseMarkdown(md: string): Descendant[] {
             const level = h[1].length;
             const text = h[2];
             const type = level === 1 ? 'heading-one' : level === 2 ? 'heading-two' : 'heading-three';
-            out.push({ type, children: [{ text }] } as any);
+            out.push({ type, children: [{ text }] });
             i++;
             continue;
         }
@@ -426,38 +431,38 @@ function parseMarkdown(md: string): Descendant[] {
                 bq.push(lines[i].replace(/^\s*>\s?/, ''));
                 i++;
             }
-            out.push({ type: 'block-quote', children: [{ type: 'paragraph', children: [{ text: bq.join('\n') }] }] } as any);
+            out.push({ type: 'block-quote', children: [{ type: 'paragraph', children: [{ text: bq.join('\n') }] }] });
             continue;
         }
 
         // list (bulleted)
         if (/^\s*[-*]\s+/.test(line)) {
-            const items: any[] = [];
+            const items: ListItemElement[] = [];
             while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
                 const itemText = lines[i].replace(/^\s*[-*]\s+/, '');
                 items.push({ type: 'list-item', children: [{ type: 'paragraph', children: [{ text: itemText }] }] });
                 i++;
             }
-            out.push({ type: 'bulleted-list', children: items } as any);
+            out.push({ type: 'bulleted-list', children: items });
             continue;
         }
 
         // list (numbered)
         if (/^\s*\d+\.\s+/.test(line)) {
-            const items: any[] = [];
+            const items: ListItemElement[] = [];
             while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
                 const itemText = lines[i].replace(/^\s*\d+\.\s+/, '');
                 items.push({ type: 'list-item', children: [{ type: 'paragraph', children: [{ text: itemText }] }] });
                 i++;
             }
-            out.push({ type: 'numbered-list', children: items } as any);
+            out.push({ type: 'numbered-list', children: items });
             continue;
         }
 
         // image-only line ![alt](url) -> image element (alt ignored here)
         const img = line.match(/^!\[[^\]]*\]\(([^)]+)\)\s*$/);
         if (img) {
-            out.push({ type: 'image', url: img[1], children: [{ text: '' }] } as any);
+            out.push({ type: 'image', url: img[1], children: [{ text: '' }] });
             i++;
             continue;
         }
@@ -465,7 +470,7 @@ function parseMarkdown(md: string): Descendant[] {
         // link-only line [text](url) -> paragraph with link
         const lk = line.match(/^\[([^\]]+)\]\(([^)]+)\)\s*$/);
         if (lk) {
-            out.push({ type: 'paragraph', children: [{ type: 'link', url: lk[2], children: [{ text: lk[1] }] }] } as any);
+            out.push({ type: 'paragraph', children: [{ type: 'link', url: lk[2], children: [{ text: lk[1] }] }] });
             i++;
             continue;
         }
@@ -488,14 +493,14 @@ function parseMarkdown(md: string): Descendant[] {
             para.push(lines[i]);
             i++;
         }
-        out.push({ type: 'paragraph', children: [{ text: para.join('\n') }] } as any);
+        out.push({ type: 'paragraph', children: [{ text: para.join('\n') }] });
     }
 
     return out.length ? out : [createParagraph('')];
 }
 
 function createParagraph(text: string): ParagraphElement {
-    return { type: 'paragraph', children: [{ text }] } as any;
+    return { type: 'paragraph', children: [{ text }] };
 }
 
 export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorProps) {
@@ -512,8 +517,8 @@ export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorPr
         // noop; value is managed by Slate
     }, []);
 
-    const renderElement = useCallback((props: any) => <Element {...props} />, []);
-    const renderLeaf = useCallback((props: any) => <Leaf {...props} />, []);
+    const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
+    const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
 
     // Keep preview text in sync when switching modes
     useEffect(() => {
@@ -528,9 +533,9 @@ export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorPr
     const setEditorContent = useCallback(
         (nodes: Descendant[]) => {
             // Replace editor children and normalize
-            (editor as any).children = nodes as any;
+            editor.children = nodes;
             Editor.normalize(editor, { force: true });
-            (editor as any).onChange();
+            editor.onChange();
             setValue(nodes);
             onHTMLChange?.(serialize(nodes));
         },
@@ -554,6 +559,7 @@ export default function SlateEditor({ initialHTML, onHTMLChange }: SlateEditorPr
             <Slate editor={editor} initialValue={initialValue} onChange={handleChange}>
                 {viewMode === 'editor' ? (
                     <Editable
+                        aria-label="Content"
                         className="rich-text min-h-40 focus:outline-none"
                         renderElement={renderElement}
                         renderLeaf={renderLeaf}
@@ -709,8 +715,8 @@ function IconBtn({ onClick, children, title }: { onClick: () => void; children: 
     );
 }
 
-const Element = ({ attributes, children, element }: any) => {
-    const style = (element.align ? { textAlign: element.align } : undefined) as React.CSSProperties;
+const Element = ({ attributes, children, element }: RenderElementProps) => {
+    const style = 'align' in element && element.align ? { textAlign: element.align } : undefined;
     switch (element.type) {
         case 'heading-one':
             return (
@@ -789,7 +795,7 @@ const Element = ({ attributes, children, element }: any) => {
     }
 };
 
-const Leaf = ({ attributes, children, leaf }: any) => {
+const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     if (leaf.code) children = <code>{children}</code>;
     if (leaf.bold) children = <strong>{children}</strong>;
     if (leaf.italic) children = <em>{children}</em>;

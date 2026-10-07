@@ -7,6 +7,7 @@ return [
     ],
     // Navigation
     'nav' => [
+
         'languages' => 'Idiomas',
         'email' => 'Correo',
         'content' => 'Contenido',
@@ -1298,6 +1299,19 @@ return [
         'restored' => 'Se restauró la versión del :date.',
     ],
     'editor' => [
+        'create' => 'Crear',
+        'edit' => 'Editar',
+        'show' => 'Ver',
+
+        'unfinished' => 'Trabajo sin terminar',
+        'untitled' => 'Borrador sin título',
+
+        'unpublish' => 'Retirar y guardar borrador',
+        'unpublish_hint' => 'Guardar como borrador retira este contenido del sitio en todos los idiomas.',
+        'schedule' => 'Programar',
+        'all_languages' => 'Las acciones de publicación se aplican a todos los idiomas. Actualizar guarda la traducción sin cambiar su estado.',
+        'preview_after_save' => 'Guarda este contenido para activar la vista previa.',
+
         'preview' => 'Vista previa',
         'preview_failed' => 'No se pudo abrir la vista previa. Inténtalo de nuevo.',
         'autosave' => [

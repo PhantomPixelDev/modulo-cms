@@ -7,6 +7,7 @@ return [
     ],
     // Navigation
     'nav' => [
+
         'languages' => 'Languages',
         'email' => 'Email',
         'content' => 'Content',
@@ -1298,6 +1299,19 @@ return [
         'restored' => 'Restored the version from :date.',
     ],
     'editor' => [
+        'create' => 'Create',
+        'edit' => 'Edit',
+        'show' => 'View',
+
+        'unfinished' => 'Unfinished work',
+        'untitled' => 'Untitled draft',
+
+        'unpublish' => 'Unpublish and save draft',
+        'unpublish_hint' => 'Saving as a draft removes this item from public view in every language.',
+        'schedule' => 'Schedule',
+        'all_languages' => 'Publication actions apply to every language. Update saves translation text without changing publication status.',
+        'preview_after_save' => 'Save this item once to enable preview.',
+
         'preview' => 'Preview',
         'preview_failed' => 'The preview could not be opened. Please try again.',
         'autosave' => [

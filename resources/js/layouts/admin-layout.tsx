@@ -1,7 +1,9 @@
-import SEOHead from '@/components/SEOHead';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
-import { type BreadcrumbItem } from '@/types';
-import { type ReactNode } from 'react';
+import { sectionMetadata } from '@/pages/dashboard/sectionMetadata';
+import type { BreadcrumbItem } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -10,9 +12,19 @@ interface AdminLayoutProps {
     description?: string;
 }
 
-export default ({ children, breadcrumbs = [], title, description, ...props }: AdminLayoutProps) => (
-    <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
-        <SEOHead title={title ?? 'Admin'} description={description} noindex />
-        {children}
-    </AppLayoutTemplate>
-);
+export default function AdminLayout({ children, breadcrumbs, title, description }: AdminLayoutProps) {
+    const { t } = useTranslation();
+    const section = usePage().props.adminSection as string | undefined;
+    const metadata = sectionMetadata(section, t);
+    const useSection = section && metadata.known;
+    return (
+        <AppLayoutTemplate breadcrumbs={useSection ? metadata.breadcrumbs : (breadcrumbs ?? metadata.breadcrumbs)}>
+            <Head>
+                <title>{useSection ? metadata.title : (title ?? metadata.title)}</title>
+                <meta name="robots" content="noindex, nofollow" />
+                {description && <meta name="description" content={description} />}
+            </Head>
+            {children}
+        </AppLayoutTemplate>
+    );
+}

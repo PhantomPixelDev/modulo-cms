@@ -4,7 +4,7 @@ interface PostViewProps {
     post: {
         id: number;
         title: string;
-        slug: string;
+        slug?: string;
         status: string;
         content: string;
         /** Server-rendered, sanitized HTML */

@@ -1,17 +1,17 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Image as ImageIcon, Loader2, X } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { Image as ImageIcon, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePage } from '@inertiajs/react';
-import { AutosaveStatus, PreviewButton, RecoverAutosave, useAutosave, type AutosaveFields } from '../common/Autosave';
+import { EditorControls } from '../common/EditorControls';
 import { RevisionsDialog } from '../common/RevisionsDialog';
 import MediaPickerDialog from '../media/MediaPickerDialog';
 import { CustomFieldInputs } from './CustomFieldInputs';
@@ -21,7 +21,7 @@ import { PostTaxonomySection } from './PostTaxonomySection';
 import SlateEditor from './SlateEditor';
 import { PostFormProps } from './types';
 import { usePostForm } from './usePostForm';
-import { slugify, toDatetimeLocalStr } from './utils';
+import { slugify } from './utils';
 
 export function PostForm({
     post,
@@ -33,6 +33,7 @@ export function PostForm({
     locales = [],
     currentLocale = 'en',
     canEditAuthor = false,
+    canPublish = false,
     isEditing,
     onSubmit,
     onCancel,
@@ -40,9 +41,22 @@ export function PostForm({
 }: PostFormProps) {
     const { t } = useTranslation();
 
-    const currentLocaleData = locales.find((l) => l.code === currentLocale);
     const hasMultipleLocales = locales.length > 1;
+    const editor = usePostForm({
+        post,
+        postTypes,
+        groupedTerms,
+        authors,
+        parentsByType,
+        canEditAuthor,
+        isEditing,
+        onSubmit,
+        onCancel,
+        currentLocale,
+    });
     const {
+        editorKey,
+        timezone,
         // Form state
         title,
         setTitle,
@@ -71,7 +85,6 @@ export function PostForm({
         fieldValues,
         setFieldValues,
         selectedTerms,
-        isSubmitting,
 
         // Handlers
         handleSubmit,
@@ -79,20 +92,7 @@ export function PostForm({
         handleMetaDataChange,
         handleFeaturedImageSelect,
         handleFeaturedImageRemove,
-    } = usePostForm({ post, postTypes, groupedTerms, authors, parentsByType, canEditAuthor, isEditing, onSubmit, onCancel });
-
-    // Translations are edited elsewhere; the autosave holds the post's own text
-    const autosaveEnabled = Boolean(isEditing && post?.id) && (!currentLocaleData || Boolean(currentLocaleData.is_default));
-    const autosave = useAutosave(post?.id, { title, excerpt, content }, autosaveEnabled);
-    const [editorKey, setEditorKey] = useState(0);
-    const restoreAutosave = (fields: AutosaveFields) => {
-        setTitle(fields.title ?? '');
-        setExcerpt(fields.excerpt ?? '');
-        setContent(fields.content ?? '');
-        // The editor keeps its own state; remount it with the restored text
-        setEditorKey((key) => key + 1);
-        autosave.setRecovered(null);
-    };
+    } = editor;
 
     // What the chosen content type uses: its own fields, and whether it has an excerpt, image, terms
     const selectedType = postTypes.find((type) => String(type.id) === postType);
@@ -105,7 +105,6 @@ export function PostForm({
 
     const [showMediaPicker, setShowMediaPicker] = useState(false);
     const [activeTab, setActiveTab] = useState('content');
-    const formRef = useRef<HTMLFormElement | null>(null);
 
     const deleteTranslationRoute =
         isEditing && post?.id && translation
@@ -125,16 +124,11 @@ export function PostForm({
         'h-11 flex-none rounded-none border-0 border-b-2 border-transparent px-0.5 text-sm text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none dark:data-[state=active]:border-primary dark:data-[state=active]:bg-transparent';
 
     return (
-        <form ref={formRef} onSubmit={handleSubmit} className="mx-auto max-w-5xl space-y-8 pb-20">
-            <RecoverAutosave recovered={autosave.recovered} onRestore={restoreAutosave} onDiscard={autosave.discardRecovered} />
+        <form onSubmit={handleSubmit} className="mx-auto max-w-5xl space-y-8 pb-20">
             <Card className="gap-0 overflow-hidden py-0">
                 <CardHeader className="border-b px-6 py-5">
                     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                         <div className="flex items-center gap-3">
-                            <div>
-                                <CardTitle className="text-lg">{isEditing ? t('dashboard.posts.edit_post') : t('dashboard.posts.add_new')}</CardTitle>
-                                <p className="mt-1 text-sm text-muted-foreground">{t('dashboard.posts.form.description')}</p>
-                            </div>
                             {hasMultipleLocales && (
                                 <LocaleDropdown
                                     locales={locales}
@@ -146,7 +140,7 @@ export function PostForm({
                             )}
                         </div>
                         <div className="flex w-full items-center space-x-3 sm:w-auto">
-                            <Select value={status} onValueChange={setStatus}>
+                            <Select value={status} onValueChange={setStatus} disabled>
                                 <SelectTrigger className="h-9 w-full sm:w-[140px]">
                                     <SelectValue placeholder={t('dashboard.posts.post_status')} />
                                 </SelectTrigger>
@@ -158,13 +152,7 @@ export function PostForm({
                                     ))}
                                 </SelectContent>
                             </Select>
-                            {autosaveEnabled && <AutosaveStatus status={autosave.status} savedAt={autosave.savedAt} />}
-                            {isEditing && post?.id && <PreviewButton postId={post.id} flush={autosave.flush} />}
                             {isEditing && post?.id && <RevisionsDialog postId={post.id} />}
-                            <Button type="submit" disabled={isSubmitting} className="h-9 px-6">
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {isEditing ? t('dashboard.posts.form.buttons.update') : t('dashboard.posts.form.buttons.publish')}
-                            </Button>
                         </div>
                     </div>
                 </CardHeader>
@@ -352,7 +340,7 @@ export function PostForm({
                                             </Label>
                                             <Input
                                                 id="ogImage"
-                                                value={metaData.og_image || ''}
+                                                value={String(metaData.og_image || '')}
                                                 onChange={(e) => handleMetaDataChange({ ...metaData, og_image: e.target.value })}
                                                 placeholder={t('dashboard.posts.form.seo.social_image_placeholder')}
                                             />
@@ -365,7 +353,7 @@ export function PostForm({
                                             </Label>
                                             <Input
                                                 id="canonicalUrl"
-                                                value={metaData.canonical_url || ''}
+                                                value={String(metaData.canonical_url || '')}
                                                 onChange={(e) => handleMetaDataChange({ ...metaData, canonical_url: e.target.value })}
                                                 placeholder="https://…"
                                             />
@@ -460,16 +448,18 @@ export function PostForm({
                                     <div className="space-y-6">
                                         <div className="space-y-2">
                                             <Label htmlFor="publishedAt" className="text-sm font-bold">
-                                                {t('dashboard.posts.form.fields.publishing_date')}
+                                                {t('dashboard.posts.form.fields.publishing_date')} ({timezone})
                                             </Label>
                                             <Input
                                                 id="publishedAt"
                                                 type="datetime-local"
                                                 className="h-10"
-                                                value={toDatetimeLocalStr(publishedAt || new Date().toISOString())}
+                                                value={publishedAt}
                                                 onChange={(e) => setPublishedAt(e.target.value)}
                                             />
-                                            <p className="text-[11px] text-muted-foreground">{t('dashboard.posts.form.seo.schedule_hint')}</p>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                {t('dashboard.posts.form.seo.schedule_hint')} ({timezone})
+                                            </p>
                                         </div>
 
                                         <div className="space-y-3">
@@ -486,32 +476,7 @@ export function PostForm({
                 </CardContent>
             </Card>
 
-            <div className="fixed right-0 bottom-0 left-0 z-40 border-t bg-background/80 p-4 backdrop-blur-md sm:left-64">
-                <div className="mx-auto flex max-w-5xl items-center justify-between px-4">
-                    <Button variant="ghost" onClick={onCancel} type="button">
-                        {t('dashboard.posts.form.buttons.cancel')}
-                    </Button>
-                    <div className="flex gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setStatus('draft');
-                                formRef.current?.requestSubmit();
-                            }}
-                            disabled={isSubmitting}
-                        >
-                            {t('dashboard.posts.form.buttons.save_draft')}
-                        </Button>
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting
-                                ? t('dashboard.posts.form.buttons.saving')
-                                : isEditing
-                                  ? t('dashboard.posts.form.buttons.update')
-                                  : t('dashboard.posts.form.buttons.publish')}
-                        </Button>
-                    </div>
-                </div>
-            </div>
+            <EditorControls editor={editor} postId={post?.id} locale={currentLocale} canPublish={canPublish} onCancel={onCancel} />
 
             <MediaPickerDialog
                 open={showMediaPicker}

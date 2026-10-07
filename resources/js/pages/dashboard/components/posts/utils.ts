@@ -30,7 +30,7 @@ export function slugify(value: string): string {
 /**
  * Extracts selected term IDs from a post object
  */
-export function getSelectedTermIds(post: any): number[] {
+export function getSelectedTermIds(post: import('../common/editor').EditorContent | undefined): number[] {
     if (Array.isArray(post?.selected_terms)) return post.selected_terms as number[];
     if (Array.isArray(post?.taxonomy_terms)) {
         return (post.taxonomy_terms as Array<{ id: number }>).map((t) => t.id);

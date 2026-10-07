@@ -49,6 +49,7 @@ export interface Permission extends BaseEntity {
 }
 
 export interface Post extends BaseEntity {
+    created_at: string;
     title: string;
     content: string;
     excerpt?: string;
@@ -254,7 +255,7 @@ export interface DashboardProps {
         per_page: number;
         total: number;
     };
-    posts?: Post[] | { data: Post[] };
+    posts?: Post[] | { data: Post[]; current_page: number; last_page: number; total: number; from: number | null; to: number | null };
     postTypes?: PostType[];
     currentPostType?: PostType;
     taxonomies?: Taxonomy[] | { data: Taxonomy[] };
@@ -421,6 +422,7 @@ export interface OverviewPost {
 }
 
 export interface DashboardOverviewData {
+    editorDrafts?: Array<{ id: string; title: string; locale: string; url: string }>;
     drafts?: OverviewPost[];
     scheduled?: OverviewPost[];
     recent?: OverviewPost[];

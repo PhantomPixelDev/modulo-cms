@@ -1,4 +1,5 @@
 import { NavUser } from '@/components/nav-user';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
     Sidebar,
     SidebarContent,
@@ -22,6 +23,7 @@ import {
     Archive,
     BookOpen,
     Boxes,
+    ChevronDown,
     CornerDownRight,
     FileText,
     FolderTree,
@@ -41,7 +43,7 @@ import {
     Users,
     type LucideIcon,
 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import AppLogo from './app-logo';
 
 interface SidebarEntry {
@@ -80,35 +82,58 @@ interface Item {
 
 const byMenuPosition = (a: SidebarEntry, b: SidebarEntry) => (a.menu_position || 999) - (b.menu_position || 999);
 
-function Group({ label, items, url }: { label: string; items: Item[]; url: string }) {
+function Group({ id, label, items, url, defaultOpen = false }: { id: string; label: string; items: Item[]; url: string; defaultOpen?: boolean }) {
+    const props = usePage().props;
+    const userId = (props.auth as { user?: { id: number } } | undefined)?.user?.id ?? 0;
+    const key = `modulo:nav:${userId}:${id}`;
+    const current = items.some((item) => item.show && (item.match ?? [item.href]).some((path) => url === path || url.startsWith(`${path}/`)));
+    const [open, setOpen] = useState(() => current || (localStorage.getItem(key) === null ? defaultOpen : localStorage.getItem(key) === 'true'));
+    useEffect(() => {
+        if (current) setOpen(true);
+    }, [current]);
+    const toggle = (value: boolean) => {
+        setOpen(value);
+        localStorage.setItem(key, String(value));
+    };
     const visible = items.filter((item) => item.show);
     if (visible.length === 0) return null;
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>{label}</SidebarGroupLabel>
-            <SidebarMenu>
-                {visible.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                        <SidebarMenuItem key={item.href}>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={(item.match ?? [item.href]).some(
-                                    (path) => url === path || url.startsWith(`${path}/`) || url.startsWith(`${path}?`),
-                                )}
-                                tooltip={{ children: item.label }}
-                            >
-                                <Link href={item.href} prefetch>
-                                    {Icon && <Icon className="h-4 w-4" />}
-                                    <span>{item.label}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                            {item.badge}
-                        </SidebarMenuItem>
-                    );
-                })}
-            </SidebarMenu>
+            <Collapsible open={open} onOpenChange={toggle}>
+                <CollapsibleTrigger asChild>
+                    <SidebarGroupLabel asChild>
+                        <button type="button" className="flex w-full justify-between">
+                            {label}
+                            <ChevronDown className={`h-3 w-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+                        </button>
+                    </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <SidebarMenu>
+                        {visible.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <SidebarMenuItem key={item.href}>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={(item.match ?? [item.href]).some(
+                                            (path) => url === path || url.startsWith(`${path}/`) || url.startsWith(`${path}?`),
+                                        )}
+                                        tooltip={{ children: item.label }}
+                                    >
+                                        <Link href={item.href} prefetch>
+                                            {Icon && <Icon className="h-4 w-4" />}
+                                            <span>{item.label}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                    {item.badge}
+                                </SidebarMenuItem>
+                            );
+                        })}
+                    </SidebarMenu>
+                </CollapsibleContent>
+            </Collapsible>
         </SidebarGroup>
     );
 }
@@ -154,7 +179,9 @@ export function AppSidebar() {
                 </SidebarGroup>
 
                 <Group
+                    id="content"
                     label={t('dashboard.nav.content')}
+                    defaultOpen
                     url={path}
                     items={[
                         {
@@ -173,44 +200,53 @@ export function AppSidebar() {
                             show: can('moderate comments'),
                         },
                         { label: t('dashboard.nav.trash'), href: '/dashboard/admin/trash', icon: Trash2, show: can('delete posts') },
-                    ]}
-                />
-
-                <Group
-                    label={t('dashboard.nav.content_types')}
-                    url={path}
-                    items={contentTypes.map((type) => ({
-                        label: type.label || type.name,
-                        href: `/dashboard/admin/posts/type/${type.slug}`,
-                        icon: type.menu_icon ? (getIcon(type.menu_icon) as LucideIcon) : Boxes,
-                        show: can('view posts'),
-                    }))}
-                />
-
-                <Group
-                    label={t('dashboard.nav.organization')}
-                    url={path}
-                    items={[
-                        {
-                            label: t('dashboard.nav.taxonomies'),
-                            href: '/dashboard/admin/taxonomies',
-                            icon: FolderTree,
-                            show: can('view taxonomies', 'view taxonomy terms'),
-                            match: ['/dashboard/admin/taxonomies', '/dashboard/admin/taxonomy-terms'],
-                        },
+                        ...contentTypes.map((type) => ({
+                            label: type.label || type.name,
+                            href: `/dashboard/admin/posts/type/${type.slug}`,
+                            icon: type.menu_icon ? getIcon(type.menu_icon) : Boxes,
+                            show: can('view posts'),
+                        })),
                         ...taxonomies.map((taxonomy) => ({
                             label: taxonomy.label || taxonomy.name,
                             href: `/dashboard/admin/taxonomies/${taxonomy.slug}/terms`,
-                            icon: taxonomy.menu_icon ? (getIcon(taxonomy.menu_icon) as LucideIcon) : FolderTree,
+                            icon: taxonomy.menu_icon ? getIcon(taxonomy.menu_icon) : FolderTree,
                             show: can('view taxonomy terms'),
                         })),
                     ]}
                 />
 
+                <Group
+                    id="appearance"
+                    label={t('dashboard.nav.appearance')}
+                    url={path}
+                    items={[
+                        { label: t('dashboard.nav.themes'), href: '/dashboard/admin/themes', icon: Palette, show: can('view themes') },
+                        { label: t('dashboard.nav.menus'), href: '/dashboard/admin/menus', icon: Menu, show: can('view menus') },
+                    ]}
+                />
+
+                {pluginMenu.length === 0 && (
+                    <Group
+                        id="extensions"
+                        label={t('dashboard.nav.extensions')}
+                        url={path}
+                        items={[{ label: t('dashboard.nav.plugins'), href: '/dashboard/admin/plugins', icon: Puzzle, show: can('view plugins') }]}
+                    />
+                )}
                 {pluginMenu.length > 0 && (
                     <SidebarGroup className="px-2 py-0">
                         <SidebarGroupLabel>{t('dashboard.nav.extensions')}</SidebarGroupLabel>
                         <SidebarMenu>
+                            {can('view plugins') && (
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild isActive={path.startsWith('/dashboard/admin/plugins')}>
+                                        <Link href="/dashboard/admin/plugins">
+                                            <Puzzle className="h-4 w-4" />
+                                            <span>{t('dashboard.nav.plugins')}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            )}
                             {pluginMenu.map((entry) => {
                                 const inside = [entry.href, ...entry.children.map((child) => child.href)].some(
                                     (href) => path === href.split('?')[0] || path.startsWith(`${href.split('?')[0]}/`),
@@ -247,33 +283,24 @@ export function AppSidebar() {
                 )}
 
                 <Group
-                    label={t('dashboard.nav.appearance')}
-                    url={path}
-                    items={[
-                        { label: t('dashboard.nav.themes'), href: '/dashboard/admin/themes', icon: Palette, show: can('view themes') },
-                        { label: t('dashboard.nav.menus'), href: '/dashboard/admin/menus', icon: Menu, show: can('view menus') },
-                    ]}
-                />
-
-                <Group
-                    label={t('dashboard.nav.administration')}
+                    id="settings"
+                    label={t('dashboard.nav.settings')}
                     url={path}
                     items={[
                         { label: t('dashboard.nav.users'), href: '/dashboard/admin/users', icon: Users, show: can('view users') },
                         { label: t('dashboard.nav.roles'), href: '/dashboard/admin/roles', icon: ShieldCheck, show: can('view roles') },
-                        { label: t('dashboard.nav.plugins'), href: '/dashboard/admin/plugins', icon: Puzzle, show: can('view plugins') },
+                        {
+                            label: t('dashboard.nav.taxonomies'),
+                            href: '/dashboard/admin/taxonomies',
+                            icon: FolderTree,
+                            show: can('view taxonomies', 'view taxonomy terms'),
+                            match: ['/dashboard/admin/taxonomies', '/dashboard/admin/taxonomy-terms'],
+                        },
                         { label: t('dashboard.nav.post_types'), href: '/dashboard/admin/post-types', icon: Boxes, show: can('view post types') },
                         { label: t('dashboard.nav.languages'), href: '/dashboard/admin/languages', icon: Languages, show: can('edit settings') },
                         { label: t('dashboard.nav.translations'), href: '/dashboard/admin/translations', icon: BookOpen, show: can('edit settings') },
                         { label: t('dashboard.nav.sitemap'), href: '/dashboard/admin/sitemap', icon: FolderTree, show: can('view sitemap') },
                         { label: t('dashboard.nav.site_settings'), href: '/dashboard/admin/settings', icon: Settings, show: can('view settings') },
-                    ]}
-                />
-
-                <Group
-                    label={t('dashboard.nav.system')}
-                    url={path}
-                    items={[
                         {
                             label: t('dashboard.nav.updates'),
                             href: '/dashboard/admin/system/updates',

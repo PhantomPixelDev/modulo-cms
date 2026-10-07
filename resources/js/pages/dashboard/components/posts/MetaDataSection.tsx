@@ -5,8 +5,8 @@ import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface MetaDataSectionProps {
-    metaData: Record<string, any>;
-    onMetaDataChange: (data: Record<string, any>) => void;
+    metaData: import('./types').MetaData;
+    onMetaDataChange: (data: import('./types').MetaData) => void;
 }
 
 /** Keys other inputs own; editing them here as text would break them. */

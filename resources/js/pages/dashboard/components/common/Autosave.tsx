@@ -61,14 +61,17 @@ export function useAutosave(postId: number | undefined, fields: AutosaveFields, 
             lastSaved.current = body;
             setSavedAt(data.saved_at);
             setStatus('saved');
-        } catch {
+        } catch (error) {
             setStatus('error');
+            throw error;
         }
     }, [active, postId]);
 
     useEffect(() => {
         if (!active || serialized === lastSaved.current) return;
-        const timer = window.setTimeout(flush, DEBOUNCE_MS);
+        const timer = window.setTimeout(() => {
+            void flush().catch(() => undefined);
+        }, DEBOUNCE_MS);
         return () => window.clearTimeout(timer);
     }, [active, serialized, flush]);
 
@@ -145,7 +148,17 @@ export function RecoverAutosave({
  * Opens the post as the theme will show it, including unsaved text: the
  * draft is written first, then a short-lived signed link is opened.
  */
-export function PreviewButton({ postId, flush }: { postId: number; flush: () => Promise<void> }) {
+export function PreviewButton({
+    postId,
+    flush,
+    locale,
+    getDraft,
+}: {
+    postId: number;
+    flush: () => Promise<void>;
+    locale?: string;
+    getDraft?: () => string | undefined;
+}) {
     const { t } = useTranslation();
     const [busy, setBusy] = useState(false);
 
@@ -155,7 +168,7 @@ export function PreviewButton({ postId, flush }: { postId: number; flush: () => 
         setBusy(true);
         try {
             await flush();
-            const { url } = await apiPost<{ url: string }>(route('dashboard.admin.preview.link', { postId }));
+            const { url } = await apiPost<{ url: string }>(route('dashboard.admin.preview.link', { postId }), { locale, draft: getDraft?.() });
             if (tab) tab.location.href = url;
             else window.location.href = url;
         } catch {

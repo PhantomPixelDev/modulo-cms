@@ -56,7 +56,7 @@ export interface PostTranslation {
 }
 
 export interface PostFormProps {
-    post?: any;
+    post?: import('../common/editor').EditorContent;
     translation?: PostTranslation;
     postTypes?: PostType[];
     groupedTerms?: Record<string, Term[]>;
@@ -65,12 +65,13 @@ export interface PostFormProps {
     locales?: Locale[];
     currentLocale?: string;
     canEditAuthor?: boolean;
+    canPublish?: boolean;
     isEditing: boolean;
-    onSubmit: (data: any) => Promise<void> | void;
+    onSubmit: (data: import('../common/editor').EditorSubmission) => Promise<boolean>;
     onCancel: () => void;
     onLocaleChange?: (locale: string) => void;
 }
 
 export interface MetaData {
-    [key: string]: any;
+    [key: string]: import('@inertiajs/core').FormDataConvertible;
 }

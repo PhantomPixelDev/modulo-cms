@@ -122,17 +122,14 @@ function PostsCard({
                     <ul className="-mx-2 divide-y">
                         {items.map((item) => (
                             <li key={item.id}>
-                                <Link
-                                    href={editHref(item)}
-                                    className="flex items-baseline justify-between gap-3 rounded-md px-2 py-2 hover:bg-accent/50"
-                                >
+                                <Link href={editHref(item)} className="block space-y-1 rounded-md px-2 py-2 hover:bg-accent/50">
                                     <span className="min-w-0">
-                                        <span className="block truncate text-sm font-medium">{item.title || '—'}</span>
+                                        <span className="block text-sm leading-snug font-medium">{item.title || '—'}</span>
                                         <span className="block truncate text-xs text-muted-foreground">
                                             {[item.type, item.author].filter(Boolean).join(' · ')}
                                         </span>
                                     </span>
-                                    <time className="shrink-0 text-xs text-muted-foreground tabular-nums" dateTime={item.date_iso ?? undefined}>
+                                    <time className="block text-xs text-muted-foreground tabular-nums" dateTime={item.date_iso ?? undefined}>
                                         {item.date}
                                     </time>
                                 </Link>
@@ -156,6 +153,24 @@ export function DashboardOverview({ overview }: { overview: DashboardOverviewDat
 
     return (
         <div className="space-y-6">
+            {Boolean(overview.editorDrafts?.length) && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('dashboard.editor.unfinished')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="space-y-2">
+                            {overview.editorDrafts?.map((draft) => (
+                                <li key={draft.id}>
+                                    <Link href={draft.url} className="text-sm text-primary hover:underline">
+                                        {draft.title || t('dashboard.editor.untitled')} ({draft.locale})
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            )}
             {overview.checklist && overview.checklist.some((step) => !step.done) && <Checklist steps={overview.checklist} />}
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

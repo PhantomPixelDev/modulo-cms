@@ -1,10 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
+import { submitEditor, type EditorSubmission } from '../../components/common/editor';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { PostForm } from '../../components/posts/PostForm';
 import { PostList } from '../../components/posts/PostList';
 import { PostView } from '../../components/posts/PostView';
+import type { PostFormProps, PostType } from '../../components/posts/types';
+import type { ROUTE as DashboardRoutes } from '../../routes';
 
 export function getPostsSections({
     postsProp,
@@ -26,51 +29,33 @@ export function getPostsSections({
     ROUTE,
     t,
 }: {
-    postsProp: any;
-    editPost: any;
-    post: any;
-    postTypes: any;
-    currentPostType?: any;
-    groupedTerms: any;
-    authors: any;
+    postsProp?: ComponentProps<typeof PostList>['posts'];
+    editPost?: ComponentProps<typeof PostView>['post'];
+    post?: ComponentProps<typeof PostView>['post'];
+    postTypes: PostFormProps['postTypes'];
+    currentPostType?: PostType & { plural_label?: string };
+    groupedTerms: PostFormProps['groupedTerms'];
+    authors: PostFormProps['authors'];
     filters?: Record<string, string>;
-    parentsByType: any;
-    locales?: any[];
+    parentsByType: PostFormProps['parentsByType'];
+    locales?: PostFormProps['locales'];
     currentLocale?: string;
-    translation?: any;
+    translation?: PostFormProps['translation'];
     can: (perm: string) => boolean;
     canEditAuthorFlag: boolean;
     showSuccess: (msg: string) => void;
     showError: (msg: string) => void;
-    ROUTE: any;
+    ROUTE: typeof DashboardRoutes;
     t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
     // Get the display name for the current post type
     const postTypeName = currentPostType?.label || currentPostType?.plural_label || t('dashboard.posts.title');
     const postTypeSingular = currentPostType?.label || currentPostType?.name || t('dashboard.posts.singular');
-    const handlePostSubmit = async (formData: any, editId?: number) => {
-        try {
-            const url = editId ? ROUTE.posts.update(editId) : ROUTE.posts.store();
-            const method = editId ? 'put' : 'post';
-            const locale = typeof formData?.locale === 'string' && formData.locale ? formData.locale : currentLocale || 'en';
-            await router[method](url, formData, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    showSuccess(t(editId ? 'dashboard.posts.messages.updated' : 'dashboard.posts.messages.created'));
-                    // Stay on the edit page in the same locale so translators
-                    // can keep working instead of being dropped to the list.
-                    router.visit(editId ? `${ROUTE.posts.edit(editId)}?locale=${encodeURIComponent(locale)}` : ROUTE.posts.index());
-                },
-                onError: (errors) => {
-                    console.error('Validation errors:', errors);
-                    showError(t(editId ? 'dashboard.posts.messages.update_failed' : 'dashboard.posts.messages.create_failed'));
-                },
-            });
-        } catch (error) {
-            console.error('Error saving post:', error);
-            showError(t(editId ? 'dashboard.posts.messages.update_failed' : 'dashboard.posts.messages.create_failed'));
-        }
-    };
+    const handlePostSubmit = (formData: EditorSubmission, editId?: number) =>
+        submitEditor(editId ? ROUTE.posts.update(editId) : ROUTE.posts.store(), editId ? 'put' : 'post', {
+            ...formData,
+            locale: currentLocale || 'en',
+        });
 
     const handleLocaleChange = (locale: string) => {
         const currentUrl = window.location.pathname;
@@ -118,14 +103,15 @@ export function getPostsSections({
             <PostForm
                 key={`new-${currentLocale || 'en'}`}
                 isEditing={false}
-                postTypes={(postTypes as any) || []}
-                groupedTerms={(groupedTerms as any) || {}}
-                authors={(authors as any) || []}
-                parentsByType={(parentsByType as any) || {}}
+                postTypes={postTypes || []}
+                groupedTerms={groupedTerms || {}}
+                authors={authors || []}
+                parentsByType={parentsByType || {}}
                 locales={locales}
                 currentLocale={currentLocale || 'en'}
                 canEditAuthor={canEditAuthorFlag}
-                onSubmit={(data) => handlePostSubmit({ ...data, locale: currentLocale || 'en' })}
+                canPublish={can('publish posts')}
+                onSubmit={(data) => handlePostSubmit(data)}
                 onCancel={() => router.visit(ROUTE.posts.index())}
                 onLocaleChange={handleLocaleChange}
             />
@@ -143,18 +129,19 @@ export function getPostsSections({
             }
         >
             <PostForm
-                key={`${(editPost as any)?.id ?? 'new'}-${currentLocale || 'en'}`}
-                post={editPost as any}
+                key={`${editPost?.id ?? 'new'}-${currentLocale || 'en'}`}
+                post={editPost}
                 translation={translation}
-                postTypes={(postTypes as any) || []}
-                groupedTerms={(groupedTerms as any) || {}}
-                authors={(authors as any) || []}
-                parentsByType={(parentsByType as any) || {}}
+                postTypes={postTypes || []}
+                groupedTerms={groupedTerms || {}}
+                authors={authors || []}
+                parentsByType={parentsByType || {}}
                 locales={locales}
                 currentLocale={currentLocale || 'en'}
                 canEditAuthor={canEditAuthorFlag}
+                canPublish={can('publish posts')}
                 isEditing={true}
-                onSubmit={(data) => handlePostSubmit({ ...data, locale: currentLocale || 'en' }, (editPost as any)?.id)}
+                onSubmit={(data) => handlePostSubmit(data, editPost?.id)}
                 onCancel={() => router.visit(ROUTE.posts.index())}
                 onLocaleChange={handleLocaleChange}
             />
@@ -171,7 +158,7 @@ export function getPostsSections({
                 </Button>
             }
         >
-            <PostView post={(post as any) || (editPost as any)} />
+            {(post || editPost) && <PostView post={(post || editPost)!} />}
         </SectionWrapper>
     );
 

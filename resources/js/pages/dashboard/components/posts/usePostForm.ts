@@ -1,149 +1,59 @@
-import { useCallback, useState } from 'react';
+import type { SetStateAction } from 'react';
+import { useContentEditor } from '../common/useContentEditor';
 import type { CustomFieldValues } from './CustomFieldInputs';
-import { FeaturedImagePreview, MetaData, PostFormProps } from './types';
-import { getSelectedTermIds } from './utils';
+import type { FeaturedImagePreview, MetaData, PostFormProps } from './types';
 
-export function usePostForm({ post, onSubmit, onCancel, isEditing }: PostFormProps) {
-    const [title, setTitle] = useState(post?.title || '');
-    const [slug, setSlug] = useState(post?.slug || '');
-    const [content, setContent] = useState(post?.content || '');
-    const [excerpt, setExcerpt] = useState(post?.excerpt || '');
-    const [status, setStatus] = useState(post?.status || 'draft');
-    const [postType, setPostType] = useState<string>(post?.post_type_id?.toString() || '');
-    const [parentId, setParentId] = useState<string>(post?.parent_id ? post.parent_id.toString() : 'none');
-    const [authorId, setAuthorId] = useState<string>(post?.author_id?.toString() || '');
-    const initialFeaturedImage: FeaturedImagePreview | null = (() => {
-        const raw = post?.featured_image;
-
-        if (!raw) return null;
-
-        if (typeof raw === 'string') {
-            return {
-                url: raw,
-                name: post?.title || undefined,
-            };
-        }
-
-        if (typeof raw === 'object') {
-            return {
-                id: raw.id,
-                url: raw.url ?? raw.src ?? '',
-                thumb: raw.thumb,
-                name: raw.name ?? raw.alt,
-                mime_type: raw.mime_type,
-                file_name: raw.file_name,
-            };
-        }
-
-        return null;
-    })();
-
-    const [featuredImage, setFeaturedImage] = useState<FeaturedImagePreview | null>(initialFeaturedImage);
-    // SEO title/description are columns of their own; older saves also left copies in meta_data
-    const [seoTitle, setSeoTitle] = useState<string>(post?.meta_title || post?.meta_data?.meta_title || '');
-    const [seoDescription, setSeoDescription] = useState<string>(post?.meta_description || post?.meta_data?.meta_description || '');
-    const [metaData, setMetaData] = useState<MetaData>(() => {
-        const rest = { ...(post?.meta_data || {}) };
-        delete rest.meta_title;
-        delete rest.meta_description;
-        delete rest.fields;
-        return rest;
-    });
-    const [fieldValues, setFieldValues] = useState<CustomFieldValues>(post?.meta_data?.fields || {});
-    const [selectedTerms, setSelectedTerms] = useState<number[]>(getSelectedTermIds(post));
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [publishedAt, setPublishedAt] = useState(post?.published_at ? new Date(post.published_at).toISOString().slice(0, 16) : '');
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        try {
-            const formData = {
-                title,
-                slug: slug || title.toLowerCase().replace(/\s+/g, '-'),
-                content,
-                excerpt,
-                status,
-                post_type_id: parseInt(postType, 10),
-                parent_id: parentId && parentId !== 'none' ? parseInt(parentId, 10) : null,
-                author_id: parseInt(authorId, 10),
-                featured_image: featuredImage?.url ?? null,
-                meta_title: seoTitle || null,
-                meta_description: seoDescription || null,
-                meta_data: { ...metaData, fields: fieldValues },
-                taxonomy_terms: selectedTerms,
-                published_at: status === 'published' && !publishedAt ? new Date().toISOString() : publishedAt,
-            };
-
-            await onSubmit(formData);
-        } finally {
-            setIsSubmitting(false);
-        }
+export function usePostForm({ post, onSubmit, postTypes = [], currentLocale = 'en' }: PostFormProps) {
+    const editor = useContentEditor(
+        post ?? { post_type_id: (postTypes.find((type) => type.name === 'post') ?? postTypes[0])?.id },
+        'post',
+        currentLocale,
+        onSubmit,
+    );
+    const { form, setForm } = editor;
+    const set = <K extends keyof typeof form>(key: K, value: SetStateAction<(typeof form)[K]>) => {
+        setForm((previous) => ({
+            ...previous,
+            [key]: typeof value === 'function' ? (value as (old: (typeof form)[K]) => (typeof form)[K])(previous[key]) : value,
+        }));
     };
-
-    const handleTermToggle = useCallback((termId: number) => {
-        setSelectedTerms((prev) => (prev.includes(termId) ? prev.filter((id) => id !== termId) : [...prev, termId]));
-    }, []);
-
-    const handleMetaDataChange = useCallback((newMetaData: MetaData) => {
-        setMetaData(newMetaData);
-    }, []);
-
-    const handleFeaturedImageSelect = useCallback((media: any) => {
-        if (!media || typeof media !== 'object') return;
-        setFeaturedImage({
-            id: media.id,
-            url: media.url,
-            thumb: media.thumb,
-            name: media.name,
-            mime_type: media.mime_type,
-            file_name: media.file_name,
-        });
-    }, []);
-
-    const handleFeaturedImageRemove = useCallback(() => {
-        setFeaturedImage(null);
-    }, []);
-
     return {
-        seoTitle,
-        setSeoTitle,
-        seoDescription,
-        setSeoDescription,
-        fieldValues,
-        setFieldValues,
-        // Form state
-        title,
-        setTitle,
-        slug,
-        setSlug,
-        content,
-        setContent,
-        excerpt,
-        setExcerpt,
-        status,
-        setStatus,
-        postType,
-        setPostType,
-        parentId,
-        setParentId,
-        authorId,
-        setAuthorId,
-        featuredImage,
-        publishedAt,
-        setPublishedAt,
-        metaData,
-        selectedTerms,
-        isSubmitting,
-
-        // Handlers
-        handleSubmit,
-        handleTermToggle,
-        handleMetaDataChange,
-        handleFeaturedImageSelect,
-        handleFeaturedImageRemove,
-        onCancel,
-        isEditing,
+        ...editor,
+        title: form.title,
+        setTitle: (value: SetStateAction<string>) => set('title', value),
+        slug: form.slug,
+        setSlug: (value: SetStateAction<string>) => set('slug', value),
+        content: form.content,
+        setContent: (value: SetStateAction<string>) => set('content', value),
+        excerpt: form.excerpt,
+        setExcerpt: (value: SetStateAction<string>) => set('excerpt', value),
+        status: form.status,
+        setStatus: (value: SetStateAction<string>) => set('status', value),
+        postType: form.post_type_id,
+        setPostType: (value: SetStateAction<string>) => set('post_type_id', value),
+        parentId: form.parent_id,
+        setParentId: (value: SetStateAction<string>) => set('parent_id', value),
+        authorId: form.author_id,
+        setAuthorId: (value: SetStateAction<string>) => set('author_id', value),
+        publishedAt: form.published_at,
+        setPublishedAt: (value: SetStateAction<string>) => set('published_at', value),
+        seoTitle: form.meta_title,
+        setSeoTitle: (value: SetStateAction<string>) => set('meta_title', value),
+        seoDescription: form.meta_description,
+        setSeoDescription: (value: SetStateAction<string>) => set('meta_description', value),
+        featuredImage: form.featured_image,
+        metaData: form.meta_data,
+        selectedTerms: form.taxonomy_terms,
+        handleTermToggle: (id: number) =>
+            setForm((previous) => ({
+                ...previous,
+                taxonomy_terms: previous.taxonomy_terms.includes(id)
+                    ? previous.taxonomy_terms.filter((term) => term !== id)
+                    : [...previous.taxonomy_terms, id],
+            })),
+        handleMetaDataChange: (meta_data: MetaData) => setForm((previous) => ({ ...previous, meta_data })),
+        handleFeaturedImageSelect: (featured_image: FeaturedImagePreview) => setForm((previous) => ({ ...previous, featured_image })),
+        handleFeaturedImageRemove: () => setForm((previous) => ({ ...previous, featured_image: null })),
+        setFieldValues: (values: SetStateAction<CustomFieldValues>) => editor.setFieldValues(values),
     };
 }

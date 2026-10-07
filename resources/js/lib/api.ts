@@ -9,6 +9,15 @@ interface RequestOptions {
 
 const DEFAULT_TIMEOUT_MS = 30000;
 
+export class ApiError extends Error {
+    constructor(
+        public status: number,
+        public data: { message?: string; draft?: unknown },
+    ) {
+        super(data.message || `Request failed: ${status}`);
+    }
+}
+
 export async function apiRequest<T = unknown>(url: string, options: RequestOptions = {}): Promise<T> {
     const { method = 'GET', body, headers = {}, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
 
@@ -31,7 +40,8 @@ export async function apiRequest<T = unknown>(url: string, options: RequestOptio
         });
 
         if (!response.ok) {
-            throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+            const body = (await response.json().catch(() => ({}))) as { message?: string };
+            throw new ApiError(response.status, body);
         }
 
         return (await response.json()) as T;

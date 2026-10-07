@@ -1,0 +1,344 @@
+import { useAdminToast } from '@/components/admin/AdminToastProvider';
+import ErrorBoundary from '@/ErrorBoundary';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useAcl } from '@/lib/acl';
+import { type ReactNode } from 'react';
+import { ROUTE } from './routes';
+import { getCommentsSections } from './sections/comments/commentsSections';
+import { renderDashboardHome } from './sections/home/homeSection';
+import { getMediaSections } from './sections/media/mediaSections';
+import { getPagesSections } from './sections/pages/pagesSections';
+import { getPluginsSections } from './sections/plugins/pluginsSections';
+import { getPostTypesSections } from './sections/post-types/postTypesSections';
+import { getPostsSections } from './sections/posts/postsSections';
+import { getRolesSections } from './sections/roles/rolesSections';
+import { getSiteSettingsSections } from './sections/site-settings/siteSettingsSections';
+import { getSitemapSections } from './sections/sitemap/sitemapSections';
+import { getSystemSections } from './sections/system/systemSections';
+import { getTaxonomiesSections } from './sections/taxonomies/taxonomiesSections';
+import { getTaxonomyTermsSections } from './sections/taxonomy-terms/taxonomyTermsSections';
+import { getTemplatesSections } from './sections/templates/templatesSections';
+import { getThemesSections } from './sections/themes/themesSections';
+import { getTranslationSections } from './sections/translations/translationSections';
+import { getTrashSections } from './sections/trash/trashSections';
+import { getUsersSections } from './sections/users/usersSections';
+import { DashboardProps, asArray, type User as DashboardUser } from './types';
+
+export default function DashboardContent({
+    adminStats,
+    adminSection,
+    users: usersProp,
+    roles: rolesProp,
+    posts: postsProp,
+    postTypes,
+    currentPostType,
+    taxonomies,
+    taxonomyTerms,
+    taxonomyTerm,
+    themes,
+    discoveredThemes,
+    activeTheme,
+    theme,
+    allRoles,
+    permissions = [],
+    editPost,
+    post,
+    authors,
+    filters,
+    pageParents,
+    pageFields,
+    defaultStatus,
+    parentsByType,
+    groupedTerms,
+    sitemapSettings,
+    settings,
+    settingsGroup,
+    pages,
+    globalCommentsEnabled,
+    timezones,
+    plugins,
+    plugin,
+    settingsSchema,
+    templates,
+    template,
+    editTemplate,
+    templateTypes,
+    media,
+    folders,
+    allFolders,
+    breadcrumb,
+    currentFolderId,
+    editUser,
+    editRole,
+    editPostType,
+    editTaxonomy,
+    editTaxonomyTerm,
+    parentTerms,
+    auth,
+    systemStatus,
+    overview,
+    locales,
+    currentLocale,
+    translation,
+    translationManager,
+    comments,
+    commentCounts,
+    commentFilter,
+    commentModeration,
+    updateCenter,
+    backups,
+    activity,
+    trash,
+    redirects,
+    mailSettings,
+    languages,
+}: DashboardProps & { globalCommentsEnabled: boolean }) {
+    const { t } = useTranslation();
+    const { success: showSuccess, error: showError } = useAdminToast();
+    // Convert users to match the expected User type
+    const users = asArray(usersProp).map((user: DashboardUser) => ({
+        ...user,
+        email_verified_at: 'email_verified_at' in user ? user.email_verified_at : null,
+        // Ensure roles is always an array of { id, name } objects
+        roles: (() => {
+            const raw: any = (user as any).roles;
+            const list: any[] = Array.isArray(raw) ? raw : Array.isArray(raw?.roles) ? raw.roles : [];
+
+            return list
+                .filter((r) => r && typeof r === 'object')
+                .map((role) => ({
+                    id: role.id,
+                    name: role.name,
+                }));
+        })(),
+    }));
+    // Transform permissions to include timestamps for RoleForm
+    const permissionsWithTimestamps = (permissions || []).map((permission) => ({
+        ...permission,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    }));
+
+    // Ensure roles is always an array
+    const roles = asArray(rolesProp);
+
+    // Centralized UI ACL: prefer auth-shared roles/permissions via useAcl
+    const { hasPermission, isAdmin: isAdminRole } = useAcl();
+    const can = (perm: string) => isAdminRole() || hasPermission(perm);
+
+    // Media permissions (computed via can())
+    const canEditMedia = can('edit media');
+    const canDeleteMedia = can('delete media');
+
+    // Admins or users with relevant permissions can edit post author
+    const canEditAuthorFlag = can('assign posts author') || can('edit posts');
+    // Posts/Pages section logic extracted to ./sections/posts and ./sections/pages
+
+    // Users/Roles section logic extracted to ./sections/users and ./sections/roles
+
+    // Users/Roles section renderers extracted to ./sections/users and ./sections/roles
+
+    // Render the appropriate section based on adminSection
+    const normalizeSection = (s?: string) => {
+        if (!s) return undefined;
+        // Strip known inertia-style prefixes and trailing index indicators
+        let key = s;
+        if (key.startsWith('dashboard.admin.')) key = key.replace(/^dashboard\.admin\./, '');
+        if (key.endsWith('.index')) key = key.slice(0, -'.index'.length);
+
+        const map: Record<string, string> = {
+            post: 'posts',
+            user: 'users',
+            role: 'roles',
+            page: 'pages',
+            'post-type': 'post-types',
+            taxonomy: 'taxonomies',
+            theme: 'themes',
+        };
+        return map[key] || key;
+    };
+
+    const renderSection = () => {
+        const section = normalizeSection(adminSection);
+        if (!section) {
+            return renderDashboardHome({ auth, adminStats, systemStatus, overview, ROUTE, t });
+        }
+
+        const sectionsMap: Record<string, () => ReactNode> = {
+            ...getSystemSections({ updateCenter, backups, activity, redirects, mailSettings, languages }),
+            ...getTrashSections({ trash }),
+            ...getMediaSections({
+                media,
+                folders,
+                allFolders,
+                breadcrumb,
+                currentFolderId,
+                can,
+                canEditMedia,
+                canDeleteMedia,
+                ROUTE,
+                t,
+            }),
+            ...getSitemapSections({
+                postTypes,
+                sitemapSettings,
+                can,
+                ROUTE,
+                t,
+            }),
+            ...getPluginsSections({
+                plugins,
+                plugin,
+                settingsSchema,
+                can,
+                ROUTE,
+                t,
+            }),
+            ...getTranslationSections({
+                translationManager,
+                can,
+                t,
+            }),
+            ...getCommentsSections({
+                comments,
+                commentCounts,
+                commentFilter,
+                commentModeration,
+                t,
+            }),
+            ...getSiteSettingsSections({
+                settings,
+                settingsGroup,
+                pages,
+                timezones,
+                locales,
+                currentLocale,
+                can,
+                ROUTE,
+                t,
+            }),
+            ...getThemesSections({
+                themes,
+                discoveredThemes,
+                activeTheme,
+                theme,
+                can,
+                showSuccess,
+                showError,
+                ROUTE,
+                t,
+            }),
+            ...getPostsSections({
+                postsProp,
+                editPost,
+                post,
+                postTypes,
+                currentPostType,
+                groupedTerms,
+                authors,
+                filters,
+                parentsByType,
+                locales,
+                currentLocale,
+                translation,
+                can,
+                canEditAuthorFlag,
+                showSuccess,
+                showError,
+                ROUTE,
+                t,
+            }),
+            ...getPagesSections({
+                postsProp,
+                post,
+                editPost,
+                authors,
+                filters,
+                pageParents,
+                pageFields,
+                defaultStatus,
+                canEditAuthorFlag,
+                locales,
+                currentLocale,
+                translation,
+                can,
+                showSuccess,
+                showError,
+                ROUTE,
+                t,
+            }),
+            ...getPostTypesSections({
+                postTypes,
+                editPostType,
+                globalCommentsEnabled,
+                can,
+                showSuccess,
+                showError,
+                ROUTE,
+                t,
+            }),
+            ...getTaxonomiesSections({
+                adminSection,
+                taxonomies,
+                editTaxonomy,
+                postTypes,
+                can,
+                showSuccess,
+                showError,
+                ROUTE,
+                t,
+            }),
+            ...getUsersSections({
+                users,
+                auth,
+                allRoles,
+                permissions,
+                editUser,
+                can,
+                showSuccess,
+                showError,
+                ROUTE,
+                t,
+            }),
+            ...getRolesSections({
+                roles,
+                editRole,
+                permissionsWithTimestamps,
+                can,
+                showSuccess,
+                showError,
+                ROUTE,
+                t,
+            }),
+            ...getTaxonomyTermsSections({
+                adminSection,
+                taxonomyTerms,
+                taxonomyTerm,
+                editTaxonomyTerm,
+                taxonomies,
+                parentTerms,
+                can,
+                showSuccess,
+                showError,
+                ROUTE,
+                t,
+            }),
+            ...getTemplatesSections({
+                adminSection,
+                templates,
+                template,
+                editTemplate,
+                templateTypes,
+                can,
+                showSuccess,
+                showError,
+                ROUTE,
+                t,
+            }),
+        };
+
+        return sectionsMap[section]?.() ?? <div>Section not found</div>;
+    };
+
+    return <ErrorBoundary>{renderSection()}</ErrorBoundary>;
+}
