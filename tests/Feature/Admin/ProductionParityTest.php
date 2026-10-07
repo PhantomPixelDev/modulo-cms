@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Post;
+use App\Models\Redirect;
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Mail;
 
@@ -29,7 +30,7 @@ it('validates foreign keys as integers instead of crashing on Postgres', functio
 
 it('matches slugs case-insensitively when searching redirects', function () {
     $this->actingAs(makeAdminUserWithPermissions(['edit settings']));
-    \App\Models\Redirect::create(['from_path' => '/Old-Path', 'to_url' => '/new', 'status_code' => 301]);
+    Redirect::create(['from_path' => '/Old-Path', 'to_url' => '/new', 'status_code' => 301]);
 
     $this->get(route('dashboard.admin.system.redirects', ['q' => 'old-path']))
         ->assertOk()
