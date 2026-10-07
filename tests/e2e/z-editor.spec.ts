@@ -126,7 +126,7 @@ test.describe('editor submissions and recovery', () => {
         const timezone = (await publishingLabel.textContent())?.match(/\(([^)]+)\)/)?.[1];
         expect(timezone).toBeTruthy();
         const expectedLocalDate = new Intl.DateTimeFormat('sv-SE', {
-            timeZone,
+            timeZone: timezone,
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
