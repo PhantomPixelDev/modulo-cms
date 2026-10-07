@@ -62,7 +62,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::post('posts/bulk', [PostController::class, 'bulk'])->middleware('throttle:6,1')->name('posts.bulk');
         Route::resource('posts', PostController::class);
         // Specific route for listing posts by post type
-        Route::get('posts/type/{postType}', [PostController::class, 'indexByType'])->whereNumber('postType')->name('posts.byType');
+        Route::get('posts/type/{postType}', [PostController::class, 'indexByType'])->name('posts.byType');
         // Post translation routes
         Route::post('posts/{post}/translations', [PostTranslationController::class, 'store'])->name('posts.translations.store');
         Route::delete('posts/{post}/translations/{locale}', [PostTranslationController::class, 'destroy'])->name('posts.translations.destroy');
@@ -77,7 +77,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('taxonomy-terms', [TaxonomyTermController::class, 'index'])->name('taxonomy-terms.index');
         Route::resource('taxonomy-terms', TaxonomyTermController::class)->except(['index'])->where(['taxonomy_term' => '[0-9]+']);
         // Specific route for listing taxonomy terms by taxonomy slug
-        Route::get('taxonomies/{taxonomy}/terms', [TaxonomyTermController::class, 'indexByTaxonomy'])->whereNumber('taxonomy')->name('taxonomy-terms.byTaxonomy');
+        Route::get('taxonomies/{taxonomy}/terms', [TaxonomyTermController::class, 'indexByTaxonomy'])->name('taxonomy-terms.byTaxonomy');
         Route::resource('templates', TemplateController::class)->where(['template' => '[0-9]+']);
         // Before the resource: "registry" would otherwise be taken for a {theme} id.
         Route::get('/themes/registry', [ThemeController::class, 'registry'])->name('themes.registry');
