@@ -14,7 +14,7 @@ it('returns 404 for non-numeric IDs on id-bound admin routes', function () {
 });
 
 it('validates foreign keys as integers instead of crashing on Postgres', function () {
-    $this->actingAs(makeAdminUserWithPermissions(['create posts']));
+    $this->actingAs(makeAdminUserWithPermissions(['create posts', 'view taxonomy terms', 'view menu items', 'view menus']));
 
     $this->post(route('dashboard.admin.posts.store'), [
         'post_type_id' => 'abc',
