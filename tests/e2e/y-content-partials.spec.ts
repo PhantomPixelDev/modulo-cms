@@ -9,6 +9,19 @@ for (const section of ['posts', 'pages']) {
         await page.getByLabel('Password').fill(process.env.MODULO_E2E_PASSWORD ?? 'a-sufficiently-long-password');
         await page.getByRole('button', { name: /log in|sign in/i }).click();
         await expect(page).toHaveURL(/\/dashboard/);
+        // The bare wizard installation deliberately has no active theme.
+        // Install/activate the bundled theme through the same UI an owner uses.
+        await page.goto('/dashboard/admin/themes');
+        await expect(page.getByRole('heading', { name: 'Active Theme', exact: true })).toBeVisible();
+        const noTheme = page.getByText('No active theme', { exact: true });
+        if (await noTheme.isVisible()) {
+            const activate = page.getByRole('button', { name: 'Activate', exact: true });
+            if (!(await activate.count())) {
+                await page.getByRole('button', { name: 'Discover & Install All', exact: true }).click();
+            }
+            await activate.first().click();
+            await expect(noTheme).toHaveCount(0);
+        }
         const loaded = page.waitForResponse(
             (response) => response.url().includes('/dashboard/admin/editor-drafts') && response.request().method() === 'GET',
         );

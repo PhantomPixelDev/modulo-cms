@@ -2,6 +2,8 @@
 
 Themes can expose reusable React components to page and post authors. Register a component once, then insert it with a shortcode:
 
+First install and activate your theme under **Appearance → Themes**. Content modules need an active React theme, just like public page templates.
+
 ```text
 [partial name="callout" title="Good to know" tone="success"]
 Your text goes here.
