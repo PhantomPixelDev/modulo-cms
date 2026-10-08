@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import Partials, { PartialCard } from './Index';
 
 vi.mock('@/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock('@/layouts/admin-layout', () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 const partial = { name: 'callout', label: 'Callout', description: 'Useful information', body: true, defaults: { tone: 'info' } };
 
 describe('partial catalog', () => {
