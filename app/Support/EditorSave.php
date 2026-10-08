@@ -67,7 +67,9 @@ class EditorSave
     {
         $request->validate(['published_at' => ['required', 'date']]);
         $zone = (string) app(SiteSettingsService::class)->get('timezone', config('app.timezone'));
-        $date = Carbon::parse($request->string('published_at')->toString(), $zone)->utc();
+        // Eloquent stores datetimes without an offset and reads them in app.timezone.
+        // Keep the stored wall time in that same zone to preserve the scheduled instant.
+        $date = Carbon::parse($request->string('published_at')->toString(), $zone)->setTimezone(config('app.timezone'));
         if (! $date->isFuture()) {
             throw ValidationException::withMessages(['published_at' => __('Choose a future date in the site timezone.')]);
         }

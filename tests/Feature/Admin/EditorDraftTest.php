@@ -98,17 +98,24 @@ it('applies explicit publication actions and keeps the editor open', function (s
         ->and($post->fresh()->translation('es')->title)->toBe('Changed');
 })->with([['draft', 'draft'], ['publish', 'published'], ['update', 'published']]);
 
-it('uses the site timezone for schedules and validates future dates', function () {
-    SiteSetting::set('timezone', 'Europe/Berlin');
-    $type = PostType::factory()->create();
-    $post = Post::factory()->create(['post_type_id' => $type->id, 'status' => 'draft']);
-    $this->actingAs(makeAdminUserWithPermissions(['edit posts', 'publish posts']));
-    $body = ['title' => 'Schedule', 'slug' => $post->slug, 'content' => 'Text', 'post_type_id' => $type->id, 'status' => 'draft', 'editor_action' => 'schedule', 'published_at' => '2030-07-10T15:30'];
-    $this->put(route('dashboard.admin.posts.update', $post), $body)->assertSessionHasNoErrors();
-    expect($post->fresh()->published_at->utc()->format('Y-m-d H:i'))->toBe('2030-07-10 13:30');
-    $body['published_at'] = '2000-01-01T12:00';
-    $this->put(route('dashboard.admin.posts.update', $post), $body)->assertSessionHasErrors('published_at');
-});
+it('uses the site timezone for schedules and validates future dates', function (string $appTimezone) {
+    config(['app.timezone' => $appTimezone]);
+    $originalTimezone = date_default_timezone_get();
+    date_default_timezone_set($appTimezone);
+    try {
+        SiteSetting::set('timezone', 'Europe/Berlin');
+        $type = PostType::factory()->create();
+        $post = Post::factory()->create(['post_type_id' => $type->id, 'status' => 'draft']);
+        $this->actingAs(makeAdminUserWithPermissions(['edit posts', 'publish posts']));
+        $body = ['title' => 'Schedule', 'slug' => $post->slug, 'content' => 'Text', 'post_type_id' => $type->id, 'status' => 'draft', 'editor_action' => 'schedule', 'published_at' => '2030-07-10T15:30'];
+        $this->put(route('dashboard.admin.posts.update', $post), $body)->assertSessionHasNoErrors();
+        expect($post->fresh()->published_at->utc()->format('Y-m-d H:i'))->toBe('2030-07-10 13:30');
+        $body['published_at'] = '2000-01-01T12:00';
+        $this->put(route('dashboard.admin.posts.update', $post), $body)->assertSessionHasErrors('published_at');
+    } finally {
+        date_default_timezone_set($originalTimezone);
+    }
+})->with(['UTC', 'Europe/Berlin']);
 
 it('does not delete recovery on validation failure or a stale explicit save', function () {
     $user = makeAdminUserWithPermissions(['create posts']);

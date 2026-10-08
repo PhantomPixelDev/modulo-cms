@@ -87,8 +87,15 @@ test.describe('editor submissions and recovery', () => {
         test.skip(!process.env.MODULO_E2E_CONTAINER, 'Requires the isolated translation fixture.');
         await page.setViewportSize({ width: 390, height: 844 });
         await login(page);
-        await newPost(page, `English recovery ${Date.now()}`);
-        await expect(page.getByRole('status').filter({ hasText: /saved at/i })).toBeVisible();
+        const englishTitle = `English recovery ${Date.now()}`;
+        await newPost(page, englishTitle);
+        // A previous recovery's status can still be visible while the new text is saving.
+        await expect
+            .poll(async () => {
+                const response = await page.context().request.get('/dashboard/admin/editor-drafts');
+                return (await response.json()).drafts.some((entry: { payload: { title: string } }) => entry.payload.title === englishTitle);
+            })
+            .toBe(true);
         const title = `Spanish recovery ${Date.now()}`;
         await newPost(page, title, 'es');
         await expect(page.getByRole('status').filter({ hasText: /saved at/i })).toBeVisible();
@@ -120,23 +127,11 @@ test.describe('editor submissions and recovery', () => {
         await page.getByRole('button', { name: 'Schedule', exact: true }).click();
         await expect(page).toHaveURL(/\/posts\/\d+\/edit/);
         await expect(page.getByRole('button', { name: 'Unpublish and save draft', exact: true })).toBeVisible();
+        await page.reload();
         await page.getByRole('tab', { name: 'Advanced', exact: true }).click();
         const publishingLabel = page.locator('label[for="publishedAt"]');
         await expect(publishingLabel).toHaveText(/Publishing Date \(.+\)/);
-        const timezone = (await publishingLabel.textContent())?.match(/\(([^)]+)\)/)?.[1];
-        expect(timezone).toBeTruthy();
-        const expectedLocalDate = new Intl.DateTimeFormat('sv-SE', {
-            timeZone: timezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-        })
-            .format(new Date(Date.UTC(2030, 6, 10, 15, 30)))
-            .replace(' ', 'T');
-        await expect(page.locator('#publishedAt')).toHaveValue(expectedLocalDate);
+        await expect(page.locator('#publishedAt')).toHaveValue('2030-07-10T15:30');
     });
 
     test('draft publish and unpublish stay open and serialize slow submissions', async ({ page }) => {
