@@ -3,6 +3,8 @@ import Layout from './Layout';
 import PostCard from './partials/PostCard';
 import { ButtonLink, Container, Pagination, useThemeT } from './partials/ui';
 
+const DOCUMENTATION_URL = 'https://github.com/PhantomPixelDev/modulo-cms/blob/main/docs/index.md';
+
 interface IndexProps {
     demo?: { enabled: boolean };
     posts?: {
@@ -122,6 +124,9 @@ export default function Index({ posts, site, theme, menus, demo, pagination }: I
                             </ButtonLink>
                             <ButtonLink href="/dashboard" variant="outline" size="lg">
                                 {tt('home.hero.secondary_cta', 'Admin Dashboard')}
+                            </ButtonLink>
+                            <ButtonLink href={DOCUMENTATION_URL} target="_blank" rel="noopener noreferrer" variant="outline" size="lg">
+                                {tt('home.hero.documentation', 'Documentation')}
                             </ButtonLink>
                         </div>
                         <p className="mt-6 text-sm text-muted-foreground">
@@ -312,6 +317,15 @@ export default function Index({ posts, site, theme, menus, demo, pagination }: I
                         <div className="flex flex-wrap gap-3">
                             <ButtonLink href="/dashboard" className="bg-background text-foreground hover:bg-background/85">
                                 {tt('home.cta.primary', 'Go to Dashboard')}
+                            </ButtonLink>
+                            <ButtonLink
+                                href={DOCUMENTATION_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                variant="outline"
+                                className="border-background/20 bg-transparent text-background hover:bg-background/10"
+                            >
+                                {tt('home.cta.documentation', 'Read the documentation')}
                             </ButtonLink>
                             <ButtonLink
                                 href="https://github.com/PhantomPixelDev/modulo-cms"

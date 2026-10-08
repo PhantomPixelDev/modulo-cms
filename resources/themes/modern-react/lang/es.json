@@ -47,7 +47,8 @@
             "title": "Crea experiencias digitales audaces",
             "tagline": "Un CMS moderno y potente construido con Laravel y React.",
             "primary_cta": "Ver contenido",
-            "secondary_cta": "Ir al panel"
+            "secondary_cta": "Ir al panel",
+            "documentation": "Documentación"
         },
         "features": {
             "title": "Funciones poderosas",
@@ -112,7 +113,8 @@
             "title": "¿Listo para comenzar?",
             "description": "Explora el panel de administración para gestionar tu contenido o consulta la documentación para saber más.",
             "primary": "Ir al panel",
-            "secondary": "Ver en GitHub"
+            "secondary": "Ver en GitHub",
+            "documentation": "Leer la documentación"
         }
     },
     "posts": {

@@ -47,7 +47,8 @@
             "title": "Create bold digital experiences",
             "tagline": "A powerful, modern content management system built with Laravel and React.",
             "primary_cta": "Browse Content",
-            "secondary_cta": "Admin Dashboard"
+            "secondary_cta": "Admin Dashboard",
+            "documentation": "Documentation"
         },
         "features": {
             "title": "Powerful Features",
@@ -112,7 +113,8 @@
             "title": "Ready to Get Started?",
             "description": "Explore the admin dashboard to manage your content, or browse our documentation to learn more.",
             "primary": "Go to Dashboard",
-            "secondary": "View on GitHub"
+            "secondary": "View on GitHub",
+            "documentation": "Read the documentation"
         }
     },
     "posts": {
