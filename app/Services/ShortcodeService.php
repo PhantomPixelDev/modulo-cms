@@ -24,22 +24,83 @@ class ShortcodeService
      */
     public function parse(string $content): string
     {
-        // Pattern matches [tag], [tag attr="value"], [tag]content[/tag]
-        $pattern = '/\[(\w+)([^\]]*)\](?:(.+?)\[\/\1\])?/s';
+        return $this->parseWith($content, $this->shortcodes);
+    }
 
-        return preg_replace_callback($pattern, function ($matches) {
-            $tag = $matches[1];
-            $attrString = $matches[2] ?? '';
-            $innerContent = $matches[3] ?? '';
+    /**
+     * Parse using request-local handlers, without changing the plugin registry.
+     * Code examples are literal; balanced tags support nested modules.
+     *
+     * @param  array<string, callable>  $handlers
+     */
+    public function parseWith(string $content, array $handlers): string
+    {
+        return $this->expand($content, $handlers, 0);
+    }
 
-            if (! isset($this->shortcodes[$tag])) {
-                return $matches[0]; // Return unchanged if shortcode not registered
+    /** @param array<string, callable> $handlers */
+    private function expand(string $content, array $handlers, int $depth): string
+    {
+        if ($depth >= 16) {
+            return $content;
+        }
+
+        $pattern = '~\[(/?)([a-zA-Z_][\w-]*)((?:&quot;.*?&quot;|&#0*39;.*?&#0*39;|"[^"]*"|\x27[^\x27]*\x27|[^\]"\x27])*)\]~s';
+        preg_match_all($pattern, $content, $tokens, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+        preg_match_all('~<(pre|code)\b[^>]*>.*?</\1>~is', $content, $literal, PREG_OFFSET_CAPTURE);
+        // A shortcode is content, never part of an HTML attribute.
+        preg_match_all('~<(?:[^>"\x27]|"[^"]*"|\x27[^\x27]*\x27)*>~s', $content, $htmlTags, PREG_OFFSET_CAPTURE);
+        $literal[0] = array_merge($literal[0], $htmlTags[0]);
+        $tokens = array_values(array_filter($tokens, function ($token) use ($literal) {
+            foreach ($literal[0] as [$html, $start]) {
+                if ($token[0][1] >= $start && $token[0][1] < $start + strlen($html)) {
+                    return false;
+                }
             }
 
-            $attrs = $this->parseAttributes($attrString);
+            return true;
+        }));
+        $result = '';
+        $cursor = 0;
 
-            return call_user_func($this->shortcodes[$tag], $attrs, $innerContent);
-        }, $content);
+        foreach ($tokens as $index => $token) {
+            [$opening, $offset] = $token[0];
+            if ($offset < $cursor || $token[1][0] === '/') {
+                continue;
+            }
+            $tag = $token[2][0];
+            $end = $offset + strlen($opening);
+            $inner = '';
+            $closing = '';
+            if (! str_ends_with(rtrim($token[3][0]), '/')) {
+                $balance = 1;
+                for ($i = $index + 1, $count = count($tokens); $i < $count; $i++) {
+                    $next = $tokens[$i];
+                    if ($next[2][0] !== $tag) {
+                        continue;
+                    }
+                    if ($next[1][0] === '/') {
+                        $balance--;
+                    } elseif (! str_ends_with(rtrim($next[3][0]), '/')) {
+                        $balance++;
+                    }
+                    if ($balance === 0) {
+                        $inner = substr($content, $end, $next[0][1] - $end);
+                        $closing = $next[0][0];
+                        $end = $next[0][1] + strlen($closing);
+                        break;
+                    }
+                }
+            }
+            $result .= substr($content, $cursor, $offset - $cursor);
+            $inner = $this->expand($inner, $handlers, $depth + 1);
+            $result .= isset($handlers[$tag])
+                ? (string) $handlers[$tag]($this->parseAttributes($token[3][0]), $inner)
+                : $opening.$inner.$closing;
+            $cursor = $end;
+        }
+
+        return $result.substr($content, $cursor);
     }
 
     /**
@@ -48,11 +109,12 @@ class ShortcodeService
     protected function parseAttributes(string $attrString): array
     {
         $attrs = [];
-        // Match key="value" or key='value' or key=value
-        preg_match_all('/(\w+)\s*=\s*["\']?([^"\'>\s]+)["\']?/', $attrString, $matches, PREG_SET_ORDER);
+        // Slate escapes quotes in text. Decode only attributes, never body HTML.
+        $attrString = html_entity_decode($attrString, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        preg_match_all('/([\w-]+)\s*=\s*(?:"([^"]*)"|\x27([^\x27]*)\x27|([^\s\]]+))/', $attrString, $matches, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL);
 
         foreach ($matches as $match) {
-            $attrs[$match[1]] = $match[2];
+            $attrs[$match[1]] = $match[2] ?? $match[3] ?? $match[4] ?? '';
         }
 
         return $attrs;

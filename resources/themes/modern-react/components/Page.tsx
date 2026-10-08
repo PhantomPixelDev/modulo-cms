@@ -1,4 +1,6 @@
-import Layout from './Layout';
+import ContentRenderer from '@/components/content/ContentRenderer';
+import type { ContentPartial } from '@/theme-partials';
+import Layout, { type ContentSeo } from './Layout';
 import { formatDate, useThemeT } from './partials/ui';
 
 interface Page {
@@ -6,6 +8,8 @@ interface Page {
     title: string;
     slug: string;
     content: string;
+    content_partials?: ContentPartial[];
+    seo?: ContentSeo;
     excerpt?: string;
     featured_image?: string;
     /** Smaller WebP copies ("url 768w, …") when the image is from the media library */
@@ -48,6 +52,7 @@ export default function Page({ page, site, theme, menus }: PageProps) {
             site={site}
             theme={theme}
             menus={menus}
+            page={page}
         >
             <article className="mx-auto max-w-3xl">
                 <header className="mb-10 border-b pb-8">
@@ -76,7 +81,7 @@ export default function Page({ page, site, theme, menus }: PageProps) {
                     </figure>
                 )}
 
-                <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: safePage.content || '' }} />
+                <ContentRenderer className="prose prose-lg max-w-none" html={safePage.content || ''} partials={safePage.content_partials} />
             </article>
         </Layout>
     );

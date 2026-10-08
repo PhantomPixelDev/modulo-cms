@@ -6,11 +6,15 @@ import { useThemeT } from '../partials/ui';
 import { cartCountFromAddResponse, fetchCartCount, notifyCartUpdated, shopAddToCart, toastAddedToCart, toastCartError } from './shopCart';
 import { configureMoney, formatMoney, type MoneyFormat } from './totals';
 
+import ContentRenderer from '@/components/content/ContentRenderer';
+import type { ContentPartial } from '@/theme-partials';
+
 interface Product {
     id: number;
     title: string;
     slug: string;
     content: string;
+    content_partials?: ContentPartial[];
     excerpt?: string;
     featured_image?: string;
     url?: string;
@@ -419,7 +423,7 @@ export default function Single({ product, relatedProducts, site, theme, menus, m
                 {product.content && (
                     <div className="mt-16 rounded-3xl border bg-card p-8 md:p-12">
                         <h2 className="mb-6 text-2xl font-semibold tracking-tight text-foreground">Product Description</h2>
-                        <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: product.content }} />
+                        <ContentRenderer className="prose prose-lg max-w-none" html={product.content} partials={product.content_partials} />
                     </div>
                 )}
 

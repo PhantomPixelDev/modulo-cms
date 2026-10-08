@@ -10,6 +10,7 @@ use App\Services\HtmlSanitizer;
 use App\Services\ResponsiveImages;
 use App\Services\ShortcodeService;
 use App\Services\SiteSettingsService;
+use App\Services\ThemePartialService;
 use App\Support\CustomFields;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -23,6 +24,7 @@ class PostPresenter
     public function presentPost(Post $post, bool $full = true): array
     {
         $content = $full ? $this->renderContent($post) : '';
+        $rendered = $full ? app(ThemePartialService::class)->render((string) apply_filters('the_content', $content, $post)) : ['html' => '', 'partials' => []];
         $settings = app(SiteSettingsService::class);
         $commentsEnabled = $full && $this->commentsEnabled($post);
 
@@ -31,7 +33,8 @@ class PostPresenter
             // Plugins can change what themes show: the_title, the_content, the_excerpt
             'title' => (string) apply_filters('the_title', $post->title ?? '', $post),
             'slug' => $post->slug ?? '',
-            'content' => $full ? (string) apply_filters('the_content', $content, $post) : '',
+            'content' => $rendered['html'],
+            'content_partials' => $rendered['partials'],
             'excerpt' => (string) apply_filters('the_excerpt', $post->excerpt ?? '', $post),
             'featured_image' => $post->featured_image,
             // Smaller WebP copies when the image comes from the media library

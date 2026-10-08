@@ -94,6 +94,16 @@
         }
     },
     "partials": {
+        "callout": {
+            "component": "components/partials/Callout.tsx",
+            "shortcode": true,
+            "defaults": { "tone": "info", "title": "" }
+        },
+        "disclosure": {
+            "component": "components/partials/Disclosure.tsx",
+            "shortcode": true,
+            "defaults": { "title": "Details", "open": "false" }
+        },
         "navigation": {
             "component": "components/partials/Navigation.tsx"
         },

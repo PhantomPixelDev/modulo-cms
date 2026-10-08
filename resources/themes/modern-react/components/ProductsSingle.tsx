@@ -3,11 +3,15 @@ import { Check, Heart, Minus, Plus, RotateCcw, Shield, ShoppingCart, Truck } fro
 import { useState } from 'react';
 import Layout from './Layout';
 
+import ContentRenderer from '@/components/content/ContentRenderer';
+import type { ContentPartial } from '@/theme-partials';
+
 interface Product {
     id: number;
     title: string;
     slug: string;
     content: string;
+    content_partials?: ContentPartial[];
     excerpt?: string;
     featured_image?: string;
     url?: string;
@@ -349,7 +353,7 @@ export default function ProductsSingle({ post, product, relatedProducts, site, t
                 {item.content && (
                     <div className="mt-16">
                         <h2 className="mb-6 text-2xl font-semibold tracking-tight text-foreground">Product Description</h2>
-                        <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: item.content }} />
+                        <ContentRenderer className="prose prose-lg max-w-none" html={item.content} partials={item.content_partials} />
                     </div>
                 )}
 

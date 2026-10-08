@@ -10,6 +10,14 @@ import { Container, normalizeMenuItems } from './partials/ui';
 import { useShortcodeCart } from './Shop/useShortcodeCart';
 import ErrorBoundary from './util/ErrorBoundary';
 
+export interface ContentSeo {
+    title?: string;
+    description?: string;
+    image?: string | null;
+    canonical?: string | null;
+    noindex?: boolean;
+}
+
 interface LayoutProps {
     children: React.ReactNode;
     /** Show the search / categories / tags column (listings and single posts). */
@@ -59,15 +67,10 @@ interface LayoutProps {
             name?: string;
         };
         /** From the post's SEO tab: search and social previews. */
-        seo?: {
-            title?: string;
-            description?: string;
-            image?: string | null;
-            canonical?: string | null;
-            noindex?: boolean;
-        };
+        seo?: ContentSeo;
     };
     page?: {
+        seo?: ContentSeo;
         id?: number;
         title?: string;
         excerpt?: string;
@@ -108,7 +111,7 @@ export default function Layout({
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS', tagline: '' };
     const safeMenus = menus && typeof menus === 'object' ? menus : { header: [], footer: [] };
     const safeAuth = auth && typeof auth === 'object' ? auth : { user: null };
-    const seo = post?.seo;
+    const seo = post?.seo ?? page?.seo;
     const pageTitle = (seo?.title ?? title) ? `${seo?.title ?? title} | ${safeSite.name}` : safeSite.name;
 
     // Only override the design tokens when the theme actually configures them.
