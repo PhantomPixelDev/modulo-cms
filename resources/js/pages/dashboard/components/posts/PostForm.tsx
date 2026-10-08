@@ -1,3 +1,4 @@
+import { PartialCatalogLink } from '@/components/content/PartialCatalogLink';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -286,7 +287,10 @@ export function PostForm({
                                     )}
 
                                     <div className="space-y-3 pt-2">
-                                        <Label className="text-sm font-bold">{t('dashboard.posts.post_content')}</Label>
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <Label className="text-sm font-bold">{t('dashboard.posts.post_content')}</Label>
+                                            <PartialCatalogLink />
+                                        </div>
                                         <div className="overflow-hidden rounded-lg border bg-input-bg shadow-xs">
                                             <SlateEditor key={editorKey} initialHTML={content} onHTMLChange={setContent} />
                                         </div>

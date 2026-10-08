@@ -97,11 +97,15 @@
         "callout": {
             "component": "components/partials/Callout.tsx",
             "shortcode": true,
+            "label": "Callout",
+            "description": "Highlight useful information. Tone can be info, success or warning.",
             "defaults": { "tone": "info", "title": "" }
         },
         "disclosure": {
             "component": "components/partials/Disclosure.tsx",
             "shortcode": true,
+            "label": "Collapsible section",
+            "description": "Content readers can expand. Set open to true to start expanded.",
             "defaults": { "title": "Details", "open": "false" }
         },
         "navigation": {

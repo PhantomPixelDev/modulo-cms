@@ -56,7 +56,7 @@ export default function {$component}({ attributes, children }: ThemePartialProps
 TSX;
         File::ensureDirectoryExists(dirname($directory.'/'.$path));
         File::put($directory.'/'.$path, $source);
-        $config['partials'][$name] = ['component' => $path, 'shortcode' => true, 'defaults' => ['title' => '']];
+        $config['partials'][$name] = ['component' => $path, 'shortcode' => true, 'label' => Str::headline($name), 'description' => '', 'defaults' => ['title' => '']];
         File::put($manifest, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)."\n");
         $this->info("Created {$path} and registered '{$name}'.");
         $this->line('Run npm run build, then use:');

@@ -29,6 +29,7 @@ use App\Http\Controllers\Content\TaxonomyController;
 use App\Http\Controllers\Content\TaxonomyTermController;
 use App\Http\Controllers\Content\TemplateController;
 use App\Http\Controllers\Content\ThemeController;
+use App\Http\Controllers\Content\ThemePartialController;
 use App\Http\Controllers\Content\TrashController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Dashboard (Route::redirect keeps route:cache working; no closure)
         Route::redirect('/', '/dashboard')->name('index');
         Route::post('onboarding/dismiss', [DashboardController::class, 'dismissOnboarding'])->name('onboarding.dismiss');
+        Route::get('partials', [ThemePartialController::class, 'index'])->name('partials.index');
         Route::get('editor-drafts', [EditorDraftController::class, 'index'])->name('editor-drafts.index');
         Route::post('editor-drafts', [EditorDraftController::class, 'store'])->name('editor-drafts.store');
         Route::get('editor-drafts/{draft}', [EditorDraftController::class, 'show'])->whereUuid('draft')->name('editor-drafts.show');

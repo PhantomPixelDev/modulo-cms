@@ -14,6 +14,14 @@ Put a block module on its own paragraph in the editor. Quoted attributes can con
 
 Modern React includes `callout` (`title`, `tone`: `info`, `success`, `warning`) and `disclosure` (`title`, `open`: `true` or `false`). Disclosure is a collapsible section with native keyboard controls. Modules work in published content, translations, and signed editor previews.
 
+## Browse and copy in the admin
+
+Open **Appearance → Content partials** to search the active theme's available modules, see their descriptions and attribute defaults, and **Copy shortcode**. Inherited modules are included; disabled and structural partials are excluded. Page and post editors have a **Browse partials** button that opens the catalog in a separate tab, keeping your editing session open.
+
+Paste the copied shortcode into its own paragraph, replace the body text, and change attribute values as needed. Clipboard failures select the snippet for manual copying. Theme viewers and users with page/post create or edit permission can view the catalog; theme-management permission is not required for authors.
+
+Theme authors can add optional `label` and `description` strings to a registration. Defaults are listed as available attributes. Set `"body": false` for a module whose example should use a self-closing shortcode. These are catalog hints; they do not change the React component contract. Unusual defaults containing quotes or HTML entities are omitted from copyable examples and still applied automatically by the renderer.
+
 ## Create a module
 
 Run this in a source checkout, with your theme under `resources/themes/`:
@@ -55,6 +63,8 @@ Add an entry to `partials` in `theme.json`:
         "contact-card": {
             "component": "components/partials/ContactCard.tsx",
             "shortcode": true,
+            "label": "Contact card",
+            "description": "Show contact information from your theme.",
             "defaults": { "title": "Contact us" }
         }
     }

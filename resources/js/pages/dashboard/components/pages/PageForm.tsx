@@ -20,6 +20,7 @@ import { CustomFieldInputs } from '../posts/CustomFieldInputs';
 
 import type { FeaturedImagePreview } from '../posts/types';
 
+import { PartialCatalogLink } from '@/components/content/PartialCatalogLink';
 import MediaPickerDialog from '../media/MediaPickerDialog';
 import { LocaleDropdown, type LocaleOption } from '../posts/LocaleDropdown';
 import SlateEditor from '../posts/SlateEditor';
@@ -261,7 +262,10 @@ export function PageForm({
                         )}
 
                         <div className="space-y-2">
-                            <Label>{t('dashboard.pages.form.fields.content')}</Label>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <Label>{t('dashboard.pages.form.fields.content')}</Label>
+                                <PartialCatalogLink />
+                            </div>
                             <div className="rounded-md border">
                                 <SlateEditor
                                     key={`${page?.id || 'new-page'}-${editorKey}`}

@@ -59,6 +59,14 @@ class ThemeValidator
                 $this->errors[] = "Content partial component not found: {$component}";
             }
             $defaults = $partial['defaults'] ?? [];
+            foreach (['label', 'description'] as $field) {
+                if (isset($partial[$field]) && ! is_string($partial[$field])) {
+                    $this->errors[] = "Content partial '{$name}' {$field} must be a string.";
+                }
+            }
+            if (isset($partial['body']) && ! is_bool($partial['body'])) {
+                $this->errors[] = "Content partial '{$name}' body must be a boolean.";
+            }
             if (! is_array($defaults) || count(array_filter($defaults, fn ($value) => is_string($value))) !== count($defaults)) {
                 $this->errors[] = "Content partial '{$name}' defaults must contain string values.";
             }

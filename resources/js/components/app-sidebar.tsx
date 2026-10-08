@@ -221,6 +221,12 @@ export function AppSidebar() {
                     url={path}
                     items={[
                         { label: t('dashboard.nav.themes'), href: '/dashboard/admin/themes', icon: Palette, show: can('view themes') },
+                        {
+                            label: t('dashboard.nav.partials'),
+                            href: '/dashboard/admin/partials',
+                            icon: Boxes,
+                            show: ['view themes', 'create posts', 'edit posts', 'create pages', 'edit pages'].some((permission) => can(permission)),
+                        },
                         { label: t('dashboard.nav.menus'), href: '/dashboard/admin/menus', icon: Menu, show: can('view menus') },
                     ]}
                 />

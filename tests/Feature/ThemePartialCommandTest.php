@@ -19,7 +19,8 @@ it('creates a typed module and registers it without overwriting work', function 
     $config = json_decode(File::get($this->partialPath.'/theme.json'), true);
     expect(File::get($path))->toContain('ThemePartialProps', 'attributes.title', '{children}')
         ->and($config['partials']['contact-card'])->toBe([
-            'component' => 'components/partials/ContactCard.tsx', 'shortcode' => true, 'defaults' => ['title' => ''],
+            'component' => 'components/partials/ContactCard.tsx', 'shortcode' => true,
+            'label' => 'Contact Card', 'description' => '', 'defaults' => ['title' => ''],
         ]);
     File::put($path, 'keep this work');
     $this->artisan('theme:partial', ['theme' => $this->partialTheme, 'name' => 'contact-card'])->assertFailed();

@@ -11,6 +11,7 @@ export function sectionMetadata(section: string | undefined, t: (key: string) =>
             'menus',
             'comments',
             'themes',
+            'partials',
             'plugins',
             'users',
             'roles',

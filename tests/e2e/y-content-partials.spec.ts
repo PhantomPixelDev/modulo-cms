@@ -22,11 +22,29 @@ for (const section of ['posts', 'pages']) {
             await activate.first().click();
             await expect(noTheme).toHaveCount(0);
         }
+        if (section === 'posts') {
+            await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+            await page.goto('/dashboard/admin/partials');
+            await expect(page.getByRole('heading', { name: 'Content partials', exact: true })).toBeVisible();
+            await expect(page.getByText('Callout', { exact: true })).toBeVisible();
+            const snippet = await page.getByRole('textbox', { name: 'Shortcode', exact: true }).first().inputValue();
+            await page.getByRole('button', { name: 'Copy shortcode', exact: true }).first().click();
+            await expect(page.getByRole('button', { name: 'Copied', exact: true })).toBeVisible();
+            const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+            expect(clipboard.replace(/\r\n/g, '\n')).toBe(snippet);
+            await page.getByRole('textbox', { name: 'Search partials' }).fill('no-such-module');
+            await expect(page.getByText('No matching partials.', { exact: true })).toBeVisible();
+            await page.getByRole('textbox', { name: 'Search partials' }).fill('');
+            await page.setViewportSize({ width: 390, height: 844 });
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+            await page.setViewportSize({ width: 1280, height: 900 });
+        }
         const loaded = page.waitForResponse(
             (response) => response.url().includes('/dashboard/admin/editor-drafts') && response.request().method() === 'GET',
         );
         await page.goto(`/dashboard/admin/${section}/create`);
         await loaded;
+        await expect(page.getByRole('link', { name: 'Browse partials' })).toHaveAttribute('target', '_blank');
         const discard = page.getByRole('button', { name: 'Discard', exact: true });
         if (await discard.isVisible()) {
             await discard.click();
