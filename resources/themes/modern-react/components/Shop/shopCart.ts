@@ -115,5 +115,5 @@ export function toastAddedToCart(message: string, viewCartLabel: string): void {
 }
 
 export function toastCartError(message: string): void {
-    toast.error(message, { id: CART_FEEDBACK_TOAST_ID, duration: 4000 });
+    toast.error(message, { id: CART_FEEDBACK_TOAST_ID, duration: 4000, action: null });
 }

@@ -46,6 +46,7 @@ for (const width of [1280, 390]) {
         await page.getByRole('button', { name: 'Add to Cart', exact: true }).first().click();
         await expect(toast).toHaveCount(1);
         await expect(toast).toContainText('Could not add this product');
+        await expect(toast.getByRole('button', { name: 'View cart', exact: true })).toHaveCount(0);
         await expect(containers).toHaveCount(1);
     });
 }

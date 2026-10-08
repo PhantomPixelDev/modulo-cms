@@ -110,7 +110,10 @@ describe('shopCart', () => {
         );
 
         toastCartError('Failed to add to cart');
-        expect(toast.error).toHaveBeenCalledWith('Failed to add to cart', expect.objectContaining({ id: 'shop-cart-feedback', duration: 4000 }));
+        expect(toast.error).toHaveBeenCalledWith(
+            'Failed to add to cart',
+            expect.objectContaining({ id: 'shop-cart-feedback', duration: 4000, action: null }),
+        );
     });
 
     it('uses the documented event name', () => {
