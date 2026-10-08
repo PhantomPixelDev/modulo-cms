@@ -12,6 +12,7 @@ import { toast } from 'sonner';
  */
 
 export const SHOP_CART_UPDATED_EVENT = 'shop:cart-updated';
+const CART_FEEDBACK_TOAST_ID = 'shop-cart-feedback';
 
 export interface ShopCartData {
     item_count?: number;
@@ -102,6 +103,7 @@ export function subscribeCartUpdated(handler: (count: number) => void): () => vo
 
 export function toastAddedToCart(message: string, viewCartLabel: string): void {
     toast.success(message, {
+        id: CART_FEEDBACK_TOAST_ID,
         duration: 4000,
         action: {
             label: viewCartLabel,
@@ -113,5 +115,5 @@ export function toastAddedToCart(message: string, viewCartLabel: string): void {
 }
 
 export function toastCartError(message: string): void {
-    toast.error(message, { duration: 4000 });
+    toast.error(message, { id: CART_FEEDBACK_TOAST_ID, duration: 4000 });
 }

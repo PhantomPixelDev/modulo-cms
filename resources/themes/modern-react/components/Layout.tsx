@@ -2,7 +2,6 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { cn } from '@/lib/utils';
 import { Head, usePage } from '@inertiajs/react';
 import React from 'react';
-import { Toaster } from 'sonner';
 import '../assets/css/theme.css';
 import Footer from './Footer';
 import Navigation from './partials/Navigation';
@@ -239,8 +238,6 @@ export default function Layout({
                 <ErrorBoundary name="Footer">
                     <Footer site={safeSite} menu={footerMenuItems} />
                 </ErrorBoundary>
-                {/* Storefront toasts (cart, …). Portal — safe to mount once per page. */}
-                <Toaster richColors position="bottom-right" closeButton />
             </div>
         </>
     );
