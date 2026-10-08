@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.4.0...v0.4.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **editor:** preserve scheduled time in the site timezone ([1946c09](https://github.com/PhantomPixelDev/modulo-cms/commit/1946c091f99da09ac0ace814f1ac5c9756a75e3a))
+* **settings:** supply content types and finish typed section contracts ([7e776d6](https://github.com/PhantomPixelDev/modulo-cms/commit/7e776d6d3fcd443c960b067c96f3e0413f3163cd))
+
 ## [0.4.0](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.3.0...v0.4.0) (2026-10-07)
 
 
