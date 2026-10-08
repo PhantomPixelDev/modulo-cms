@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "phantompixeldev/modulo-cms",
     "type": "project",
-    "description": "A modern, modular content management system built on Laravel 12 with a React 19 frontend.",
+    "description": "A modern, modular content management system built on Laravel 13 with a React 19 frontend.",
     "keywords": [
         "cms",
         "laravel",

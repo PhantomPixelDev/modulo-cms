@@ -3,7 +3,7 @@
 [![tests](https://github.com/PhantomPixelDev/modulo-cms/actions/workflows/tests.yml/badge.svg)](https://github.com/PhantomPixelDev/modulo-cms/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-![Modulo CMS: the public site and the admin dashboard](docs/screenshots/hero.png)
+![Modulo CMS on Laravel 13 and React 19: the public site and admin dashboard](docs/screenshots/hero.png)
 
 **Modulo is a free, open-source CMS for your own server.** Publish pages and posts, manage translations, and add a shop through plugins. It runs on a VPS or dedicated server using Docker Engine and Docker Compose, with a browser-based administration dashboard.
 

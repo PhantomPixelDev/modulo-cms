@@ -1,7 +1,7 @@
 {
     "name": "modulo-cms",
     "version": "0.0.0-dev",
-    "description": "A modern, modular content management system built on Laravel 12 with a React 19 frontend.",
+    "description": "A modern, modular content management system built on Laravel 13 with a React 19 frontend.",
     "license": "MIT",
     "repository": {
         "type": "git",
