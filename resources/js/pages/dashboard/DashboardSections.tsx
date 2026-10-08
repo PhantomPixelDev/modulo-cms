@@ -210,11 +210,11 @@ export default function DashboardContent({
                 settings,
                 settingsGroup,
                 pages,
+                postTypes,
                 timezones,
                 locales,
                 currentLocale,
                 can,
-                ROUTE,
                 t,
             }),
             ...getThemesSections({

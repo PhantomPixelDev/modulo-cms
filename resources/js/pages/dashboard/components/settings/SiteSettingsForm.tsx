@@ -11,13 +11,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { router } from '@inertiajs/react';
 import { BarChart3, FileText, Globe, Image, Link2, Search, Settings, Share2, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { Locale } from '../../types';
+import type { Locale, SettingsGroup, SettingsValue, SiteSettings } from '../../types';
 import MediaPickerDialog from '../media/MediaPickerDialog';
 
-type SettingsValue = string | number | boolean | null | string[];
-type SettingsData = Record<string, Record<string, SettingsValue>>;
-
-type SettingsGroup = 'general' | 'reading' | 'writing' | 'permalinks' | 'seo' | 'social' | 'analytics' | 'media' | 'advanced';
+type SettingsData = SiteSettings;
 
 interface Page {
     id: number;

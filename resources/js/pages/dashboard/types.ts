@@ -172,16 +172,9 @@ export interface SitemapSettings {
     custom_urls?: SitemapCustomUrl[];
 }
 
-export interface SiteSettings {
-    general?: Record<string, any>;
-    reading?: Record<string, any>;
-    writing?: Record<string, any>;
-    seo?: Record<string, any>;
-    social?: Record<string, any>;
-    analytics?: Record<string, any>;
-    media?: Record<string, any>;
-    advanced?: Record<string, any>;
-}
+export type SettingsValue = string | number | boolean | null | string[];
+export type SiteSettings = Record<string, Record<string, SettingsValue>>;
+export type SettingsGroup = 'general' | 'reading' | 'writing' | 'permalinks' | 'seo' | 'social' | 'analytics' | 'media' | 'advanced';
 
 export interface MediaItem extends BaseEntity {
     name: string;
@@ -287,7 +280,7 @@ export interface DashboardProps {
     sitemapSettings?: SitemapSettings;
     // Site settings
     settings?: SiteSettings;
-    settingsGroup?: string;
+    settingsGroup?: SettingsGroup;
     pages?: Array<{ id: number; title: string }>;
     timezones?: string[];
     // System
