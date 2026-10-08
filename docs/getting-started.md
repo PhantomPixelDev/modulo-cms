@@ -16,7 +16,7 @@ These credentials belong to the public demo. Its database, uploads, and recovery
 
 ## Install your own site
 
-Install Docker, then follow the [installation guide](installation.md) for your operating system. The installer prints your site's address. Open it and follow the setup wizard to name your site and create your administrator account.
+On your server, install Docker Engine and the Docker Compose plugin, or use Podman with a Compose provider. Follow the [installation guide](installation.md) to configure the public URL and HTTPS, start the stack, and open `/install` to name your site and create your administrator account.
 
 Normal installations have `MODULO_DEMO=false`: the homepage shows your site identity and published content. Demo credentials and CMS promotional sections appear only in demo mode. A configured published front page takes precedence over the default homepage.
 

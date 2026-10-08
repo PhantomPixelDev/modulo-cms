@@ -5,9 +5,9 @@
 
 ![Modulo CMS: the public site and the admin dashboard](docs/screenshots/hero.png)
 
-**Modulo is a free, self-hosted content management system — your own website platform that runs on your server, with no monthly fees and no vendor lock-in.** Write pages and blog posts, translate them into multiple languages, sell products with the shop plugin, and manage everything from a modern admin dashboard.
+**Modulo is a free, open-source CMS for your own server.** Publish pages and posts, manage translations, and add a shop through plugins. It runs on a VPS or dedicated server using Docker Engine and Docker Compose, with a browser-based administration dashboard.
 
-No programming needed to _use_ it. You only need to run one install command (see below) — or ask a technical friend; it takes about 10 minutes.
+The production stack includes the application, nginx, PostgreSQL, Redis, a queue worker, and a scheduler. PHP, Composer, Node.js, and database services do not need to be installed separately on the host.
 
 **[Read the documentation](docs/index.md)** — start with [getting started](docs/getting-started.md), the [editor guide](docs/editor-guide.md), or the [shop guide](docs/shop.md).
 
@@ -18,7 +18,7 @@ No programming needed to _use_ it. You only need to run one install command (see
 - **Users & permissions** — admin, editor and reader roles out of the box; decide exactly who may publish.
 - **Online shop** — install the shop plugin for products, cart, checkout and payments (Stripe, PayPal, Mollie).
 - **Contact forms** — install the contact-form plugin, drop in a shortcode, get emails.
-- **Automatic safety** — nightly backups, one-click updates, and a health check that keeps the site running.
+- **Operations** — scheduled backups, guarded updates, web health checks, and background-service diagnostics.
 - **Your design** — switch themes, or keep the clean default.
 
 ## Try the demo first
@@ -33,24 +33,36 @@ No install needed — open [the live demo](https://dev-modulo.ppxl.dev/), then l
 
 The demo restores clean content every four hours, including uploads and recovery drafts. Use your own installation for work you want to keep.
 
-## Install it (about 10 minutes)
+## Install on a server
 
-You need [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed — that is the only prerequisite. Everything else (database, web server, mail catcher) comes bundled.
+Requirements:
 
-**Option A — automatic install (recommended)**
+- A Linux server with shell access.
+- Docker Engine running, with the Docker Compose plugin (`docker compose`). Podman with a working Compose provider is also supported.
+- Bash, `curl`, `tar`, and OpenSSL for the installer.
+- For a public site, a domain pointing to the server and an HTTPS reverse proxy such as Caddy or nginx.
 
-On Mac or Linux, open a terminal and run:
+Run these commands on the server:
 
 ```bash
+docker info
+docker compose version
 curl -fsSLO https://raw.githubusercontent.com/PhantomPixelDev/modulo-cms/main/install.sh
-bash install.sh
+less install.sh
+APP_URL=https://cms.example.com bash install.sh
 ```
 
-On Windows, download [install.ps1](https://github.com/PhantomPixelDev/modulo-cms/raw/main/install.ps1), right-click it and choose _Run with PowerShell_.
+Replace `https://cms.example.com` with your site's public URL. Configure your reverse proxy to forward to the web container's HTTP port, **8080** by default; use `WEB_PORT=8081` with the installer if that port is occupied.
 
-The installer checks your system, sets everything up, and prints a web address. Open it in your browser and a **setup wizard** walks you through creating your administrator account and naming your site. Done — that is your CMS.
+The installer downloads deployment files for a published release, generates application and database secrets, and starts the stack in a new `modulo-cms/` directory. It creates a `.env` file there; keep it private and retain it for future updates.
 
-**Option B — for developers**
+Once HTTPS is configured and the containers are running, open `https://cms.example.com/install` to create your administrator account and name the site. The `localhost` address printed by the installer refers to the server itself.
+
+Configure production SMTP for email delivery. Mailpit is included in the development stack only. See [installation](docs/installation.md) for manual Docker, Podman, and bare-metal setup, and [configuration](docs/configuration.md) for environment settings.
+
+## Local development
+
+For contributing or testing changes, use the development stack:
 
 ```bash
 git clone https://github.com/PhantomPixelDev/modulo-cms.git
@@ -59,7 +71,7 @@ cp .env.dev.example .env.dev
 ./modulo.sh up dev
 ```
 
-Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <http://localhost:8025>). On Windows use Git Bash or WSL.
+Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <http://localhost:8025>). On Windows use Git Bash or WSL with a working container runtime. See [Contributing](CONTRIBUTING.md) for development commands and quality checks.
 
 ## Screenshots
 
