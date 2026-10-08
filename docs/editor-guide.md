@@ -73,7 +73,7 @@ Changes to the order are saved as you make them.
 
 ## Languages
 
-**Administration → Languages** lists the languages your content can be written in. Add
+**Settings → Languages** lists the languages your content can be written in. Add
 one from the list, switch languages on and off, and choose the default: the language
 visitors see when they open your site. In the posts list, the small language badges on
 each row open that translation (a dashed badge means it isn't translated yet).
@@ -85,14 +85,14 @@ Whether new comments need approval first is set on the same page.
 
 ## Email
 
-**System → Email** decides how your site sends mail (order confirmations, password
+**Settings → Email** decides how your site sends mail (order confirmations, password
 resets, contact messages). Enter the SMTP details from your email provider and use
 **Send test email** to check they work. Until email is set up, messages are only written
 to the site's log, so nobody receives them.
 
 ## Backups
 
-**System → Backups** keeps full copies of your site: all content, uploaded files and
+**Settings → Backups** keeps full copies of your site: all content, uploaded files and
 plugins. One is made every Sunday night; **Back up now** makes one immediately, for
 example before a big change.
 
@@ -106,14 +106,14 @@ worked.
 
 ## Users and roles
 
-**Administration → Users** invites people and changes their role. Roles decide what
+**Settings → Users** invites people and changes their role. Roles decide what
 someone may do: an _Editor_ can publish content, an _Author_ can write drafts that an
 editor publishes. Turn on two-step sign-in for your own account under your profile
 (**Settings → Two-factor**): it keeps your site safe even if your password leaks.
 
 ## Plugins and the shop
 
-**Administration → Plugins → Browse registry** adds features such as the
+**Extensions → Plugins → Browse registry** adds features such as the
 [Shop](https://github.com/PhantomPixelDev/modulo-plugin-shop) or a contact form.
 Installed plugins get their own entries in the sidebar under **Extensions**, and their
 settings are found there or under Plugins.

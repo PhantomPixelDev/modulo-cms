@@ -12,13 +12,18 @@ A trashed post still owns its slug. New posts get a free one automatically
 
 ## Autosave and preview
 
-While you type, the editor keeps your unsaved text as a draft of your own (per post and
-person) a few seconds after you stop. If the tab closes, opening the post again offers to
-restore it. Saving the post discards the autosave.
+About three seconds after you stop typing, the editor saves a private recovery record
+for your account, content item, and language. New posts and pages can recover before
+their first explicit save. Reopen the editor or resume an unfinished draft from the
+dashboard. A successful explicit save removes its matching recovery record.
 
-**Preview** opens the post through the theme with the unsaved text, from a signed link
+**Preview** waits for autosave to succeed, then opens the content through the theme
+with the saved recovery text, from a signed link
 that expires after an hour, so it can be shared for a quick look. Previews are never
 cached, counted as views or indexed.
+
+New content needs its first explicit save before preview is available. See
+[saving and recovering work](editing.md) for translation recovery and concurrent tabs.
 
 ## Custom fields
 
@@ -39,7 +44,8 @@ Restoring keeps the current text as a revision too, so it can be undone. The new
 
 ## Scheduling
 
-Set the status to **Published** and the publish date in the future. The post stays
+Choose a future publish date under **Advanced**, check the displayed site timezone,
+and choose **Schedule**. The post stays
 hidden until then (the list shows it as **Scheduled**). When the time comes,
 `modulo:publish-scheduled` — run every minute by the scheduler — clears the cached
 listings and sitemap, notifies search engines (IndexNow), records it in the activity
@@ -56,7 +62,7 @@ scheduled post still appears on time, but caches clear only when they expire.
 
 ## Redirects
 
-**System → Redirects** sends visitors of an old path to a new path or a full URL, with
+**Settings → Redirects** sends visitors of an old path to a new path or a full URL, with
 301/308 (permanent) or 302/307 (temporary), and counts hits. The query string is passed
 on. The admin, API, login and system paths are never redirected, and a redirect can
 only point to a path or an `http(s)://` URL.

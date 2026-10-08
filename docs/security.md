@@ -118,7 +118,7 @@ php artisan tinker --execute="App\\Models\\User::where('email', 'someone@example
 
 ## Activity log
 
-**System → Activity** (administrators only) is the audit trail: sign-ins, failed and
+**Settings → Activity** (administrators only) is the audit trail: sign-ins, failed and
 locked-out sign-ins, wrong two-factor codes, password resets; creating, changing and
 deleting posts, pages, users, roles, post types, taxonomies and menus; role and
 permission assignments; settings saved; plugins and themes installed, activated,

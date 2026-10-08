@@ -113,7 +113,7 @@ sha256, like a plugin. Then:
   lives on the persistent storage volume, and its assets are published to
   `public/themes/<slug>` (the shared `theme_assets` volume in Docker).
 
-Registry theme updates show on **System → Updates**. Uninstalling a runtime theme
+Registry theme updates show on **Settings → Updates**. Uninstalling a runtime theme
 removes its files.
 
 ## Styling

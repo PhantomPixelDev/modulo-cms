@@ -74,7 +74,7 @@ scheduler, which would otherwise keep writing during the migration.
 ## Getting the new code there
 
 That part is channel-specific, and the admin shows the right commands for your
-install under **System → Updates**.
+install under **Settings → Updates**.
 
 **Docker** — the image is replaced, not updated. The installer puts a `modulo` helper
 next to `docker-compose.yml`; from that folder:
@@ -150,7 +150,7 @@ is needed.
 
 ## Is an upgrade available?
 
-**System → Updates** in the admin shows the running version, whether a newer release
+**Settings → Updates** in the admin shows the running version, whether a newer release
 exists (flagged when it is a security release or has breaking changes), any PHP or
 PostgreSQL requirement of the new release this server does not meet, and the exact
 commands for that release on this install. The same page lists plugin updates from

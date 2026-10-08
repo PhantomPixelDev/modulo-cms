@@ -11,7 +11,7 @@ php artisan plugin:update --all
 ```
 
 Or from the admin: **Plugins → Browse registry** searches the registry and installs
-with one click (the plugin arrives inactive), and **System → Updates** lists and
+with one click (the plugin arrives inactive), and **Settings → Updates** lists and
 applies plugin updates. A daily check emails administrators when updates appear.
 
 **A plugin is not sandboxed.** It runs as part of the application, with the same

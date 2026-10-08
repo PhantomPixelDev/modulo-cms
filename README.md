@@ -9,6 +9,8 @@
 
 No programming needed to _use_ it. You only need to run one install command (see below) — or ask a technical friend; it takes about 10 minutes.
 
+**[Read the documentation](docs/index.md)** — start with [getting started](docs/getting-started.md), the [editor guide](docs/editor-guide.md), or the [shop guide](docs/shop.md).
+
 ## What you can do with it
 
 - **Publish content** — pages, blog posts, menus and an image library, with drafts and scheduled publishing.
@@ -21,7 +23,7 @@ No programming needed to _use_ it. You only need to run one install command (see
 
 ## Try the demo first
 
-No install needed — click around a live demo, then log in with a public demo account:
+No install needed — open [the live demo](https://dev-modulo.ppxl.dev/), then log in with a public demo account:
 
 | Role                    | Email                | Password    |
 | ----------------------- | -------------------- | ----------- |
@@ -29,7 +31,7 @@ No install needed — click around a live demo, then log in with a public demo a
 | Editor (writes content) | `editor@example.com` | `editor123` |
 | Reader                  | `user@example.com`   | `user123`   |
 
-The demo resets itself regularly, so feel free to break things.
+The demo restores clean content every four hours, including uploads and recovery drafts. Use your own installation for work you want to keep.
 
 ## Install it (about 10 minutes)
 
@@ -71,21 +73,27 @@ Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <ht
 
 ## Keeping it running
 
-- **Updates:** open _System → Updates_ in the admin panel — it tells you when a new version exists and installs it with one click (a backup is taken first, automatically).
-- **Backups:** _System → Backups_ — nightly backups happen on their own; download or restore from the same screen.
-- **Plugins:** _Plugins → Browse registry_ — the [Shop](https://github.com/PhantomPixelDev/modulo-plugin-shop), [Contact Form](https://github.com/PhantomPixelDev/modulo-plugin-contact-form) and more install in one click. Every package is checksum-verified before installing.
+- **Updates:** open _Settings → Updates_ in the admin panel — it tells you when a new version exists and installs it with one click (a backup is taken first, automatically).
+- **Backups:** the scheduler creates nightly database dumps and weekly full backups. _Settings → Backups_ lists full backups for download and restore; see the [backup guide](docs/backup-restore.md).
+- **Plugins:** _Extensions → Plugins → Browse registry_ — the [Shop](https://github.com/PhantomPixelDev/modulo-plugin-shop), [Contact Form](https://github.com/PhantomPixelDev/modulo-plugin-contact-form) and more install in one click. Every package is checksum-verified before installing.
 
 ## Learn more
 
-|                                      |                                                  |
-| ------------------------------------ | ------------------------------------------------ |
-| [Installation](docs/installation.md) | Detailed setup options                           |
-| [Editor guide](docs/editor-guide.md) | Writing posts, pages and translations            |
-| [Upgrading](docs/upgrading.md)       | Versions, preflight checks, per-channel commands |
-| [Backups](docs/backup-restore.md)    | What is saved, and how to test a restore         |
-| [Security](docs/security.md)         | Hardening checklist                              |
-| [Plugins](docs/plugins.md)           | Installing plugins and writing your own          |
-| [Themes](docs/theme-development.md)  | Changing the design                              |
-| [Contributing](CONTRIBUTING.md)      | Development setup and quality gates              |
+[Browse all documentation](docs/index.md), including configuration, APIs, architecture, and release guides.
+
+|                                            |                                                  |
+| ------------------------------------------ | ------------------------------------------------ |
+| [Getting started](docs/getting-started.md) | First login, navigation, and your first page     |
+| [Installation](docs/installation.md)       | Detailed setup options                           |
+| [Editor guide](docs/editor-guide.md)       | Writing posts, pages and translations            |
+| [Draft recovery](docs/editing.md)          | Saving, scheduling, recovery, and previews       |
+| [Shop guide](docs/shop.md)                 | Products, checkout, payments, and orders         |
+| [Troubleshooting](docs/troubleshooting.md) | Common errors and service diagnostics            |
+| [Upgrading](docs/upgrading.md)             | Versions, preflight checks, per-channel commands |
+| [Backups](docs/backup-restore.md)          | What is saved, and how to test a restore         |
+| [Security](docs/security.md)               | Hardening checklist                              |
+| [Plugins](docs/plugins.md)                 | Installing plugins and writing your own          |
+| [Themes](docs/theme-development.md)        | Changing the design                              |
+| [Contributing](CONTRIBUTING.md)            | Development setup and quality gates              |
 
 Built with PHP 8.4 · Laravel 13 · React 19 · PostgreSQL 16 · Redis 7. MIT licensed — see [LICENSE](LICENSE).
