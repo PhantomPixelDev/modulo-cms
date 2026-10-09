@@ -360,8 +360,8 @@ jobs:
       - name: Frontend tests (Vitest)
         run: npm run test:js
 
-      - name: Build assets
-        run: npm run build
+      - name: Build client and server assets
+        run: npm run build:ssr
 
       # Kept so a broken bundle can be inspected without reproducing the build.
       - name: Upload built assets

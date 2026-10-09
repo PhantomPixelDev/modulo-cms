@@ -14,7 +14,7 @@ const hmrEnabled = process.env.VITE_HMR_ENABLED !== 'false';
 // Set dev server URL for Laravel Vite plugin
 process.env.VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || `http://localhost:${vitePort}`;
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, isSsrBuild }) => ({
     base: command === 'build' ? '/build/' : '/',
     server: {
         host: serverHost,
@@ -81,19 +81,21 @@ export default defineConfig(({ command }) => ({
         sourcemap: process.env.VITE_BUILD_SOURCEMAP === 'true',
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vendor: ['react', 'react-dom', '@inertiajs/react'],
-                    ui: [
-                        '@radix-ui/react-dialog',
-                        '@radix-ui/react-dropdown-menu',
-                        '@radix-ui/react-select',
-                        '@radix-ui/react-tabs',
-                        '@radix-ui/react-tooltip',
-                        '@headlessui/react',
-                    ],
-                    editor: ['slate', 'slate-react', 'slate-history', 'slate-dom'],
-                    utils: ['date-fns', 'clsx', 'tailwind-merge', 'class-variance-authority'],
-                },
+                manualChunks: isSsrBuild
+                    ? undefined
+                    : {
+                          vendor: ['react', 'react-dom', '@inertiajs/react'],
+                          ui: [
+                              '@radix-ui/react-dialog',
+                              '@radix-ui/react-dropdown-menu',
+                              '@radix-ui/react-select',
+                              '@radix-ui/react-tabs',
+                              '@radix-ui/react-tooltip',
+                              '@headlessui/react',
+                          ],
+                          editor: ['slate', 'slate-react', 'slate-history', 'slate-dom'],
+                          utils: ['date-fns', 'clsx', 'tailwind-merge', 'class-variance-authority'],
+                      },
             },
         },
     },
