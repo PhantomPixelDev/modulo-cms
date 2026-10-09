@@ -98,6 +98,8 @@ cookies.txt
 storage/media-library/
 bootstrap/cache/*.php
 .claude/
+.husky/
+components.json
 .omo/
 .playwright-mcp/
 .playwright-cli/
