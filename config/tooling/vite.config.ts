@@ -61,7 +61,7 @@ export default defineConfig(({ command, isSsrBuild }) => ({
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
-            ssr: process.env.VITE_LARAVEL_SSR === 'true' ? 'resources/js/ssr.tsx' : undefined,
+            ssr: isSsrBuild || process.env.VITE_LARAVEL_SSR === 'true' ? 'resources/js/ssr.tsx' : undefined,
             refresh: process.env.VITE_LARAVEL_REFRESH === 'true',
             // Relative to public/; must match what Laravel's @vite expects (public/build)
             buildDirectory: 'build',

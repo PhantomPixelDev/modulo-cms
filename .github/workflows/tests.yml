@@ -363,6 +363,22 @@ jobs:
       - name: Build client and server assets
         run: npm run build:ssr
 
+      - name: Server rendering bundle starts
+        run: |
+          set -euo pipefail
+          node bootstrap/ssr/ssr.js >/tmp/modulo-ssr.log 2>&1 &
+          ssr_pid=$!
+          trap 'kill "$ssr_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 10); do
+            if curl -fsS http://127.0.0.1:13714/health | grep -q '"status":"OK"'; then
+              exit 0
+            fi
+            if ! kill -0 "$ssr_pid" 2>/dev/null; then break; fi
+            sleep 1
+          done
+          cat /tmp/modulo-ssr.log
+          exit 1
+
       # Kept so a broken bundle can be inspected without reproducing the build.
       - name: Upload built assets
         uses: actions/upload-artifact@v7
