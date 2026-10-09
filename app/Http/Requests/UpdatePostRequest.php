@@ -42,7 +42,7 @@ class UpdatePostRequest extends FormRequest
             ],
             'content' => ['required', 'string'],
             'excerpt' => ['nullable', 'string', 'max:500'],
-            'status' => ['required', 'string', Rule::in(['draft', 'published', 'private', 'archived']), new CanPublish($this->user(), $post)],
+            'status' => ['required', 'string', Rule::in(['draft', 'published', 'private', 'archived']), CanPublish::forRequest($this, $post)],
             'featured_image' => ['nullable', 'string', 'max:255'],
             'taxonomy_terms' => ['nullable', 'array'],
             'taxonomy_terms.*' => ['integer', 'exists:taxonomy_terms,id'],

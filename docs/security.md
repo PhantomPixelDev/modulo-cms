@@ -45,10 +45,32 @@ Said plainly, because the gap matters more than the list above:
 
 - **Plugin packages are checksum-verified, not signed.** The registry is the
   only authority; whoever controls it controls what installs.
-- **No rate limiting on the installer.** It is unreachable once a user exists,
-  which is the actual protection.
-- **No 2FA.**
-- **No audit log** of administrator actions.
+- Packages contain executable trusted code. Checksum verification does not
+  establish that a publisher's code is safe; install extensions you trust.
+
+## Public demos and setup
+
+`MODULO_DEMO=true` restricts server administration even for the shared super-admin
+account. Visitors can edit content, products, and media. Backup administration,
+extension installation/removal, users/roles, credentials, API tokens, and mail or
+payment configuration are blocked on the server. Operators use private CLI access.
+
+The web installer requires a one-time token from `php artisan modulo:install-token`.
+Only its SHA-256 hash is stored. Tokens expire after one hour, are claimed by one
+session, and disappear when setup finishes. `--rotate` replaces a lost or expired
+claim. Setup and first-administrator creation are serialized using locks on the
+shared storage volume. Replicas must share that volume during setup.
+
+Core and plugin admin routes use the `admin.access` middleware group. Older plugin
+routes beneath `/dashboard` also receive mandatory two-factor enrollment checks.
+When required, administrator API tokens are refused until their owner enrolls.
+Setup, login, logout, and two-factor recovery stay accessible.
+
+Publication permissions cover scheduling and publication-date changes, including
+date-only API updates. Editing the text of an already-public item remains allowed
+with its edit permission. Backup upload, restore, and download require a recently
+confirmed password on normal installations. Package downloads validate every
+redirect and pin public DNS answers; downloads and archive expansion are bounded.
 
 ## Dependencies
 

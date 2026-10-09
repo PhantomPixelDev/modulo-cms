@@ -11,6 +11,8 @@ test.describe('install wizard', () => {
         await page.goto('/install');
 
         await expect(page.getByRole('heading', { name: 'Install Modulo CMS' })).toBeVisible();
+        await page.getByLabel('Setup token').fill(process.env.MODULO_E2E_SETUP_TOKEN ?? '');
+        await page.getByRole('button', { name: 'Start setup' }).click();
 
         // The requirements step is shown only when something fails; with the
         // environment satisfied the wizard starts at the database step.

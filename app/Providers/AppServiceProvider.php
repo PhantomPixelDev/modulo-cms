@@ -55,6 +55,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('install', fn (Request $request) => Limit::perMinute(30)->by('install:'.$request->ip()));
+        RateLimiter::for('install-claim', fn (Request $request) => Limit::perMinute(6)->by('install-claim:'.$request->ip()));
         // {post} resolves by numeric ID or slug. The editor saves by ID while
         // list links use slugs (and a translation slug may differ from the
         // base slug). Registered here — not in a route file — so it also

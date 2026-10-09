@@ -297,7 +297,7 @@ class PagesController extends Controller
         return [
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:posts,slug'.($page ? ','.$page->id : ''),
-            'status' => ['required', 'in:draft,published,private,archived', new CanPublish($request->user(), $page, isPage: true)],
+            'status' => ['required', 'in:draft,published,private,archived', CanPublish::forRequest($request, $page, isPage: true)],
             'content' => 'required', // Content can be string or array
             'excerpt' => 'nullable|string',
             'featured_image' => 'nullable|string',

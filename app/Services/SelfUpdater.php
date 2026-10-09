@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Plugins\PackageDownloader;
 use App\Support\InstallChannel;
 use App\Support\Version;
 use Illuminate\Support\Facades\File;
@@ -151,17 +152,7 @@ class SelfUpdater
         File::ensureDirectoryExists($extractTo, 0750);
 
         ($this->log)("Downloading {$release['tarball_url']}");
-        try {
-            $response = Http::timeout(300)
-                ->withOptions(['sink' => $archive, 'allow_redirects' => ['max' => 5, 'protocols' => ['https'], 'strict' => true]])
-                ->get($release['tarball_url']);
-        } catch (Throwable $e) {
-            throw new RuntimeException('Download failed: '.$e->getMessage());
-        }
-
-        if (! $response->successful()) {
-            throw new RuntimeException('Download failed: HTTP '.$response->status());
-        }
+        app(PackageDownloader::class)->download($release['tarball_url'], $archive, timeout: 300, maxBytes: 536870912);
 
         $actual = hash_file('sha256', $archive);
         if ($actual === false || ! hash_equals($release['sha256'], strtolower($actual))) {

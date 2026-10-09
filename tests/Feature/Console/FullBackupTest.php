@@ -155,7 +155,7 @@ it('lets administrators create, download and delete backups', function () {
     $name = app(BackupManager::class)->all()[0]['name'];
 
     $this->actingAs($admin)->get(route('dashboard.admin.system.backups'))->assertOk();
-    $this->actingAs($admin)->get(route('dashboard.admin.system.backups.download', $name))->assertOk()->assertDownload($name);
+    $this->actingAs($admin)->withSession(['auth.password_confirmed_at' => time()])->get(route('dashboard.admin.system.backups.download', $name))->assertOk()->assertDownload($name);
     $this->actingAs($admin)->get(route('dashboard.admin.system.backups.download', '..%2F.env'))->assertNotFound();
     $this->actingAs($admin)->delete(route('dashboard.admin.system.backups.destroy', $name))->assertSessionHas('success');
 

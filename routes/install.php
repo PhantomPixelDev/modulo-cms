@@ -15,8 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['install.guard', 'throttle:30,1'])->prefix('install')->name('install.')->group(function () {
+Route::middleware(['install.guard', 'install.owner', 'throttle:install'])->prefix('install')->name('install.')->group(function () {
     Route::get('/', [InstallController::class, 'show'])->name('show');
+    Route::post('/claim', [InstallController::class, 'claim'])->middleware('throttle:install-claim')->name('claim');
     Route::get('/requirements', [InstallController::class, 'requirements'])->name('requirements');
     Route::post('/migrate', [InstallController::class, 'migrate'])->name('migrate');
     Route::post('/administrator', [InstallController::class, 'createAdministrator'])->name('administrator');

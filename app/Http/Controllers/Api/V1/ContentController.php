@@ -195,17 +195,13 @@ class ContentController extends Controller
     {
         $required = $post === null ? 'required' : 'sometimes';
 
-        return $request->validate([
+        $data = $request->validate([
             'type' => ['sometimes', 'string', 'max:100'],
             'title' => [$required, 'string', 'max:255'],
             'slug' => ['sometimes', 'nullable', 'string', 'max:255', 'regex:/^[a-z0-9-]+$/'],
             'excerpt' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'content' => ['sometimes', 'nullable', 'string'],
-            'status' => ['sometimes', Rule::in(['draft', 'published', 'private', 'archived']), new CanPublish(
-                $request->user(),
-                $post,
-                isPage: ($post?->postType->name ?? $type?->name) === 'page',
-            )],
+            'status' => ['sometimes', Rule::in(['draft', 'published', 'private', 'archived'])],
             'published_at' => ['sometimes', 'nullable', 'date'],
             'featured_image' => ['sometimes', 'nullable', 'string', 'max:1000', 'regex:#^(/|https?://)#i'],
             'meta_title' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -213,6 +209,10 @@ class ContentController extends Controller
             'terms' => ['sometimes', 'array'],
             'terms.*' => ['integer', 'exists:taxonomy_terms,id'],
         ]);
+
+        CanPublish::checkRequest($request, $post, isPage: ($post?->postType->name ?? $type?->name) === 'page');
+
+        return $data;
     }
 
     /**

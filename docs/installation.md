@@ -103,7 +103,17 @@ Carry that rule into whatever server you use.
 
 ## Finishing setup
 
-Whichever route you took, visit `/install`. The wizard checks requirements,
+Generate a one-time setup token on the server, then visit `/install`:
+
+```bash
+# Docker / Podman Compose:
+docker compose exec app php artisan modulo:install-token
+# Tarball or Git installation:
+php artisan modulo:install-token
+```
+
+Paste the token into the wizard (never put it in a URL). It expires after one hour;
+run the command with `--rotate` to replace a lost or expired claim. The wizard checks requirements,
 creates the tables, takes an administrator account and your site name, then
 closes itself permanently — it returns 404 afterwards.
 

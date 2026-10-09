@@ -107,6 +107,9 @@ jobs:
           set -euo pipefail
           cp .env.example .env
           php artisan key:generate
+          setup_token=$(php artisan modulo:install-token)
+          echo "::add-mask::$setup_token"
+          echo "MODULO_E2E_SETUP_TOKEN=$setup_token" >> "$GITHUB_ENV"
           # Deliberately not migrated or seeded: the wizard is what should
           # bring an empty database up, and that is the thing under test.
           npm run build

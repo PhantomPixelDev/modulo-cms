@@ -68,6 +68,14 @@ class MailSettings
      */
     public function apply(): void
     {
+        if (config('demo.enabled')) {
+            config(['mail.default' => 'log']);
+            if (app()->resolved('mail.manager')) {
+                app('mail.manager')->forgetMailers();
+            }
+
+            return;
+        }
         if (! schema_has_table('site_settings')) {
             return;
         }
