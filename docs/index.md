@@ -25,20 +25,20 @@ Modulo is a self-hosted CMS for pages, posts, translations, and online shops. Th
 
 ## Extend or contribute
 
-| Guide                                                                                   | What it covers                                     |
-| --------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| [Plugins](plugins.md)                                                                   | Installation, structure, and lifecycle             |
-| [Plugin front ends](plugin-frontend.md)                                                 | Admin components and public templates              |
-| [Hooks](hooks.md)                                                                       | Actions and filters                                |
-| [Themes](theme-development.md)                                                          | Components, settings, and translations             |
-| [React content partials](theme-partials.md)                                             | Reusable modules inserted with shortcodes          |
-| [Headless API](api.md)                                                                  | Reading published content from another application |
-| [Architecture](architecture.md)                                                         | Application structure                              |
-| [Database architecture](database-architecture.md)                                       | Content models and relationships                   |
-| [Migration policy](migration-policy.md)                                                 | Forward upgrades and data compatibility            |
-| [Versioning](versioning.md)                                                             | Release identity and installation channels         |
-| [Releasing](releasing.md)                                                               | Release automation and validation                  |
-| [Contributing](https://github.com/PhantomPixelDev/modulo-cms/blob/main/CONTRIBUTING.md) | Development setup and required checks              |
+| Guide                                                                                           | What it covers                                     |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| [Plugins](plugins.md)                                                                           | Installation, structure, and lifecycle             |
+| [Plugin front ends](plugin-frontend.md)                                                         | Admin components and public templates              |
+| [Hooks](hooks.md)                                                                               | Actions and filters                                |
+| [Themes](theme-development.md)                                                                  | Components, settings, and translations             |
+| [React content partials](theme-partials.md)                                                     | Reusable modules inserted with shortcodes          |
+| [Headless API](api.md)                                                                          | Reading published content from another application |
+| [Architecture](architecture.md)                                                                 | Application structure                              |
+| [Database architecture](database-architecture.md)                                               | Content models and relationships                   |
+| [Migration policy](migration-policy.md)                                                         | Forward upgrades and data compatibility            |
+| [Versioning](versioning.md)                                                                     | Release identity and installation channels         |
+| [Releasing](releasing.md)                                                                       | Release automation and validation                  |
+| [Contributing](https://github.com/PhantomPixelDev/modulo-cms/blob/main/.github/CONTRIBUTING.md) | Development setup and required checks              |
 
 ## Read these guides locally
 

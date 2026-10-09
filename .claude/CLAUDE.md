@@ -18,7 +18,7 @@ npm run docs:dev                 # documentation site
 
 ## Conventions
 
-- Match the surrounding code; comments explain *why*, briefly.
+- Match the surrounding code; comments explain _why_, briefly.
 - Admin screens are sections of the `Dashboard` Inertia page (see
   `resources/js/pages/dashboard/DashboardContent.tsx`); add a section rather than a page.
 - Use the design tokens (`bg-background`, `text-muted-foreground`, `bg-primary`, …), never

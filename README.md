@@ -71,7 +71,7 @@ cp .env.dev.example .env.dev
 ./modulo.sh up dev
 ```
 
-Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <http://localhost:8025>). On Windows use Git Bash or WSL with a working container runtime. See [Contributing](CONTRIBUTING.md) for development commands and quality checks.
+Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <http://localhost:8025>). On Windows use Git Bash or WSL with a working container runtime. See [Contributing](.github/CONTRIBUTING.md) for development commands and quality checks.
 
 ## Screenshots
 
@@ -108,6 +108,6 @@ Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <ht
 | [Themes](docs/theme-development.md)               | Changing the design                                |
 | [React content partials](docs/theme-partials.md)  | Reusable React modules in pages and posts          |
 | [Demo fixtures and testing](docs/demo-testing.md) | Compact examples, safe replacement and link checks |
-| [Contributing](CONTRIBUTING.md)                   | Development setup and quality gates                |
+| [Contributing](.github/CONTRIBUTING.md)           | Development setup and quality gates                |
 
 Built with PHP 8.4 · Laravel 13 · React 19 · PostgreSQL 16 · Redis 7. MIT licensed — see [LICENSE](LICENSE).

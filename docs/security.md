@@ -1,6 +1,6 @@
 # Security
 
-For reporting a vulnerability, see [../SECURITY.md](../SECURITY.md). This is
+For reporting a vulnerability, see the [security policy](https://github.com/PhantomPixelDev/modulo-cms/blob/main/.github/SECURITY.md). This is
 about running the thing safely.
 
 ## The short list
