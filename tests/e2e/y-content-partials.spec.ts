@@ -61,16 +61,19 @@ for (const section of ['posts', 'pages']) {
         await expect(page).toHaveURL(new RegExp(`/${section}/\\d+/edit`));
         const publicPath = `${section === 'posts' ? '/posts' : ''}/${slug}`;
         // Exercise an autosaved editor preview after the newly saved item loads.
+        // A standalone saved shortcode is now an editable module block.
+        await page.locator('[data-partial-name="callout"]').getByRole('button', { name: 'Edit partial', exact: true }).click();
         await page
+            .getByRole('dialog')
             .getByRole('textbox', { name: 'Content', exact: true })
-            .fill(
-                '[partial name="callout" title="From the theme" tone="success"]Fallback introduction[partial name="disclosure" title="Read more"]Hidden details[/partial][/partial] Preview revision',
-            );
+            .fill('Fallback introduction[partial name="disclosure" title="Read more"]Hidden details[/partial] Preview revision');
+        await page.getByRole('dialog').getByRole('button', { name: 'Apply changes', exact: true }).click();
         await expect(page.getByRole('status').filter({ hasText: /saved at/i })).toBeVisible();
         const popup = page.waitForEvent('popup');
         await page.getByRole('button', { name: 'Preview', exact: true }).click();
         const preview = await popup;
         await expect(preview.getByRole('heading', { name: 'From the theme', exact: true })).toBeVisible();
+        await expect(preview.getByText(/Preview revision/).last()).toBeVisible();
         await expect(preview.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
         await preview.close();
         await page.goto(publicPath);

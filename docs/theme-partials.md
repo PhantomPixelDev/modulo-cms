@@ -22,6 +22,43 @@ Paste the copied shortcode into its own paragraph, replace the body text, and ch
 
 Theme authors can add optional `label` and `description` strings to a registration. Defaults are listed as available attributes. Set `"body": false` for a module whose example should use a self-closing shortcode. These are catalog hints; they do not change the React component contract. Unusual defaults containing quotes or HTML entities are omitted from copyable examples and still applied automatically by the renderer.
 
+## Insert, edit, and preview
+
+In the page or post editor, place the cursor where the module belongs and click **Insert partial** in the formatting toolbar. Choose a module, fill its fields, and write its body text. **Preview module** opens an embedded preview using the active theme's page template. Click **Insert partial** to add an editable block; use **Edit partial** on that block to change it later. Insertion supports undo and redo. Blocks remain editable after saving, recovery, and switching between the editor, HTML, and Markdown views.
+
+The catalog also has **Configure and preview** for trying modules before inserting them. Previews require your current authoring or theme-view permission, expire after ten minutes, and belong only to your account. They do not create a post, page, or recovery draft, and are excluded from indexing and caching. If the theme has no renderable page template, preview reports an error. Changing fields clears an outdated preview; a failed request keeps your input for retrying.
+
+Existing shortcodes continue to work. A complete shortcode in its own paragraph becomes an editable block when the content is reopened. Shortcodes mixed with other text remain ordinary text. Module bodies can contain nested shortcodes and formatting; the outer block's body editor keeps nested shortcodes as text. Missing modules retain their saved content, so authors can inspect it in HTML mode and install the required theme.
+
+## Define editor fields
+
+Add optional `fields` to an opted-in partial registration:
+
+```json
+{
+    "component": "components/partials/ContactCard.tsx",
+    "shortcode": true,
+    "defaults": { "title": "Contact us", "tone": "info", "open": "false" },
+    "fields": {
+        "title": { "type": "text", "label": "Title", "required": true },
+        "message": { "type": "textarea", "label": "Message", "help": "A short introduction." },
+        "tone": {
+            "type": "select",
+            "label": "Tone",
+            "options": [{ "value": "info", "label": "Information" }, { "value": "success", "label": "Success" }]
+        },
+        "open": { "type": "boolean", "label": "Start expanded" },
+        "image": { "type": "image", "label": "Photo" }
+    }
+}
+```
+
+Supported controls are `text`, `textarea`, `select`, `boolean`, and `image`. Field keys must be lowercase attribute names (`a-z`, numbers, `_`, `-`), starting with a letter; `name` is reserved. `label` and `help` are optional strings; `required` is an optional boolean. Select options are a list of 1–50 unique string values with labels. Defaults without an explicit field get a plain text control, keeping older themes usable.
+
+All submitted values remain strings: switches use `"true"` and `"false"`. Image controls accept HTTP(S) or site-relative URLs and show a media picker when the author has **view media** permission. Field values are limited to 2,000 characters and body HTML to 32,768 characters in the picker. Required fields, select values, booleans, and image URL schemes are checked before insertion and again by the preview endpoint. These hints do not retroactively reject existing published shortcodes; components still need to validate untrusted values, including URLs.
+
+The editor escapes attribute quotes and HTML entities when serializing blocks. Keep the generated wrapper in source views to preserve the block. The public component receives the decoded string and sanitized body, using the same rendering contract as manually written shortcodes.
+
 ## Create a module
 
 Run this in a source checkout, with your theme under `resources/themes/`:

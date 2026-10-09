@@ -1,3 +1,4 @@
+import { escapePartialText, type PartialValue } from '@/components/content/partial-editor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,13 +8,16 @@ import { useTranslation } from '@/hooks/useTranslation';
 import AdminLayout from '@/layouts/admin-layout';
 import { SectionWrapper } from '@/pages/dashboard/components/common/SectionWrapper';
 import { Check, Copy, Search } from 'lucide-react';
-import { useId, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useId, useRef, useState, type ReactNode } from 'react';
 import { partialShortcode, type CatalogPartial } from './shortcode';
+
+const PartialDialog = lazy(() => import('@/components/content/PartialDialog').then((module) => ({ default: module.PartialDialog })));
 
 export function PartialCard({ partial }: { partial: CatalogPartial }) {
     const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
     const [copyFailed, setCopyFailed] = useState(false);
+    const [previewValue, setPreviewValue] = useState<PartialValue>();
     const textarea = useRef<HTMLTextAreaElement>(null);
     const id = useId();
     const shortcode = partialShortcode(partial, t('dashboard.partials.body_placeholder'));
@@ -44,6 +48,20 @@ export function PartialCard({ partial }: { partial: CatalogPartial }) {
                         {copied ? <Check className="mr-2 size-4" /> : <Copy className="mr-2 size-4" />}
                         {t(copied ? 'dashboard.partials.copied' : 'dashboard.partials.copy')}
                     </Button>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() =>
+                            setPreviewValue({
+                                name: partial.name,
+                                attributes: partial.defaults,
+                                body: `<p>${escapePartialText(t('dashboard.partials.body_placeholder'))}</p>`,
+                                hasBody: partial.body,
+                            })
+                        }
+                    >
+                        {t('dashboard.partials.configure')}
+                    </Button>
                     <p role="status" className="text-sm text-muted-foreground">
                         {copyFailed ? t('dashboard.partials.copy_failed') : copied ? t('dashboard.partials.copied') : ''}
                     </p>
@@ -62,6 +80,17 @@ export function PartialCard({ partial }: { partial: CatalogPartial }) {
                     </div>
                 )}
             </CardContent>
+            {previewValue && (
+                <Suspense fallback={<p role="status">{t('dashboard.partials.loading')}</p>}>
+                    <PartialDialog
+                        open
+                        initial={previewValue}
+                        onOpenChange={(next) => {
+                            if (!next) setPreviewValue(undefined);
+                        }}
+                    />
+                </Suspense>
+            )}
         </Card>
     );
 }

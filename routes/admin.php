@@ -43,6 +43,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::redirect('/', '/dashboard')->name('index');
         Route::post('onboarding/dismiss', [DashboardController::class, 'dismissOnboarding'])->name('onboarding.dismiss');
         Route::get('partials', [ThemePartialController::class, 'index'])->name('partials.index');
+        Route::post('partials/preview', [ThemePartialController::class, 'preview'])->middleware('throttle:30,1')->name('partials.preview');
+        Route::get('partials/preview/{token}', [ThemePartialController::class, 'showPreview'])->whereUuid('token')->name('partials.preview.show');
         Route::get('editor-drafts', [EditorDraftController::class, 'index'])->name('editor-drafts.index');
         Route::post('editor-drafts', [EditorDraftController::class, 'store'])->name('editor-drafts.store');
         Route::get('editor-drafts/{draft}', [EditorDraftController::class, 'show'])->whereUuid('draft')->name('editor-drafts.show');

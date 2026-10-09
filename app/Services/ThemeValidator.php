@@ -59,6 +59,9 @@ class ThemeValidator
                 $this->errors[] = "Content partial component not found: {$component}";
             }
             $defaults = $partial['defaults'] ?? [];
+            foreach (app(ThemePartialFields::class)->manifestErrors($partial) as $error) {
+                $this->errors[] = "Content partial '{$name}' {$error}";
+            }
             foreach (['label', 'description'] as $field) {
                 if (isset($partial[$field]) && ! is_string($partial[$field])) {
                     $this->errors[] = "Content partial '{$name}' {$field} must be a string.";

@@ -11,7 +11,7 @@ class ThemePartialService
     public const COMPONENT_PATTERN = '~^(?:components/partials|partials)/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.tsx$~D';
 
     /**
-     * @return array<string, array{component: string, defaults: array<string, string>, label: string, description: string, body: bool}>
+     * @return array<string, array{component: string, defaults: array<string, string>, label: string, description: string, body: bool, fields: array}>
      */
     public function registry(?Theme $theme): array
     {
@@ -50,6 +50,7 @@ class ThemePartialService
                     'label' => is_string($definition['label'] ?? null) ? $definition['label'] : (string) $name,
                     'description' => is_string($definition['description'] ?? null) ? $definition['description'] : '',
                     'body' => ($definition['body'] ?? true) !== false,
+                    'fields' => app(ThemePartialFields::class)->catalog(array_merge($definition, ['defaults' => is_array($defaults) ? $defaults : []])),
                 ];
             }
         }

@@ -4,6 +4,16 @@ export interface CatalogPartial {
     description: string;
     body: boolean;
     defaults: Record<string, string>;
+    fields?: PartialField[];
+}
+
+export interface PartialField {
+    name: string;
+    type: 'text' | 'textarea' | 'select' | 'boolean' | 'image';
+    label: string;
+    help: string;
+    required: boolean;
+    options: { value: string; label: string }[];
 }
 
 export function partialShortcode(partial: CatalogPartial, body: string): string {

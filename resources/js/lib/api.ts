@@ -12,7 +12,7 @@ const DEFAULT_TIMEOUT_MS = 30000;
 export class ApiError extends Error {
     constructor(
         public status: number,
-        public data: { message?: string; draft?: unknown },
+        public data: { message?: string; draft?: unknown; errors?: Record<string, string[]> },
     ) {
         super(data.message || `Request failed: ${status}`);
     }

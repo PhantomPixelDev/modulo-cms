@@ -114,7 +114,7 @@ class ShortcodeService
         preg_match_all('/([\w-]+)\s*=\s*(?:"([^"]*)"|\x27([^\x27]*)\x27|([^\s\]]+))/', $attrString, $matches, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL);
 
         foreach ($matches as $match) {
-            $attrs[$match[1]] = $match[2] ?? $match[3] ?? $match[4] ?? '';
+            $attrs[$match[1]] = html_entity_decode($match[2] ?? $match[3] ?? $match[4] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
         }
 
         return $attrs;
