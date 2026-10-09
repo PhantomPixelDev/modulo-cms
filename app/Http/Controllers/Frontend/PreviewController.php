@@ -44,7 +44,7 @@ class PreviewController extends BaseFrontendController
         $post->meta_data = array_merge((array) $post->meta_data, ['noindex' => true]);
 
         $template = $post->postType?->name === 'page' ? 'page' : 'post';
-        $response = $this->renderContent($post, $template, $template, countView: false);
+        $response = $this->renderContent($post, $template, $template, countView: false, localize: false);
         $request->attributes->set(CachePublicPages::CACHEABLE, false);
 
         $response = $response->toResponse($request);

@@ -37,31 +37,33 @@ class TaxonomyController extends BaseFrontendController
             ->where('is_public', true)
             ->firstOrFail();
 
-        $term = TaxonomyTerm::with(['taxonomy', 'translations'])
-            ->where('slug', $slug)
-            ->where('taxonomy_id', $taxonomy->id)
-            ->firstOrFail();
+        $terms = TaxonomyTerm::with(['taxonomy', 'translations'])->where('taxonomy_id', $taxonomy->id);
+        $term = (clone $terms)->whereHas('translations', fn ($q) => $q
+            ->where('locale', app()->getLocale())->where('slug', $slug))->first()
+            ?? $terms->where('slug', $slug)->firstOrFail();
 
         $posts = $term->posts()
             ->publiclyVisible()
             ->orderBy('published_at', 'desc')
-            ->with(['author', 'postType', 'taxonomyTerms.taxonomy'])
+            ->with(['author', 'postType', 'taxonomyTerms.taxonomy', 'translations'])
             ->paginate($this->getPerPage());
 
         $presented = $this->postPresenter->presentPaginator($posts);
+        $localizations = $this->buildLocalizationMap($term, $taxonomySlug);
+        $translation = $term->translation(app()->getLocale());
         $data = [
             'term' => [
                 'id' => $term->id,
-                'name' => $term->name,
-                'slug' => $term->slug,
-                'description' => $term->description,
+                'name' => $translation->name ?? $term->name,
+                'slug' => $translation->slug ?? $term->slug,
+                'description' => $translation->description ?? $term->description,
                 'taxonomy' => [
                     'id' => $term->taxonomy->id,
                     'name' => $term->taxonomy->name,
                     'slug' => $term->taxonomy->slug,
                     'label' => $term->taxonomy->label,
                 ],
-                'localizations' => $this->buildLocalizationMap($term, $taxonomySlug),
+                'localizations' => $localizations,
             ],
             'posts' => [
                 'data' => $presented['data'],

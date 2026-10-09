@@ -133,6 +133,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Define global rate limiters used by routes
+        RateLimiter::for('public-content', fn (Request $request) => Limit::perMinute(
+            max(1, (int) config('content.public_requests_per_minute', 120))
+        )->by('public-content:'.$request->ip()));
+
         RateLimiter::for('api', function (Request $request) {
             $key = optional($request->user())->id ? 'user:'.$request->user()->id : 'ip:'.$request->ip();
 

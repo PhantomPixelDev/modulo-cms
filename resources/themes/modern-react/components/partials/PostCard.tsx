@@ -6,6 +6,7 @@ interface Post {
     id: number;
     title: string;
     slug: string;
+    url?: string;
     excerpt?: string;
     featured_image?: string;
     /** Smaller WebP copies ("url 768w, …") when the image is from the media library */
@@ -19,7 +20,7 @@ interface Post {
     post_type?: {
         name?: string;
         label?: string;
-        route_prefix?: string;
+        route_prefix?: string | null;
     };
     terms?: Array<{
         name: string;
@@ -34,8 +35,10 @@ interface PostCardProps {
     className?: string;
 }
 
-export function postUrl(post: Pick<Post, 'slug' | 'post_type'>) {
-    return `/${post.post_type?.route_prefix || 'posts'}/${post.slug || ''}`;
+export function postUrl(post: Pick<Post, 'slug' | 'post_type' | 'url'>) {
+    if (post.url) return post.url;
+    const prefix = post.post_type?.route_prefix ?? (post.post_type?.name === 'page' ? '' : 'posts');
+    return `/${[prefix.replace(/^\/+|\/+$/g, ''), post.slug].filter(Boolean).join('/')}`;
 }
 
 export default function PostCard({ post, className }: PostCardProps) {

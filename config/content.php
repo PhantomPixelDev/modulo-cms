@@ -2,6 +2,9 @@
 
 return [
 
+    // Separate from login, search and write limits; normal browsing may prefetch pages.
+    'public_requests_per_minute' => (int) env('MODULO_PUBLIC_REQUESTS_PER_MINUTE', 120),
+
     // Days a deleted post or page stays in the trash before it is purged. 0 keeps it until emptied by hand.
     'trash_days' => (int) env('MODULO_TRASH_DAYS', 30),
 

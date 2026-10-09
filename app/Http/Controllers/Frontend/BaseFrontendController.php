@@ -39,7 +39,7 @@ abstract class BaseFrontendController extends Controller
         return null;
     }
 
-    protected function renderContent($content, $template, $dataKey, bool $countView = true)
+    protected function renderContent($content, $template, $dataKey, bool $countView = true, bool $localize = true)
     {
         if ($resp = $this->requireReactTheme()) {
             return $resp;
@@ -82,7 +82,7 @@ abstract class BaseFrontendController extends Controller
         }
 
         return $this->reactRenderer->render($templateName, [
-            $dataKey => $this->postPresenter->presentPost($content),
+            $dataKey => $this->postPresenter->presentPost($content, localize: $localize),
         ]);
     }
 }

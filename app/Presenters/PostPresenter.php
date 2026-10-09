@@ -21,8 +21,24 @@ class PostPresenter
      * @param  bool  $full  false for list views: skips rendering content, comments and
      *                      localizations, which archive/search templates never use
      */
-    public function presentPost(Post $post, bool $full = true): array
+    public function presentPost(Post $post, bool $full = true, bool $localize = true): array
     {
+        $localizations = $full ? $this->buildLocalizationMap($post) : [];
+        // Work on a clone: cached models and editor previews must keep their original text.
+        if ($localize && $translation = $post->translation(app()->getLocale())) {
+            $post = clone $post;
+            $post->forceFill(array_filter($translation->only(['title', 'slug', 'excerpt', 'content']), fn ($value) => $value !== null));
+            $post->meta_title = $translation->seo_title ?? $post->meta_title;
+            $post->meta_description = $translation->seo_description ?? $post->meta_description;
+        }
+        $path = $post->publicPath();
+        $locale = app()->getLocale();
+        // Explicit plugin routes (such as /shop) do not use the core locale router.
+        $prefix = $post->postType?->route_prefix;
+        $usesLocaleRouter = $prefix === 'posts' || ! in_array($prefix, config('routes.reserved_slugs', []), true);
+        if ($localize && $locale !== Locale::defaultCode() && $usesLocaleRouter) {
+            $path = '/'.$locale.$path;
+        }
         $content = $full ? $this->renderContent($post) : '';
         $rendered = $full ? app(ThemePartialService::class)->render((string) apply_filters('the_content', $content, $post)) : ['html' => '', 'partials' => []];
         $settings = app(SiteSettingsService::class);
@@ -33,6 +49,7 @@ class PostPresenter
             // Plugins can change what themes show: the_title, the_content, the_excerpt
             'title' => (string) apply_filters('the_title', $post->title ?? '', $post),
             'slug' => $post->slug ?? '',
+            'url' => $path,
             'content' => $rendered['html'],
             'content_partials' => $rendered['partials'],
             'excerpt' => (string) apply_filters('the_excerpt', $post->excerpt ?? '', $post),
@@ -59,7 +76,7 @@ class PostPresenter
                 'name' => $post->postType->name ?? 'post',
                 'label' => $post->postType->label ?? 'Post',
                 'slug' => $post->postType->slug ?? 'post',
-                'route_prefix' => $post->postType->route_prefix ?? 'posts',
+                'route_prefix' => $post->postType->route_prefix,
             ] : [
                 'id' => 0,
                 'name' => 'post',
@@ -85,7 +102,7 @@ class PostPresenter
             'allow_comments' => $commentsEnabled,
             // The post type's custom fields, by key
             'fields' => CustomFields::values($post),
-            'localizations' => $full ? $this->buildLocalizationMap($post) : [],
+            'localizations' => $localizations,
         ];
     }
 
@@ -371,21 +388,6 @@ class PostPresenter
 
     protected function buildContentPath(Post $post, ?string $slug): string
     {
-        $segments = [];
-        $prefix = $post->postType?->route_prefix;
-
-        if ($prefix && $prefix !== '/') {
-            $segments[] = trim($prefix, '/');
-        }
-
-        if ($slug) {
-            $segments[] = trim($slug, '/');
-        }
-
-        if (empty($segments)) {
-            return '/';
-        }
-
-        return '/'.implode('/', $segments);
+        return $post->publicPath($slug);
     }
 }

@@ -77,7 +77,7 @@ $segment = '[a-zA-Z0-9\-_]+';
 $reserved = implode('|', array_map('preg_quote', config('routes.reserved_slugs', [])));
 $firstSegment = '(?!(?:'.$reserved.')(?:/|$))'.$segment;
 
-Route::middleware('throttle:30,1')->group(function () use ($segment, $firstSegment) {
+Route::middleware('throttle:public-content')->group(function () use ($segment, $firstSegment) {
     Route::get('/{one}', FrontendRouterController::class)
         ->where('one', $firstSegment)
         ->name('frontend.one');

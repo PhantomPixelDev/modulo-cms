@@ -89,6 +89,7 @@ class PostController extends BaseFrontendController
         }
 
         $query = Post::with([
+            'translations',
             'postType',
             'author',
             'taxonomyTerms.taxonomy',

@@ -210,14 +210,7 @@ class SiteSettingsService
         // The router serves /{type prefix}/{slug} and nothing else (same as the
         // sitemap). The old permalink_structure setting (%year% etc.) was never
         // routed, so honouring it here produced feed links that 404.
-        $path = '/'.ltrim((string) $post->slug, '/');
-
-        $prefix = $post->postType?->route_prefix;
-        if ($prefix && $prefix !== '/') {
-            return url(rtrim($prefix, '/').$path);
-        }
-
-        return url($path);
+        return url($post->publicPath());
     }
 
     /**
