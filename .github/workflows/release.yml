@@ -169,6 +169,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
+            DOCKER_LIBRARY=public.ecr.aws/docker/library
             MODULO_VERSION=${{ needs.prepare.outputs.version }}
             MODULO_COMMIT=${{ github.sha }}
             MODULO_BUILT_AT=${{ needs.prepare.outputs.built_at }}
