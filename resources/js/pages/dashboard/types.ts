@@ -214,7 +214,8 @@ export interface Template extends BaseEntity {
 }
 
 export interface AuthUser extends User {
-    can: (permission: string) => boolean;
+    roles: Role[];
+    permissions: Permission[];
 }
 
 interface Auth {

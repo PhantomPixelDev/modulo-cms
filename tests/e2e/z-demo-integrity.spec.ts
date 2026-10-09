@@ -87,3 +87,30 @@ test('seeded partials stay interactive on desktop and mobile', async ({ page }) 
         await expect(page.getByText('Nested modules also work.', { exact: true }).last()).toBeVisible();
     }
 });
+
+test('dashboard shortcuts respect editor and normal-user permissions', async ({ browser }) => {
+    for (const [email, password, canCreate] of [
+        ['editor@example.com', 'editor123', true],
+        ['user@example.com', 'user123', false],
+    ] as const) {
+        const context = await browser.newContext();
+        const page = await context.newPage();
+        await page.goto('/login');
+        await page.getByLabel('Email').fill(email);
+        await page.getByLabel('Password').fill(password);
+        await page.getByRole('button', { name: 'Log in', exact: true }).click();
+        await expect(page).toHaveURL(/\/dashboard$/);
+        await expect(page.getByRole('heading', { name: /Welcome back/ })).toBeVisible();
+        for (const name of ['Add User', 'Themes', 'Settings']) {
+            await expect(page.locator('main').getByRole('button', { name, exact: true })).toHaveCount(0);
+        }
+        await expect(page.getByRole('button', { name: 'Create Post', exact: true })).toHaveCount(canCreate ? 1 : 0);
+        if (canCreate) {
+            await page.getByRole('button', { name: 'Create Post', exact: true }).click();
+            await expect(page).toHaveURL(/\/dashboard\/admin\/posts\/create$/);
+            await expect(page.getByRole('heading', { name: 'Create Post', exact: true })).toBeVisible();
+        }
+        expect((await context.request.get('/dashboard/admin/users/create')).status()).toBe(403);
+        await context.close();
+    }
+});
