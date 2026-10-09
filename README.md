@@ -109,5 +109,6 @@ Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <ht
 | [React content partials](docs/theme-partials.md)  | Reusable React modules in pages and posts          |
 | [Demo fixtures and testing](docs/demo-testing.md) | Compact examples, safe replacement and link checks |
 | [Contributing](.github/CONTRIBUTING.md)           | Development setup and quality gates                |
+| [Repository layout](docs/repository-layout.md)    | Source folders and tooling configuration           |
 
 Built with PHP 8.4 · Laravel 13 · React 19 · PostgreSQL 16 · Redis 7. MIT licensed — see [LICENSE](LICENSE).

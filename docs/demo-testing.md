@@ -39,9 +39,9 @@ the Shop plugin is active. Announcement URLs use `/infos/{slug}`; pages use
 
 ```bash
 vendor/bin/pest tests/Feature/Frontend/DemoIntegrityTest.php tests/Feature/Frontend/RoutingTest.php
-vendor/bin/pest -c phpunit.pgsql.xml
+vendor/bin/pest -c config/testing/phpunit.pgsql.xml
 npm run types
-npx eslint .
+npx eslint --config config/tooling/eslint.config.js .
 npm run format:check
 npm run test:js
 npm run build
@@ -60,7 +60,7 @@ to tune it for your installation.
 After seeding a running test server, exercise actual browser navigation:
 
 ```bash
-MODULO_E2E_URL=http://127.0.0.1:8000 MODULO_E2E_DEMO=1 npx playwright test z-demo-integrity.spec.ts
+MODULO_E2E_URL=http://127.0.0.1:8000 MODULO_E2E_DEMO=1 npm run test:e2e -- z-demo-integrity.spec.ts
 ```
 
 Browser CI first tests installation and editing, then replaces its disposable
@@ -69,7 +69,7 @@ discovery links, refreshes destinations, and exercises nested partials on mobile
 and desktop. A 200 response alone is insufficient: search destinations must show
 their expected heading, and modules must respond to interaction.
 
-With Shop active, `MODULO_E2E_SHOP=1 npx playwright test z-demo-shop.spec.ts`
+With Shop active, `MODULO_E2E_SHOP=1 npm run test:e2e -- z-demo-shop.spec.ts`
 also checks product search, sale price, sold-out behavior, one cart toast,
 cart totals, and a cash-on-delivery checkout using a fictional test customer.
 

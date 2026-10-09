@@ -14,24 +14,24 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "build:ssr": "vite build && vite build --ssr",
+        "build": "vite build --config config/tooling/vite.config.ts",
+        "build:ssr": "npm run build && vite build --ssr --config config/tooling/vite.config.ts",
         "build:shims": "node scripts/build-plugin-shims.mjs",
-        "dev": "vite",
-        "format": "prettier --write resources/",
-        "format:check": "prettier --check resources/",
-        "lint": "eslint . --fix",
+        "dev": "vite --config config/tooling/vite.config.ts",
+        "format": "prettier --write resources/ --ignore-path .gitignore --ignore-path config/tooling/prettier.ignore",
+        "format:check": "prettier --check resources/ --ignore-path .gitignore --ignore-path config/tooling/prettier.ignore",
+        "lint": "eslint --config config/tooling/eslint.config.js . --fix",
         "types": "tsc --noEmit",
         "clean": "npm run clean:php && npm run clean:frontend",
         "clean:php": "bash -lc 'php artisan optimize:clear && php artisan cache:clear && php artisan view:clear || true'",
         "clean:frontend": "bash -lc 'rm -rf .vite public/build tsconfig.tsbuildinfo resources/js/*.tsbuildinfo .eslintcache'",
-        "test:js": "vitest run",
-        "test:js:coverage": "vitest run --coverage",
-        "test:js:watch": "vitest",
-        "test:e2e": "playwright test",
+        "test:js": "vitest run --config config/testing/vitest.config.ts",
+        "test:js:coverage": "vitest run --coverage --config config/testing/vitest.config.ts",
+        "test:js:watch": "vitest --config config/testing/vitest.config.ts",
+        "test:e2e": "playwright test --config config/testing/playwright.config.ts",
         "docs:dev": "vitepress dev docs",
         "docs:build": "vitepress build docs",
-        "prepare": "husky"
+        "lint:check": "eslint --config config/tooling/eslint.config.js ."
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
@@ -45,9 +45,7 @@
         "eslint-config-prettier": "^10.0.1",
         "eslint-plugin-react": "^7.37.3",
         "eslint-plugin-react-hooks": "^5.1.0",
-        "husky": "^9.1.7",
         "jsdom": "^30.1.0",
-        "lint-staged": "^17.6.0",
         "prettier": "^3.9.8",
         "prettier-plugin-organize-imports": "^4.3.0",
         "prettier-plugin-tailwindcss": "^0.8.1",
@@ -103,5 +101,6 @@
         "@rollup/rollup-linux-x64-gnu": "4.63.3",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
         "lightningcss-linux-x64-gnu": "^1.29.1"
-    }
+    },
+    "prettier": "./config/tooling/prettier.json"
 }

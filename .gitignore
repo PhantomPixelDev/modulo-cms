@@ -55,7 +55,9 @@ coverage.xml
 .omo/
 .playwright-mcp/
 .playwright-cli/
-/.claude/settings.local.json
+/.claude/
+/.husky/
+/components.json
 CLAUDE.local.md
 .DS_Store
 Thumbs.db

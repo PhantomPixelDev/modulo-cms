@@ -51,19 +51,24 @@ blocks a merge. Run them locally first:
 ```bash
 ./modulo.sh artisan test                       # Pest, SQLite
 ./vendor/bin/pint --test                       # code style
-./vendor/bin/phpstan analyse --memory-limit=1G # static analysis (Larastan level 5)
+./vendor/bin/phpstan analyse --configuration=config/tooling/phpstan.neon --memory-limit=1G # static analysis (Larastan level 5)
 npm run format:check                           # Prettier
-npm run lint                                   # ESLint
+npm run lint:check                             # ESLint, check only
 npm run types                                  # tsc --noEmit
 npm run test:js                                # Vitest
 ```
 
-Tests also run against PostgreSQL in CI (`vendor/bin/pest -c phpunit.pgsql.xml`),
+Tests also run against PostgreSQL in CI (`vendor/bin/pest -c config/testing/phpunit.pgsql.xml`),
 because production is PostgreSQL and several bugs have only ever reproduced there —
 case-sensitive `LIKE` and full-text search among them.
 
-`phpstan-baseline.neon` holds pre-existing findings. Do not regenerate it to silence a
+`config/tooling/phpstan-baseline.neon` holds pre-existing findings. Do not regenerate it to silence a
 new error; fix the code instead. The baseline is expected to shrink over time.
+
+Tooling and secondary test configuration are grouped under `config/tooling/` and
+`config/testing/`. Use `composer analyse`, `composer test:pgsql` and the npm scripts
+to select them. See the [repository layout](../docs/repository-layout.md). Quality
+checks run in CI and explicitly on your machine; no Git hooks are installed.
 
 ## Conventions
 

@@ -161,7 +161,7 @@ jobs:
           php artisan migrate:status
 
       - name: Tests (PostgreSQL)
-        run: ./vendor/bin/pest -c phpunit.pgsql.xml
+        run: ./vendor/bin/pest -c config/testing/phpunit.pgsql.xml
 
       - name: Concurrent two-factor challenges (PostgreSQL)
         env:

@@ -56,6 +56,7 @@ export default defineConfig({
                 text: 'Project',
                 items: [
                     { text: 'Architecture', link: '/architecture' },
+                    { text: 'Repository layout', link: '/repository-layout' },
                     { text: 'Database', link: '/database-architecture' },
                     { text: 'Migration policy', link: '/migration-policy' },
                     { text: 'Versioning', link: '/versioning' },

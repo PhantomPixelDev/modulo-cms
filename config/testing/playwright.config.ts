@@ -10,7 +10,8 @@ import { defineConfig, devices } from '@playwright/test';
  * are in the browser.
  */
 export default defineConfig({
-    testDir: './tests/e2e',
+    testDir: '../../tests/e2e',
+    outputDir: '../../test-results',
     // A wizard step runs migrations, which is slow on a cold database.
     timeout: 120_000,
     expect: { timeout: 15_000 },

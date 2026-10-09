@@ -273,7 +273,7 @@ jobs:
             --exclude='./storage/framework/sessions/*' \
             --exclude='./storage/framework/views/*' \
             --exclude='./bootstrap/cache/*.php' \
-            --exclude='./phpstan-baseline.neon' \
+            --exclude='./config/tooling/phpstan-baseline.neon' \
             ./
 
           mv "${RUNNER_TEMP}/${name}.tar.gz" .

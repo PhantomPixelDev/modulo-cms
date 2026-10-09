@@ -83,7 +83,9 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
-        ]
+        ],
+        "test:pgsql": "vendor/bin/pest --configuration=config/testing/phpunit.pgsql.xml",
+        "analyse": "vendor/bin/phpstan analyse --configuration=config/tooling/phpstan.neon --memory-limit=1G"
     },
     "extra": {
         "laravel": {

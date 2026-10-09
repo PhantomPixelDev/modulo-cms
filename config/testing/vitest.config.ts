@@ -6,8 +6,8 @@ export default defineConfig({
     plugins: [react()],
     resolve: {
         alias: {
-            '@': path.resolve(__dirname, './resources/js'),
-            '@themes': path.resolve(__dirname, './resources/themes'),
+            '@': path.resolve(__dirname, '../../resources/js'),
+            '@themes': path.resolve(__dirname, '../../resources/themes'),
         },
     },
     test: {
