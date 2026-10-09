@@ -17,6 +17,7 @@ Modulo is a self-hosted CMS for pages, posts, translations, and online shops. Th
 | [Installation](installation.md)                  | Docker, automatic installers, and bare-metal setup          |
 | [Configuration](configuration.md)                | Environment variables, demo mode, email, and caching        |
 | [Working with content](content.md)               | Revisions, custom fields, redirects, SEO, and trash         |
+| [Demo fixtures and testing](demo-testing.md)     | Compact demo data, guarded replacement and browser checks   |
 | [Upgrading](upgrading.md)                        | Preflight checks and commands for each installation channel |
 | [Backups and restoring](backup-restore.md)       | Scheduled backups, restores, and off-site copies            |
 | [Security](security.md)                          | Permissions, authentication, and server configuration       |

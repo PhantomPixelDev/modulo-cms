@@ -11,73 +11,26 @@ class DefaultPagesSeeder extends Seeder
 {
     public function run(): void
     {
-        // The page post type is bootstrap data and belongs to ContentSeeder.
-        // If it is missing, this seeder has been run out of order.
-        $pageType = PostType::where('name', 'page')->first();
-
-        if (! $pageType) {
-            $this->command?->warn('DefaultPagesSeeder: no "page" post type; run ContentSeeder first. Skipping.');
-
-            return;
-        }
-
-        $author = User::where('is_admin', true)->first() ?? User::first();
-
-        if (! $author) {
-            $this->command?->warn('DefaultPagesSeeder: no user to attribute pages to. Skipping.');
-
-            return;
-        }
-
-        // Create default pages
+        $type = PostType::where('name', 'page')->firstOrFail();
+        $author = User::where('email', 'admin@example.com')->firstOrFail();
         $pages = [
-            [
-                'title' => 'Home',
-                'slug' => 'home',
-                'content' => '<h1>Welcome to Modulo CMS</h1><p>This is the home page. You can edit this content in the admin dashboard.</p>',
-                'excerpt' => 'Welcome to our website built with Modulo CMS.',
-            ],
-            [
-                'title' => 'About',
-                'slug' => 'about',
-                'content' => '<h1>About Us</h1><p>Learn more about our company and mission.</p>',
-                'excerpt' => 'Learn more about our company and mission.',
-            ],
-            [
-                'title' => 'Contact',
-                'slug' => 'contact',
-                'content' => '<h1>Contact Us</h1><p>Have a question? Send us a message and we’ll get back to you shortly.</p>[contact_form subject="Contact request"]',
-                'excerpt' => 'Get in touch with us via the contact form.',
-            ],
-            [
-                'title' => 'Privacy Policy',
-                'slug' => 'privacy',
-                'content' => '<h1>Privacy Policy</h1><p>Your privacy is important to us. This policy explains how we collect and use your information.</p>',
-                'excerpt' => 'Our privacy policy and data handling practices.',
-            ],
-            [
-                'title' => 'Terms of Service',
-                'slug' => 'terms',
-                'content' => '<h1>Terms of Service</h1><p>By using our website, you agree to these terms and conditions.</p>',
-                'excerpt' => 'Terms and conditions for using our website.',
-            ],
+            ['about', 'About', 'A small site built with Modulo CMS.', '<p>This demo uses Laravel 13, React, themes, and optional plugins. All sample content is disposable.</p><p>Try the <a href="/modules">content modules</a> or browse the <a href="/posts">articles</a>.</p>'],
+            ['contact', 'Contact', 'Where to find the project and documentation.', '<p>For setup and development questions, see the <a href="https://github.com/PhantomPixelDev/modulo-cms/tree/main/docs">documentation</a> or <a href="https://github.com/PhantomPixelDev/modulo-cms/issues">GitHub issues</a>.</p>'],
+            ['privacy', 'Privacy Policy', 'Sample privacy content for this disposable demo.', '<p>This is example content, not a privacy policy for your installation. Do not enter personal or confidential information into the public demo. Visitor content is periodically removed.</p>'],
+            ['terms', 'Terms of Service', 'Sample terms for exploring the demo.', '<p>This demo is for trying the CMS. Sample products and checkout are demonstrations. Replace this page with your own terms before opening a real site.</p>'],
+            ['modules', 'Content Modules', 'Interactive React partials rendered inside a page.', '<p>These modules are defined by the active theme and can be configured in the editor.</p>[partial name="callout" title="Reusable content" tone="info"]A theme component inside a page.[/partial][partial name="disclosure" title="How does it work?"]Pick a partial, set its fields, and insert it in a page or post.[/partial]'],
         ];
-
-        foreach ($pages as $pageData) {
-            Post::updateOrCreate(
-                [
-                    'slug' => $pageData['slug'],
-                    'post_type_id' => $pageType->id,
-                ],
-                [
-                    'title' => $pageData['title'],
-                    'content' => $pageData['content'],
-                    'excerpt' => $pageData['excerpt'],
-                    'status' => 'published',
-                    'published_at' => now(),
-                    'author_id' => $author->id,
-                ]
-            );
+        foreach ($pages as [$slug, $title, $excerpt, $content]) {
+            Post::updateOrCreate(['post_type_id' => $type->id, 'slug' => $slug], [
+                'author_id' => $author->id, 'title' => $title, 'excerpt' => $excerpt,
+                'content' => $content, 'status' => 'published', 'published_at' => now()->subDay(),
+            ]);
         }
+        $about = Post::where('post_type_id', $type->id)->where('slug', 'about')->firstOrFail();
+        $about->setTranslation('es', [
+            'title' => 'Acerca de', 'slug' => 'acerca', 'excerpt' => 'Un sitio pequeño con Modulo CMS.',
+            'content' => '<p>Prueba páginas, publicaciones y módulos React en esta demostración.</p>',
+        ]);
+        Post::where('post_type_id', $type->id)->where('slug', 'modules')->update(['parent_id' => $about->id]);
     }
 }

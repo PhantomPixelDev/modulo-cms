@@ -93,20 +93,21 @@ Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <ht
 
 [Browse all documentation](docs/index.md), including configuration, APIs, architecture, and release guides.
 
-|                                                  |                                                  |
-| ------------------------------------------------ | ------------------------------------------------ |
-| [Getting started](docs/getting-started.md)       | First login, navigation, and your first page     |
-| [Installation](docs/installation.md)             | Detailed setup options                           |
-| [Editor guide](docs/editor-guide.md)             | Writing posts, pages and translations            |
-| [Draft recovery](docs/editing.md)                | Saving, scheduling, recovery, and previews       |
-| [Shop guide](docs/shop.md)                       | Products, checkout, payments, and orders         |
-| [Troubleshooting](docs/troubleshooting.md)       | Common errors and service diagnostics            |
-| [Upgrading](docs/upgrading.md)                   | Versions, preflight checks, per-channel commands |
-| [Backups](docs/backup-restore.md)                | What is saved, and how to test a restore         |
-| [Security](docs/security.md)                     | Hardening checklist                              |
-| [Plugins](docs/plugins.md)                       | Installing plugins and writing your own          |
-| [Themes](docs/theme-development.md)              | Changing the design                              |
-| [React content partials](docs/theme-partials.md) | Reusable React modules in pages and posts        |
-| [Contributing](CONTRIBUTING.md)                  | Development setup and quality gates              |
+|                                                   |                                                    |
+| ------------------------------------------------- | -------------------------------------------------- |
+| [Getting started](docs/getting-started.md)        | First login, navigation, and your first page       |
+| [Installation](docs/installation.md)              | Detailed setup options                             |
+| [Editor guide](docs/editor-guide.md)              | Writing posts, pages and translations              |
+| [Draft recovery](docs/editing.md)                 | Saving, scheduling, recovery, and previews         |
+| [Shop guide](docs/shop.md)                        | Products, checkout, payments, and orders           |
+| [Troubleshooting](docs/troubleshooting.md)        | Common errors and service diagnostics              |
+| [Upgrading](docs/upgrading.md)                    | Versions, preflight checks, per-channel commands   |
+| [Backups](docs/backup-restore.md)                 | What is saved, and how to test a restore           |
+| [Security](docs/security.md)                      | Hardening checklist                                |
+| [Plugins](docs/plugins.md)                        | Installing plugins and writing your own            |
+| [Themes](docs/theme-development.md)               | Changing the design                                |
+| [React content partials](docs/theme-partials.md)  | Reusable React modules in pages and posts          |
+| [Demo fixtures and testing](docs/demo-testing.md) | Compact examples, safe replacement and link checks |
+| [Contributing](CONTRIBUTING.md)                   | Development setup and quality gates                |
 
 Built with PHP 8.4 · Laravel 13 · React 19 · PostgreSQL 16 · Redis 7. MIT licensed — see [LICENSE](LICENSE).

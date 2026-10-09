@@ -10,167 +10,21 @@ class DefaultUsersSeeder extends Seeder
 {
     public function run(): void
     {
-        // Defense in depth: DatabaseSeeder already skips demo content in
-        // production, but this seeder creates documented-password accounts
-        // and must refuse to run there even when invoked directly.
         if (app()->isProduction() && (! config('demo.enabled') || ! config('demo.seeding_authorized'))) {
             $this->command?->warn('DefaultUsersSeeder refuses to run in production.');
 
             return;
         }
-
-        // The three showcased demo accounts always carry their documented
-        // passwords: re-seeding restores them even if someone changed them.
-        // (The extra filler users below stay firstOrCreate on purpose.)
-        User::updateOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'Super Admin',
-                'password' => Hash::make('admin123'),
-                'email_verified_at' => now(),
-                'is_admin' => true,
-            ]
-        );
-
-        // Create regular example user
-        User::updateOrCreate(
-            ['email' => 'user@example.com'],
-            [
-                'name' => 'Example User',
-                'password' => Hash::make('user123'),
-                'email_verified_at' => now(),
-                'is_admin' => false,
-            ]
-        );
-
-        // Create editor user
-        User::updateOrCreate(
-            ['email' => 'editor@example.com'],
-            [
-                'name' => 'Content Editor',
-                'password' => Hash::make('editor123'),
-                'email_verified_at' => now(),
-                'is_admin' => false,
-            ]
-        );
-
-        // Create additional test users for comprehensive testing
-        $additionalUsers = [
-            [
-                'name' => 'Sarah Johnson',
-                'email' => 'sarah.johnson@example.com',
-                'password' => Hash::make('sarah123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Mike Chen',
-                'email' => 'mike.chen@example.com',
-                'password' => Hash::make('mike123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Emily Davis',
-                'email' => 'emily.davis@example.com',
-                'password' => Hash::make('emily123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'David Wilson',
-                'email' => 'david.wilson@example.com',
-                'password' => Hash::make('david123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Lisa Anderson',
-                'email' => 'lisa.anderson@example.com',
-                'password' => Hash::make('lisa123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'James Brown',
-                'email' => 'james.brown@example.com',
-                'password' => Hash::make('james123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Jennifer Taylor',
-                'email' => 'jennifer.taylor@example.com',
-                'password' => Hash::make('jennifer123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Robert Martinez',
-                'email' => 'robert.martinez@example.com',
-                'password' => Hash::make('robert123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Michelle Garcia',
-                'email' => 'michelle.garcia@example.com',
-                'password' => Hash::make('michelle123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Kevin Lee',
-                'email' => 'kevin.lee@example.com',
-                'password' => Hash::make('kevin123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Amanda White',
-                'email' => 'amanda.white@example.com',
-                'password' => Hash::make('amanda123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Christopher Harris',
-                'email' => 'christopher.harris@example.com',
-                'password' => Hash::make('christopher123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Ashley Clark',
-                'email' => 'ashley.clark@example.com',
-                'password' => Hash::make('ashley123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Matthew Lewis',
-                'email' => 'matthew.lewis@example.com',
-                'password' => Hash::make('matthew123'),
-                'is_admin' => false,
-            ],
-            [
-                'name' => 'Jessica Walker',
-                'email' => 'jessica.walker@example.com',
-                'password' => Hash::make('jessica123'),
-                'is_admin' => false,
-            ],
-        ];
-
-        foreach ($additionalUsers as $userData) {
-            User::firstOrCreate(
-                ['email' => $userData['email']],
-                [
-                    'name' => $userData['name'],
-                    'password' => $userData['password'],
-                    'email_verified_at' => now(),
-                    'is_admin' => $userData['is_admin'],
-                ]
-            );
+        foreach ([
+            ['admin@example.com', 'Super Admin', 'admin123', 'super-admin', true],
+            ['editor@example.com', 'Content Editor', 'editor123', 'editor', false],
+            ['user@example.com', 'Example User', 'user123', 'user', false],
+        ] as [$email, $name, $password, $role, $isAdmin]) {
+            $user = User::updateOrCreate(['email' => $email], [
+                'name' => $name, 'password' => Hash::make($password),
+                'email_verified_at' => now(), 'is_admin' => $isAdmin,
+            ]);
+            $user->syncRoles([$role]);
         }
-
-        // Assign roles here rather than in RolePermissionSeeder: that one is
-        // bootstrap data and now runs before any user exists, so it would find
-        // nothing to assign to.
-        foreach (['admin@example.com' => 'super-admin', 'editor@example.com' => 'editor', 'user@example.com' => 'user'] as $email => $role) {
-            $user = User::where('email', $email)->first();
-
-            if ($user && ! $user->hasRole($role)) {
-                $user->assignRole($role);
-            }
-        }
-
-        $this->command?->info('Created '.(count($additionalUsers) + 3).' users for testing');
     }
 }

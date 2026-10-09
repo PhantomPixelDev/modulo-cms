@@ -15,7 +15,7 @@ class ContentSeeder extends Seeder
     public function run(): void
     {
         // Create only essential post types
-        $postType = PostType::updateOrCreate(
+        $postType = PostType::firstOrCreate(
             ['name' => 'post'],
             [
                 'label' => 'Post',
@@ -25,8 +25,8 @@ class ContentSeeder extends Seeder
                 'has_featured_image' => true,
                 'has_excerpt' => true,
                 'has_comments' => true,
-                'supports' => json_encode(['title', 'editor', 'thumbnail', 'excerpt', 'comments']),
-                'taxonomies' => json_encode(['category', 'post_tag']),
+                'supports' => ['title', 'editor', 'thumbnail', 'excerpt', 'comments'],
+                'taxonomies' => ['category', 'post_tag'],
                 'slug' => 'post',
                 'route_prefix' => 'posts',
                 'is_public' => true,
@@ -40,7 +40,7 @@ class ContentSeeder extends Seeder
         // created by DefaultPagesSeeder, which also seeds demo pages -- so a
         // production install that (correctly) skipped the demo content ended up
         // with no page type at all and no way to create a page.
-        PostType::updateOrCreate(
+        PostType::firstOrCreate(
             ['name' => 'page'],
             [
                 'label' => 'Page',
@@ -50,8 +50,8 @@ class ContentSeeder extends Seeder
                 'has_featured_image' => true,
                 'has_excerpt' => true,
                 'has_comments' => false,
-                'supports' => json_encode(['title', 'editor', 'thumbnail', 'excerpt']),
-                'taxonomies' => json_encode([]),
+                'supports' => ['title', 'editor', 'thumbnail', 'excerpt'],
+                'taxonomies' => [],
                 'slug' => 'page',
                 'route_prefix' => null,
                 'is_public' => true,
@@ -62,7 +62,7 @@ class ContentSeeder extends Seeder
         );
 
         // Create only essential taxonomies
-        $categoryTaxonomy = Taxonomy::updateOrCreate(
+        $categoryTaxonomy = Taxonomy::firstOrCreate(
             ['name' => 'category'],
             [
                 'label' => 'Category',
@@ -86,7 +86,7 @@ class ContentSeeder extends Seeder
             ],
         ]);
 
-        $tagTaxonomy = Taxonomy::updateOrCreate(
+        $tagTaxonomy = Taxonomy::firstOrCreate(
             ['name' => 'post_tag'],
             [
                 'label' => 'Tag',
@@ -119,7 +119,7 @@ class ContentSeeder extends Seeder
         ];
 
         foreach ($essentialCategories as $category) {
-            TaxonomyTerm::updateOrCreate(
+            TaxonomyTerm::firstOrCreate(
                 ['taxonomy_id' => $categoryTaxonomy->id, 'slug' => $category['slug']],
                 [
                     'name' => $category['name'],
@@ -138,7 +138,7 @@ class ContentSeeder extends Seeder
         ];
 
         foreach ($essentialTags as $tag) {
-            TaxonomyTerm::updateOrCreate(
+            TaxonomyTerm::firstOrCreate(
                 ['taxonomy_id' => $tagTaxonomy->id, 'slug' => $tag['slug']],
                 [
                     'name' => $tag['name'],
@@ -218,7 +218,7 @@ class ContentSeeder extends Seeder
                 continue;
             }
 
-            $taxonomy->setTranslation($locale, $payload);
+            $taxonomy->translations()->firstOrCreate(['locale' => $locale], $payload);
         }
     }
 
@@ -233,7 +233,7 @@ class ContentSeeder extends Seeder
                 continue;
             }
 
-            $term->setTranslation($locale, $payload);
+            $term->translations()->firstOrCreate(['locale' => $locale], $payload);
         }
     }
 
