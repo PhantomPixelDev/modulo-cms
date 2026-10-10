@@ -34,6 +34,7 @@ interface CheckoutProps {
     /** A returning customer's details from their last order */
     saved_address?: Record<string, string | boolean | null> | null;
     terms_url?: string | null;
+    checkout_key?: string;
     site?: any;
     theme?: any;
     menus?: any;
@@ -47,6 +48,7 @@ export default function Checkout({
     payment_methods,
     saved_address,
     terms_url,
+    checkout_key,
     site,
     theme,
     menus,
@@ -128,7 +130,7 @@ export default function Checkout({
                     Accept: 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify({ ...form, shipping_method: liveTotals?.shipping_method ?? null, accept_terms: acceptTerms }),
+                body: JSON.stringify({ ...form, checkout_key, shipping_method: liveTotals?.shipping_method ?? null, accept_terms: acceptTerms }),
             });
 
             const data = await response.json();

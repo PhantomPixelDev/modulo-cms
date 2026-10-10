@@ -41,6 +41,7 @@
         "@testing-library/user-event": "^14.6.7",
         "@types/node": "^24.3.1",
         "@vitest/coverage-v8": "^5.0.3",
+        "concurrently": "10.0.6",
         "eslint": "^9.17.0",
         "eslint-config-prettier": "^10.0.1",
         "eslint-plugin-react": "^7.37.3",
@@ -102,5 +103,8 @@
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
         "lightningcss-linux-x64-gnu": "^1.33.0"
     },
-    "prettier": "./config/tooling/prettier.json"
+    "prettier": "./config/tooling/prettier.json",
+    "engines": {
+        "node": ">=24 <25"
+    }
 }

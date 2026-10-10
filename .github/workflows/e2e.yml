@@ -76,7 +76,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Cache Composer dependencies
@@ -145,7 +145,7 @@ jobs:
           MODULO_E2E_DEMO: '1'
           MODULO_E2E_SHOP: '1'
         run: |
-          php artisan plugin:install modulo-shop --release=1.9.2 --activate
+          php artisan plugin:install modulo-shop --release=1.10.0 --activate
           php artisan modulo:seed-demo --reset-content --force
           php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); App\Models\SiteSetting::set("site_url", getenv("APP_URL"));'
           # Earlier restore/package checks may have cached normal-site URLs.
