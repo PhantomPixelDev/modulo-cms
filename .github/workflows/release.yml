@@ -185,7 +185,11 @@ jobs:
             MODULO_VERSION=${{ needs.prepare.outputs.version }}
             MODULO_COMMIT=${{ github.sha }}
             MODULO_BUILT_AT=${{ needs.prepare.outputs.built_at }}
-          cache-from: type=gha,scope=${{ matrix.target }}
+          # web copies app's public assets and therefore builds the same PHP
+          # base. Reuse app layers rather than compiling its ARM extensions twice.
+          cache-from: |
+            type=gha,scope=${{ matrix.target }}
+            type=gha,scope=app
           cache-to: type=gha,mode=max,scope=${{ matrix.target }}
           # SLSA provenance and an SPDX SBOM, attached to the image as
           # attestations (docker buildx imagetools inspect --format '{{ json .SBOM }}').
