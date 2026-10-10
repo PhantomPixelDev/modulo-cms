@@ -142,7 +142,7 @@ jobs:
           MODULO_E2E_DEMO: '1'
           MODULO_E2E_SHOP: '1'
         run: |
-          php artisan plugin:install modulo-shop --release=1.9.1 --activate
+          php artisan plugin:install modulo-shop --release=1.9.2 --activate
           php artisan modulo:seed-demo --reset-content --force
           npm run test:e2e -- z-demo-integrity.spec.ts z-demo-shop.spec.ts
 
