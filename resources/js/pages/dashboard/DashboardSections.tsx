@@ -4,25 +4,55 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAcl } from '@/lib/acl';
 import { type ReactNode } from 'react';
 import { ROUTE } from './routes';
-import { getCommentsSections } from './sections/comments/commentsSections';
 import { renderDashboardHome } from './sections/home/homeSection';
-import { getMediaSections } from './sections/media/mediaSections';
-import { getPagesSections } from './sections/pages/pagesSections';
-import { getPluginsSections } from './sections/plugins/pluginsSections';
-import { getPostTypesSections } from './sections/post-types/postTypesSections';
-import { getPostsSections } from './sections/posts/postsSections';
-import { getRolesSections } from './sections/roles/rolesSections';
-import { getSiteSettingsSections } from './sections/site-settings/siteSettingsSections';
-import { getSitemapSections } from './sections/sitemap/sitemapSections';
-import { getSystemSections } from './sections/system/systemSections';
-import { getTaxonomiesSections } from './sections/taxonomies/taxonomiesSections';
-import { getTaxonomyTermsSections } from './sections/taxonomy-terms/taxonomyTermsSections';
-import { getTemplatesSections } from './sections/templates/templatesSections';
-import { getThemesSections } from './sections/themes/themesSections';
-import { getTranslationSections } from './sections/translations/translationSections';
-import { getTrashSections } from './sections/trash/trashSections';
-import { getUsersSections } from './sections/users/usersSections';
+import { lazySections } from './sections/lazySections';
 import { DashboardProps, asArray, type User as DashboardUser } from './types';
+
+const getCommentsSections = lazySections(['comments'], () =>
+    import('./sections/comments/commentsSections').then((module) => module.getCommentsSections),
+);
+const getMediaSections = lazySections(['media'], () => import('./sections/media/mediaSections').then((module) => module.getMediaSections));
+const getPagesSections = lazySections(['pages', 'pages.create', 'pages.edit'], () =>
+    import('./sections/pages/pagesSections').then((module) => module.getPagesSections),
+);
+const getPluginsSections = lazySections(['plugins', 'plugin-settings'], () =>
+    import('./sections/plugins/pluginsSections').then((module) => module.getPluginsSections),
+);
+const getPostTypesSections = lazySections(['post-types', 'post-types.create', 'post-types.edit'], () =>
+    import('./sections/post-types/postTypesSections').then((module) => module.getPostTypesSections),
+);
+const getPostsSections = lazySections(['posts', 'posts.create', 'posts.edit', 'posts.show'], () =>
+    import('./sections/posts/postsSections').then((module) => module.getPostsSections),
+);
+const getRolesSections = lazySections(['roles', 'roles.create', 'roles.edit'], () =>
+    import('./sections/roles/rolesSections').then((module) => module.getRolesSections),
+);
+const getSiteSettingsSections = lazySections(['site-settings'], () =>
+    import('./sections/site-settings/siteSettingsSections').then((module) => module.getSiteSettingsSections),
+);
+const getSitemapSections = lazySections(['sitemap'], () => import('./sections/sitemap/sitemapSections').then((module) => module.getSitemapSections));
+const getSystemSections = lazySections(['languages', 'email', 'activity', 'redirects', 'updates', 'backups'], () =>
+    import('./sections/system/systemSections').then((module) => module.getSystemSections),
+);
+const getTaxonomiesSections = lazySections(['taxonomies', 'taxonomies.create', 'taxonomies.edit'], () =>
+    import('./sections/taxonomies/taxonomiesSections').then((module) => module.getTaxonomiesSections),
+);
+const getTaxonomyTermsSections = lazySections(['taxonomy-terms', 'taxonomy-terms.create', 'taxonomy-terms.edit', 'taxonomy-terms.show'], () =>
+    import('./sections/taxonomy-terms/taxonomyTermsSections').then((module) => module.getTaxonomyTermsSections),
+);
+const getTemplatesSections = lazySections(['templates', 'templates.create', 'templates.edit', 'templates.show'], () =>
+    import('./sections/templates/templatesSections').then((module) => module.getTemplatesSections),
+);
+const getThemesSections = lazySections(['themes', 'themes.show', 'themes.customizer'], () =>
+    import('./sections/themes/themesSections').then((module) => module.getThemesSections),
+);
+const getTranslationSections = lazySections(['translations'], () =>
+    import('./sections/translations/translationSections').then((module) => module.getTranslationSections),
+);
+const getTrashSections = lazySections(['trash'], () => import('./sections/trash/trashSections').then((module) => module.getTrashSections));
+const getUsersSections = lazySections(['users', 'users.create', 'users.edit'], () =>
+    import('./sections/users/usersSections').then((module) => module.getUsersSections),
+);
 
 export default function DashboardContent({
     adminStats,
@@ -101,11 +131,20 @@ export default function DashboardContent({
         email_verified_at: 'email_verified_at' in user ? user.email_verified_at : null,
         // Ensure roles is always an array of { id, name } objects
         roles: (() => {
-            const raw: any = (user as any).roles;
-            const list: any[] = Array.isArray(raw) ? raw : Array.isArray(raw?.roles) ? raw.roles : [];
+            const raw: unknown = user.roles;
+            const nested = raw && typeof raw === 'object' && 'roles' in raw ? raw.roles : null;
+            const list: unknown[] = Array.isArray(raw) ? raw : Array.isArray(nested) ? nested : [];
 
             return list
-                .filter((r) => r && typeof r === 'object')
+                .filter(
+                    (role): role is { id: number; name: string } =>
+                        !!role &&
+                        typeof role === 'object' &&
+                        'id' in role &&
+                        typeof role.id === 'number' &&
+                        'name' in role &&
+                        typeof role.name === 'string',
+                )
                 .map((role) => ({
                     id: role.id,
                     name: role.name,

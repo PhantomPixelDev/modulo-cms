@@ -11,6 +11,19 @@ function listType(string $name = 'article'): PostType
     return PostType::factory()->create(['name' => $name, 'slug' => $name.'s', 'route_prefix' => $name]);
 }
 
+it('renders sanitized HTML rather than raw author markup in the admin preview', function () {
+    $post = Post::factory()->create([
+        'content' => '<p>Preview body</p><script>alert("preview-xss")</script><img src="/x.png" onerror="alert(1)">',
+    ]);
+
+    $this->actingAs(makeAdminUserWithPermissions(['view posts']))
+        ->get(route('dashboard.admin.posts.show', $post))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('post.content_html', fn ($html) => str_contains($html, 'Preview body')
+                && ! str_contains($html, 'preview-xss') && ! str_contains($html, 'onerror')));
+});
+
 it('searches every post, not only the first page', function () {
     SiteSetting::set('posts_per_page', 2);
     $type = listType();

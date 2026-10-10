@@ -1,3 +1,4 @@
+import ContentRenderer from '@/components/content/ContentRenderer';
 import { Badge } from '@/components/ui/badge';
 
 interface PostViewProps {
@@ -30,7 +31,7 @@ export function PostView({ post }: PostViewProps) {
                 )}
             </div>
             {post.excerpt && <p className="text-muted-foreground">{post.excerpt}</p>}
-            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: post.content_html ?? '' }} />
+            <ContentRenderer className="prose prose-sm max-w-none" html={post.content_html ?? ''} />
         </div>
     );
 }
