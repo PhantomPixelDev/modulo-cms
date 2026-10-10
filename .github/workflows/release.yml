@@ -128,6 +128,8 @@ jobs:
             suffix: '-web'
           - target: database
             suffix: '-postgres'
+          - target: redis
+            suffix: '-redis'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -413,6 +415,8 @@ jobs:
             --arg web_digest "$(cat digests/digest-web.txt)" \
             --arg database_image "${IMAGE_BASE}-postgres" \
             --arg database_digest "$(cat digests/digest-database.txt)" \
+            --arg redis_image "${IMAGE_BASE}-redis" \
+            --arg redis_digest "$(cat digests/digest-redis.txt)" \
             '{
               schema: 1,
               version: $version,
@@ -432,7 +436,8 @@ jobs:
                 images: {
                   app: { image: $app_image, digest: $app_digest },
                   web: { image: $web_image, digest: $web_digest },
-                  database: { image: $database_image, digest: $database_digest }
+                  database: { image: $database_image, digest: $database_digest },
+                  redis: { image: $redis_image, digest: $redis_digest }
                 }
               }
             }' > dist/release.json

@@ -134,8 +134,10 @@ These are build-size measurements, not request latency; use
 `node scripts/measure-admin-bundle.mjs` with each build to compare.
 
 Production and development PHP images now use the official PHP 8.5 Alpine 3.24
-variant. Redis, nginx and PostgreSQL also use Alpine variants. PHP compilation
-dependencies are removed from the runtime; PostgreSQL client tools stay on major
+variant. Redis, nginx and PostgreSQL also use Alpine variants. Alpine runtime
+builds apply available package patches, including Redis's
+bundled libraries. Release automation builds and signs all four runtime images.
+PHP compilation dependencies are removed from the runtime; PostgreSQL client tools stay on major
 16 for backup compatibility. The PHP user retains UID/GID 33 so existing named
 volumes remain writable. Full ICU locale data supports multilingual formatting.
 Node and Composer run in build stages and are absent from the production runtime.

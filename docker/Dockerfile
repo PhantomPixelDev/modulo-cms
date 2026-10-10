@@ -98,6 +98,10 @@ RUN set -eux; \
     su-exec postgres sh -c 'test "$(id -un)" = postgres'; \
     postgres --version
 
+# --- Redis: retain the official entrypoint and persistence behavior ------------
+FROM ${DOCKER_LIBRARY}/redis:8.10.2-alpine AS redis
+RUN apk upgrade --no-cache
+
 # --- nginx ---------------------------------------------------------------------
 FROM ${DOCKER_LIBRARY}/nginx:1.30-alpine AS web
 

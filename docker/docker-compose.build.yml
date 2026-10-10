@@ -11,6 +11,12 @@
 # a build argument if you need a local build to claim a specific one.
 
 services:
+  redis:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: redis
+
   db:
     build:
       context: ..

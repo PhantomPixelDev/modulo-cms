@@ -106,7 +106,7 @@ services:
 
   redis:
     container_name: modulo-redis
-    image: redis:8.10.2-alpine
+    image: ${MODULO_REDIS_IMAGE:-ghcr.io/phantompixeldev/modulo-cms-redis}:${MODULO_TAG:-latest}
     command: ['redis-server', '--appendonly', 'yes']
     volumes:
       - redis_data:/data
