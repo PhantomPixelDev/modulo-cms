@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.5.0](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.4.1...v0.5.0) (2026-10-10)
+
+
+### Features
+
+* **admin:** browse theme partials and copy content shortcodes ([4ca2bbc](https://github.com/PhantomPixelDev/modulo-cms/commit/4ca2bbc032ad36a929be22826badd7debffd7f1c))
+* **content:** add configurable partial blocks and theme previews ([d7b5f63](https://github.com/PhantomPixelDev/modulo-cms/commit/d7b5f63cbe138448474b994958d33784c3739946))
+* **demo:** seed compact fixtures and audit public navigation ([052d90c](https://github.com/PhantomPixelDev/modulo-cms/commit/052d90c7225ed2d53a0544e968afaf3e1a2a13bf))
+* **themes:** add branding and scoped website cache controls ([9f602a9](https://github.com/PhantomPixelDev/modulo-cms/commit/9f602a9b16a6e85c09b958e9e2393ed2a28f4275))
+* **themes:** add saved appearance settings in admin ([f28e509](https://github.com/PhantomPixelDev/modulo-cms/commit/f28e5096816b5bccd09031e8da1d044c280ef9a3))
+* **themes:** render reusable React partials from content shortcodes ([7b9c625](https://github.com/PhantomPixelDev/modulo-cms/commit/7b9c625aed3712d1e14070da8a96284fe514b75a))
+
+
+### Bug Fixes
+
+* **admin:** align plugin menus with server and demo permissions ([e2b0b1e](https://github.com/PhantomPixelDev/modulo-cms/commit/e2b0b1edcaa01602cac8d0074d3ec390b3db0f26))
+* **build:** exclude client chunks from server rendering builds ([76878eb](https://github.com/PhantomPixelDev/modulo-cms/commit/76878eb9b2041938c77ecad672861adef48f9e3d))
+* **build:** target the server entry for SSR builds ([680cbfa](https://github.com/PhantomPixelDev/modulo-cms/commit/680cbfaf72d1e8338edff912d3233a66f518528d))
+* **ci:** align the disposable demo canonical URL with its test server ([fd1d110](https://github.com/PhantomPixelDev/modulo-cms/commit/fd1d1103c133464620c4527ea1c9edb9be3633e5))
+* **ci:** clear configuration before booting the isolated demo server ([702508c](https://github.com/PhantomPixelDev/modulo-cms/commit/702508c99a8b2d3c025273d18667a638c9849a00))
+* **dashboard:** hide shortcuts for inaccessible admin actions ([76ce028](https://github.com/PhantomPixelDev/modulo-cms/commit/76ce0289397c2235b5095e6fb759278bfec5293c))
+* **docker:** keep public assets readable after private deployments ([92a6f2e](https://github.com/PhantomPixelDev/modulo-cms/commit/92a6f2e1a159ff8786dc9e9724299c81ba621f1e))
+* **docker:** patch and publish the Alpine Redis runtime ([0fd3b17](https://github.com/PhantomPixelDev/modulo-cms/commit/0fd3b17a6b826bd5bc379a88fa1f0f70c40c1fe2))
+* **docker:** preserve writable application ownership on Alpine ([47b7f77](https://github.com/PhantomPixelDev/modulo-cms/commit/47b7f77a2c037c746afd5ff7c726ce7fa83da9f7))
+* **docker:** resolve the development Composer image through a build stage ([6927260](https://github.com/PhantomPixelDev/modulo-cms/commit/6927260c35a4e6e9d14c79688875d0366e8a7d06))
+* **frontend:** keep search and translated content links routable ([be291d2](https://github.com/PhantomPixelDev/modulo-cms/commit/be291d2fd73dfcd0f6a68c3279f29e0e0485b8c0))
+* **media:** restore seeded images and browse root folders ([556fca7](https://github.com/PhantomPixelDev/modulo-cms/commit/556fca7e6885b6158454680c1cc0ffc1a9e8d1aa))
+* **plugins:** publish frontend assets immediately after installation ([8ed0cb3](https://github.com/PhantomPixelDev/modulo-cms/commit/8ed0cb3d97d2abd404553dba402de6ba9f92db23))
+* restore PostgreSQL backups with compatible client tools ([f723f94](https://github.com/PhantomPixelDev/modulo-cms/commit/f723f94929a76dad662680b819a92c2929f8c34d))
+* **security:** exclude operator credentials from image build contexts ([b35c200](https://github.com/PhantomPixelDev/modulo-cms/commit/b35c2005362cd5e5939deab04141441d0b4417f1))
+* **security:** harden PostgreSQL image without changing its database version ([1be9d6c](https://github.com/PhantomPixelDev/modulo-cms/commit/1be9d6c5e6bdfe03b1886c17c3f43374edcd4d87))
+* **security:** prevent public demo password resets ([f3c5f38](https://github.com/PhantomPixelDev/modulo-cms/commit/f3c5f3815cf5e4e0fc0238ad0af2168d0dea1bf2))
+* **security:** protect demo administration, publication and first setup ([c7f3a66](https://github.com/PhantomPixelDev/modulo-cms/commit/c7f3a66c7507dcec269a357297199349b2426721))
+* **security:** reject SVG declarations before invoking the XML parser ([ba9a1f4](https://github.com/PhantomPixelDev/modulo-cms/commit/ba9a1f4422d38ffbb3cd3227f120d479477b8205))
+* **shop:** clear stale cart actions on failed additions ([564d63d](https://github.com/PhantomPixelDev/modulo-cms/commit/564d63d2c26232ce9368ce437115333b6cb74a86))
+* **shop:** keep checkout locked until submission and navigation finish ([a44438a](https://github.com/PhantomPixelDev/modulo-cms/commit/a44438a1cb099b087e0bc5d713413822d5a35d2a))
+* **shop:** send checkout retry keys and verify repeated browser submissions ([cd911ef](https://github.com/PhantomPixelDev/modulo-cms/commit/cd911ef27b07c7eb71cbd77fe01ecfa23bbdbaf8))
+* **shop:** show cart feedback once in a single toast ([0f92f49](https://github.com/PhantomPixelDev/modulo-cms/commit/0f92f49a8a87a2f788255f735fb7d4d82799ec0c))
+* **ssr:** mount client-only plugin screens without hydrating placeholders ([541038c](https://github.com/PhantomPixelDev/modulo-cms/commit/541038c5e9bd5f5527ad1ae21fc2bad29e76b22e))
+* stop cart navigation from following redirect loops ([c0e38eb](https://github.com/PhantomPixelDev/modulo-cms/commit/c0e38ebb56614d53f2ddd6fe2b4be7f4da448bc8))
+* **themes:** highlight settings navigation and align controls ([116800c](https://github.com/PhantomPixelDev/modulo-cms/commit/116800c79c8760cf77618fa17fd9e90a04185a95))
+
+
+### Performance
+
+* **admin:** load content and maintenance screens on demand ([7a55d1f](https://github.com/PhantomPixelDev/modulo-cms/commit/7a55d1f033c817c3ba1da2974fbfafb926cee1e5))
+* **docker:** slim PHP runtimes with official Alpine images ([827870c](https://github.com/PhantomPixelDev/modulo-cms/commit/827870c25713d2fae2b8108354427a9995346349))
+
 ## [0.4.1](https://github.com/PhantomPixelDev/modulo-cms/compare/v0.4.0...v0.4.1) (2026-10-08)
 
 
