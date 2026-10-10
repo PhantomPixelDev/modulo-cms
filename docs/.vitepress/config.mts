@@ -26,6 +26,7 @@ export default defineConfig({
                     { text: 'Installation', link: '/installation' },
                     { text: 'Configuration', link: '/configuration' },
                     { text: 'Upgrading', link: '/upgrading' },
+                    { text: 'Security and runtime upgrades', link: '/modernization' },
                     { text: 'Backups and restoring', link: '/backup-restore' },
                     { text: 'Security', link: '/security' },
                     { text: 'Troubleshooting', link: '/troubleshooting' },

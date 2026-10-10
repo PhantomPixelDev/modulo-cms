@@ -181,7 +181,7 @@ jobs:
             if curl -fsS http://127.0.0.1:13714/health >/dev/null 2>&1; then break; fi
             sleep 1
           done
-          php artisan plugin:install modulo-shop --release=1.10.0 --activate
+          php artisan plugin:install modulo-shop --release=1.10.1 --activate
           php artisan modulo:seed-demo --reset-content --force
           php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); App\Models\SiteSetting::set("site_url", getenv("APP_URL"));'
           # Earlier restore/package checks may have cached normal-site URLs.

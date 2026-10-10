@@ -1,5 +1,9 @@
 # Upgrading
 
+For the stack changes after 0.4.1, read [Security and runtime upgrades](modernization.md)
+before deploying. Inertia/Vite changes need matching plugin builds; Redis 8 needs
+a separately preserved Redis 7 snapshot for rollback.
+
 ## Before anything else
 
 Take a backup you have actually restored at least once. `modulo:upgrade` takes one

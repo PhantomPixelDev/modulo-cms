@@ -107,7 +107,7 @@ arbitrary script.
 
 Plugin components are **client-only**. Their bundle is fetched over HTTP and registers
 itself on `window`; the SSR renderer has neither. SSR renders nothing for them and the
-client fills them in on hydration, rather than failing the whole page.
+client mounts their page afresh rather than hydrating an empty plugin placeholder.
 
 If a page must be server-rendered, keep it in the theme or the core.
 

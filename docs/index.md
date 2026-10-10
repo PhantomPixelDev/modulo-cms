@@ -9,6 +9,7 @@ Modulo is a self-hosted CMS for pages, posts, translations, and online shops. Th
 - [Saving and recovering work](editing.md): drafts, publishing, scheduling, recovery, and previews.
 - [Shop guide](shop.md): products, checkout, payments, and orders.
 - [Troubleshooting](troubleshooting.md): saving, preview, email, and background-service problems.
+- [Security and runtime upgrades](modernization.md): supported versions, permissions, plugin builds and Redis rollback.
 
 ## Run a site
 

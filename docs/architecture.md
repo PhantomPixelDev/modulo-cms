@@ -4,7 +4,7 @@ A map of the code for contributors. The individual guides go deeper.
 
 ## Stack
 
-- **Laravel 13** (PHP 8.4) serves everything; **Inertia** hands pages to **React 19**
+- **Laravel 13** (PHP 8.4/8.5; shipped images use 8.5) serves everything; **Inertia 3** hands pages to **React 19**
   (TypeScript, Tailwind v4, shadcn-style components in `resources/js/components/ui`).
 - **PostgreSQL** in production (Docker), **SQLite** for tests and quick local runs.
 - One Docker image for the app (php-fpm), one for the web server (nginx with `public/`
@@ -25,6 +25,8 @@ nginx ─▶ php-fpm ─▶ web middleware ─▶ route ─▶ controller ─▶
 **Admin**: `routes/admin.php` (`/dashboard/admin/*`). Nearly every screen renders the
 `Dashboard` Inertia page with an `adminSection` prop; `resources/js/pages/dashboard/
 DashboardContent.tsx` maps it to a section in `pages/dashboard/sections/*`.
+Each section and substantial system panel is dynamically imported when opened.
+Core and plugins share `admin.access` and the server's demo and two-factor guards.
 
 **Public site**: `routes/web.php` ends in catch-all routes handled by
 `FrontendRouterController`, which finds the content and asks `ReactTemplateRenderer` to
@@ -61,3 +63,8 @@ last three releases, Pint, Larastan (the baseline may only shrink), Prettier, ES
 (the count of `any` may only shrink), TypeScript, Vitest with coverage thresholds, the
 Playwright end-to-end suite (install wizard, admin system screens, API), and dependency
 audits. Ratchet values live in `.github/quality-baseline.json` and `config/tooling/phpstan-baseline.neon`.
+
+Supported-runtime jobs cover PHP 8.4/8.5 and Redis 7/8. Semgrep and Trivy retain
+security reports; client, SSR and standalone plugin builds run on x64 and ARM64.
+See [Security and runtime upgrades](modernization.md) for measured results and
+remaining distribution advisories.

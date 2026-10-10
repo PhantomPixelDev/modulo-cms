@@ -27,11 +27,14 @@ No install needed — open [the live demo](https://dev-modulo.ppxl.dev/), then l
 
 | Role                    | Email                | Password    |
 | ----------------------- | -------------------- | ----------- |
-| Admin (everything)      | `admin@example.com`  | `admin123`  |
+| Demo admin (editing)    | `admin@example.com`  | `admin123`  |
 | Editor (writes content) | `editor@example.com` | `editor123` |
 | Reader                  | `user@example.com`   | `user123`   |
 
 The demo restores clean content every four hours, including uploads and recovery drafts. Use your own installation for work you want to keep.
+
+Demo accounts cannot administer backups, extensions, users, API tokens or server
+credentials. See [security](docs/security.md) for the server-enforced restrictions.
 
 ## Install on a server
 
@@ -56,7 +59,11 @@ Replace `https://cms.example.com` with your site's public URL. Configure your re
 
 The installer downloads deployment files for a published release, generates application and database secrets, and starts the stack in a new `modulo-cms/` directory. It creates a `.env` file there; keep it private and retain it for future updates.
 
-Once HTTPS is configured and the containers are running, open `https://cms.example.com/install` to create your administrator account and name the site. The `localhost` address printed by the installer refers to the server itself.
+Once HTTPS is configured and the containers are running, generate a one-time setup
+token with `docker compose exec app php artisan modulo:install-token` from the
+deployment directory. Open `https://cms.example.com/install`, paste the token into
+the wizard, and create your administrator account. The `localhost` address printed
+by the installer refers to the server itself.
 
 Configure production SMTP for email delivery. Mailpit is included in the development stack only. See [installation](docs/installation.md) for manual Docker, Podman, and bare-metal setup, and [configuration](docs/configuration.md) for environment settings.
 
@@ -93,22 +100,23 @@ Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <ht
 
 [Browse all documentation](docs/index.md), including configuration, APIs, architecture, and release guides.
 
-|                                                   |                                                    |
-| ------------------------------------------------- | -------------------------------------------------- |
-| [Getting started](docs/getting-started.md)        | First login, navigation, and your first page       |
-| [Installation](docs/installation.md)              | Detailed setup options                             |
-| [Editor guide](docs/editor-guide.md)              | Writing posts, pages and translations              |
-| [Draft recovery](docs/editing.md)                 | Saving, scheduling, recovery, and previews         |
-| [Shop guide](docs/shop.md)                        | Products, checkout, payments, and orders           |
-| [Troubleshooting](docs/troubleshooting.md)        | Common errors and service diagnostics              |
-| [Upgrading](docs/upgrading.md)                    | Versions, preflight checks, per-channel commands   |
-| [Backups](docs/backup-restore.md)                 | What is saved, and how to test a restore           |
-| [Security](docs/security.md)                      | Hardening checklist                                |
-| [Plugins](docs/plugins.md)                        | Installing plugins and writing your own            |
-| [Themes](docs/theme-development.md)               | Changing the design                                |
-| [React content partials](docs/theme-partials.md)  | Reusable React modules in pages and posts          |
-| [Demo fixtures and testing](docs/demo-testing.md) | Compact examples, safe replacement and link checks |
-| [Contributing](.github/CONTRIBUTING.md)           | Development setup and quality gates                |
-| [Repository layout](docs/repository-layout.md)    | Source folders and tooling configuration           |
+|                                                        |                                                      |
+| ------------------------------------------------------ | ---------------------------------------------------- |
+| [Getting started](docs/getting-started.md)             | First login, navigation, and your first page         |
+| [Installation](docs/installation.md)                   | Detailed setup options                               |
+| [Editor guide](docs/editor-guide.md)                   | Writing posts, pages and translations                |
+| [Draft recovery](docs/editing.md)                      | Saving, scheduling, recovery, and previews           |
+| [Shop guide](docs/shop.md)                             | Products, checkout, payments, and orders             |
+| [Troubleshooting](docs/troubleshooting.md)             | Common errors and service diagnostics                |
+| [Upgrading](docs/upgrading.md)                         | Versions, preflight checks, per-channel commands     |
+| [Security and runtime upgrades](docs/modernization.md) | Supported versions, plugin builds and Redis rollback |
+| [Backups](docs/backup-restore.md)                      | What is saved, and how to test a restore             |
+| [Security](docs/security.md)                           | Hardening checklist                                  |
+| [Plugins](docs/plugins.md)                             | Installing plugins and writing your own              |
+| [Themes](docs/theme-development.md)                    | Changing the design                                  |
+| [React content partials](docs/theme-partials.md)       | Reusable React modules in pages and posts            |
+| [Demo fixtures and testing](docs/demo-testing.md)      | Compact examples, safe replacement and link checks   |
+| [Contributing](.github/CONTRIBUTING.md)                | Development setup and quality gates                  |
+| [Repository layout](docs/repository-layout.md)         | Source folders and tooling configuration             |
 
-Built with PHP 8.4 · Laravel 13 · React 19 · PostgreSQL 16 · Redis 7. MIT licensed — see [LICENSE](LICENSE).
+Built with PHP 8.5 (8.4 supported) · Laravel 13 · React 19 · Inertia 3 · PostgreSQL 16 · Redis 8. MIT licensed — see [LICENSE](LICENSE).
