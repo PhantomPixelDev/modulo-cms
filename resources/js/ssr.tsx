@@ -3,6 +3,7 @@ import createServer from '@inertiajs/react/server';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import ReactDOMServer from 'react-dom/server';
 import { route } from 'ziggy-js';
+import ApplicationProviders from './ApplicationProviders';
 import type { SharedData } from './types';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Modulo CMS';
@@ -70,7 +71,11 @@ createServer((page) =>
                     route(name, params, absolute, { ...ziggy, location: new URL(ziggy.location) }),
             });
 
-            return <App {...props} />;
+            return (
+                <ApplicationProviders>
+                    <App {...props} />
+                </ApplicationProviders>
+            );
         },
     }),
 );

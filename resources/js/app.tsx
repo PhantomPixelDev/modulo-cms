@@ -4,8 +4,7 @@ import { createInertiaApp, type ResolvedComponent } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createElement, type ReactNode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
-import ErrorBoundary from './ErrorBoundary';
-import { AdminToastProvider } from './components/admin/AdminToastProvider';
+import ApplicationProviders from './ApplicationProviders';
 import { initializeTheme } from './hooks/use-appearance';
 import { resolvePluginComponent } from './plugin-runtime';
 
@@ -113,11 +112,9 @@ createInertiaApp({
 
         // Minimal initial render with global ErrorBoundary
         const content = (
-            <ErrorBoundary>
-                <AdminToastProvider>
-                    <App {...props} />
-                </AdminToastProvider>
-            </ErrorBoundary>
+            <ApplicationProviders>
+                <App {...props} />
+            </ApplicationProviders>
         );
         if (el.hasChildNodes()) {
             hydrateRoot(el, content);
