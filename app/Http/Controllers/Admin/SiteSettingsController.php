@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\SiteSetting;
 use App\Services\SiteSettingsService;
+use App\Services\WebsiteCache;
 use App\Support\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -30,7 +31,7 @@ class SiteSettingsController extends Controller
         $group = $request->query('group', 'general');
         $currentLocale = $request->query('locale', Locale::getDefault()?->code ?? config('app.fallback_locale', 'en'));
         $locales = Locale::getActive();
-        $validGroups = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced'];
+        $validGroups = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced', 'cache'];
 
         if (! in_array($group, $validGroups)) {
             $group = 'general';
@@ -82,7 +83,7 @@ class SiteSettingsController extends Controller
     {
         $this->authorize('update', SiteSetting::class);
 
-        $validGroups = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced'];
+        $validGroups = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced', 'cache'];
 
         if (! in_array($group, $validGroups)) {
             return back()->withErrors(['group' => 'Invalid settings group']);
@@ -93,6 +94,9 @@ class SiteSettingsController extends Controller
         $data = $request->validate($rules);
 
         $this->settings->updateGroup($group, $data, $currentLocale);
+        if ($group === 'cache') {
+            app(WebsiteCache::class)->clear();
+        }
         ActivityLog::record('settings.updated', 'Updated '.$group.' settings', null, ['group' => $group, 'keys' => array_keys($data)]);
 
         return back()->with('success', ucfirst($group).' settings updated successfully');
@@ -105,9 +109,9 @@ class SiteSettingsController extends Controller
     {
         $this->authorize('update', SiteSetting::class);
 
-        $this->settings->clearCache();
+        app(WebsiteCache::class)->clear();
 
-        return back()->with('success', 'Settings cache cleared');
+        return back()->with('success', __('dashboard.website_cache.cleared'));
     }
 
     /**
@@ -195,6 +199,10 @@ class SiteSettingsController extends Controller
                 'maintenance_message' => 'nullable|string|max:1000',
                 'enable_comments' => 'nullable|boolean',
                 'registration_enabled' => 'nullable|boolean',
+            ],
+            'cache' => [
+                'page_cache_enabled' => ['required', 'boolean'],
+                'page_cache_ttl' => ['required', 'integer', 'min:60', 'max:86400'],
             ],
             default => [],
         };

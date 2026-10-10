@@ -10,6 +10,41 @@ updates while you edit; switch it between light and dark. **Save settings** appl
 the changes to public pages. **Discard changes** restores the current saved form.
 **Reset to theme defaults** removes this theme’s saved choices after confirmation.
 
+### Logo, header and footer
+
+**Logo and branding** supports automatic branding, text only, an icon, or an image.
+Choose logo images from the media library, or enter a local path / HTTP(S) URL.
+Upload new files through **Content → Media** first. A separate dark-mode image is
+optional. Set the mark height (16–80 px), text size (12–36 px), and whether text
+appears beside the mark. Image-only links retain an accessible site name.
+Blank logo text uses the site name; blank image uses the global site logo.
+These theme overrides do not rename the site or change SEO page titles.
+
+Header settings control sticky positioning, spacing, and the light/dark switch.
+Footer settings control the logo, tagline, CMS credit, and copyright text.
+Use `{year}` and `{site}` in copyright text; leave it blank for the standard footer.
+The same branding appears in the header, footer, and public authentication pages.
+Theme developers can reuse `ThemeBrand` for consistent rendering.
+The media picker includes a folder selector for top-level and nested folders.
+The upgrade also repairs older library seeds saved in the wrong media collection,
+so their existing images become selectable without moving or deleting files.
+
+**Clear website cache** refreshes public pages, content lookups, menus, theme
+settings, and sitemap XML. It preserves sessions, locks, queues, health heartbeats,
+and editor recovery. This scoped action is available with **customize themes**,
+including on the public demo. Clearing cache does not save pending form changes.
+
+### Page-cache settings
+
+On normal installations, open **Settings → Site settings → Cache** to enable or
+disable public page caching and set its lifetime (60–86,400 seconds). These writes
+require **edit settings**. The public demo keeps global settings read-only.
+`MODULO_PAGE_CACHE=false` is a server-level off switch that takes precedence;
+`MODULO_PAGE_CACHE_TTL` supplies the default lifetime until one is saved.
+Changing preferences invalidates existing website caches immediately.
+Account, cart, checkout, signed preview, and authenticated responses are excluded.
+The existing site-settings clear button now clears the scoped website caches too.
+
 Settings belong to each theme and live in the database. Switching themes keeps
 their choices, and upgrading or reinstalling a theme preserves them. Child themes
 inherit available controls from their parent and may override their definitions.
@@ -51,8 +86,11 @@ Add a `settings` object to `theme.json`:
 ```
 
 Keys use lowercase letters, numbers and underscores, starting with a letter.
-Supported types are `color` (six-digit hex), `select` (declared string choices)
-and `boolean`. Groups are `colors`, `dark_colors` and `layout`. Defaults must
+Supported types are `color` (six-digit hex), `select` (declared string choices),
+`boolean`, `text` (up to 500 characters), `image` (local path or HTTP(S) URL), and
+`number` (integer with declared `min` / `max`, bounded within 0–1000).
+Text and image controls can default to an empty string. Groups are `branding`,
+`header`, `footer`, `colors`, `dark_colors` and `layout`. Defaults must
 match the field type; invalid definitions are omitted. Undeclared submission
 keys and invalid values are rejected on the server.
 

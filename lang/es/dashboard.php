@@ -966,6 +966,10 @@ return [
 
     // Themes section
     'theme_settings' => [
+        'branding' => 'Logotipo e identidad', 'header' => 'Cabecera', 'footer' => 'Pie de página',
+        'choose_image' => 'Elegir de la biblioteca', 'remove_image' => 'Quitar',
+        'logo_text_hint' => 'Deja vacío para usar el nombre del sitio. No cambia la identidad ni los títulos de las páginas.',
+        'footer_text_hint' => 'Deja vacío para el valor predeterminado. Usa {year} para el año y {site} para el nombre del sitio.',
         'title' => 'Ajustes del tema',
         'description' => 'Cambia la apariencia del sitio sin editar los archivos del tema.',
         'colors' => 'Colores claros', 'dark_colors' => 'Colores oscuros', 'layout' => 'Tipografía y diseño',
@@ -981,6 +985,11 @@ return [
         'no_theme' => 'Activa un tema antes de cambiar sus ajustes.',
         'no_controls' => 'Este tema no declara ajustes de apariencia.',
         'fields' => [
+            'logo_style' => 'Estilo del logotipo', 'logo_text' => 'Texto del logotipo', 'logo_icon' => 'Icono del logotipo',
+            'logo_image' => 'Imagen del logotipo', 'dark_logo_image' => 'Logotipo en modo oscuro',
+            'logo_height' => 'Altura del logotipo (px)', 'logo_text_size' => 'Tamaño del texto (px)', 'logo_show_text' => 'Mostrar texto junto al logotipo',
+            'header_sticky' => 'Mantener visible la cabecera', 'header_density' => 'Espaciado de cabecera', 'header_theme_toggle' => 'Mostrar selector claro / oscuro',
+            'footer_show_brand' => 'Mostrar logotipo en el pie', 'footer_show_tagline' => 'Mostrar lema del sitio', 'footer_text' => 'Texto de derechos de autor', 'footer_powered_by' => 'Mostrar crédito de Modulo CMS',
             'primary_color' => 'Color de marca', 'background_color' => 'Fondo', 'text_color' => 'Texto',
             'surface_color' => 'Superficies suaves', 'border_color' => 'Bordes',
             'dark_primary_color' => 'Color de marca', 'dark_background_color' => 'Fondo', 'dark_text_color' => 'Texto',
@@ -988,10 +997,18 @@ return [
             'font_family' => 'Fuente', 'container_width' => 'Ancho del contenido', 'corner_style' => 'Esquinas', 'show_sidebar' => 'Mostrar barra lateral de artículos',
         ],
         'options' => [
+            'auto' => 'Automático (logotipo o inicial)', 'text' => 'Solo texto', 'icon' => 'Icono', 'image' => 'Imagen',
+            'layers' => 'Capas', 'code' => 'Código', 'globe' => 'Globo', 'leaf' => 'Hoja', 'box' => 'Caja', 'sparkles' => 'Destellos', 'roomy' => 'Espacioso',
             'system' => 'Fuente sans serif del sistema', 'helvetica' => 'Helvetica / Arial', 'serif' => 'Georgia', 'mono' => 'Monoespaciada',
             'compact' => 'Compacto', 'standard' => 'Estándar', 'wide' => 'Amplio',
             'square' => 'Rectas', 'subtle' => 'Sutiles', 'rounded' => 'Redondeadas', 'soft' => 'Suaves',
         ],
+    ],
+    'website_cache' => [
+        'title' => 'Caché', 'description' => 'Guarda páginas públicas para visitantes sin sesión. Los cambios de contenido invalidan la caché automáticamente. Se excluyen cuentas, carrito, pago y vistas previas.',
+        'enabled' => 'Activar caché de páginas públicas', 'ttl' => 'Duración de la caché (segundos)', 'ttl_hint' => '60–86.400 segundos. La configuración del servidor puede desactivar la caché globalmente.',
+        'save' => 'Guardar ajustes de caché', 'clear' => 'Limpiar caché del sitio', 'clearing' => 'Limpiando…', 'cleared' => 'Caché del sitio limpiada.',
+        'clear_hint' => 'Actualiza páginas, contenido, menús, tema y mapas del sitio. Conserva sesiones, colas y recuperación del editor.',
     ],
     'themes' => [
         'title' => 'Themes',

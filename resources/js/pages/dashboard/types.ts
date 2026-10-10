@@ -174,7 +174,7 @@ export interface SitemapSettings {
 
 export type SettingsValue = string | number | boolean | null | string[];
 export type SiteSettings = Record<string, Record<string, SettingsValue>>;
-export type SettingsGroup = 'general' | 'reading' | 'writing' | 'permalinks' | 'seo' | 'social' | 'analytics' | 'media' | 'advanced';
+export type SettingsGroup = 'general' | 'reading' | 'writing' | 'permalinks' | 'seo' | 'social' | 'analytics' | 'media' | 'advanced' | 'cache';
 
 export interface MediaItem extends BaseEntity {
     name: string;

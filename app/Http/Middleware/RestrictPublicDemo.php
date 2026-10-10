@@ -42,7 +42,7 @@ class RestrictPublicDemo
         // Fail closed for new plugin write endpoints. Read-only screens remain
         // available, while the existing editing routes are explicitly allowed.
         $allowedWrite = preg_match('#^dashboard/admin/(posts|pages|media|editor-drafts|content|trash|taxonomy-terms|menus|menu-items|partials)(/|$)#', $path)
-            || preg_match('#^dashboard/admin/themes/[0-9]+/settings$#', $path)
+            || preg_match('#^dashboard/admin/themes/[0-9]+/settings(/clear-cache)?$#', $path)
             || preg_match('#^dashboard/admin/shop/(products|coupons|orders)(/|$)#', $path)
             || $is(['dashboard/admin/onboarding/dismiss', 'api/v1/posts', 'api/v1/posts/*']);
         $forbiddenWrite = ! $safe

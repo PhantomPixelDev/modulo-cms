@@ -7,38 +7,221 @@
     "author_url": "https://github.com/PhantomPixelDev/modulo-cms",
     "tags": ["react", "modern", "typescript", "inertia"],
     "settings": {
-        "primary_color": { "type": "color", "group": "colors", "label": "Brand color", "default": "#2563eb" },
-        "background_color": { "type": "color", "group": "colors", "label": "Background", "default": "#ffffff" },
-        "text_color": { "type": "color", "group": "colors", "label": "Text", "default": "#1e293b" },
-        "surface_color": { "type": "color", "group": "colors", "label": "Muted surfaces", "default": "#f5f5f5" },
-        "border_color": { "type": "color", "group": "colors", "label": "Borders", "default": "#e5e7eb" },
-        "dark_primary_color": { "type": "color", "group": "dark_colors", "label": "Brand color", "default": "#60a5fa" },
-        "dark_background_color": { "type": "color", "group": "dark_colors", "label": "Background", "default": "#171923" },
-        "dark_text_color": { "type": "color", "group": "dark_colors", "label": "Text", "default": "#f1f5f9" },
-        "dark_surface_color": { "type": "color", "group": "dark_colors", "label": "Muted surfaces", "default": "#252735" },
-        "dark_border_color": { "type": "color", "group": "dark_colors", "label": "Borders", "default": "#383b4a" },
+        "logo_style": {
+            "type": "select",
+            "group": "branding",
+            "label": "Logo style",
+            "default": "auto",
+            "options": {
+                "auto": "Automatic (site logo or initial)",
+                "text": "Text only",
+                "icon": "Icon",
+                "image": "Image"
+            }
+        },
+        "logo_text": {
+            "type": "text",
+            "group": "branding",
+            "label": "Logo text",
+            "default": ""
+        },
+        "logo_icon": {
+            "type": "select",
+            "group": "branding",
+            "label": "Logo icon",
+            "default": "layers",
+            "options": {
+                "layers": "Layers",
+                "code": "Code",
+                "globe": "Globe",
+                "leaf": "Leaf",
+                "box": "Box",
+                "sparkles": "Sparkles",
+                "square": "Square"
+            }
+        },
+        "logo_image": {
+            "type": "image",
+            "group": "branding",
+            "label": "Logo image",
+            "default": ""
+        },
+        "dark_logo_image": {
+            "type": "image",
+            "group": "branding",
+            "label": "Dark mode logo image",
+            "default": ""
+        },
+        "logo_height": {
+            "type": "number",
+            "group": "branding",
+            "label": "Logo height (px)",
+            "default": 32,
+            "min": 16,
+            "max": 80
+        },
+        "logo_text_size": {
+            "type": "number",
+            "group": "branding",
+            "label": "Logo text size (px)",
+            "default": 18,
+            "min": 12,
+            "max": 36
+        },
+        "logo_show_text": {
+            "type": "boolean",
+            "group": "branding",
+            "label": "Show text beside the logo",
+            "default": true
+        },
+        "header_sticky": {
+            "type": "boolean",
+            "group": "header",
+            "label": "Keep header visible while scrolling",
+            "default": true
+        },
+        "header_density": {
+            "type": "select",
+            "group": "header",
+            "label": "Header spacing",
+            "default": "standard",
+            "options": {
+                "compact": "Compact",
+                "standard": "Standard",
+                "roomy": "Roomy"
+            }
+        },
+        "header_theme_toggle": {
+            "type": "boolean",
+            "group": "header",
+            "label": "Show light / dark switch",
+            "default": true
+        },
+        "footer_show_brand": {
+            "type": "boolean",
+            "group": "footer",
+            "label": "Show footer logo",
+            "default": true
+        },
+        "footer_show_tagline": {
+            "type": "boolean",
+            "group": "footer",
+            "label": "Show site tagline",
+            "default": true
+        },
+        "footer_text": {
+            "type": "text",
+            "group": "footer",
+            "label": "Footer copyright text",
+            "default": ""
+        },
+        "footer_powered_by": {
+            "type": "boolean",
+            "group": "footer",
+            "label": "Show Modulo CMS credit",
+            "default": true
+        },
+        "primary_color": {
+            "type": "color",
+            "group": "colors",
+            "label": "Brand color",
+            "default": "#2563eb"
+        },
+        "background_color": {
+            "type": "color",
+            "group": "colors",
+            "label": "Background",
+            "default": "#ffffff"
+        },
+        "text_color": {
+            "type": "color",
+            "group": "colors",
+            "label": "Text",
+            "default": "#1e293b"
+        },
+        "surface_color": {
+            "type": "color",
+            "group": "colors",
+            "label": "Muted surfaces",
+            "default": "#f5f5f5"
+        },
+        "border_color": {
+            "type": "color",
+            "group": "colors",
+            "label": "Borders",
+            "default": "#e5e7eb"
+        },
+        "dark_primary_color": {
+            "type": "color",
+            "group": "dark_colors",
+            "label": "Brand color",
+            "default": "#60a5fa"
+        },
+        "dark_background_color": {
+            "type": "color",
+            "group": "dark_colors",
+            "label": "Background",
+            "default": "#171923"
+        },
+        "dark_text_color": {
+            "type": "color",
+            "group": "dark_colors",
+            "label": "Text",
+            "default": "#f1f5f9"
+        },
+        "dark_surface_color": {
+            "type": "color",
+            "group": "dark_colors",
+            "label": "Muted surfaces",
+            "default": "#252735"
+        },
+        "dark_border_color": {
+            "type": "color",
+            "group": "dark_colors",
+            "label": "Borders",
+            "default": "#383b4a"
+        },
         "font_family": {
             "type": "select",
             "group": "layout",
             "label": "Font",
             "default": "system",
-            "options": { "system": "System sans serif", "helvetica": "Helvetica / Arial", "serif": "Georgia", "mono": "Monospace" }
+            "options": {
+                "system": "System sans serif",
+                "helvetica": "Helvetica / Arial",
+                "serif": "Georgia",
+                "mono": "Monospace"
+            }
         },
         "container_width": {
             "type": "select",
             "group": "layout",
             "label": "Content width",
             "default": "standard",
-            "options": { "compact": "Compact", "standard": "Standard", "wide": "Wide" }
+            "options": {
+                "compact": "Compact",
+                "standard": "Standard",
+                "wide": "Wide"
+            }
         },
         "corner_style": {
             "type": "select",
             "group": "layout",
             "label": "Corners",
             "default": "rounded",
-            "options": { "square": "Square", "subtle": "Subtle", "rounded": "Rounded", "soft": "Soft" }
+            "options": {
+                "square": "Square",
+                "subtle": "Subtle",
+                "rounded": "Rounded",
+                "soft": "Soft"
+            }
         },
-        "show_sidebar": { "type": "boolean", "group": "layout", "label": "Show article sidebar", "default": true }
+        "show_sidebar": {
+            "type": "boolean",
+            "group": "layout",
+            "label": "Show article sidebar",
+            "default": true
+        }
     },
     "supports": {
         "post_thumbnails": true,
@@ -48,6 +231,9 @@
         "responsive": true
     },
     "templates": {
+        "404": {
+            "component": "components/NotFound.tsx"
+        },
         "layout": {
             "component": "components/Layout.tsx"
         },
@@ -99,9 +285,6 @@
         "confirm-password": {
             "component": "components/ConfirmPassword.tsx"
         },
-        "404": {
-            "component": "components/NotFound.tsx"
-        },
         "taxonomy": {
             "component": "components/TaxonomyTerm.tsx"
         },
@@ -134,19 +317,34 @@
             "label": "Callout",
             "description": "Highlight useful information. Tone can be info, success or warning.",
             "fields": {
-                "title": { "type": "text", "label": "Title" },
+                "title": {
+                    "type": "text",
+                    "label": "Title"
+                },
                 "tone": {
                     "type": "select",
                     "label": "Tone",
                     "required": true,
                     "options": [
-                        { "value": "info", "label": "Information" },
-                        { "value": "success", "label": "Success" },
-                        { "value": "warning", "label": "Warning" }
+                        {
+                            "value": "info",
+                            "label": "Information"
+                        },
+                        {
+                            "value": "success",
+                            "label": "Success"
+                        },
+                        {
+                            "value": "warning",
+                            "label": "Warning"
+                        }
                     ]
                 }
             },
-            "defaults": { "tone": "info", "title": "" }
+            "defaults": {
+                "tone": "info",
+                "title": ""
+            }
         },
         "disclosure": {
             "component": "components/partials/Disclosure.tsx",
@@ -154,10 +352,20 @@
             "label": "Collapsible section",
             "description": "Content readers can expand. Set open to true to start expanded.",
             "fields": {
-                "title": { "type": "text", "label": "Title", "required": true },
-                "open": { "type": "boolean", "label": "Start expanded" }
+                "title": {
+                    "type": "text",
+                    "label": "Title",
+                    "required": true
+                },
+                "open": {
+                    "type": "boolean",
+                    "label": "Start expanded"
+                }
             },
-            "defaults": { "title": "Details", "open": "false" }
+            "defaults": {
+                "title": "Details",
+                "open": "false"
+            }
         },
         "navigation": {
             "component": "components/partials/Navigation.tsx"

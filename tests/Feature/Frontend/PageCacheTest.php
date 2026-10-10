@@ -1,10 +1,25 @@
 <?php
 
+use App\Models\SiteSetting;
 use App\Models\User;
 
 beforeEach(function () {
     config(['content.page_cache.enabled' => true]);
     activateReactTheme();
+});
+
+it('honors saved caching preferences and expires pages after the selected lifetime', function () {
+    makePublishedPage(['slug' => 'about']);
+    SiteSetting::set('page_cache_ttl', 60, 'cache', 'integer');
+    $this->get('/about')->assertHeader('X-Page-Cache', 'miss');
+    $this->get('/about')->assertHeader('X-Page-Cache', 'hit');
+    $this->travel(61)->seconds();
+    $this->get('/about')->assertHeader('X-Page-Cache', 'miss');
+    SiteSetting::set('page_cache_enabled', false, 'cache', 'boolean');
+    $this->get('/about')->assertHeaderMissing('X-Page-Cache');
+    SiteSetting::set('page_cache_enabled', true, 'cache', 'boolean');
+    config(['content.page_cache.enabled' => false]);
+    $this->get('/about')->assertHeaderMissing('X-Page-Cache');
 });
 
 it('serves repeat visits from the cache with this visitor\'s own token and nonce', function () {

@@ -1,5 +1,7 @@
+import { ThemeBrand, type BrandSite } from '@/components/theme-brand';
 import { useAppearance } from '@/hooks/use-appearance';
 import { cn } from '@/lib/utils';
+import type { ThemeSettingValues } from '@/theme-settings';
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronDown, LayoutDashboard, LogOut, Menu as MenuIcon, Moon, ShoppingCart, Sun, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -30,8 +32,8 @@ function ThemeToggle({ className }: { className?: string }) {
 
 interface NavigationProps {
     className?: string;
-    site?: any;
-    menus?: any;
+    site?: BrandSite;
+    menus?: { header?: MenuItem[] | { items?: MenuItem[] } };
     auth?: {
         user?: {
             id: number;
@@ -74,7 +76,8 @@ function NavLink({ item, active, className, onNavigate }: { item: MenuItem; acti
 }
 
 const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, auth }) => {
-    const { url: currentUrl, props } = usePage<{ activePlugins?: string[] }>();
+    const { url: currentUrl, props } = usePage<{ activePlugins?: string[]; theme?: { settings?: ThemeSettingValues } }>();
+    const values = props.theme?.settings ?? {};
     const tt = useThemeT();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [cartCount, setCartCount] = useState(0);
@@ -120,21 +123,24 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
         return path === '/' ? currentPath === '/' : currentPath === path || currentPath.startsWith(`${path}/`);
     };
 
-    const siteName = site?.name || 'Modulo CMS';
     const linkClass = 'rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground';
 
     return (
-        <header className={cn('sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70', className)}>
-            <Container className="flex h-16 items-center justify-between gap-6">
+        <header
+            className={cn(
+                values.header_sticky !== false && 'sticky top-0',
+                'z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70',
+                className,
+            )}
+        >
+            <Container
+                className={cn(
+                    'flex items-center justify-between gap-4',
+                    values.header_density === 'compact' ? 'min-h-14 py-2' : values.header_density === 'roomy' ? 'min-h-20 py-3' : 'min-h-16 py-2',
+                )}
+            >
                 <Link href="/" className="flex min-w-0 items-center gap-2.5 font-semibold tracking-tight text-foreground">
-                    {site?.logo ? (
-                        <img src={site.logo} alt="" className="h-8 w-auto" />
-                    ) : (
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-                            {siteName.charAt(0).toUpperCase()}
-                        </span>
-                    )}
-                    <span className="truncate text-lg">{siteName}</span>
+                    <ThemeBrand site={site} values={values} />
                 </Link>
 
                 {/* Desktop navigation */}
@@ -168,7 +174,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
                 </nav>
 
                 <div className="hidden items-center gap-2 md:flex">
-                    <ThemeToggle />
+                    {values.header_theme_toggle !== false && <ThemeToggle />}
                     {shopActive && <MiniCart count={cartCount} />}
                     {auth?.user ? (
                         <>
@@ -200,7 +206,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
 
                 {/* Mobile menu button */}
                 <div className="flex items-center gap-2 md:hidden">
-                    <ThemeToggle />
+                    {values.header_theme_toggle !== false && <ThemeToggle />}
                     <button
                         type="button"
                         onClick={() => setIsMenuOpen((open) => !open)}

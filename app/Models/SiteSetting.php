@@ -310,6 +310,10 @@ class SiteSetting extends Model
                 'enable_comments' => ['value' => false, 'type' => 'boolean'],
                 'registration_enabled' => ['value' => false, 'type' => 'boolean'],
             ],
+            'cache' => [
+                'page_cache_enabled' => ['value' => (bool) config('content.page_cache.enabled', true), 'type' => 'boolean'],
+                'page_cache_ttl' => ['value' => (int) config('content.page_cache.ttl', 3600), 'type' => 'integer'],
+            ],
         ];
     }
 

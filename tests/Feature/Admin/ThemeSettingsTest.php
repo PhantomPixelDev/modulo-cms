@@ -55,6 +55,11 @@ it('rejects unknown controls unsafe colors invalid choices and incomplete forms'
         ['font_family' => 'url(https://example.test/font)'],
         ['show_sidebar' => 'yes'],
         ['executable_code' => 'bad'],
+        ['logo_image' => 'javascript:alert(1)'],
+        ['dark_logo_image' => '//evil.test/logo.png'],
+        ['logo_icon' => 'constructor'],
+        ['logo_height' => 81],
+        ['logo_text' => str_repeat('a', 501)],
     ] as $changes) {
         $this->putJson(route('dashboard.admin.themes.settings.update', $this->theme), ['values' => array_replace($values, $changes)])
             ->assertUnprocessable();
@@ -62,6 +67,20 @@ it('rejects unknown controls unsafe colors invalid choices and incomplete forms'
     $this->putJson(route('dashboard.admin.themes.settings.update', $this->theme), ['values' => []])
         ->assertUnprocessable()->assertJsonValidationErrors('values.primary_color');
     expect($this->theme->fresh()->settings)->toBeNull();
+});
+
+it('saves branding and header/footer choices with typed sizes and blank fallback text', function () {
+    $values = app(ThemeSettings::class)->values($this->theme);
+    $values = array_replace($values, [
+        'logo_style' => 'image', 'logo_image' => '/storage/logo.png', 'dark_logo_image' => 'https://example.test/dark.png',
+        'logo_text' => 'My studio', 'logo_height' => 48, 'logo_show_text' => false,
+        'header_sticky' => false, 'footer_text' => '© {year} {site}', 'footer_powered_by' => false,
+    ]);
+    $this->actingAs($this->owner)->put(route('dashboard.admin.themes.settings.update', $this->theme), ['values' => $values])->assertRedirect();
+    expect($this->theme->fresh()->settings)->toBe($values);
+    $this->get('/')->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('theme.settings.logo_height', 48)->where('theme.settings.logo_image', '/storage/logo.png')
+        ->where('theme.settings.header_sticky', false));
 });
 
 it('resets to defaults while leaving other themes alone', function () {

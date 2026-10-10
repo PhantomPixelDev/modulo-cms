@@ -26,7 +26,7 @@ class ThemeSettings
                     continue;
                 }
                 $type = $field['type'] ?? null;
-                if (! in_array($type, ['color', 'select', 'boolean'], true)) {
+                if (! in_array($type, ['color', 'select', 'boolean', 'text', 'image', 'number'], true)) {
                     continue;
                 }
                 $options = $field['options'] ?? [];
@@ -37,9 +37,11 @@ class ThemeSettings
                 $normalized = [
                     'type' => $type,
                     'label' => is_string($field['label'] ?? null) ? $field['label'] : $key,
-                    'group' => in_array($field['group'] ?? '', ['colors', 'dark_colors', 'layout'], true) ? $field['group'] : 'layout',
+                    'group' => in_array($field['group'] ?? '', ['branding', 'header', 'footer', 'colors', 'dark_colors', 'layout'], true) ? $field['group'] : 'layout',
                     'default' => $field['default'] ?? null,
                     'options' => $type === 'select' ? $options : [],
+                    'min' => max(0, min(1000, (int) ($field['min'] ?? 0))),
+                    'max' => max(0, min(1000, (int) ($field['max'] ?? 100))),
                 ];
                 if (! Validator::make(['value' => $normalized['default']], ['value' => $this->rulesFor($normalized)])->fails()) {
                     $fields[$key] = $normalized;
@@ -57,11 +59,14 @@ class ThemeSettings
             'color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/D'],
             'select' => ['required', 'string', Rule::in(array_keys($field['options']))],
             'boolean' => ['required', 'boolean'],
+            'text' => ['present', 'nullable', 'string', 'max:500'],
+            'image' => ['present', 'nullable', 'string', 'max:1000', 'regex:#^(?:/(?!/)[^\s]*|https?://[^\s]+)$#i'],
+            'number' => ['required', 'integer', 'min:'.$field['min'], 'max:'.$field['max']],
             default => throw new \LogicException('Unsupported theme setting type.'),
         };
     }
 
-    /** @return array<string, string|bool> */
+    /** @return array<string, string|bool|int> */
     public function values(Theme $theme): array
     {
         $values = [];
@@ -70,7 +75,11 @@ class ThemeSettings
             if (Validator::make(['value' => $value], ['value' => $this->rulesFor($field)])->fails()) {
                 $value = $field['default'];
             }
-            $values[$key] = $field['type'] === 'boolean' ? (bool) $value : (string) $value;
+            $values[$key] = match ($field['type']) {
+                'boolean' => (bool) $value,
+                'number' => (int) $value,
+                default => (string) $value,
+            };
         }
 
         return $values;
@@ -85,6 +94,15 @@ class ThemeSettings
             $rules['values.'.$key] = $this->rulesFor($field);
         }
 
-        return Validator::make($input, $rules)->validate()['values'];
+        $values = Validator::make($input, $rules)->validate()['values'];
+        foreach ($fields as $key => $field) {
+            $values[$key] = match ($field['type']) {
+                'boolean' => (bool) $values[$key],
+                'number' => (int) $values[$key],
+                default => (string) $values[$key],
+            };
+        }
+
+        return $values;
     }
 }

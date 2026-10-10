@@ -1,6 +1,5 @@
-import { useAdminToast } from '@/components/admin/AdminToastProvider';
 import { Button } from '@/components/ui/button';
-import { router } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
@@ -58,23 +57,19 @@ export function getSiteSettingsSections({
 
 // A real component, so the toast hook is called under the rules of hooks
 function ClearSettingsCacheButton({ canEdit, t }: { canEdit: boolean; t: (key: string, replacements?: Record<string, string | number>) => string }) {
-    const { success: showSuccess } = useAdminToast();
+    const form = useForm({});
 
     const handleClearCache = () => {
-        if (!canEdit) return;
-        router.post(
-            '/dashboard/admin/settings/clear-cache',
-            {},
-            {
-                onSuccess: () => showSuccess(t('dashboard.settings.cache_cleared')),
-            },
-        );
+        if (!canEdit || form.processing) return;
+        form.post('/dashboard/admin/settings/clear-cache', {
+            preserveScroll: true,
+        });
     };
 
     return (
-        <Button variant="outline" size="sm" onClick={handleClearCache} disabled={!canEdit}>
+        <Button variant="outline" size="sm" onClick={handleClearCache} disabled={!canEdit || form.processing}>
             <Trash2 className="mr-2 h-4 w-4" />
-            {t('dashboard.settings.actions.clear_cache')}
+            {t(form.processing ? 'dashboard.website_cache.clearing' : 'dashboard.website_cache.clear')}
         </Button>
     );
 }

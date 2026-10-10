@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SiteSetting;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -76,7 +77,8 @@ class CachePublicPages
                 $body = str_replace($nonce, self::NONCE, $body);
             }
 
-            Cache::put($key, ['body' => $body, 'type' => $response->headers->get('Content-Type')], (int) config('content.page_cache.ttl', 3600));
+            $ttl = max(60, min(86400, (int) SiteSetting::get('page_cache_ttl', config('content.page_cache.ttl', 3600))));
+            Cache::put($key, ['body' => $body, 'type' => $response->headers->get('Content-Type')], $ttl);
             $response->headers->set('X-Page-Cache', 'miss');
         }
 
@@ -86,6 +88,9 @@ class CachePublicPages
     protected function eligible(Request $request): bool
     {
         if (! config('content.page_cache.enabled', true) || ! $request->isMethod('GET') || $request->header('X-Inertia')) {
+            return false;
+        }
+        if (! SiteSetting::get('page_cache_enabled', true)) {
             return false;
         }
 

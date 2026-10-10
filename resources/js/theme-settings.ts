@@ -1,11 +1,13 @@
-export type ThemeSettingValue = string | boolean;
+export type ThemeSettingValue = string | boolean | number;
 export type ThemeSettingValues = Record<string, ThemeSettingValue>;
 export interface ThemeSettingField {
-    type: 'color' | 'select' | 'boolean';
+    type: 'color' | 'select' | 'boolean' | 'text' | 'image' | 'number';
     label: string;
-    group: 'colors' | 'dark_colors' | 'layout';
+    group: 'branding' | 'header' | 'footer' | 'colors' | 'dark_colors' | 'layout';
     default: ThemeSettingValue;
     options: Record<string, string>;
+    min?: number;
+    max?: number;
 }
 export interface ThemeSettingsData {
     id: number;
@@ -13,6 +15,8 @@ export interface ThemeSettingsData {
     active: boolean;
     fields: Record<string, ThemeSettingField>;
     values: ThemeSettingValues;
+    site?: { name?: string; tagline?: string; logo?: string | null };
+    canSelectMedia?: boolean;
 }
 
 const fonts: Record<string, string> = {

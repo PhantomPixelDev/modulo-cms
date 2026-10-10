@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
 use App\Models\Theme;
+use App\Services\SiteSettingsService;
 use App\Services\ThemeManager;
 use App\Services\ThemeSettings;
+use App\Services\WebsiteCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -33,6 +35,12 @@ class ThemeSettingsController extends Controller
             'themeSettings' => [
                 'id' => $theme->id, 'name' => $theme->name, 'active' => $theme->is_active,
                 'fields' => $settings->fields($theme), 'values' => $settings->values($theme),
+                'site' => [
+                    'name' => app(SiteSettingsService::class)->siteName(),
+                    'tagline' => app(SiteSettingsService::class)->get('site_tagline', ''),
+                    'logo' => app(SiteSettingsService::class)->get('site_logo', '') ?: null,
+                ],
+                'canSelectMedia' => auth()->user()?->can('view media') ?? false,
             ],
         ]);
     }
@@ -55,5 +63,14 @@ class ThemeSettingsController extends Controller
         $manager->clearCache();
 
         return back()->with('success', __('dashboard.theme_settings.reset_done'));
+    }
+
+    public function clearCache(Theme $theme, WebsiteCache $cache): RedirectResponse
+    {
+        $this->authorize('customize', $theme);
+        abort_unless($theme->is_installed, 404);
+        $cache->clear();
+
+        return back()->with('success', __('dashboard.website_cache.cleared'));
     }
 }

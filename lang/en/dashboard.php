@@ -966,6 +966,10 @@ return [
 
     // Themes section
     'theme_settings' => [
+        'branding' => 'Logo and branding', 'header' => 'Header', 'footer' => 'Footer',
+        'choose_image' => 'Choose from media', 'remove_image' => 'Remove',
+        'logo_text_hint' => 'Leave empty to use the site name. This does not change your site identity or page titles.',
+        'footer_text_hint' => 'Leave empty for the default. Use {year} for the current year and {site} for the site name.',
         'title' => 'Theme settings',
         'description' => 'Change your site’s appearance without editing theme files.',
         'colors' => 'Light colors', 'dark_colors' => 'Dark colors', 'layout' => 'Typography and layout',
@@ -981,6 +985,11 @@ return [
         'no_theme' => 'Activate a theme before changing its settings.',
         'no_controls' => 'This theme does not declare appearance settings.',
         'fields' => [
+            'logo_style' => 'Logo style', 'logo_text' => 'Logo text', 'logo_icon' => 'Logo icon',
+            'logo_image' => 'Logo image', 'dark_logo_image' => 'Dark mode logo image',
+            'logo_height' => 'Logo height (px)', 'logo_text_size' => 'Logo text size (px)', 'logo_show_text' => 'Show text beside the logo',
+            'header_sticky' => 'Keep header visible while scrolling', 'header_density' => 'Header spacing', 'header_theme_toggle' => 'Show light / dark switch',
+            'footer_show_brand' => 'Show footer logo', 'footer_show_tagline' => 'Show site tagline', 'footer_text' => 'Footer copyright text', 'footer_powered_by' => 'Show Modulo CMS credit',
             'primary_color' => 'Brand color', 'background_color' => 'Background', 'text_color' => 'Text',
             'surface_color' => 'Muted surfaces', 'border_color' => 'Borders',
             'dark_primary_color' => 'Brand color', 'dark_background_color' => 'Background', 'dark_text_color' => 'Text',
@@ -988,10 +997,18 @@ return [
             'font_family' => 'Font', 'container_width' => 'Content width', 'corner_style' => 'Corners', 'show_sidebar' => 'Show article sidebar',
         ],
         'options' => [
+            'auto' => 'Automatic (site logo or initial)', 'text' => 'Text only', 'icon' => 'Icon', 'image' => 'Image',
+            'layers' => 'Layers', 'code' => 'Code', 'globe' => 'Globe', 'leaf' => 'Leaf', 'box' => 'Box', 'sparkles' => 'Sparkles', 'roomy' => 'Roomy',
             'system' => 'System sans serif', 'helvetica' => 'Helvetica / Arial', 'serif' => 'Georgia', 'mono' => 'Monospace',
             'compact' => 'Compact', 'standard' => 'Standard', 'wide' => 'Wide',
             'square' => 'Square', 'subtle' => 'Subtle', 'rounded' => 'Rounded', 'soft' => 'Soft',
         ],
+    ],
+    'website_cache' => [
+        'title' => 'Cache', 'description' => 'Cache public pages for signed-out visitors. Content changes invalidate cached pages automatically. Account, cart, checkout and preview pages are excluded.',
+        'enabled' => 'Enable public page cache', 'ttl' => 'Page cache lifetime (seconds)', 'ttl_hint' => '60–86,400 seconds. Server configuration can disable page caching globally.',
+        'save' => 'Save cache settings', 'clear' => 'Clear website cache', 'clearing' => 'Clearing…', 'cleared' => 'Website cache cleared.',
+        'clear_hint' => 'Refresh pages, content, menus, theme settings and sitemaps. Sessions, queues and editor recovery are preserved.',
     ],
     'themes' => [
         'title' => 'Themes',

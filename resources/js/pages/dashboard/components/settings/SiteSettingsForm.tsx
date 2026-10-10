@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { router } from '@inertiajs/react';
-import { BarChart3, FileText, Globe, Image, Link2, Search, Settings, Share2, Wrench } from 'lucide-react';
+import { BarChart3, FileText, Globe, Image, Link2, Search, Settings, Share2, Wrench, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Locale, SettingsGroup, SettingsValue, SiteSettings } from '../../types';
 import MediaPickerDialog from '../media/MediaPickerDialog';
@@ -54,6 +54,7 @@ const groupIcons: Record<SettingsGroup, React.ReactNode> = {
     analytics: <BarChart3 className="h-4 w-4" />,
     media: <Image className="h-4 w-4" />,
     advanced: <Wrench className="h-4 w-4" />,
+    cache: <Zap className="h-4 w-4" />,
 };
 
 export function SiteSettingsForm({
@@ -77,12 +78,14 @@ export function SiteSettingsForm({
         analytics: t('dashboard.settings.groups.analytics'),
         media: t('dashboard.settings.groups.media'),
         advanced: t('dashboard.settings.groups.advanced'),
+        cache: t('dashboard.website_cache.title'),
     };
     const { success: showSuccess, error: showError } = useAdminToast();
     const [activeTab, setActiveTab] = useState<SettingsGroup>(currentGroup);
     const [formData, setFormData] = useState<SettingsData>(settings);
     const [selectedLocale, setSelectedLocale] = useState<string>(resolveLocale(locales, currentLocale));
     const [saving, setSaving] = useState(false);
+    const [cacheErrors, setCacheErrors] = useState<Record<string, string>>({});
     const [pickerFor, setPickerFor] = useState<'site_logo' | 'site_favicon' | null>(null);
 
     useEffect(() => {
@@ -109,6 +112,7 @@ export function SiteSettingsForm({
 
     const handleSave = (group: SettingsGroup) => {
         if (!canEdit || saving) return;
+        setCacheErrors({});
         setSaving(true);
         router.put(
             `/dashboard/admin/settings/${group}`,
@@ -116,7 +120,10 @@ export function SiteSettingsForm({
             {
                 preserveScroll: true,
                 onSuccess: () => showSuccess(t('dashboard.settings.messages.saved', { group: groupLabels[group] })),
-                onError: () => showError(t('dashboard.settings.messages.save_failed')),
+                onError: (errors) => {
+                    if (group === 'cache') setCacheErrors(errors);
+                    showError(t('dashboard.settings.messages.save_failed'));
+                },
                 onFinish: () => setSaving(false),
             },
         );
@@ -878,7 +885,7 @@ export function SiteSettingsForm({
         </div>
     );
 
-    const groups: SettingsGroup[] = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced'];
+    const groups: SettingsGroup[] = ['general', 'reading', 'writing', 'permalinks', 'seo', 'social', 'analytics', 'media', 'advanced', 'cache'];
 
     return (
         <div className="space-y-6">
@@ -908,7 +915,7 @@ export function SiteSettingsForm({
                 )}
                 <CardContent className="p-0">
                     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                        <div className="border-b bg-muted/20 px-6">
+                        <div className="overflow-x-auto border-b bg-muted/20 px-6">
                             <TabsList className="h-12 gap-4 bg-transparent p-0">
                                 {groups.map((group) => (
                                     <TabsTrigger
@@ -926,6 +933,43 @@ export function SiteSettingsForm({
                         </div>
 
                         <div className="p-6">
+                            <TabsContent value="cache" className="mt-0 space-y-6 focus-visible:outline-none">
+                                <p className="text-sm text-muted-foreground">{t('dashboard.website_cache.description')}</p>
+                                <div className="flex items-center justify-between gap-4">
+                                    <Label htmlFor="page-cache-enabled">{t('dashboard.website_cache.enabled')}</Label>
+                                    <Switch
+                                        id="page-cache-enabled"
+                                        checked={Boolean(formData.cache?.page_cache_enabled)}
+                                        onCheckedChange={(value) => updateField('cache', 'page_cache_enabled', value)}
+                                        disabled={!canEdit || saving}
+                                    />
+                                </div>
+                                <div className="max-w-sm space-y-2">
+                                    <Label htmlFor="page-cache-ttl">{t('dashboard.website_cache.ttl')}</Label>
+                                    <Input
+                                        id="page-cache-ttl"
+                                        type="number"
+                                        min={60}
+                                        max={86400}
+                                        value={String(formData.cache?.page_cache_ttl ?? 3600)}
+                                        onChange={(event) =>
+                                            updateField('cache', 'page_cache_ttl', event.target.value === '' ? '' : Number(event.target.value))
+                                        }
+                                        disabled={!canEdit || saving}
+                                    />
+                                    <p className="text-xs text-muted-foreground">{t('dashboard.website_cache.ttl_hint')}</p>
+                                    {cacheErrors.page_cache_ttl && (
+                                        <p role="alert" className="text-sm text-destructive">
+                                            {cacheErrors.page_cache_ttl}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex justify-end border-t pt-4">
+                                    <Button onClick={() => handleSave('cache')} disabled={!canEdit || saving}>
+                                        {t(saving ? 'dashboard.settings.actions.saving' : 'dashboard.website_cache.save')}
+                                    </Button>
+                                </div>
+                            </TabsContent>
                             <TabsContent value="general" className="mt-0 space-y-6 focus-visible:outline-none">
                                 {renderGeneralSettings()}
                                 <div className="flex justify-end border-t pt-4">

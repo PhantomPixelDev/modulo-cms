@@ -95,6 +95,7 @@ Route::middleware('admin.access')
         Route::get('/themes/{theme}/settings', [ThemeSettingsController::class, 'edit'])->whereNumber('theme')->name('themes.settings.edit');
         Route::put('/themes/{theme}/settings', [ThemeSettingsController::class, 'update'])->whereNumber('theme')->name('themes.settings.update');
         Route::delete('/themes/{theme}/settings', [ThemeSettingsController::class, 'reset'])->whereNumber('theme')->name('themes.settings.reset');
+        Route::post('/themes/{theme}/settings/clear-cache', [ThemeSettingsController::class, 'clearCache'])->whereNumber('theme')->middleware('throttle:6,1')->name('themes.settings.clear-cache');
         Route::post('/themes/registry/install', [ThemeController::class, 'installFromRegistry'])->name('themes.registry.install');
         Route::resource('themes', ThemeController::class)->only(['index', 'show', 'update', 'destroy'])->where(['theme' => '[0-9]+']);
 

@@ -1,3 +1,4 @@
+import { safeLogoUrl, ThemeBrand } from '@/components/theme-brand';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,12 +7,15 @@ import { themeDeclarations, type ThemeSettingsData, type ThemeSettingValues } fr
 import { useForm } from '@inertiajs/react';
 import { useState, type CSSProperties } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
+import MediaPickerDialog from '../../components/media/MediaPickerDialog';
 
 function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
     const { t } = useTranslation();
     const form = useForm<{ values: ThemeSettingValues }>({ values: settings.values });
+    const cacheForm = useForm({});
     const { setData } = form;
     const [darkPreview, setDarkPreview] = useState(false);
+    const [imageField, setImageField] = useState<string | null>(null);
     const label = (key: string, fallback: string) => t(`dashboard.theme_settings.fields.${key}`, {}, fallback);
     const previewStyle = Object.fromEntries(
         [themeDeclarations(form.data.values), darkPreview ? themeDeclarations(form.data.values, true) : '']
@@ -37,7 +41,7 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                 <p className="text-sm text-muted-foreground">
                     {settings.name} · {t(`dashboard.theme_settings.${settings.active ? 'active' : 'inactive'}`)}
                 </p>
-                {(['colors', 'dark_colors', 'layout'] as const).map((group) => {
+                {(['branding', 'header', 'footer', 'colors', 'dark_colors', 'layout'] as const).map((group) => {
                     const fields = Object.entries(settings.fields).filter(([, field]) => field.group === group);
                     if (!fields.length) return null;
                     return (
@@ -82,6 +86,62 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                                                     </option>
                                                 ))}
                                             </select>
+                                        ) : field.type === 'image' ? (
+                                            <div className="space-y-2">
+                                                {safeLogoUrl(form.data.values[key]) && (
+                                                    <img
+                                                        src={String(form.data.values[key])}
+                                                        alt=""
+                                                        className="h-12 max-w-full rounded border bg-muted object-contain p-1"
+                                                    />
+                                                )}
+                                                <Input
+                                                    id={`theme-${key}`}
+                                                    value={String(form.data.values[key] ?? '')}
+                                                    maxLength={1000}
+                                                    placeholder="/storage/…"
+                                                    onChange={(event) => setData('values', { ...form.data.values, [key]: event.target.value })}
+                                                />
+                                                <div className="flex flex-wrap gap-2">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        disabled={!settings.canSelectMedia}
+                                                        onClick={() => setImageField(key)}
+                                                    >
+                                                        {t('dashboard.theme_settings.choose_image')}
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        disabled={!form.data.values[key]}
+                                                        onClick={() => setData('values', { ...form.data.values, [key]: '' })}
+                                                    >
+                                                        {t('dashboard.theme_settings.remove_image')}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ) : field.type === 'text' || field.type === 'number' ? (
+                                            <Input
+                                                id={`theme-${key}`}
+                                                type={field.type === 'number' ? 'number' : 'text'}
+                                                value={String(form.data.values[key] ?? '')}
+                                                min={field.min}
+                                                max={field.max}
+                                                maxLength={field.type === 'text' ? 500 : undefined}
+                                                onChange={(event) =>
+                                                    setData('values', {
+                                                        ...form.data.values,
+                                                        [key]:
+                                                            field.type === 'number' && event.target.value !== ''
+                                                                ? Number(event.target.value)
+                                                                : event.target.value,
+                                                    })
+                                                }
+                                                aria-invalid={Boolean(form.errors[`values.${key}`])}
+                                            />
                                         ) : (
                                             <input
                                                 id={`theme-${key}`}
@@ -90,6 +150,12 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                                                 onChange={(event) => setData('values', { ...form.data.values, [key]: event.target.checked })}
                                                 className="size-4 accent-primary"
                                             />
+                                        )}
+                                        {key === 'logo_text' && (
+                                            <p className="text-xs text-muted-foreground">{t('dashboard.theme_settings.logo_text_hint')}</p>
+                                        )}
+                                        {key === 'footer_text' && (
+                                            <p className="text-xs text-muted-foreground">{t('dashboard.theme_settings.footer_text_hint')}</p>
                                         )}
                                         {form.errors[`values.${key}`] && (
                                             <p className="text-sm text-destructive" role="alert">
@@ -140,7 +206,11 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                     style={previewStyle}
                     className="theme-frontend overflow-hidden rounded-lg border bg-background text-foreground"
                 >
-                    <div className="border-b bg-muted px-6 py-4 text-sm font-semibold">{settings.name}</div>
+                    <div className={darkPreview ? 'dark' : ''}>
+                        <div className="border-b bg-muted px-6 py-4 font-semibold">
+                            <ThemeBrand site={settings.site} values={form.data.values} dark={darkPreview} />
+                        </div>
+                    </div>
                     <div className="space-y-4 p-6">
                         <div className="h-24 rounded-md bg-muted" />
                         <h3 className="text-xl font-semibold">{t('dashboard.theme_settings.preview_title')}</h3>
@@ -154,7 +224,31 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                 <a href="/" target="_blank" rel="noreferrer" className="text-sm underline">
                     {t('dashboard.theme_settings.view_site')}
                 </a>
+                <div className="space-y-2 border-t pt-4">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={form.processing || cacheForm.processing}
+                        onClick={() => {
+                            if (!cacheForm.processing)
+                                cacheForm.post(route('dashboard.admin.themes.settings.clear-cache', settings.id), { preserveScroll: true });
+                        }}
+                    >
+                        {t(cacheForm.processing ? 'dashboard.website_cache.clearing' : 'dashboard.website_cache.clear')}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.website_cache.clear_hint')}</p>
+                </div>
             </aside>
+            <MediaPickerDialog
+                open={imageField !== null}
+                onOpenChange={(open) => {
+                    if (!open) setImageField(null);
+                }}
+                onSelect={(item) => {
+                    if (imageField) setData('values', { ...form.data.values, [imageField]: item.url });
+                    setImageField(null);
+                }}
+            />
         </form>
     );
 }
