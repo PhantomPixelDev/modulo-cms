@@ -147,6 +147,9 @@ jobs:
         run: |
           php artisan plugin:install modulo-shop --release=1.9.2 --activate
           php artisan modulo:seed-demo --reset-content --force
+          # Earlier restore/package checks may have cached normal-site URLs.
+          # The demo server must boot with this step's environment.
+          php artisan optimize:clear
           php artisan serve --no-reload --host=127.0.0.1 --port=8001 &
           for _ in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8001/health >/dev/null 2>&1; then break; fi
