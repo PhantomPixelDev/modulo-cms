@@ -48,11 +48,17 @@ jobs:
   e2e:
     uses: ./.github/workflows/e2e.yml
 
+  runtime:
+    uses: ./.github/workflows/runtime.yml
+
+  security:
+    uses: ./.github/workflows/security.yml
+
   prepare:
     name: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [tests, lint, e2e]
+    needs: [tests, lint, e2e, runtime, security]
     outputs:
       version: ${{ steps.meta.outputs.version }}
       image_base: ${{ steps.meta.outputs.image_base }}
