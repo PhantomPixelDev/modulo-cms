@@ -1,5 +1,7 @@
 <?php
 
+use Inertia\Inertia;
+
 it('sends security headers and a nonce-based policy on pages', function () {
     config(['security.csp' => 'enforce']);
 
@@ -36,7 +38,7 @@ it('only reports violations in report mode', function () {
 
 it('escapes executable markup inside the initial page data block', function () {
     $probe = '</script><script>alert("escaped-page-data")</script>';
-    \Inertia\Inertia::share('security_probe', $probe);
+    Inertia::share('security_probe', $probe);
 
     $html = $this->get('/login')->assertOk()->getContent();
     expect($html)->not->toContain($probe);
