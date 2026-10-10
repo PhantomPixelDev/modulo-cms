@@ -7,8 +7,8 @@ A map of the code for contributors. The individual guides go deeper.
 - **Laravel 13** (PHP 8.4/8.5; shipped images use 8.5) serves everything; **Inertia 3** hands pages to **React 19**
   (TypeScript, Tailwind v4, shadcn-style components in `resources/js/components/ui`).
 - **PostgreSQL** in production (Docker), **SQLite** for tests and quick local runs.
-- One Docker image for the app (php-fpm), one for the web server (nginx with `public/`
-  baked in), plus a queue worker and the scheduler.
+- Separate Docker images for PHP-FPM, nginx (with `public/` baked in), and
+  PostgreSQL 16.15. The queue worker and scheduler use the application image.
 
 ## Request flow
 

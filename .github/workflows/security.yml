@@ -50,11 +50,12 @@ jobs:
         run: |
           docker build --pull --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target app -f docker/Dockerfile -t modulo-security-app .
           docker build --pull --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target web -f docker/Dockerfile -t modulo-security-web .
+          docker build --pull --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target database -f docker/Dockerfile -t modulo-security-database .
       - name: Report every finding and reject available high-severity fixes
         run: |
           mkdir -p security-reports
           result=0
-          for image in app web; do
+          for image in app web database; do
             /tmp/trivy image --scanners vuln --format json --output "security-reports/$image.json" "modulo-security-$image"
             # Unfixed distribution advisories remain in the full report. They
             # are reviewed separately rather than hidden with CVE exclusions.
@@ -62,7 +63,7 @@ jobs:
           done
           # Scan the database/cache tags from the shipped Compose definition,
           # too. Use the Official Images mirror to avoid Docker Hub rate limits.
-          for service in db redis; do
+          for service in redis; do
             image=$(MODULO_ENV_FILE=../.env.prod.example docker compose --env-file .env.prod.example -f docker/docker-compose.yml config --format json | jq -r --arg service "$service" '.services[$service].image')
             image="public.ecr.aws/docker/library/$image"
             /tmp/trivy image --scanners vuln --format json --output "security-reports/$service.json" "$image"

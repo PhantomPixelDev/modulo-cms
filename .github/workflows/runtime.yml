@@ -16,6 +16,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  database-image:
+    name: PostgreSQL 16.15 image
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target database -f docker/Dockerfile -t modulo-database-test .
+      - run: bash scripts/test-database-image.sh modulo-database-test
+
   development-image:
     name: PHP 8.5 development image
     runs-on: ubuntu-latest

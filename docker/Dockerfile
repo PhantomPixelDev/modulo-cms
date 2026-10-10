@@ -2,6 +2,7 @@
 #
 #   app  - PHP-FPM with the application, vendor (no dev deps) and built assets
 #   web  - nginx serving public/ and proxying PHP to the app service
+#   database - PostgreSQL 16.15 with the minimal Alpine privilege-drop helper
 #
 # Built by docker/docker-compose.yml; see README "Production".
 
@@ -94,6 +95,19 @@ EXPOSE 9000
 ENTRYPOINT ["modulo-entrypoint"]
 CMD ["php-fpm"]
 
+
+# --- PostgreSQL: same database version, minimal privilege-drop helper ----------
+FROM ${DOCKER_LIBRARY}/postgres:16.15-alpine AS database
+RUN set -eux; \
+    apk upgrade --no-cache; \
+    apk add --no-cache su-exec; \
+    sed -i 's/exec gosu postgres /exec su-exec postgres /' /usr/local/bin/docker-entrypoint.sh; \
+    ! grep -q gosu /usr/local/bin/docker-entrypoint.sh; \
+    rm -f /usr/local/bin/gosu; \
+    # The official entrypoint uses only `gosu postgres command [args]`.
+    # su-exec preserves this exec/UID contract without an unused Go runtime.
+    su-exec postgres sh -c 'test "$(id -un)" = postgres'; \
+    postgres --version
 
 # --- nginx ---------------------------------------------------------------------
 FROM ${DOCKER_LIBRARY}/nginx:1.30-alpine AS web

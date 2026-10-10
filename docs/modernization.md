@@ -73,6 +73,20 @@ queue worker when using asynchronous mail delivery. The Shop stores a checkout
 retry key so repeated submissions return the same order without reserving stock
 or sending its confirmation again.
 
+## Database and cache images
+
+The shipped PostgreSQL image remains on 16.15. It replaces the upstream Go-based
+`gosu` startup helper with Alpine's `su-exec`, using the same user-and-command
+interface, and applies Alpine security updates. This removes 25 embedded Go
+library advisories without changing the database engine or its data format.
+The image is built and signed alongside the app/web images as
+`ghcr.io/phantompixeldev/modulo-cms-postgres`. CI verifies fresh initialization,
+the PostgreSQL process UID, restart persistence and dump/restore. Existing
+installations using `postgres:16-alpine` must also update their Compose database
+image when adopting this stack; keep the old image and a database dump for rollback.
+See the [helper's contract](https://github.com/ncopa/su-exec) and
+[upstream PostgreSQL entrypoint](https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh).
+
 ## Redis 7 to 8: persistence and rollback
 
 Do this separately from application migrations. Follow [Upgrading](upgrading.md)
@@ -115,8 +129,8 @@ to 284,761 gzip bytes, **36.9% smaller**. Other admin sections load when opened.
 These are build-size measurements, not request latency; use
 `node scripts/measure-admin-bundle.mjs` with each build to compare.
 
-Composer/npm audits report no known advisories. The patched nginx image has no
-high/critical findings in the measured scan. The PHP image still has 64 unfixed
+Composer/npm audits report no known advisories. The patched nginx/PostgreSQL and
+Redis images have no high/critical findings in the measured scans. The PHP image still has 64 unfixed
 high/critical distribution findings; full reports are retained rather than
 ignored. SVG input now rejects DTD/entity declarations and unsupported encodings
 before libxml parsing, mitigating its exposed parsing path while awaiting

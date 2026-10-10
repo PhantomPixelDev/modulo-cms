@@ -88,7 +88,7 @@ services:
 
   db:
     container_name: modulo-db
-    image: postgres:16-alpine
+    image: ${MODULO_DATABASE_IMAGE:-ghcr.io/phantompixeldev/modulo-cms-postgres}:${MODULO_TAG:-latest}
     environment:
       POSTGRES_DB: ${DB_DATABASE:-modulo_prod}
       POSTGRES_USER: ${DB_USERNAME:-modulo}

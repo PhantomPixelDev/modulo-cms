@@ -126,6 +126,8 @@ jobs:
             suffix: ''
           - target: web
             suffix: '-web'
+          - target: database
+            suffix: '-postgres'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -172,9 +174,8 @@ jobs:
           context: .
           file: docker/Dockerfile
           target: ${{ matrix.target }}
-          # The vendor and assets stages are pinned to BUILDPLATFORM in the
-          # Dockerfile; without that, arm64 fails on the x64-only rollup,
-          # oxide and lightningcss binaries pinned in package.json.
+          # Composer and frontend tooling run natively on BUILDPLATFORM;
+          # PHP and PostgreSQL images use the target architecture.
           platforms: linux/amd64,linux/arm64
           push: ${{ needs.prepare.outputs.publish == 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -406,6 +407,8 @@ jobs:
             --arg app_digest "$(cat digests/digest-app.txt)" \
             --arg web_image "${IMAGE_BASE}-web" \
             --arg web_digest "$(cat digests/digest-web.txt)" \
+            --arg database_image "${IMAGE_BASE}-postgres" \
+            --arg database_digest "$(cat digests/digest-database.txt)" \
             '{
               schema: 1,
               version: $version,
@@ -424,7 +427,8 @@ jobs:
                 tarball: { name: $tarball, sha256: $tarball_sha256, signature: ($tarball + ".sigstore.json") },
                 images: {
                   app: { image: $app_image, digest: $app_digest },
-                  web: { image: $web_image, digest: $web_digest }
+                  web: { image: $web_image, digest: $web_digest },
+                  database: { image: $database_image, digest: $database_digest }
                 }
               }
             }' > dist/release.json

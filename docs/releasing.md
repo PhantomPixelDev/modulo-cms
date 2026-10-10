@@ -5,16 +5,17 @@
 One tag produces two delivery channels, because the project supports Docker and
 bare-metal installs equally:
 
-| Artifact | Contents |
-|---|---|
-| `ghcr.io/phantompixeldev/modulo-cms` | PHP-FPM app image, `linux/amd64` + `linux/arm64` |
-| `ghcr.io/phantompixeldev/modulo-cms-web` | nginx image serving `public/` |
-| `modulo-cms-<version>.tar.gz` | Full source **with `vendor/` and `public/build` prebuilt** |
-| `…​.tar.gz.sha256` | Checksum for the tarball |
-| `…​.tar.gz.sigstore.json` | Keyless Sigstore signature bundle for the tarball |
-| `release.json` (+ `.sigstore.json`) | Machine-readable manifest: version, channel, security/breaking flags, new migrations, requirements, artifact checksums and image digests |
-| `docker-compose.yml`, `env.prod.example` | So a Docker install needs no git clone (the env template is published without its leading dot; GitHub renames dotfile assets) |
-| `install.sh`, `install.ps1`, `modulo` | One-line installers, and the site helper they place next to `docker-compose.yml` (`./modulo update / backup / restore`) |
+| Artifact                                      | Contents                                                                                                                                 |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `ghcr.io/phantompixeldev/modulo-cms`          | PHP-FPM app image, `linux/amd64` + `linux/arm64`                                                                                         |
+| `ghcr.io/phantompixeldev/modulo-cms-web`      | nginx image serving `public/`                                                                                                            |
+| `ghcr.io/phantompixeldev/modulo-cms-postgres` | PostgreSQL 16.15 with Alpine security updates and the minimal privilege-drop helper                                                      |
+| `modulo-cms-<version>.tar.gz`                 | Full source **with `vendor/` and `public/build` prebuilt**                                                                               |
+| `…​.tar.gz.sha256`                            | Checksum for the tarball                                                                                                                 |
+| `…​.tar.gz.sigstore.json`                     | Keyless Sigstore signature bundle for the tarball                                                                                        |
+| `release.json` (+ `.sigstore.json`)           | Machine-readable manifest: version, channel, security/breaking flags, new migrations, requirements, artifact checksums and image digests |
+| `docker-compose.yml`, `env.prod.example`      | So a Docker install needs no git clone (the env template is published without its leading dot; GitHub renames dotfile assets)            |
+| `install.sh`, `install.ps1`, `modulo`         | One-line installers, and the site helper they place next to `docker-compose.yml` (`./modulo update / backup / restore`)                  |
 
 The tarball ships its dependencies already installed and its assets already built, so a
 bare-metal install needs **neither Composer nor Node** on the target host. That is why
@@ -24,7 +25,7 @@ include files it does not track.
 Images are tagged `X.Y.Z`, `X.Y`, `X`, and `latest`. A prerelease (any version with a
 hyphen, such as `1.2.0-rc.1`) is published but deliberately **does not move `latest`**.
 
-Both images are signed with cosign (keyless, by digest) and carry SLSA provenance and
+All three images are signed with cosign (keyless, by digest) and carry SLSA provenance and
 an SPDX SBOM as build attestations.
 
 ## release.json
