@@ -4,6 +4,16 @@ test.skip(process.env.MODULO_E2E_SHOP !== '1', 'Requires the active shop');
 
 test('cart navigation stops a redirect and recovers on the next poll', async ({ page }) => {
     await page.clock.install();
+    await page.addInitScript(() => {
+        const nativeFetch = window.fetch.bind(window);
+        const responseTypes: string[] = [];
+        (window as Window & { cartResponseTypes?: string[] }).cartResponseTypes = responseTypes;
+        window.fetch = async (...args: Parameters<typeof fetch>) => {
+            const response = await nativeFetch(...args);
+            if (typeof args[0] === 'string' && args[0].endsWith('/shop/cart/count')) responseTypes.push(response.type);
+            return response;
+        };
+    });
     let requests = 0;
     let healthy = false;
     const failures: string[] = [];
@@ -20,6 +30,9 @@ test('cart navigation stops a redirect and recovers on the next poll', async ({ 
     await page.goto('/shop?lang=en');
     expect((await first).status()).toBe(301);
     await expect(page.getByRole('button', { name: 'Cart', exact: true })).toBeVisible();
+    // Observe the native fetch result before recovering: a followed redirect
+    // chain must not accidentally pass by reaching the later healthy response.
+    await expect.poll(() => page.evaluate(() => (window as Window & { cartResponseTypes?: string[] }).cartResponseTypes)).toEqual(['opaqueredirect']);
     healthy = true;
     await page.clock.fastForward('00:31');
     await expect(page.getByRole('button', { name: 'Cart', exact: true })).toContainText('2');
