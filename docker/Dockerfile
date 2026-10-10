@@ -5,8 +5,11 @@
 #
 # Built by docker/docker-compose.yml; see README "Production".
 
+# CI can select another Docker Official Images registry without changing tags.
+ARG DOCKER_LIBRARY=docker.io/library
+
 # --- Composer dependencies (no dev packages) ---------------------------------
-FROM --platform=$BUILDPLATFORM composer:2 AS vendor
+FROM --platform=$BUILDPLATFORM ${DOCKER_LIBRARY}/composer:2 AS vendor
 WORKDIR /app
 
 COPY composer.json composer.lock ./
@@ -18,7 +21,7 @@ RUN composer dump-autoload --no-dev --optimize --no-scripts
 
 
 # --- Frontend build ------------------------------------------------------------
-FROM --platform=$BUILDPLATFORM node:25-bookworm-slim AS assets
+FROM --platform=$BUILDPLATFORM ${DOCKER_LIBRARY}/node:24-bookworm-slim AS assets
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -29,7 +32,7 @@ RUN npm run build
 
 
 # --- PHP-FPM application -------------------------------------------------------
-FROM php:8.4-fpm AS app
+FROM ${DOCKER_LIBRARY}/php:8.4-fpm AS app
 WORKDIR /var/www/html
 
 RUN set -eux; \
@@ -41,6 +44,15 @@ RUN set -eux; \
     docker-php-ext-install -j"$(nproc)" gd pdo_pgsql pgsql opcache exif bcmath zip pcntl intl; \
     pecl install redis; \
     docker-php-ext-enable redis; \
+    # Keep extension runtime libraries, then remove compilers and headers.
+    # This also avoids shipping kernel-header advisories in an FPM runtime.
+    ldd /usr/local/bin/php /usr/local/lib/php/extensions/*/*.so \
+      | awk '$2 == "=>" { print $3 }' | sort -u \
+      | xargs -r readlink -f | xargs -r dpkg-query --search \
+      | cut -d: -f1 | sort -u | xargs -r apt-mark manual; \
+    apt-get purge -y --auto-remove $PHPIZE_DEPS \
+      libpq-dev libzip-dev libfreetype6-dev libjpeg62-turbo-dev \
+      libpng-dev libwebp-dev libicu-dev linux-libc-dev; \
     rm -rf /var/lib/apt/lists/* /tmp/pear; \
     cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
@@ -82,7 +94,10 @@ CMD ["php-fpm"]
 
 
 # --- nginx ---------------------------------------------------------------------
-FROM nginx:1.29-alpine AS web
+FROM ${DOCKER_LIBRARY}/nginx:1.30-alpine AS web
+
+# Apply distribution security fixes even when the upstream image is cached.
+RUN apk upgrade --no-cache
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/nginx-entrypoint.sh /usr/local/bin/modulo-nginx-entrypoint

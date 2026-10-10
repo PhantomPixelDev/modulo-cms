@@ -33,6 +33,10 @@ class AuthenticateApiToken
             return $this->unauthorized('The API token is invalid or has expired.');
         }
 
+        if (! $token->user->hasVerifiedEmail()) {
+            return $this->unauthorized('The API token owner has not verified their email address.');
+        }
+
         // Once a minute is enough to show "last used" without a write per request.
         if ($token->last_used_at === null || $token->last_used_at->lt(now()->subMinute())) {
             $token->forceFill(['last_used_at' => now()])->saveQuietly();
@@ -42,7 +46,7 @@ class AuthenticateApiToken
         $request->setUserResolver(fn () => $token->user);
         $request->attributes->set('api_token', $token);
 
-        return $next($request);
+        return app(RequireTwoFactorForAdmins::class)->handle($request, $next);
     }
 
     protected function unauthorized(string $message): Response

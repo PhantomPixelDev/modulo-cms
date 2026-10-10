@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MediaUploadRequest;
 use App\Models\MediaBucket;
+use App\Services\SvgValidator;
+use App\Support\LikeEscape;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -49,25 +52,26 @@ class MediaController extends Controller
             $query = $this->libraryQuery()->where('model_id', $bucket->id);
 
             if ($q !== '') {
-                $query->where(function ($sub) use ($q) {
-                    $sub->where('name', 'like', "%$q%")
-                        ->orWhere('file_name', 'like', "%$q%");
+                $term = '%'.strtolower(LikeEscape::escape($q)).'%';
+                $query->where(function ($sub) use ($term) {
+                    $sub->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term])
+                        ->orWhereRaw("LOWER(file_name) LIKE ? ESCAPE '!'", [$term]);
                 });
             }
             if ($type !== '') {
                 $type = strtolower($type);
                 $query->where(function ($sub) use ($type) {
                     if (in_array($type, ['image', 'video', 'audio'])) {
-                        $sub->where('mime_type', 'like', $type.'/%');
+                        $sub->whereRaw('LOWER(mime_type) LIKE ?', [$type.'/%']);
                     } elseif ($type === 'doc') {
                         $sub->where(function ($s2) {
-                            $s2->where('mime_type', 'like', 'application/%')
-                                ->orWhere('mime_type', 'like', 'text/%');
+                            $s2->whereRaw('LOWER(mime_type) LIKE ?', ['application/%'])
+                                ->orWhereRaw('LOWER(mime_type) LIKE ?', ['text/%']);
                         });
                     } elseif ($type === 'other') {
                         $s3 = ['image/%', 'video/%', 'audio/%', 'application/%', 'text/%'];
                         foreach ($s3 as $pat) {
-                            $sub->where('mime_type', 'not like', $pat);
+                            $sub->whereRaw('LOWER(mime_type) NOT LIKE ?', [$pat]);
                         }
                     }
                 });
@@ -214,7 +218,7 @@ class MediaController extends Controller
         // SVG is active content: reject anything that can run script
         if ($uploaded && $uploaded->getMimeType() === 'image/svg+xml') {
             $contents = @file_get_contents($uploaded->getRealPath());
-            if ($contents === false || $this->svgLooksUnsafe($contents)) {
+            if ($contents === false || ! app(SvgValidator::class)->isSafe($contents)) {
                 return back()->with('error', 'Unsafe SVG content detected.');
             }
         }
@@ -265,11 +269,10 @@ class MediaController extends Controller
             $media->setCustomProperty('caption', $data['caption']);
         }
         if (array_key_exists('folder_id', $data)) {
-            $target = $data['folder_id'] ? MediaBucket::findOrFail((int) $data['folder_id']) : null;
-            if ($target) {
-                $media->model_type = MediaBucket::class;
-                $media->model_id = $target->id;
-            }
+            // Explicit null means back to the library root (default bucket).
+            $target = $data['folder_id'] ? MediaBucket::findOrFail((int) $data['folder_id']) : MediaBucket::firstOrCreate(['name' => 'default', 'parent_id' => null]);
+            $media->model_type = MediaBucket::class;
+            $media->model_id = $target->id;
         }
         $media->save();
 
@@ -319,11 +322,14 @@ class MediaController extends Controller
 
     public function bulk(Request $request)
     {
-        $action = (string) $request->input('action');
-        $ids = $request->input('ids');
-        if (! is_array($ids) || empty($ids)) {
-            return back()->with('error', 'No items selected');
-        }
+        $data = $request->validate([
+            'action' => ['required', 'string', Rule::in(['delete', 'regenerate', 'move'])],
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+            'target_folder_id' => ['nullable', 'integer', 'exists:media_buckets,id'],
+        ]);
+        $action = $data['action'];
+        $ids = $data['ids'];
 
         if (! class_exists('Spatie\\MediaLibrary\\MediaCollections\\Models\\Media')) {
             return back()->with('error', 'Media library package not installed yet.');
@@ -349,22 +355,19 @@ class MediaController extends Controller
             return back()->with('success', 'Regenerated conversions for selected media');
         }
 
-        if ($action === 'move') {
-            $this->authorizeEdit();
-            $targetId = (int) $request->integer('target_folder_id');
-            if (! $targetId) {
-                return back()->with('error', 'Target folder is required');
-            }
-            $target = MediaBucket::findOrFail($targetId);
-            $this->libraryQuery()->whereIn('id', $ids)->update([
-                'model_type' => MediaBucket::class,
-                'model_id' => $target->id,
-            ]);
-
-            return back()->with('success', 'Moved selected media');
+        // 'move', validated above
+        $this->authorizeEdit();
+        $targetId = (int) ($data['target_folder_id'] ?? 0);
+        if (! $targetId) {
+            return back()->with('error', 'Target folder is required');
         }
+        $target = MediaBucket::findOrFail($targetId);
+        $this->libraryQuery()->whereIn('id', $ids)->update([
+            'model_type' => MediaBucket::class,
+            'model_id' => $target->id,
+        ]);
 
-        return back()->with('error', 'Unknown action');
+        return back()->with('success', 'Moved selected media');
     }
 
     /**
@@ -435,13 +438,5 @@ class MediaController extends Controller
             return;
         }
         abort(403);
-    }
-
-    protected function svgLooksUnsafe(string $svg): bool
-    {
-        return (bool) preg_match(
-            '/<\s*(script|foreignObject|iframe|embed|object)\b|\bon[a-z]+\s*=|(?:href|src)\s*=\s*["\']?\s*(?:javascript|data|vbscript):|<!ENTITY/i',
-            $svg
-        );
     }
 }

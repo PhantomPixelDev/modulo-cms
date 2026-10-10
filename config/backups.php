@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'max_entries' => (int) env('MODULO_BACKUP_MAX_ENTRIES', 100000),
+    'max_entry_bytes' => (int) env('MODULO_BACKUP_MAX_ENTRY_BYTES', 2147483648),
+    'max_total_bytes' => (int) env('MODULO_BACKUP_MAX_TOTAL_BYTES', 8589934592),
 
     /*
     |--------------------------------------------------------------------------

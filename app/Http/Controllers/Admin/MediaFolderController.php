@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MediaBucket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class MediaFolderController extends Controller
 {
@@ -65,7 +66,7 @@ class MediaFolderController extends Controller
         return back()->with('success', 'Folder created');
     }
 
-    public function update(Request $request, MediaBucket $bucket): RedirectResponse
+    public function update(Request $request, MediaBucket $folder): RedirectResponse
     {
         $this->authorizeEdit();
 
@@ -75,28 +76,36 @@ class MediaFolderController extends Controller
         ]);
 
         if (array_key_exists('name', $data)) {
-            $bucket->name = (string) $data['name'];
+            $folder->name = (string) $data['name'];
         }
         if (array_key_exists('parent_id', $data)) {
-            $bucket->parent_id = $data['parent_id'];
+            $parents = MediaBucket::query()->pluck('parent_id', 'id')->all();
+            $seen = [$folder->id => true];
+            for ($at = $data['parent_id']; $at !== null; $at = $parents[$at] ?? null) {
+                if (isset($seen[$at])) {
+                    throw ValidationException::withMessages(['parent_id' => 'A folder cannot be moved into itself or a descendant.']);
+                }
+                $seen[$at] = true;
+            }
+            $folder->parent_id = $data['parent_id'];
         }
-        $bucket->save();
+        $folder->save();
 
         return back()->with('success', 'Folder updated');
     }
 
-    public function destroy(MediaBucket $bucket): RedirectResponse
+    public function destroy(MediaBucket $folder): RedirectResponse
     {
         $this->authorizeDelete();
 
         // Prevent delete if has children or media
-        $hasChildren = $bucket->children()->exists();
-        $hasMedia = method_exists($bucket, 'getMedia') && count($bucket->getMedia('library')) > 0;
+        $hasChildren = $folder->children()->exists();
+        $hasMedia = method_exists($folder, 'getMedia') && count($folder->getMedia('library')) > 0;
         if ($hasChildren || $hasMedia) {
             return back()->with('error', 'Folder is not empty');
         }
 
-        $bucket->delete();
+        $folder->delete();
 
         return back()->with('success', 'Folder deleted');
     }

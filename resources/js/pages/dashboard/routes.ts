@@ -157,6 +157,6 @@ export const ROUTE = {
         },
     },
     misc: {
-        dashboard: () => route('dashboard.admin.index'),
+        dashboard: () => route('dashboard'),
     },
 };

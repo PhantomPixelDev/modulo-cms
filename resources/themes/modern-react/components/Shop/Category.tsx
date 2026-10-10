@@ -2,6 +2,8 @@ import { Link } from '@inertiajs/react';
 import { ChevronRight, Grid, List, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import Layout from '../Layout';
+import { useThemeT } from '../partials/ui';
+import { cartCountFromAddResponse, fetchCartCount, notifyCartUpdated, shopAddToCart, toastAddedToCart, toastCartError } from './shopCart';
 import { configureMoney, formatMoney, type MoneyFormat } from './totals';
 
 interface Product {
@@ -44,14 +46,34 @@ interface ShopCategoryProps {
 
 export default function CategoryPage({ category, products, pagination, site, theme, menus, money }: ShopCategoryProps) {
     configureMoney(money);
+    const tt = useThemeT();
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
 
     const list: Product[] = Array.isArray(products?.data) ? products.data : [];
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [addingId, setAddingId] = useState<number | null>(null);
 
     const formatPrice = formatMoney;
+
+    const addToCart = async (item: Product) => {
+        if (item.in_stock === false || addingId === item.id) return;
+        setAddingId(item.id);
+        try {
+            const { data } = await shopAddToCart(item.id, 1);
+            if (data.success) {
+                const count = cartCountFromAddResponse(data) ?? (await fetchCartCount());
+                if (typeof count === 'number') notifyCartUpdated(count);
+                toastAddedToCart(tt('shop.added_to_cart', 'Added to cart: :title', { title: item.title }), tt('shop.view_cart', 'View cart'));
+            } else {
+                toastCartError(data.message || tt('shop.add_failed', 'Failed to add to cart'));
+            }
+        } catch {
+            toastCartError(tt('shop.add_failed', 'Failed to add to cart'));
+        }
+        setAddingId(null);
+    };
 
     const getDiscountPercent = (price?: number, salePrice?: number | null) => {
         if (!price || !salePrice || salePrice >= price) return null;
@@ -207,11 +229,12 @@ export default function CategoryPage({ category, products, pagination, site, the
                                             </span>
                                         </div>
                                         <button
+                                            onClick={() => addToCart(p)}
                                             className="w-full rounded-md bg-primary py-2.5 font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-                                            disabled={p.in_stock === false}
+                                            disabled={p.in_stock === false || addingId === p.id}
                                             data-product-id={p.id}
                                         >
-                                            {p.in_stock === false ? 'Out of Stock' : 'Add to Cart'}
+                                            {p.in_stock === false ? 'Out of Stock' : addingId === p.id ? 'Adding…' : 'Add to Cart'}
                                         </button>
                                     </div>
                                 </article>
@@ -267,11 +290,12 @@ export default function CategoryPage({ category, products, pagination, site, the
                                                 </span>
                                             </div>
                                             <button
+                                                onClick={() => addToCart(p)}
                                                 className="rounded-md bg-primary px-6 py-2.5 font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
-                                                disabled={p.in_stock === false}
+                                                disabled={p.in_stock === false || addingId === p.id}
                                                 data-product-id={p.id}
                                             >
-                                                {p.in_stock === false ? 'Out of Stock' : 'Add to Cart'}
+                                                {p.in_stock === false ? 'Out of Stock' : addingId === p.id ? 'Adding…' : 'Add to Cart'}
                                             </button>
                                         </div>
                                     </div>

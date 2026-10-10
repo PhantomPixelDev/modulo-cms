@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     // Second login step for accounts with two-factor authentication
     Route::get('two-factor-challenge', [TwoFactorChallengeController::class, 'create'])->name('two-factor.login');
-    Route::post('two-factor-challenge', [TwoFactorChallengeController::class, 'store'])->name('two-factor.login.store');
+    Route::post('two-factor-challenge', [TwoFactorChallengeController::class, 'store'])
+        ->middleware('throttle:auth')
+        ->name('two-factor.login.store');
 
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');

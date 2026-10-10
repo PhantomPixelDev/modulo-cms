@@ -5,8 +5,10 @@ namespace App\Http\Requests;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TaxonomyTerm;
+use App\Rules\AssignAuthor;
 use App\Rules\CanPublish;
 use App\Support\CustomFields;
+use App\Support\EditorSave;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -24,10 +26,10 @@ class UpdatePostRequest extends FormRequest
     {
         $post = $this->route('post');
         $postTypeId = $this->input('post_type_id');
-        $postType = PostType::find($postTypeId);
+        $postType = is_numeric($postTypeId) ? PostType::find((int) $postTypeId) : null;
 
         $rules = [
-            'post_type_id' => ['required', 'exists:post_types,id'],
+            'post_type_id' => ['required', 'integer', 'exists:post_types,id'],
             'title' => ['required', 'string', 'max:255'],
             'slug' => [
                 'nullable',
@@ -40,15 +42,15 @@ class UpdatePostRequest extends FormRequest
             ],
             'content' => ['required', 'string'],
             'excerpt' => ['nullable', 'string', 'max:500'],
-            'status' => ['required', 'string', Rule::in(['draft', 'published', 'private', 'archived']), new CanPublish($this->user(), $post)],
+            'status' => ['required', 'string', Rule::in(['draft', 'published', 'private', 'archived']), CanPublish::forRequest($this, $post)],
             'featured_image' => ['nullable', 'string', 'max:255'],
             'taxonomy_terms' => ['nullable', 'array'],
-            'taxonomy_terms.*' => ['exists:taxonomy_terms,id'],
+            'taxonomy_terms.*' => ['integer', 'exists:taxonomy_terms,id'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'published_at' => ['nullable', 'date'],
-            'author_id' => ['nullable', 'exists:users,id'],
-            'parent_id' => ['nullable', 'exists:posts,id'],
+            'author_id' => ['nullable', 'integer', 'exists:users,id', new AssignAuthor],
+            'parent_id' => ['nullable', 'integer', 'exists:posts,id'],
             'menu_order' => ['nullable', 'integer'],
             'meta_data' => ['nullable', 'array'],
         ];
@@ -63,7 +65,7 @@ class UpdatePostRequest extends FormRequest
                     function ($attribute, $value, $fail) use ($postType) {
                         // taxonomies.post_types lists the types a taxonomy applies to
                         // (by name; slugs and ids accepted too). Empty means all.
-                        $term = TaxonomyTerm::with('taxonomy')->find($value);
+                        $term = is_numeric($value) ? TaxonomyTerm::with('taxonomy')->find((int) $value) : null;
                         $allowed = array_map('strval', (array) ($term?->taxonomy->post_types ?? []));
                         if ($term && $allowed !== [] && array_intersect($allowed, [$postType->name, $postType->slug, (string) $postType->id]) === []) {
                             $fail('The selected taxonomy term is invalid for this post type.');
@@ -81,6 +83,7 @@ class UpdatePostRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        EditorSave::prepare($this, $this->route('post'));
         if (! $this->has('slug') && $this->has('title')) {
             $this->merge([
                 'slug' => Str::slug($this->title),
@@ -93,6 +96,9 @@ class UpdatePostRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return CustomFields::attributes(PostType::find($this->input('post_type_id')));
+        $postTypeId = $this->input('post_type_id');
+        $postType = is_numeric($postTypeId) ? PostType::find((int) $postTypeId) : null;
+
+        return CustomFields::attributes($postType);
     }
 }

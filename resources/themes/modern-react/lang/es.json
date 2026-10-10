@@ -30,6 +30,12 @@
         "previous": "Anterior",
         "next": "Siguiente"
     },
+    "shop": {
+        "added_to_cart": "Agregado al carrito: :title",
+        "added_to_cart_generic": "¡Agregado al carrito!",
+        "add_failed": "No se pudo agregar al carrito",
+        "view_cart": "Ver carrito"
+    },
     "statuses": {
         "in_stock": "Disponible",
         "out_of_stock": "Agotado",
@@ -41,7 +47,8 @@
             "title": "Crea experiencias digitales audaces",
             "tagline": "Un CMS moderno y potente construido con Laravel y React.",
             "primary_cta": "Ver contenido",
-            "secondary_cta": "Ir al panel"
+            "secondary_cta": "Ir al panel",
+            "documentation": "Documentación"
         },
         "features": {
             "title": "Funciones poderosas",
@@ -50,26 +57,64 @@
                     "title": "Tipos de contenido flexibles",
                     "description": "Crea tipos de publicación y taxonomías personalizados para organizar tu contenido a tu manera."
                 },
+                "multilingual": {
+                    "title": "Contenido multilingüe",
+                    "description": "Traduce entradas, páginas, menús y ajustes por idioma, con un editor por idioma."
+                },
                 "roles": {
                     "title": "Acceso por roles",
                     "description": "Sistema de permisos granular para controlar quién puede crear, editar y publicar contenido."
                 },
-                "modern": {
-                    "title": "UI/UX moderna",
-                    "description": "Interfaz hermosa y responsiva construida con React, TypeScript y Tailwind CSS."
+                "themes": {
+                    "title": "Temas",
+                    "description": "Componentes React por tema, con un diseño base limpio que puedes cambiar."
+                },
+                "plugins": {
+                    "title": "Plugins y hooks",
+                    "description": "Extiende todo con hooks al estilo WordPress. Incluye formulario de contacto y tienda."
+                },
+                "operations": {
+                    "title": "Operación segura",
+                    "description": "Chequeos de salud, copias nocturnas, actualizaciones en un clic y cola de trabajos."
                 }
             }
+        },
+        "stack": {
+            "eyebrow": "Bajo el capó",
+            "title": "Tecnología sólida",
+            "description": "Herramientas modernas y fiables — las mismas que usan algunos de los sitios más visitados."
+        },
+        "registry": {
+            "eyebrow": "Amplíalo",
+            "title": "Un registro lleno de plugins",
+            "description": "Tienda, formularios y más se instalan desde el panel — cada paquete verificado antes de desempaquetar.",
+            "primary": "Ver plugins en el panel",
+            "secondary": "Ver el registro"
         },
         "latest": {
             "title": "Últimas novedades",
             "view_all": "Ver todo",
             "badge_fallback": "Entrada"
         },
+        "demo": {
+            "eyebrow": "Pruébalo tú mismo",
+            "title": "Inicia sesión con una cuenta demo",
+            "description": "Esta demo se restablece periódicamente y las contraseñas son públicas a propósito. Elige un rol y explora.",
+            "email": "Correo",
+            "password": "Contraseña",
+            "login": "Iniciar sesión",
+            "roles": {
+                "admin": { "label": "Admin" },
+                "editor": { "label": "Editor" },
+                "user": { "label": "Usuario" }
+            }
+        },
         "cta": {
             "title": "¿Listo para comenzar?",
             "description": "Explora el panel de administración para gestionar tu contenido o consulta la documentación para saber más.",
             "primary": "Ir al panel",
-            "secondary": "Ver en GitHub"
+            "secondary": "Ver en GitHub",
+            "documentation": "Leer la documentación"
         }
     },
     "posts": {

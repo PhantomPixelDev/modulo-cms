@@ -1,5 +1,13 @@
 # Plugins
 
+Administrative plugin routes should use `Route::middleware('admin.access')`.
+This group supplies authentication, verified email, admin access, and mandatory
+two-factor enrollment. Keep the plugin's own operation permissions as well.
+Routes beneath `/dashboard` also receive the core security guard for compatibility
+with older plugins. In public demo mode, only explicitly allowed editing writes
+are available; new administration endpoints fail closed. Normal sites retain their
+existing permissions. See [Security](security.md).
+
 ## Installing
 
 ```bash
@@ -11,7 +19,7 @@ php artisan plugin:update --all
 ```
 
 Or from the admin: **Plugins → Browse registry** searches the registry and installs
-with one click (the plugin arrives inactive), and **System → Updates** lists and
+with one click (the plugin arrives inactive), and **Settings → Updates** lists and
 applies plugin updates. A daily check emails administrators when updates appear.
 
 **A plugin is not sandboxed.** It runs as part of the application, with the same

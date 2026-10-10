@@ -20,6 +20,7 @@ class CommentController extends Controller
     public function __construct()
     {
         $this->middleware('permission:moderate comments');
+        $this->middleware('permission:edit settings')->only(['updateSettings']);
     }
 
     public function index(Request $request): Response

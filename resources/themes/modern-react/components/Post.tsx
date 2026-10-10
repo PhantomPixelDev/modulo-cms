@@ -1,3 +1,5 @@
+import ContentRenderer from '@/components/content/ContentRenderer';
+import type { ContentPartial } from '@/theme-partials';
 import { Link } from '@inertiajs/react';
 import { ArrowLeft, Calendar, Clock, Tag, User } from 'lucide-react';
 import Layout from './Layout';
@@ -11,6 +13,7 @@ interface Post {
     title: string;
     slug: string;
     content: string;
+    content_partials?: ContentPartial[];
     excerpt?: string;
     featured_image?: string;
     /** Smaller WebP copies ("url 768w, …") when the image is from the media library */
@@ -133,7 +136,7 @@ export default function Post({ post, site, theme, menus, relatedPosts }: PostPro
                     </figure>
                 )}
 
-                <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
+                <ContentRenderer className="prose prose-lg max-w-none" html={content} partials={post.content_partials} />
 
                 {post.terms && post.terms.length > 0 && (
                     <div className="mt-10 flex flex-wrap gap-2">

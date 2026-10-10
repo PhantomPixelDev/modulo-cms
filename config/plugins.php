@@ -45,6 +45,7 @@ return [
     'registry_cache_ttl' => (int) env('MODULO_PLUGIN_REGISTRY_TTL', 60 * 60 * 12),
 
     'timeout' => (int) env('MODULO_PLUGIN_TIMEOUT', 60),
+    'max_download_bytes' => (int) env('MODULO_PACKAGE_MAX_BYTES', 268435456),
 
     /*
     | Installing from an arbitrary URL is off by default. It bypasses the

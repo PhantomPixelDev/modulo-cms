@@ -1,25 +1,10 @@
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import type { AclUser } from '@/lib/acl';
 import { cn } from '@/lib/utils';
-import { router } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
-import {
-    Activity,
-    Database,
-    FileText,
-    HardDrive,
-    ImageIcon,
-    Palette,
-    PenSquare,
-    RefreshCcw,
-    Server,
-    Settings,
-    Sparkles,
-    Timer,
-    UserPlus,
-    Zap,
-} from 'lucide-react';
+import { Activity, Database, HardDrive, RefreshCcw, Server, Sparkles, Timer, Zap } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { DashboardCreatePostButton, DashboardQuickActions } from '../../components/dashboard/DashboardActions';
 import { DashboardOverview } from '../../components/dashboard/DashboardOverview';
 import { DashboardStats } from '../../components/dashboard/DashboardStats';
 import type { DashboardOverviewData } from '../../types';
@@ -91,49 +76,10 @@ const formatLastChecked = (iso?: string) => {
     return relative.format(-Math.round(diffMinutes / 1440), 'day');
 };
 
-const quickActions = [
-    {
-        labelKey: 'dashboard.home.quick_actions.new_post',
-        icon: PenSquare,
-        route: 'posts.create',
-        color: 'text-blue-600 dark:text-blue-400',
-    },
-    {
-        labelKey: 'dashboard.home.quick_actions.new_page',
-        icon: FileText,
-        route: 'pages.create',
-        color: 'text-violet-600 dark:text-violet-400',
-    },
-    {
-        labelKey: 'dashboard.home.quick_actions.add_user',
-        icon: UserPlus,
-        route: 'users.create',
-        color: 'text-emerald-600 dark:text-emerald-400',
-    },
-    {
-        labelKey: 'dashboard.home.quick_actions.media',
-        icon: ImageIcon,
-        route: 'media.index',
-        color: 'text-amber-600 dark:text-amber-400',
-    },
-    {
-        labelKey: 'dashboard.home.quick_actions.themes',
-        icon: Palette,
-        route: 'themes.index',
-        color: 'text-pink-600 dark:text-pink-400',
-    },
-    {
-        labelKey: 'dashboard.home.quick_actions.settings',
-        icon: Settings,
-        route: 'siteSettings.index',
-        color: 'text-muted-foreground',
-    },
-];
-
 type TranslateFn = (key: string, replacements?: Record<string, string | number>, fallback?: string) => string;
 
 interface RenderDashboardHomeArgs {
-    auth: any;
+    auth: { user: AclUser };
     adminStats: any;
     systemStatus: any;
     overview?: DashboardOverviewData;
@@ -157,36 +103,12 @@ export function renderDashboardHome({ auth, adminStats, systemStatus, overview, 
                     <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('dashboard.home.welcome', { name: userName })}</h1>
                     <p className="max-w-xl text-sm text-muted-foreground sm:text-base">{t('dashboard.home.hero_description')}</p>
                 </div>
-                <Button onClick={() => router.visit(ROUTE.posts.create())} className="self-start sm:self-auto">
-                    <PenSquare />
-                    {t('dashboard.home.cta_create_post')}
-                </Button>
+                <DashboardCreatePostButton user={auth.user} create={ROUTE.posts.create} t={t} />
             </div>
 
             {overview && <DashboardOverview overview={overview} />}
 
-            {/* Quick Actions */}
-            <div>
-                <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-base font-semibold">{t('dashboard.home.quick_actions_header')}</h2>
-                </div>
-                <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                    {quickActions.map((action) => {
-                        const Icon = action.icon;
-                        const routeFn = action.route.split('.').reduce((obj: any, key) => obj?.[key], ROUTE);
-                        return (
-                            <button
-                                key={action.labelKey}
-                                onClick={() => routeFn && router.visit(routeFn())}
-                                className="group flex flex-col items-center justify-center gap-2 rounded-xl border bg-card p-4 shadow-xs transition-colors outline-none hover:border-input hover:bg-accent/50 focus-visible:ring-[3px] focus-visible:ring-ring/40"
-                            >
-                                <Icon className={cn('size-5 transition-transform group-hover:-translate-y-0.5', action.color)} />
-                                <span className="text-xs font-medium text-foreground">{t(action.labelKey)}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
+            <DashboardQuickActions user={auth.user} routes={ROUTE} t={t} />
 
             {/* Stats Grid */}
             {adminStats && (

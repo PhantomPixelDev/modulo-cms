@@ -25,7 +25,7 @@ class TaxonomyTermController extends Controller
         $original = $slug;
         $i = 2;
         while (TaxonomyTerm::where('taxonomy_id', $taxonomyId)
-            ->where('slug', $slug)
+            ->whereRaw('LOWER(slug) = LOWER(?)', [$slug])
             ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->exists()) {
             $slug = $original.'-'.$i;
@@ -44,7 +44,8 @@ class TaxonomyTermController extends Controller
         $query = TaxonomyTerm::with('taxonomy')->orderBy('term_order');
 
         if ($request->has('taxonomy_id')) {
-            $query->where('taxonomy_id', $request->taxonomy_id);
+            $validated = $request->validate(['taxonomy_id' => ['integer']]);
+            $query->where('taxonomy_id', $validated['taxonomy_id']);
         }
 
         $perPage = SiteSetting::get('posts_per_page', 15);
@@ -236,7 +237,7 @@ class TaxonomyTermController extends Controller
 
         while (
             TaxonomyTermTranslation::where('locale', $locale)
-                ->where('slug', $slug)
+                ->whereRaw('LOWER(slug) = LOWER(?)', [$slug])
                 ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
                 ->exists()
         ) {

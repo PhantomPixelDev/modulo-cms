@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 import { SiteSettingsForm } from '../../components/settings/SiteSettingsForm';
 import { SystemInfoCard } from '../../components/settings/SystemInfoCard';
+import type { DashboardProps } from '../../types';
 
 export function getSiteSettingsSections({
     settings,
@@ -16,18 +17,9 @@ export function getSiteSettingsSections({
     locales,
     currentLocale,
     can,
-    ROUTE,
     t,
-}: {
-    settings: any;
-    settingsGroup: any;
-    pages: any;
-    postTypes?: any;
-    timezones: any;
-    locales?: any[];
-    currentLocale?: string;
+}: Pick<DashboardProps, 'settings' | 'settingsGroup' | 'pages' | 'postTypes' | 'timezones' | 'locales' | 'currentLocale'> & {
     can: (perm: string) => boolean;
-    ROUTE: any;
     t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
     const renderSiteSettings = () => {
@@ -42,8 +34,8 @@ export function getSiteSettingsSections({
                 }
             >
                 <SiteSettingsForm
-                    settings={(settings || {}) as Record<string, Record<string, any>>}
-                    currentGroup={(settingsGroup as any) || 'general'}
+                    settings={settings || {}}
+                    currentGroup={settingsGroup || 'general'}
                     pages={pages || []}
                     postTypes={postTypes || []}
                     timezones={timezones || []}

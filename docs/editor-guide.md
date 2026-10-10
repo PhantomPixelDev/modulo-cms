@@ -25,25 +25,29 @@ publish them, move them back to draft or put them in the trash in one go.
 
 In the editor:
 
-- **Status** sits next to the save button: *Draft* is only visible to you and other
-  editors, *Published* is live.
-- **Your work is saved as you type.** If you close the tab by mistake, the editor offers
-  to bring back your unsaved changes the next time you open the post.
+- **Save Draft, Publish and Update** are explicit actions. Update preserves publication
+  status; **Unpublish and save draft** removes published content from public view in
+  every language.
+- **Your work is saved as you type.** Recovery reaches the server after a three-second
+  pause, including new posts and each translation separately. Resume from **Unfinished
+  work** on the dashboard or restore the changes when you reopen the editor.
 - **Preview** shows the post exactly as visitors will see it, including unsaved changes.
-  The preview link works for an hour, so you can send it to someone for a quick look.
+  It waits for recovery to succeed; new content needs its first explicit save. The
+  preview link works for an hour, so you can send it to someone for a quick look.
 - **Schedule** a post by choosing a publish date in the future (Advanced tab) and
-  setting the status to *Published*. It goes live on its own at that time.
-- **Revisions** lists earlier versions. *Changes since* highlights what was removed and
+  clicking **Schedule**. The editor labels the site's timezone. It goes live on its
+  own at that time.
+- **Revisions** lists earlier versions. _Changes since_ highlights what was removed and
   added since each one; **Restore this version** puts it back (the current text is kept
   as a revision, so you can undo that too).
 - **Search engines** (SEO tab): the title and description shown in Google, the picture
-  shown when the page is shared, and *Hide from search engines* for pages that shouldn't
+  shown when the page is shared, and _Hide from search engines_ for pages that shouldn't
   appear in search results.
 - **Details**: some content types have extra fields, like a price or an event date. They
   appear under the excerpt.
 
-Pages can sit under another page (**Advanced → Parent page**), for example *Team* under
-*About*.
+Pages can sit under another page (**Advanced → Parent page**), for example _Team_ under
+_About_.
 
 Deleted posts go to **Trash**, where you can restore them for 30 days.
 
@@ -58,8 +62,8 @@ upload the best version you have.
 
 **Appearance → Menus** builds the navigation of your site:
 
-1. Open a menu (or create one and choose where it shows, e.g. *Header Navigation*).
-2. Tick pages under **Add to menu** and click *Add to menu*, or add a **Custom link**.
+1. Open a menu (or create one and choose where it shows, e.g. _Header Navigation_).
+2. Tick pages under **Add to menu** and click _Add to menu_, or add a **Custom link**.
 3. **Drag** items to reorder them; drag an item to the right to make it a sub-item.
    The arrow buttons do the same if you prefer (or on a phone).
 4. Click the pencil to rename an item, link it elsewhere, open it in a new tab, show it
@@ -69,7 +73,7 @@ Changes to the order are saved as you make them.
 
 ## Languages
 
-**Administration → Languages** lists the languages your content can be written in. Add
+**Settings → Languages** lists the languages your content can be written in. Add
 one from the list, switch languages on and off, and choose the default: the language
 visitors see when they open your site. In the posts list, the small language badges on
 each row open that translation (a dashed badge means it isn't translated yet).
@@ -81,14 +85,14 @@ Whether new comments need approval first is set on the same page.
 
 ## Email
 
-**System → Email** decides how your site sends mail (order confirmations, password
+**Settings → Email** decides how your site sends mail (order confirmations, password
 resets, contact messages). Enter the SMTP details from your email provider and use
 **Send test email** to check they work. Until email is set up, messages are only written
 to the site's log, so nobody receives them.
 
 ## Backups
 
-**System → Backups** keeps full copies of your site: all content, uploaded files and
+**Settings → Backups** keeps full copies of your site: all content, uploaded files and
 plugins. One is made every Sunday night; **Back up now** makes one immediately, for
 example before a big change.
 
@@ -102,14 +106,14 @@ worked.
 
 ## Users and roles
 
-**Administration → Users** invites people and changes their role. Roles decide what
-someone may do: an *Editor* can publish content, an *Author* can write drafts that an
+**Settings → Users** invites people and changes their role. Roles decide what
+someone may do: an _Editor_ can publish content, an _Author_ can write drafts that an
 editor publishes. Turn on two-step sign-in for your own account under your profile
 (**Settings → Two-factor**): it keeps your site safe even if your password leaks.
 
 ## Plugins and the shop
 
-**Administration → Plugins → Browse registry** adds features such as the
+**Extensions → Plugins → Browse registry** adds features such as the
 [Shop](https://github.com/PhantomPixelDev/modulo-plugin-shop) or a contact form.
 Installed plugins get their own entries in the sidebar under **Extensions**, and their
 settings are found there or under Plugins.

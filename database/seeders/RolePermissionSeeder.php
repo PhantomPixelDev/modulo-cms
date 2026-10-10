@@ -51,6 +51,7 @@ class RolePermissionSeeder extends Seeder
             'edit posts',
             'delete posts',
             'publish posts',
+            'assign posts author',
 
             // Page management (separate from posts)
             'view pages',
@@ -75,6 +76,13 @@ class RolePermissionSeeder extends Seeder
             'create taxonomy terms',
             'edit taxonomy terms',
             'delete taxonomy terms',
+
+            // Media management. Checked by MediaController/MediaFolderController
+            // but previously created by nothing, so no role could ever hold them.
+            'view media',
+            'upload media',
+            'edit media',
+            'delete media',
 
             // Plugin management
             'view plugins',
@@ -108,7 +116,9 @@ class RolePermissionSeeder extends Seeder
             'export data',
 
             // Backup & maintenance
+            'view backups',
             'create backups',
+            'delete backups',
             'restore backups',
             'system maintenance',
         ];
@@ -126,16 +136,18 @@ class RolePermissionSeeder extends Seeder
                 'view users', 'create users', 'edit users', 'assign roles',
                 'view roles', 'create roles', 'edit roles', 'assign permissions',
                 'view content', 'create content', 'edit content', 'delete content', 'publish content', 'approve content', 'moderate comments',
-                'view posts', 'create posts', 'edit posts', 'delete posts', 'publish posts',
+                'view posts', 'create posts', 'edit posts', 'delete posts', 'publish posts', 'assign posts author',
                 'view pages', 'create pages', 'edit pages', 'delete pages',
                 'view post types', 'create post types', 'edit post types', 'delete post types',
                 'view taxonomies', 'create taxonomies', 'edit taxonomies', 'delete taxonomies',
                 'view taxonomy terms', 'create taxonomy terms', 'edit taxonomy terms', 'delete taxonomy terms',
+                'view media', 'upload media', 'edit media', 'delete media',
                 'view plugins', 'install plugins', 'activate plugins', 'deactivate plugins', 'delete plugins',
                 'view settings', 'edit settings',
                 'view sitemap', 'edit sitemap',
                 'view analytics', 'export data',
                 'create backups', 'restore backups',
+                'view backups', 'delete backups',
                 'view menus', 'create menus', 'edit menus', 'delete menus',
                 'view menu items', 'create menu items', 'edit menu items', 'delete menu items',
                 'view templates', 'create templates', 'edit templates', 'delete templates',

@@ -89,11 +89,12 @@ class PostController extends BaseFrontendController
         }
 
         $query = Post::with([
+            'translations',
             'postType',
             'author',
             'taxonomyTerms.taxonomy',
         ])
-            ->published()
+            ->publiclyVisible()
             ->orderBy('published_at', 'desc');
 
         $routeName = $request->route()->getName();

@@ -20,6 +20,10 @@ class RequireTwoFactorForAdmins
             && $user !== null
             && $user->hasRole(['admin', 'super-admin'])
             && ! $user->hasTwoFactorEnabled()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'Two-factor authentication is required for administrators.', 'code' => 'two_factor_required'], 403);
+            }
+
             return redirect()->route('two-factor.edit')
                 ->with('warning', 'Set up two-factor authentication to continue: it is required for administrators on this site.');
         }

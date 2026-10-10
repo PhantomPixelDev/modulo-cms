@@ -67,7 +67,7 @@ class TwoFactorChallengeController extends Controller
         RateLimiter::clear($key);
 
         Auth::guard('web')->login($user, (bool) $request->session()->pull('login.remember', false));
-        $request->session()->forget('login.id');
+        $request->session()->forget(['login.id', 'login.expires_at', 'login.fingerprint']);
         $request->session()->regenerate();
 
         return Inertia::location($request->session()->pull('url.intended', route('dashboard', absolute: false)));
@@ -78,6 +78,18 @@ class TwoFactorChallengeController extends Controller
         $id = $request->session()->get('login.id');
         $user = $id !== null ? User::find($id) : null;
 
-        return $user !== null && $user->hasTwoFactorEnabled() ? $user : null;
+        $fingerprint = $request->session()->get('login.fingerprint');
+        $expiresAt = $request->session()->get('login.expires_at');
+
+        if ($user === null || ! $user->hasTwoFactorEnabled()
+            || ! is_int($expiresAt) || now()->timestamp >= $expiresAt
+            || ! is_string($fingerprint)
+            || ! hash_equals($fingerprint, hash('sha256', $user->getAuthPassword().'|'.$user->two_factor_secret))) {
+            $request->session()->forget(['login.id', 'login.remember', 'login.expires_at', 'login.fingerprint']);
+
+            return null;
+        }
+
+        return $user;
     }
 }

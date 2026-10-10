@@ -1,5 +1,7 @@
 # Building a theme
 
+For reusable React modules inside page and post content, see [React content partials](theme-partials.md). `theme:partial` creates a component and its opt-in shortcode registration.
+
 A theme provides the React components the public site renders. There is one
 bundled theme, `modern-react`, and it is the reference.
 
@@ -26,15 +28,15 @@ resources/themes/my-theme/
 
 ```json
 {
-  "name": "My Theme",
-  "slug": "my-theme",
-  "version": "1.0.0",
-  "template_engine": "react",
-  "templates": {
-    "layout": { "component": "components/Layout.tsx" },
-    "index":  { "component": "components/Index.tsx" },
-    "post":   { "component": "components/Post.tsx" }
-  }
+    "name": "My Theme",
+    "slug": "my-theme",
+    "version": "1.0.0",
+    "template_engine": "react",
+    "templates": {
+        "layout": { "component": "components/Layout.tsx" },
+        "index": { "component": "components/Index.tsx" },
+        "post": { "component": "components/Post.tsx" }
+    }
 }
 ```
 
@@ -58,7 +60,7 @@ So: **after adding or changing a theme, rebuild.**
 npm run build
 ```
 
-This is also why themes *with their own components* ship with the core. The
+This is also why themes _with their own components_ ship with the core. The
 production image contains no Node, so it cannot rebuild. What can be installed
 at runtime is a **child theme** (below).
 
@@ -77,12 +79,12 @@ my-child/
 
 ```json
 {
-  "name": "Ocean",
-  "slug": "ocean",
-  "version": "1.0.0",
-  "parent": "modern-react",
-  "styles": ["assets/css/style.css"],
-  "colors": { "primary": "oklch(0.55 0.15 230)" }
+    "name": "Ocean",
+    "slug": "ocean",
+    "version": "1.0.0",
+    "parent": "modern-react",
+    "styles": ["assets/css/style.css"],
+    "colors": { "primary": "oklch(0.55 0.15 230)" }
 }
 ```
 
@@ -113,7 +115,7 @@ sha256, like a plugin. Then:
   lives on the persistent storage volume, and its assets are published to
   `public/themes/<slug>` (the shared `theme_assets` volume in Docker).
 
-Registry theme updates show on **System → Updates**. Uninstalling a runtime theme
+Registry theme updates show on **Settings → Updates**. Uninstalling a runtime theme
 removes its files.
 
 ## Styling
@@ -127,11 +129,15 @@ entry for a theme looks like a plugin's, plus `parent` and an optional
 
 ```json
 {
-  "themes": [{
-    "slug": "ocean", "name": "Ocean", "parent": "modern-react",
-    "screenshot": "https://…/ocean.png",
-    "latest": { "version": "1.0.0", "asset_url": "https://github.com/…/ocean.zip", "sha256": "…" }
-  }]
+    "themes": [
+        {
+            "slug": "ocean",
+            "name": "Ocean",
+            "parent": "modern-react",
+            "screenshot": "https://…/ocean.png",
+            "latest": { "version": "1.0.0", "asset_url": "https://github.com/…/ocean.zip", "sha256": "…" }
+        }
+    ]
 }
 ```
 

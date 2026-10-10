@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Locale;
 use App\Models\Post;
 
 function translationPayload(): array
@@ -46,4 +47,112 @@ it('does not let an admin-area user without edit rights delete a translation', f
     $this->delete(route('dashboard.admin.posts.translations.destroy', [$post, 'es']))->assertForbidden();
 
     expect($post->translations()->where('locale', 'es')->exists())->toBeTrue();
+});
+
+function seedLocales(): void
+{
+    Locale::create(['code' => 'en', 'name' => 'English', 'native_name' => 'English', 'is_active' => true, 'is_default' => true]);
+    Locale::create(['code' => 'es', 'name' => 'Spanish', 'native_name' => 'Español', 'is_active' => true, 'is_default' => false]);
+    Locale::clearCache();
+}
+
+it('updates a post through its numeric ID, the way the editor saves', function () {
+    $post = Post::factory()->create(['title' => 'Original', 'slug' => 'original']);
+    $this->actingAs(makeAdminUserWithPermissions(['edit posts']));
+
+    // Regression: {post} used to bind by slug only, so the editor's
+    // ID-based PUT 404'd.
+    $this->put("/dashboard/admin/posts/{$post->id}", [
+        'post_type_id' => $post->post_type_id,
+        'title' => 'Renamed',
+        'slug' => 'renamed',
+        'content' => 'Body',
+        'status' => 'draft',
+    ])->assertRedirect();
+
+    expect($post->refresh()->title)->toBe('Renamed');
+});
+
+it('saves a second-locale translation without touching the base post', function () {
+    seedLocales();
+    $post = Post::factory()->create(['title' => 'Hello', 'slug' => 'hello']);
+    $this->actingAs(makeAdminUserWithPermissions(['edit posts']));
+
+    $this->put("/dashboard/admin/posts/{$post->id}", [
+        'post_type_id' => $post->post_type_id,
+        'title' => 'Hola',
+        'slug' => 'hola',
+        'content' => 'Cuerpo',
+        'status' => 'draft',
+        'locale' => 'es',
+    ])->assertRedirect();
+
+    expect($post->refresh()->title)->toBe('Hello');
+    expect($post->translations()->where('locale', 'es')->value('title'))->toBe('Hola');
+});
+
+it('falls back to the default locale for an unknown locale', function () {
+    seedLocales();
+    $post = Post::factory()->create(['title' => 'Hello', 'slug' => 'hello']);
+    $this->actingAs(makeAdminUserWithPermissions(['edit posts']));
+
+    $this->put("/dashboard/admin/posts/{$post->id}", [
+        'post_type_id' => $post->post_type_id,
+        'title' => 'Hello edited',
+        'slug' => 'hello',
+        'content' => 'Body',
+        'status' => 'draft',
+        'locale' => 'xx',
+    ])->assertRedirect();
+
+    expect($post->refresh()->title)->toBe('Hello edited');
+    expect($post->translations()->where('locale', 'xx')->exists())->toBeFalse();
+});
+
+it('saves a page translation without touching the base page', function () {
+    seedLocales();
+    $page = makePublishedPage(['title' => 'About', 'slug' => 'about']);
+    $this->actingAs(makeAdminUserWithPermissions(['edit pages']));
+
+    $this->put(route('dashboard.admin.pages.update', $page), [
+        'title' => 'Acerca de',
+        'slug' => 'acerca-de',
+        'content' => 'Contenido',
+        'status' => 'draft',
+        'locale' => 'es',
+    ])->assertRedirect();
+
+    expect($page->refresh()->title)->toBe('About');
+    expect($page->translations()->where('locale', 'es')->value('title'))->toBe('Acerca de');
+});
+
+it('deletes a page translation through the pages route', function () {
+    $page = makePublishedPage();
+    $page->setTranslation('es', ['title' => 'Hola', 'slug' => 'hola']);
+    $this->actingAs(makeAdminUserWithPermissions(['edit posts']));
+
+    $this->delete(route('dashboard.admin.pages.translations.destroy', [$page->id, 'es']))->assertRedirect();
+
+    expect($page->translations()->where('locale', 'es')->exists())->toBeFalse();
+});
+
+it('resolves the post binder by slug and by ID', function () {
+    $post = Post::factory()->create(['title' => 'Binder Proof', 'slug' => 'binder-proof']);
+
+    // The editor saves by numeric ID while list links use slugs, so the
+    // {post} binder must resolve either form.
+    $binder = app('router')->getBindingCallback('post');
+    expect($binder)->not->toBeNull();
+    expect($binder((string) $post->id)->is($post))->toBeTrue();
+    expect($binder($post->slug)->is($post))->toBeTrue();
+});
+
+it('registers route bindings outside route files', function () {
+    // Bindings registered in a route file silently stop working in
+    // production, where the cached route table means route files never
+    // load. That 500'd every post edit on Postgres (bigint = slug).
+    // They belong in a provider, which always boots.
+    foreach (glob(base_path('routes/*.php')) ?: [] as $file) {
+        expect(file_get_contents($file))->not->toContain('Route::bind');
+    }
 });

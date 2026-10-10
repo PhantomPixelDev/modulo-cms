@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\UpdateCenterController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Content\AutosaveController;
+use App\Http\Controllers\Content\EditorDraftController;
 use App\Http\Controllers\Content\MenuController;
 use App\Http\Controllers\Content\MenuItemController;
 use App\Http\Controllers\Content\PagesController;
@@ -28,21 +29,29 @@ use App\Http\Controllers\Content\TaxonomyController;
 use App\Http\Controllers\Content\TaxonomyTermController;
 use App\Http\Controllers\Content\TemplateController;
 use App\Http\Controllers\Content\ThemeController;
+use App\Http\Controllers\Content\ThemePartialController;
 use App\Http\Controllers\Content\TrashController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // All admin routes are protected by auth, verified, and admin role check
-Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|access admin', 'two-factor.admin'])
+Route::middleware('admin.access')
     ->prefix('dashboard/admin')
     ->name('dashboard.admin.')
     ->group(function () {
         // Dashboard (Route::redirect keeps route:cache working; no closure)
         Route::redirect('/', '/dashboard')->name('index');
         Route::post('onboarding/dismiss', [DashboardController::class, 'dismissOnboarding'])->name('onboarding.dismiss');
+        Route::get('partials', [ThemePartialController::class, 'index'])->name('partials.index');
+        Route::post('partials/preview', [ThemePartialController::class, 'preview'])->middleware('throttle:30,1')->name('partials.preview');
+        Route::get('partials/preview/{token}', [ThemePartialController::class, 'showPreview'])->whereUuid('token')->name('partials.preview.show');
+        Route::get('editor-drafts', [EditorDraftController::class, 'index'])->name('editor-drafts.index');
+        Route::post('editor-drafts', [EditorDraftController::class, 'store'])->name('editor-drafts.store');
+        Route::get('editor-drafts/{draft}', [EditorDraftController::class, 'show'])->whereUuid('draft')->name('editor-drafts.show');
+        Route::delete('editor-drafts/{draft}', [EditorDraftController::class, 'destroy'])->whereUuid('draft')->name('editor-drafts.destroy');
 
         // Resource routes with automatic permission checks
-        Route::resource('pages', PagesController::class)->except(['show']);
+        Route::resource('pages', PagesController::class)->except(['show'])->where(['page' => '[0-9]+']);
         // Trash (deleted posts and pages); before the posts resource
         Route::get('trash', [TrashController::class, 'index'])->name('trash.index');
         Route::post('trash/{id}/restore', [TrashController::class, 'restore'])->whereNumber('id')->name('trash.restore');
@@ -60,28 +69,29 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::post('content/{postId}/preview-link', [AutosaveController::class, 'previewLink'])->whereNumber('postId')->name('preview.link');
 
         Route::post('posts/bulk', [PostController::class, 'bulk'])->middleware('throttle:6,1')->name('posts.bulk');
-        Route::resource('posts', PostController::class)
-            ->scoped(['post' => 'slug']);
+        Route::resource('posts', PostController::class);
         // Specific route for listing posts by post type
         Route::get('posts/type/{postType}', [PostController::class, 'indexByType'])->name('posts.byType');
         // Post translation routes
         Route::post('posts/{post}/translations', [PostTranslationController::class, 'store'])->name('posts.translations.store');
         Route::delete('posts/{post}/translations/{locale}', [PostTranslationController::class, 'destroy'])->name('posts.translations.destroy');
-        Route::resource('post-types', PostTypeController::class);
-        Route::put('menus/{menu}/order', [MenuController::class, 'reorder'])->name('menus.reorder');
-        Route::post('menus/{menu}/pages', [MenuController::class, 'addPages'])->name('menus.add-pages');
-        Route::resource('menus', MenuController::class);
-        Route::resource('menu-items', MenuItemController::class);
-        Route::resource('taxonomies', TaxonomyController::class);
+        // Pages are posts too, so the generic translation endpoints serve them
+        Route::delete('pages/{post}/translations/{locale}', [PostTranslationController::class, 'destroy'])->name('pages.translations.destroy');
+        Route::resource('post-types', PostTypeController::class)->where(['post_type' => '[0-9]+']);
+        Route::put('menus/{menu}/order', [MenuController::class, 'reorder'])->whereNumber('menu')->name('menus.reorder');
+        Route::post('menus/{menu}/pages', [MenuController::class, 'addPages'])->whereNumber('menu')->name('menus.add-pages');
+        Route::resource('menus', MenuController::class)->where(['menu' => '[0-9]+']);
+        Route::resource('menu-items', MenuItemController::class)->only(['index', 'store', 'update', 'destroy'])->where(['menu_item' => '[0-9]+']);
+        Route::resource('taxonomies', TaxonomyController::class)->where(['taxonomy' => '[0-9]+']);
         Route::get('taxonomy-terms', [TaxonomyTermController::class, 'index'])->name('taxonomy-terms.index');
-        Route::resource('taxonomy-terms', TaxonomyTermController::class)->except(['index']);
+        Route::resource('taxonomy-terms', TaxonomyTermController::class)->except(['index'])->where(['taxonomy_term' => '[0-9]+']);
         // Specific route for listing taxonomy terms by taxonomy slug
         Route::get('taxonomies/{taxonomy}/terms', [TaxonomyTermController::class, 'indexByTaxonomy'])->name('taxonomy-terms.byTaxonomy');
-        Route::resource('templates', TemplateController::class);
+        Route::resource('templates', TemplateController::class)->where(['template' => '[0-9]+']);
         // Before the resource: "registry" would otherwise be taken for a {theme} id.
         Route::get('/themes/registry', [ThemeController::class, 'registry'])->name('themes.registry');
         Route::post('/themes/registry/install', [ThemeController::class, 'installFromRegistry'])->name('themes.registry.install');
-        Route::resource('themes', ThemeController::class)->only(['index', 'show', 'update', 'destroy']);
+        Route::resource('themes', ThemeController::class)->only(['index', 'show', 'update', 'destroy'])->where(['theme' => '[0-9]+']);
 
         // Theme-specific routes
         // install() existed with no route at all, so the only way to install a
@@ -90,14 +100,14 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::post('/themes/discover', [ThemeController::class, 'discover'])->name('themes.discover');
         Route::post('/themes/clear-cache', [ThemeController::class, 'clearCache'])->name('themes.clear-cache');
         Route::post('/themes/{slug}/activate', [ThemeController::class, 'activate'])->name('themes.activate');
-        Route::post('/themes/{theme}/publish-assets', [ThemeController::class, 'publishAssets'])->name('themes.publish-assets');
+        Route::post('/themes/{theme}/publish-assets', [ThemeController::class, 'publishAssets'])->whereNumber('theme')->name('themes.publish-assets');
 
         // Media routes
         Route::prefix('media')->group(function () {
             Route::get('/', [AdminMediaController::class, 'index'])->name('media.index');
             Route::post('/', [AdminMediaController::class, 'store'])->name('media.store');
-            Route::match(['put', 'patch'], '/{media}', [AdminMediaController::class, 'update'])->name('media.update');
-            Route::delete('/{media}', [AdminMediaController::class, 'destroy'])->name('media.destroy');
+            Route::match(['put', 'patch'], '/{media}', [AdminMediaController::class, 'update'])->whereNumber('media')->name('media.update');
+            Route::delete('/{media}', [AdminMediaController::class, 'destroy'])->whereNumber('media')->name('media.destroy');
             Route::post('/regenerate/{media?}', [AdminMediaController::class, 'regenerate'])->name('media.regenerate');
             Route::post('/bulk', [AdminMediaController::class, 'bulk'])->middleware('throttle:6,1')->name('media.bulk');
 
@@ -107,20 +117,22 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
             // Media folders
             Route::prefix('folders')->group(function () {
                 Route::post('/', [AdminMediaFolderController::class, 'store'])->name('media.folders.store');
-                Route::put('/{folder}', [AdminMediaFolderController::class, 'update'])->name('media.folders.update');
-                Route::delete('/{folder}', [AdminMediaFolderController::class, 'destroy'])->name('media.folders.destroy');
+                Route::put('/{folder}', [AdminMediaFolderController::class, 'update'])->whereNumber('folder')->name('media.folders.update');
+                Route::delete('/{folder}', [AdminMediaFolderController::class, 'destroy'])->whereNumber('folder')->name('media.folders.destroy');
             });
         });
 
         // Comment moderation
         Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
         Route::put('/comments/settings', [CommentController::class, 'updateSettings'])->name('comments.settings');
-        Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
-        Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+        Route::patch('/comments/{comment}', [CommentController::class, 'update'])->whereNumber('comment')->name('comments.update');
+        Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->whereNumber('comment')->name('comments.destroy');
 
         // User & Role Management
-        Route::resource('users', UserController::class);
-        Route::resource('roles', RoleController::class);
+        Route::resource('users', UserController::class)->except(['show'])->where(['user' => '[0-9]+']);
+        Route::resource('roles', RoleController::class)->except(['show'])->where(['role' => '[0-9]+']);
+        Route::post('users/{user}/roles/{role}/assign', [UserController::class, 'assign'])->whereNumber(['user', 'role'])->name('users.roles.assign');
+        Route::post('users/{user}/roles/{role}/remove', [UserController::class, 'remove'])->whereNumber(['user', 'role'])->name('users.roles.remove');
 
         // Sitemap
         Route::get('/sitemap', [SitemapController::class, 'index'])->name('sitemap.index');
@@ -153,14 +165,14 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
 
             Route::get('/redirects', [RedirectController::class, 'index'])->name('redirects');
             Route::post('/redirects', [RedirectController::class, 'store'])->name('redirects.store');
-            Route::put('/redirects/{redirect}', [RedirectController::class, 'update'])->name('redirects.update');
-            Route::delete('/redirects/{redirect}', [RedirectController::class, 'destroy'])->name('redirects.destroy');
+            Route::put('/redirects/{redirect}', [RedirectController::class, 'update'])->whereNumber('redirect')->name('redirects.update');
+            Route::delete('/redirects/{redirect}', [RedirectController::class, 'destroy'])->whereNumber('redirect')->name('redirects.destroy');
 
             Route::get('/backups', [BackupController::class, 'index'])->name('backups');
             Route::post('/backups', [BackupController::class, 'store'])->middleware('throttle:6,1')->name('backups.store');
-            Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware('throttle:6,1')->name('backups.upload');
-            Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware('throttle:6,1')->name('backups.restore');
-            Route::get('/backups/{backup}', [BackupController::class, 'download'])->name('backups.download');
+            Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware(['password.confirm', 'throttle:6,1'])->name('backups.upload');
+            Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware(['password.confirm', 'throttle:6,1'])->name('backups.restore');
+            Route::get('/backups/{backup}', [BackupController::class, 'download'])->middleware('password.confirm')->name('backups.download');
             Route::delete('/backups/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy');
         });
 
@@ -168,8 +180,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         // Languages content can be written in
         Route::get('/languages', [LocaleController::class, 'index'])->name('languages.index');
         Route::post('/languages', [LocaleController::class, 'store'])->name('languages.store');
-        Route::put('/languages/{language}', [LocaleController::class, 'update'])->name('languages.update');
-        Route::delete('/languages/{language}', [LocaleController::class, 'destroy'])->name('languages.destroy');
+        Route::put('/languages/{language}', [LocaleController::class, 'update'])->whereNumber('language')->name('languages.update');
+        Route::delete('/languages/{language}', [LocaleController::class, 'destroy'])->whereNumber('language')->name('languages.destroy');
 
         Route::get('/translations', [TranslationController::class, 'index'])->name('translations.index');
         Route::post('/translations', [TranslationController::class, 'store'])->name('translations.store');
@@ -179,7 +191,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('plugins', [PluginController::class, 'index'])->name('plugins.index');
         Route::post('plugins/discover', [PluginController::class, 'discover'])->name('plugins.discover');
         Route::get('plugins/registry', [PluginController::class, 'registry'])->name('plugins.registry');
-        Route::post('plugins/install', [PluginController::class, 'install'])->middleware('throttle:6,1')->name('plugins.install');
+        Route::post('plugins/install', [PluginController::class, 'install'])->middleware(['password.confirm', 'throttle:6,1'])->name('plugins.install');
         Route::post('plugins/{slug}/activate', [PluginController::class, 'activate'])->middleware('throttle:6,1')->name('plugins.activate');
         Route::post('plugins/{slug}/deactivate', [PluginController::class, 'deactivate'])->middleware('throttle:6,1')->name('plugins.deactivate');
         Route::get('plugins/{slug}/settings', [PluginController::class, 'settings'])->name('plugins.settings');

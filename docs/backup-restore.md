@@ -12,7 +12,7 @@ There are two kinds of backup:
 
 ## Full backups
 
-**Admin → System → Backups** lists full backups and can create, download and
+**Admin → Settings → Backups** lists full backups and can create, download and
 delete them. Only users with the `admin` or `super-admin` role can open it: a
 backup holds the whole database, password hashes included.
 
@@ -27,8 +27,8 @@ Each archive carries a `manifest.json` with the Modulo version that made it.
 Turn the weekly run off with `MODULO_BACKUP_SCHEDULE=false`; change where
 archives go with `MODULO_BACKUP_PATH`.
 
-Restoring is command-line only, because it replaces the database under anyone
-using the site:
+Restore from **Settings → Backups** (see [From the admin](#from-the-admin)) or use the
+command line. A restore replaces the selected data while the site is in maintenance mode:
 
 ```bash
 php artisan modulo:restore modulo-backup-2026-09-25_034500.zip
@@ -84,7 +84,7 @@ docker compose -f docker/docker-compose.yml start app queue scheduler
 
 ## From the admin
 
-**System → Backups** lists the full backups, makes one on demand, and:
+**Settings → Backups** lists the full backups, makes one on demand, and:
 
 - **Restores** one: choose what to restore (database, media, plugins) and type the
   backup's name to confirm. A queued job runs `modulo:restore` (maintenance mode,

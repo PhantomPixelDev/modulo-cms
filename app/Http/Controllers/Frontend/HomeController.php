@@ -27,8 +27,8 @@ class HomeController extends BaseFrontendController
         if ($showOnFront === 'page') {
             $frontPageId = SiteSetting::get('front_page_id');
             if ($frontPageId) {
-                $content = Post::with(['author', 'postType', 'taxonomyTerms.taxonomy'])->find($frontPageId);
-                if ($content && $content->status === 'published') {
+                $content = Post::with(['author', 'postType', 'taxonomyTerms.taxonomy'])->publiclyVisible()->find($frontPageId);
+                if ($content) {
                     return $this->renderContent($content, 'page', 'page');
                 }
             }
@@ -41,7 +41,7 @@ class HomeController extends BaseFrontendController
             'taxonomyTerms.taxonomy',
             'translations',
         ])
-            ->published()
+            ->publiclyVisible()
             ->orderBy('published_at', 'desc');
 
         $postType = PostType::where('slug', 'post')->first();
@@ -57,6 +57,7 @@ class HomeController extends BaseFrontendController
         $presented = $this->postPresenter->presentPaginator($posts);
 
         return $this->reactRenderer->render($this->templateResolver->indexTemplate(), [
+            'demo' => ['enabled' => (bool) config('demo.enabled')],
             'posts' => [
                 'data' => $presented['data'],
             ],

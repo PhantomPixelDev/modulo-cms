@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\ActivityLog;
 use App\Support\Totp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -39,12 +41,25 @@ class TwoFactorController extends Controller
     /** Start setting up: a new secret, not yet active. */
     public function store(Request $request): RedirectResponse
     {
-        $request->user()->forceFill([
-            'two_factor_secret' => Totp::generateSecret(),
-            'two_factor_confirmed_at' => null,
-            'two_factor_recovery_codes' => null,
-            'two_factor_last_step' => null,
-        ])->save();
+        $started = DB::transaction(function () use ($request): bool {
+            $user = User::lockForUpdate()->findOrFail($request->user()->getKey());
+            if ($user->hasTwoFactorEnabled()) {
+                return false;
+            }
+
+            $user->forceFill([
+                'two_factor_secret' => Totp::generateSecret(),
+                'two_factor_confirmed_at' => null,
+                'two_factor_recovery_codes' => null,
+                'two_factor_last_step' => null,
+            ])->save();
+
+            return true;
+        });
+
+        if (! $started) {
+            return back()->with('error', 'Two-factor authentication is already on.');
+        }
 
         return back();
     }
@@ -52,17 +67,20 @@ class TwoFactorController extends Controller
     /** Finish setting up with a code from the app, which proves it is set up. */
     public function confirm(Request $request): RedirectResponse
     {
-        $request->validate(['code' => ['required', 'string']]);
-        $user = $request->user();
+        $request->validate(['code' => ['required', 'string', 'max:16']]);
+        $codes = DB::transaction(function () use ($request): array {
+            $user = User::lockForUpdate()->findOrFail($request->user()->getKey());
+            if ($user->two_factor_secret === null || $user->two_factor_confirmed_at !== null
+                || ! $user->verifyTwoFactorCode((string) $request->input('code'))) {
+                throw ValidationException::withMessages(['code' => 'That code is not valid. Check the time on your phone and try the next one.']);
+            }
 
-        if ($user->two_factor_secret === null || $user->two_factor_confirmed_at !== null
-            || ! $user->verifyTwoFactorCode((string) $request->input('code'))) {
-            throw ValidationException::withMessages(['code' => 'That code is not valid. Check the time on your phone and try the next one.']);
-        }
+            $user->forceFill(['two_factor_confirmed_at' => now()])->save();
+            $codes = $user->regenerateRecoveryCodes();
+            ActivityLog::record('2fa.enabled', 'Turned on two-factor authentication', $user);
 
-        $user->forceFill(['two_factor_confirmed_at' => now()])->save();
-        $codes = $user->regenerateRecoveryCodes();
-        ActivityLog::record('2fa.enabled', 'Turned on two-factor authentication', $user);
+            return $codes;
+        });
 
         return back()
             ->with('two_factor_recovery_codes', $codes)

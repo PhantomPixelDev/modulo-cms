@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class PostService
 {
@@ -56,7 +57,7 @@ class PostService
      */
     public function flushCache(): void
     {
-        Cache::forever(self::VERSION_KEY, $this->cacheVersion() + 1);
+        Cache::forever(self::VERSION_KEY, (string) Str::uuid());
         // Covers quiet saves too (stock changes), which fire no model events
         CachePublicPages::bumpVersion();
     }
@@ -97,7 +98,7 @@ class PostService
 
         // Only published posts for non-authenticated users
         if (! auth()->check()) {
-            $query->published();
+            $query->publiclyVisible();
         }
 
         return $query->orderBy($orderBy, $orderDirection)
@@ -113,7 +114,7 @@ class PostService
             'parent',
             'children',
             'translations',
-        ])->published();
+        ])->publiclyVisible();
     }
 
     /**
@@ -149,8 +150,8 @@ class PostService
         );
     }
 
-    protected function cacheVersion(): int
+    protected function cacheVersion(): string
     {
-        return (int) Cache::get(self::VERSION_KEY, 1);
+        return (string) Cache::get(self::VERSION_KEY, '1');
     }
 }

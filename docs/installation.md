@@ -2,17 +2,42 @@
 
 Three ways in. Pick one.
 
+Normal installations keep `MODULO_DEMO=false` (the default). The bundled homepage
+shows your site's identity and published articles; a configured front page takes
+precedence. Set `MODULO_DEMO=true` only for a disposable public demo to enable CMS
+promotion and documented demo credentials. Production demo seeding additionally
+requires the explicit `php artisan modulo:seed-demo --force` command.
+
+Run the scheduler and a queue worker for scheduled publication, recovery pruning
+and asynchronous jobs. Dashboard diagnostics show missing or stale heartbeats
+after three minutes; synchronous queues report inline processing. `/health`
+checks web readiness independently of those background services. Docker uptime
+comes from the application container's startup timestamp; other installations
+show Unavailable when no reliable timestamp exists.
+
 ## Docker, with the installer script
 
-The shortest path if you have Docker or Podman.
+For a Linux server, install Docker Engine with the Docker Compose plugin, or Podman
+with a working Compose provider. The runtime must be running and accessible to
+your shell user. The installer also needs Bash, `curl`, `tar`, and OpenSSL. The
+production images include the application and its built assets, so you do not
+need PHP, Composer, Node.js, PostgreSQL, or Redis installed separately on the host.
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/PhantomPixelDev/modulo-cms/main/install.sh
 less install.sh          # read it before running it
-bash install.sh
+APP_URL=https://cms.example.com bash install.sh
 ```
 
-On Windows, download `install.ps1` and run `.\install.ps1`.
+Replace the example URL with your public site address. Put an HTTPS reverse proxy
+in front of the web container's HTTP port (8080 by default), then open your public
+URL at `/install`. The printed `localhost` address refers to the machine running
+the installer. For a local trial, `bash install.sh` uses `http://localhost:8080`;
+the production template uses secure session cookies, so use HTTPS or explicitly
+disable secure cookies only for local HTTP testing.
+
+For Windows installations, download `install.ps1` and run `.\install.ps1` with a
+working Docker or Podman runtime and Compose provider.
 
 It checks prerequisites and the port, downloads the compose file and env
 template pinned to a published release, generates a unique `APP_KEY` and
@@ -78,7 +103,17 @@ Carry that rule into whatever server you use.
 
 ## Finishing setup
 
-Whichever route you took, visit `/install`. The wizard checks requirements,
+Generate a one-time setup token on the server, then visit `/install`:
+
+```bash
+# Docker / Podman Compose:
+docker compose exec app php artisan modulo:install-token
+# Tarball or Git installation:
+php artisan modulo:install-token
+```
+
+Paste the token into the wizard (never put it in a URL). It expires after one hour;
+run the command with `--rotate` to replace a lost or expired claim. The wizard checks requirements,
 creates the tables, takes an administrator account and your site name, then
 closes itself permanently — it returns 404 afterwards.
 
@@ -94,7 +129,7 @@ Both run the same code.
 
 **Demo content is off by default** and should stay off on a real site: it
 creates accounts whose passwords are published in the README. `modulo:seed-demo`
-refuses to run in production without `--force`.
+refuses to run in production without both `MODULO_DEMO=true` and `--force`.
 
 ## After installing
 

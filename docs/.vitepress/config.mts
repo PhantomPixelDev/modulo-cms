@@ -12,7 +12,7 @@ export default defineConfig({
     ignoreDeadLinks: [/(^|\/)\.\.\//, /localhost/],
     themeConfig: {
         nav: [
-            { text: 'Guide', link: '/installation' },
+            { text: 'Guide', link: '/' },
             { text: 'Extending', link: '/plugins' },
             { text: 'API', link: '/api' },
             { text: 'GitHub', link: 'https://github.com/PhantomPixelDev/modulo-cms' },
@@ -21,11 +21,14 @@ export default defineConfig({
             {
                 text: 'Running a site',
                 items: [
+                    { text: 'Documentation home', link: '/' },
+                    { text: 'Getting started', link: '/getting-started' },
                     { text: 'Installation', link: '/installation' },
                     { text: 'Configuration', link: '/configuration' },
                     { text: 'Upgrading', link: '/upgrading' },
                     { text: 'Backups and restoring', link: '/backup-restore' },
                     { text: 'Security', link: '/security' },
+                    { text: 'Troubleshooting', link: '/troubleshooting' },
                     { text: 'Performance on Windows', link: '/performance-windows' },
                 ],
             },
@@ -33,7 +36,9 @@ export default defineConfig({
                 text: 'Content',
                 items: [
                     { text: 'Guide for editors', link: '/editor-guide' },
+                    { text: 'Saving and recovering work', link: '/editing' },
                     { text: 'Working with content', link: '/content' },
+                    { text: 'Shop guide', link: '/shop' },
                 ],
             },
             {
@@ -43,6 +48,7 @@ export default defineConfig({
                     { text: 'Plugin front ends', link: '/plugin-frontend' },
                     { text: 'Hooks', link: '/hooks' },
                     { text: 'Themes', link: '/theme-development' },
+                    { text: 'React content partials', link: '/theme-partials' },
                     { text: 'Headless API', link: '/api' },
                 ],
             },
@@ -50,6 +56,7 @@ export default defineConfig({
                 text: 'Project',
                 items: [
                     { text: 'Architecture', link: '/architecture' },
+                    { text: 'Repository layout', link: '/repository-layout' },
                     { text: 'Database', link: '/database-architecture' },
                     { text: 'Migration policy', link: '/migration-policy' },
                     { text: 'Versioning', link: '/versioning' },

@@ -49,6 +49,7 @@ export interface Permission extends BaseEntity {
 }
 
 export interface Post extends BaseEntity {
+    created_at: string;
     title: string;
     content: string;
     excerpt?: string;
@@ -171,16 +172,9 @@ export interface SitemapSettings {
     custom_urls?: SitemapCustomUrl[];
 }
 
-export interface SiteSettings {
-    general?: Record<string, any>;
-    reading?: Record<string, any>;
-    writing?: Record<string, any>;
-    seo?: Record<string, any>;
-    social?: Record<string, any>;
-    analytics?: Record<string, any>;
-    media?: Record<string, any>;
-    advanced?: Record<string, any>;
-}
+export type SettingsValue = string | number | boolean | null | string[];
+export type SiteSettings = Record<string, Record<string, SettingsValue>>;
+export type SettingsGroup = 'general' | 'reading' | 'writing' | 'permalinks' | 'seo' | 'social' | 'analytics' | 'media' | 'advanced';
 
 export interface MediaItem extends BaseEntity {
     name: string;
@@ -220,7 +214,8 @@ export interface Template extends BaseEntity {
 }
 
 export interface AuthUser extends User {
-    can: (permission: string) => boolean;
+    roles: Role[];
+    permissions: Permission[];
 }
 
 interface Auth {
@@ -254,7 +249,7 @@ export interface DashboardProps {
         per_page: number;
         total: number;
     };
-    posts?: Post[] | { data: Post[] };
+    posts?: Post[] | { data: Post[]; current_page: number; last_page: number; total: number; from: number | null; to: number | null };
     postTypes?: PostType[];
     currentPostType?: PostType;
     taxonomies?: Taxonomy[] | { data: Taxonomy[] };
@@ -286,7 +281,7 @@ export interface DashboardProps {
     sitemapSettings?: SitemapSettings;
     // Site settings
     settings?: SiteSettings;
-    settingsGroup?: string;
+    settingsGroup?: SettingsGroup;
     pages?: Array<{ id: number; title: string }>;
     timezones?: string[];
     // System
@@ -421,6 +416,7 @@ export interface OverviewPost {
 }
 
 export interface DashboardOverviewData {
+    editorDrafts?: Array<{ id: string; title: string; locale: string; url: string }>;
     drafts?: OverviewPost[];
     scheduled?: OverviewPost[];
     recent?: OverviewPost[];

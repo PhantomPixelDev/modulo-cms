@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\PhpExecutableFinder;
+use Throwable;
 
 class PluginManager
 {
@@ -167,7 +168,42 @@ class PluginManager
 
         $this->discover();
         Cache::forever($cacheKey, $fingerprint);
+
+        $this->warnIfRouteCachePredatesPlugins();
     }
+
+    /**
+     * A route cache built before the newest plugin state change serves stale
+     * routes (new plugin routes 404, removed ones linger) until the next
+     * rebuild. Anything that flips plugin state outside this manager skips
+     * refreshRouteCache(), so say so loudly instead of failing silently.
+     */
+    protected function warnIfRouteCachePredatesPlugins(): void
+    {
+        try {
+            $cachePath = app()->getCachedRoutesPath();
+            if (! File::exists($cachePath)) {
+                return;
+            }
+
+            $newest = Plugin::query()->max('updated_at');
+            if ($newest === null) {
+                return;
+            }
+
+            if (@filemtime($cachePath) < strtotime((string) $newest)) {
+                Log::warning('Route cache is older than the newest plugin state change; plugin routes may 404 until route:cache rebuilds.', [
+                    'route_cache_built_at' => date('c', (int) @filemtime($cachePath)),
+                    'newest_plugin_change' => $newest,
+                ]);
+            }
+        } catch (Throwable) {
+            // Never break boot for a diagnostic.
+        }
+    }
+
+    /**
+     * Refresh the route cache after plugin state changes.
 
     /**
      * Cache key for the discovery fingerprint.
@@ -453,7 +489,7 @@ class PluginManager
             }
 
             Log::info("Plugin '{$slug}' migrations executed successfully.");
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error("Plugin '{$slug}' migration failed: ".$e->getMessage());
 
             return [false, "Plugin migration failed: {$e->getMessage()}"];
@@ -523,7 +559,7 @@ class PluginManager
 
             try {
                 $this->callLifecycle($plugin->service_provider, 'onActivate', [], rethrow: true);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $plugin->update(['is_active' => false]);
                 $this->lastError = "{$plugin->name} could not be activated: ".$e->getMessage();
 
@@ -567,7 +603,7 @@ class PluginManager
 
         try {
             (new $providerClass(app()))->{$hook}(...$arguments);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error("Plugin lifecycle hook {$providerClass}::{$hook}() failed: ".$e->getMessage());
 
             if ($rethrow) {
@@ -634,7 +670,7 @@ class PluginManager
                     }
 
                     Log::info("Plugin '{$slug}' seeder executed successfully.");
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     Log::error("Plugin '{$slug}' seeder failed: ".$e->getMessage());
 
                     return [false, "Plugin seeder failed: {$e->getMessage()}"];
@@ -721,7 +757,7 @@ class PluginManager
         // Deactivate first to prevent it from being loaded in the current request lifecycle
         try {
             $plugin->update(['is_active' => false]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // best effort
         }
 
@@ -735,7 +771,7 @@ class PluginManager
                 'uninstalled_at' => now()->toIso8601String(),
                 'version' => $plugin->version,
             ], JSON_PRETTY_PRINT));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Without the record, discovery would re-add the row immediately,
             // so leave the database alone rather than flip-flopping.
             $this->lastError = 'Failed to record the uninstall: '.$e->getMessage();
@@ -780,7 +816,7 @@ class PluginManager
                 '--realpath' => ! Str::startsWith($path, base_path()),
                 '--force' => true,
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->lastError = "Could not remove the plugin's data: ".$e->getMessage();
 
             return false;
@@ -823,7 +859,7 @@ class PluginManager
             if ($result->failed()) {
                 Log::warning('Could not rebuild the route cache after a plugin change: '.trim($result->errorOutput() ?: $result->output()));
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('Could not rebuild the route cache after a plugin change: '.$e->getMessage());
         }
     }

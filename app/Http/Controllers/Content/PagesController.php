@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
+use App\Models\Locale;
 use App\Models\Post;
+use App\Models\PostTranslation;
 use App\Models\PostType;
 use App\Models\User;
 use App\Rules\CanPublish;
 use App\Services\SiteSettingsService;
 use App\Support\ContentListFilters;
 use App\Support\CustomFields;
+use App\Support\EditorSave;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -24,10 +27,10 @@ class PagesController extends Controller
         protected SiteSettingsService $settings
     ) {
         // Pages are posts of the "page" type and share their permissions
-        $this->middleware('permission:view posts')->only(['index', 'show']);
-        $this->middleware('permission:create posts')->only(['create', 'store']);
-        $this->middleware('permission:edit posts')->only(['edit', 'update']);
-        $this->middleware('permission:delete posts')->only(['destroy']);
+        $this->middleware('permission:view pages')->only(['index', 'show']);
+        $this->middleware('permission:create pages')->only(['create', 'store']);
+        $this->middleware('permission:edit pages')->only(['edit', 'update']);
+        $this->middleware('permission:delete pages')->only(['destroy']);
     }
 
     private function resolvePageType(): PostType
@@ -105,21 +108,33 @@ class PagesController extends Controller
             'postTypes' => [],
             'authors' => User::orderBy('name')->get(['id', 'name']),
             'filters' => $filters,
+            'locales' => Locale::getActive(),
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $defaultStatus = $this->settings->get('default_post_status', 'draft');
+
+        $default = Locale::getDefault();
+        $defaultLocale = $default ? $default->code : 'en';
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'pages.create',
             'defaultStatus' => $defaultStatus,
+            'locales' => Locale::getActive(),
+            'currentLocale' => $request->query('locale', $defaultLocale),
         ] + $this->formProps());
     }
 
     public function store(Request $request)
     {
+        return EditorSave::transaction($request, fn () => $this->storeContent($request));
+    }
+
+    private function storeContent(Request $request)
+    {
+        EditorSave::prepare($request);
         $data = $request->validate($this->rules($request), [], CustomFields::attributes($this->resolvePageType()));
 
         // Ensure content is properly formatted as JSON string
@@ -153,28 +168,68 @@ class PagesController extends Controller
             'meta_data' => (array) $request->input('meta_data', []),
         ]);
 
+        EditorSave::clearRecovery($request);
+        if ($request->has('editor_action')) {
+            return redirect()->route('dashboard.admin.pages.edit', ['page' => $page->id, 'locale' => $request->input('locale', Locale::defaultCode())])
+                ->with('success', __('dashboard.pages.messages.created'));
+        }
+
         return redirect()->route('dashboard.admin.pages.index')
             ->with('success', __('dashboard.pages.messages.created'));
     }
 
-    public function edit(Post $page)
+    public function edit(Request $request, Post $page)
     {
         // Ensure it's a page
         $pageType = $this->resolvePageType();
         abort_unless($page->post_type_id === $pageType->id, 404);
 
+        $page->loadMissing('translations');
+        $default = Locale::getDefault();
+        $defaultLocale = $default ? $default->code : 'en';
+        $currentLocale = (string) $request->query('locale', $defaultLocale);
+        $translation = $page->translation($currentLocale);
+        if ($translation) {
+            // In memory only: the editor works on the translation's text
+            $page->forceFill([
+                'title' => $translation->title,
+                'slug' => $translation->slug,
+                'excerpt' => $translation->excerpt,
+                'content' => $translation->content,
+                'meta_title' => $translation->seo_title,
+                'meta_description' => $translation->seo_description,
+            ]);
+        }
+
         return Inertia::render('Dashboard', [
             'adminSection' => 'pages.edit',
             'post' => $page,
+            'locales' => Locale::getActive(),
+            'currentLocale' => $currentLocale,
+            'translation' => $translation,
         ] + $this->formProps($page));
     }
 
     public function update(Request $request, Post $page)
     {
+        return EditorSave::transaction($request, fn () => $this->updateContent($request, $page));
+    }
+
+    private function updateContent(Request $request, Post $page)
+    {
+        EditorSave::prepare($request, $page);
         $pageType = $this->resolvePageType();
         abort_unless($page->post_type_id === $pageType->id, 404);
 
         $data = $request->validate($this->rules($request, $page), [], CustomFields::attributes($this->resolvePageType()));
+
+        $default = Locale::getDefault();
+        $defaultLocale = $default ? $default->code : 'en';
+        $locale = (string) $request->input('locale', $defaultLocale);
+        if (! Locale::getActive()->contains('code', $locale)) {
+            $locale = $defaultLocale;
+        }
+        $isDefaultLocale = $locale === $defaultLocale;
 
         // Ensure content is properly formatted as JSON string
         if (is_array($data['content']) || is_object($data['content'])) {
@@ -189,20 +244,46 @@ class PagesController extends Controller
         $data['slug'] = Post::uniqueSlug(Str::slug(empty($data['slug']) ? $data['title'] : $data['slug']), $page->id);
 
         // Update the page
-        $page->update([
-            'title' => $data['title'],
-            'slug' => $data['slug'],
-            'content' => $data['content'],
-            'excerpt' => $data['excerpt'] ?? '',
+        $pageUpdate = [
             'status' => $data['status'],
-            'published_at' => $data['published_at'] ?? $page->published_at,
+            'published_at' => $request->input('editor_action') === 'draft' ? null : $data['published_at'],
             'featured_image' => $data['featured_image'] ?? $page->featured_image,
-            'meta_title' => $data['meta_title'] ?? $page->meta_title,
-            'meta_description' => $data['meta_description'] ?? $page->meta_description,
             'author_id' => $data['author_id'] ?? $page->author_id,
             'parent_id' => array_key_exists('parent_id', $data) ? $data['parent_id'] : $page->parent_id,
             'meta_data' => $request->has('meta_data') ? (array) $request->input('meta_data') : $page->meta_data,
+        ];
+
+        if ($isDefaultLocale) {
+            $pageUpdate = array_merge($pageUpdate, [
+                'title' => $data['title'],
+                'slug' => $data['slug'],
+                'content' => $data['content'],
+                'excerpt' => $data['excerpt'] ?? '',
+                'meta_title' => $data['meta_title'] ?? $page->meta_title,
+                'meta_description' => $data['meta_description'] ?? $page->meta_description,
+            ]);
+        }
+
+        $page->update($pageUpdate);
+
+        $page->setTranslation($locale, [
+            'title' => $data['title'],
+            'slug' => PostTranslation::generateUniqueSlug(
+                Str::slug($data['slug'] ?: $data['title']),
+                $locale,
+                $page->translation($locale)?->id
+            ),
+            'excerpt' => $data['excerpt'] ?? '',
+            'content' => $data['content'],
+            'seo_title' => $data['meta_title'] ?? null,
+            'seo_description' => $data['meta_description'] ?? null,
         ]);
+
+        EditorSave::clearRecovery($request);
+        if ($request->has('editor_action')) {
+            return redirect()->route('dashboard.admin.pages.edit', ['page' => $page->id, 'locale' => $request->input('locale', Locale::defaultCode())])
+                ->with('success', __('dashboard.pages.messages.updated'));
+        }
 
         return redirect()->route('dashboard.admin.pages.index')
             ->with('success', __('dashboard.pages.messages.updated'));
@@ -216,7 +297,7 @@ class PagesController extends Controller
         return [
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:posts,slug'.($page ? ','.$page->id : ''),
-            'status' => ['required', 'in:draft,published,private,archived', new CanPublish($request->user(), $page, isPage: true)],
+            'status' => ['required', 'in:draft,published,private,archived', CanPublish::forRequest($request, $page, isPage: true)],
             'content' => 'required', // Content can be string or array
             'excerpt' => 'nullable|string',
             'featured_image' => 'nullable|string',

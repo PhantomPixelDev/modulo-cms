@@ -30,7 +30,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        image: public.ecr.aws/docker/library/postgres:16-alpine
         env:
           POSTGRES_DB: modulo_e2e
           POSTGRES_USER: modulo
@@ -76,7 +76,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Cache Composer dependencies
@@ -107,6 +107,9 @@ jobs:
           set -euo pipefail
           cp .env.example .env
           php artisan key:generate
+          setup_token=$(php artisan modulo:install-token)
+          echo "::add-mask::$setup_token"
+          echo "MODULO_E2E_SETUP_TOKEN=$setup_token" >> "$GITHUB_ENV"
           # Deliberately not migrated or seeded: the wizard is what should
           # bring an empty database up, and that is the thing under test.
           npm run build
@@ -131,7 +134,30 @@ jobs:
           exit 1
 
       - name: Run the end-to-end tests
-        run: npx playwright test
+        run: npm run test:e2e --
+
+      - name: Seed and audit the compact disposable demo
+        env:
+          MODULO_DEMO: 'true'
+          MODULO_E2E_URL: http://127.0.0.1:8001
+          APP_URL: http://127.0.0.1:8001
+          ASSET_URL: http://127.0.0.1:8001
+          MODULO_E2E_DEMO: '1'
+          MODULO_E2E_SHOP: '1'
+        run: |
+          php artisan plugin:install modulo-shop --release=1.9.2 --activate
+          php artisan modulo:seed-demo --reset-content --force
+          php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); App\Models\SiteSetting::set("site_url", getenv("APP_URL"));'
+          # Earlier restore/package checks may have cached normal-site URLs.
+          # The demo server must boot with this step's environment.
+          php artisan optimize:clear
+          php artisan serve --no-reload --host=127.0.0.1 --port=8001 &
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8001/health >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8001/health >/dev/null
+          npm run test:e2e -- z-demo-integrity.spec.ts z-demo-shop.spec.ts demo-security.spec.ts
 
       - name: Upload the trace when it fails
         if: failure()

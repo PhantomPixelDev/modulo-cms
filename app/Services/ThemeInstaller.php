@@ -129,6 +129,12 @@ class ThemeInstaller
             if ($extension === '' ? ! in_array($file->getFilename(), self::ALLOWED_FILENAMES, true) : ! in_array($extension, $allowed, true)) {
                 throw new RuntimeException('The theme contains a file that is not allowed: '.$file->getRelativePathname());
             }
+
+            // Theme SVGs are served statically, so a script inside one runs on
+            // direct navigation. Same bar as uploaded media.
+            if ($extension === 'svg' && ! app(SvgValidator::class)->isSafe(File::get($file->getPathname()))) {
+                throw new RuntimeException('The theme contains an unsafe SVG: '.$file->getRelativePathname());
+            }
         }
     }
 

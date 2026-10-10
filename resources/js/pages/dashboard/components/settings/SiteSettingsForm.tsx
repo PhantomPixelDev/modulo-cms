@@ -11,10 +11,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { router } from '@inertiajs/react';
 import { BarChart3, FileText, Globe, Image, Link2, Search, Settings, Share2, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { Locale } from '../../types';
+import type { Locale, SettingsGroup, SettingsValue, SiteSettings } from '../../types';
 import MediaPickerDialog from '../media/MediaPickerDialog';
 
-type SettingsGroup = 'general' | 'reading' | 'writing' | 'permalinks' | 'seo' | 'social' | 'analytics' | 'media' | 'advanced';
+type SettingsData = SiteSettings;
 
 interface Page {
     id: number;
@@ -28,7 +28,7 @@ interface PostType {
 }
 
 interface SiteSettingsFormProps {
-    settings: Record<string, Record<string, any>>;
+    settings: SettingsData;
     currentGroup: SettingsGroup;
     pages?: Page[];
     postTypes?: PostType[];
@@ -80,7 +80,7 @@ export function SiteSettingsForm({
     };
     const { success: showSuccess, error: showError } = useAdminToast();
     const [activeTab, setActiveTab] = useState<SettingsGroup>(currentGroup);
-    const [formData, setFormData] = useState<Record<string, Record<string, any>>>(settings);
+    const [formData, setFormData] = useState<SettingsData>(settings);
     const [selectedLocale, setSelectedLocale] = useState<string>(resolveLocale(locales, currentLocale));
     const [saving, setSaving] = useState(false);
     const [pickerFor, setPickerFor] = useState<'site_logo' | 'site_favicon' | null>(null);
@@ -97,7 +97,7 @@ export function SiteSettingsForm({
         setSelectedLocale(resolveLocale(locales, currentLocale));
     }, [locales, currentLocale]);
 
-    const updateField = (group: string, key: string, value: any) => {
+    const updateField = (group: string, key: string, value: SettingsValue) => {
         setFormData((prev) => ({
             ...prev,
             [group]: {
@@ -107,32 +107,19 @@ export function SiteSettingsForm({
         }));
     };
 
-    const handleSave = async (group: SettingsGroup) => {
-        if (!canEdit) return;
+    const handleSave = (group: SettingsGroup) => {
+        if (!canEdit || saving) return;
         setSaving(true);
-
-        try {
-            // Ensure all boolean fields are actually booleans, and nulls are handled
-            const dataToSave = { ...formData[group] };
-
-            await router.put(
-                `/dashboard/admin/settings/${group}`,
-                { ...dataToSave, locale: selectedLocale },
-                {
-                    preserveScroll: true,
-                    onSuccess: () => showSuccess(t('dashboard.settings.messages.saved', { group: groupLabels[group] })),
-                    onError: (errors) => {
-                        console.error('Validation errors:', errors);
-                        showError(t('dashboard.settings.messages.save_failed'));
-                    },
-                },
-            );
-        } catch (e) {
-            console.error(e);
-            showError(t('dashboard.settings.messages.save_error'));
-        } finally {
-            setSaving(false);
-        }
+        router.put(
+            `/dashboard/admin/settings/${group}`,
+            { ...formData[group], locale: selectedLocale },
+            {
+                preserveScroll: true,
+                onSuccess: () => showSuccess(t('dashboard.settings.messages.saved', { group: groupLabels[group] })),
+                onError: () => showError(t('dashboard.settings.messages.save_failed')),
+                onFinish: () => setSaving(false),
+            },
+        );
     };
 
     const handleTabChange = (value: string): void => {
@@ -180,7 +167,7 @@ export function SiteSettingsForm({
                     {hint('site_name')}
                     <Input
                         id="site_name"
-                        value={formData.general?.site_name || ''}
+                        value={String(formData.general?.site_name || '')}
                         onChange={(e) => updateField('general', 'site_name', e.target.value)}
                         disabled={!canEdit}
                         placeholder={t('dashboard.settings.placeholders.site_name')}
@@ -194,7 +181,7 @@ export function SiteSettingsForm({
                     <Input
                         id="site_url"
                         type="url"
-                        value={formData.general?.site_url || ''}
+                        value={String(formData.general?.site_url || '')}
                         onChange={(e) => updateField('general', 'site_url', e.target.value)}
                         disabled={!canEdit}
                         placeholder={t('dashboard.settings.placeholders.site_url')}
@@ -212,14 +199,14 @@ export function SiteSettingsForm({
                         <div className="flex items-center gap-3">
                             <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
                                 {formData.general?.[key] ? (
-                                    <img src={formData.general[key]} alt="" className="max-h-full max-w-full object-contain" />
+                                    <img src={String(formData.general[key])} alt="" className="max-h-full max-w-full object-contain" />
                                 ) : (
                                     <Image className="size-5 text-muted-foreground" />
                                 )}
                             </div>
                             <Input
                                 id={key}
-                                value={formData.general?.[key] || ''}
+                                value={String(formData.general?.[key] || '')}
                                 onChange={(e) => updateField('general', key, e.target.value)}
                                 disabled={!canEdit}
                                 placeholder="https://…"
@@ -247,7 +234,7 @@ export function SiteSettingsForm({
                 {hint('site_tagline')}
                 <Input
                     id="site_tagline"
-                    value={formData.general?.site_tagline || ''}
+                    value={String(formData.general?.site_tagline || '')}
                     onChange={(e) => updateField('general', 'site_tagline', e.target.value)}
                     placeholder={t('dashboard.settings.placeholders.site_tagline')}
                     disabled={!canEdit}
@@ -262,7 +249,7 @@ export function SiteSettingsForm({
                 <Input
                     id="admin_email"
                     type="email"
-                    value={formData.general?.admin_email || ''}
+                    value={String(formData.general?.admin_email || '')}
                     onChange={(e) => updateField('general', 'admin_email', e.target.value)}
                     disabled={!canEdit}
                     placeholder={t('dashboard.settings.placeholders.admin_email')}
@@ -276,7 +263,7 @@ export function SiteSettingsForm({
                     </Label>
                     {hint('timezone')}
                     <Select
-                        value={formData.general?.timezone || 'UTC'}
+                        value={String(formData.general?.timezone || 'UTC')}
                         onValueChange={(v) => updateField('general', 'timezone', v)}
                         disabled={!canEdit}
                     >
@@ -298,7 +285,7 @@ export function SiteSettingsForm({
                     </Label>
                     {hint('date_format')}
                     <Select
-                        value={formData.general?.date_format || 'F j, Y'}
+                        value={String(formData.general?.date_format || 'F j, Y')}
                         onValueChange={(v) => updateField('general', 'date_format', v)}
                         disabled={!canEdit}
                     >
@@ -319,7 +306,7 @@ export function SiteSettingsForm({
                     </Label>
                     {hint('time_format')}
                     <Select
-                        value={formData.general?.time_format || 'g:i a'}
+                        value={String(formData.general?.time_format || 'g:i a')}
                         onValueChange={(v) => updateField('general', 'time_format', v)}
                         disabled={!canEdit}
                     >
@@ -345,7 +332,7 @@ export function SiteSettingsForm({
                 </Label>
                 {hint('homepage')}
                 <Select
-                    value={formData.reading?.show_on_front || 'posts'}
+                    value={String(formData.reading?.show_on_front || 'posts')}
                     onValueChange={(v) => updateField('reading', 'show_on_front', v)}
                     disabled={!canEdit}
                 >
@@ -367,7 +354,7 @@ export function SiteSettingsForm({
                         </Label>
                         {hint('front_page')}
                         <Select
-                            value={formData.reading?.front_page_id ? String(formData.reading.front_page_id) : 'none'}
+                            value={String(formData.reading?.front_page_id ? String(formData.reading.front_page_id) : 'none')}
                             onValueChange={(v) => updateField('reading', 'front_page_id', v === 'none' ? null : parseInt(v))}
                             disabled={!canEdit}
                         >
@@ -390,7 +377,7 @@ export function SiteSettingsForm({
                         </Label>
                         {hint('posts_page')}
                         <Select
-                            value={formData.reading?.posts_page_id ? String(formData.reading.posts_page_id) : 'none'}
+                            value={String(formData.reading?.posts_page_id ? String(formData.reading.posts_page_id) : 'none')}
                             onValueChange={(v) => updateField('reading', 'posts_page_id', v === 'none' ? null : parseInt(v))}
                             disabled={!canEdit}
                         >
@@ -423,7 +410,7 @@ export function SiteSettingsForm({
                             className="w-24"
                             min={1}
                             max={100}
-                            value={formData.reading?.posts_per_page || 10}
+                            value={String(formData.reading?.posts_per_page || 10)}
                             onChange={(e) => updateField('reading', 'posts_per_page', parseInt(e.target.value) || 10)}
                             disabled={!canEdit}
                         />
@@ -442,7 +429,7 @@ export function SiteSettingsForm({
                             className="w-24"
                             min={1}
                             max={100}
-                            value={formData.reading?.feed_limit || 10}
+                            value={String(formData.reading?.feed_limit || 10)}
                             onChange={(e) => updateField('reading', 'feed_limit', parseInt(e.target.value) || 10)}
                             disabled={!canEdit}
                         />
@@ -462,7 +449,7 @@ export function SiteSettingsForm({
                     </Label>
                     {hint('default_post_status')}
                     <Select
-                        value={formData.writing?.default_post_status || 'draft'}
+                        value={String(formData.writing?.default_post_status || 'draft')}
                         onValueChange={(v) => updateField('writing', 'default_post_status', v)}
                         disabled={!canEdit}
                     >
@@ -482,7 +469,7 @@ export function SiteSettingsForm({
                     </Label>
                     {hint('default_post_type')}
                     <Select
-                        value={formData.writing?.default_post_type || 'post'}
+                        value={String(formData.writing?.default_post_type || 'post')}
                         onValueChange={(v) => updateField('writing', 'default_post_type', v)}
                         disabled={!canEdit}
                     >
@@ -511,7 +498,7 @@ export function SiteSettingsForm({
                 {hint('meta_title_suffix')}
                 <Input
                     id="meta_title_suffix"
-                    value={formData.seo?.meta_title_suffix || ''}
+                    value={String(formData.seo?.meta_title_suffix || '')}
                     onChange={(e) => updateField('seo', 'meta_title_suffix', e.target.value)}
                     placeholder={t('dashboard.settings.placeholders.meta_title_suffix')}
                     disabled={!canEdit}
@@ -525,7 +512,7 @@ export function SiteSettingsForm({
                 {hint('meta_description')}
                 <Textarea
                     id="meta_description"
-                    value={formData.seo?.meta_description || ''}
+                    value={String(formData.seo?.meta_description || '')}
                     onChange={(e) => updateField('seo', 'meta_description', e.target.value)}
                     rows={3}
                     disabled={!canEdit}
@@ -542,7 +529,7 @@ export function SiteSettingsForm({
                     {hint('google_site_verification')}
                     <Input
                         id="google_site_verification"
-                        value={formData.seo?.google_site_verification || ''}
+                        value={String(formData.seo?.google_site_verification || '')}
                         onChange={(e) => updateField('seo', 'google_site_verification', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.verification_code')}
                         disabled={!canEdit}
@@ -555,7 +542,7 @@ export function SiteSettingsForm({
                     {hint('bing_site_verification')}
                     <Input
                         id="bing_site_verification"
-                        value={formData.seo?.bing_site_verification || ''}
+                        value={String(formData.seo?.bing_site_verification || '')}
                         onChange={(e) => updateField('seo', 'bing_site_verification', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.verification_code')}
                         disabled={!canEdit}
@@ -570,7 +557,7 @@ export function SiteSettingsForm({
                 {hint('indexnow_key')}
                 <Input
                     id="indexnow_key"
-                    value={formData.seo?.indexnow_key || ''}
+                    value={String(formData.seo?.indexnow_key || '')}
                     onChange={(e) => updateField('seo', 'indexnow_key', e.target.value)}
                     placeholder={t('dashboard.settings.placeholders.indexnow_key')}
                     disabled={!canEdit}
@@ -584,7 +571,7 @@ export function SiteSettingsForm({
                 {hint('robots_txt')}
                 <Textarea
                     id="robots_txt"
-                    value={formData.seo?.robots_txt || ''}
+                    value={String(formData.seo?.robots_txt || '')}
                     onChange={(e) => updateField('seo', 'robots_txt', e.target.value)}
                     rows={5}
                     className="font-mono text-xs"
@@ -606,7 +593,7 @@ export function SiteSettingsForm({
                     <Input
                         id="facebook_url"
                         type="url"
-                        value={formData.social?.facebook_url || ''}
+                        value={String(formData.social?.facebook_url || '')}
                         onChange={(e) => updateField('social', 'facebook_url', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.facebook_url')}
                         disabled={!canEdit}
@@ -620,7 +607,7 @@ export function SiteSettingsForm({
                     <Input
                         id="twitter_url"
                         type="url"
-                        value={formData.social?.twitter_url || ''}
+                        value={String(formData.social?.twitter_url || '')}
                         onChange={(e) => updateField('social', 'twitter_url', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.twitter_url')}
                         disabled={!canEdit}
@@ -634,7 +621,7 @@ export function SiteSettingsForm({
                     <Input
                         id="instagram_url"
                         type="url"
-                        value={formData.social?.instagram_url || ''}
+                        value={String(formData.social?.instagram_url || '')}
                         onChange={(e) => updateField('social', 'instagram_url', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.instagram_url')}
                         disabled={!canEdit}
@@ -648,7 +635,7 @@ export function SiteSettingsForm({
                     <Input
                         id="linkedin_url"
                         type="url"
-                        value={formData.social?.linkedin_url || ''}
+                        value={String(formData.social?.linkedin_url || '')}
                         onChange={(e) => updateField('social', 'linkedin_url', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.linkedin_url')}
                         disabled={!canEdit}
@@ -662,7 +649,7 @@ export function SiteSettingsForm({
                     <Input
                         id="youtube_url"
                         type="url"
-                        value={formData.social?.youtube_url || ''}
+                        value={String(formData.social?.youtube_url || '')}
                         onChange={(e) => updateField('social', 'youtube_url', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.youtube_url')}
                         disabled={!canEdit}
@@ -676,7 +663,7 @@ export function SiteSettingsForm({
                     <Input
                         id="github_url"
                         type="url"
-                        value={formData.social?.github_url || ''}
+                        value={String(formData.social?.github_url || '')}
                         onChange={(e) => updateField('social', 'github_url', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.github_url')}
                         disabled={!canEdit}
@@ -696,7 +683,7 @@ export function SiteSettingsForm({
                     {hint('google_analytics_id')}
                     <Input
                         id="google_analytics_id"
-                        value={formData.analytics?.google_analytics_id || ''}
+                        value={String(formData.analytics?.google_analytics_id || '')}
                         onChange={(e) => updateField('analytics', 'google_analytics_id', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.google_analytics_id')}
                         disabled={!canEdit}
@@ -709,7 +696,7 @@ export function SiteSettingsForm({
                     {hint('gtm_container_id')}
                     <Input
                         id="gtm_container_id"
-                        value={formData.analytics?.gtm_container_id || ''}
+                        value={String(formData.analytics?.gtm_container_id || '')}
                         onChange={(e) => updateField('analytics', 'gtm_container_id', e.target.value)}
                         placeholder={t('dashboard.settings.placeholders.gtm_container_id')}
                         disabled={!canEdit}
@@ -730,7 +717,7 @@ export function SiteSettingsForm({
             { label: t('dashboard.settings.options.mime.zip'), value: 'application/zip' },
         ];
 
-        const currentMimes = formData.media?.allowed_mime_types || [];
+        const currentMimes = Array.isArray(formData.media?.allowed_mime_types) ? formData.media.allowed_mime_types : [];
 
         const toggleMime = (mime: string) => {
             const next = currentMimes.includes(mime) ? currentMimes.filter((m: string) => m !== mime) : [...currentMimes, mime];
@@ -750,7 +737,7 @@ export function SiteSettingsForm({
                             type="number"
                             min={1}
                             max={100}
-                            value={formData.media?.max_upload_size || 10}
+                            value={String(formData.media?.max_upload_size || 10)}
                             onChange={(e) => updateField('media', 'max_upload_size', parseInt(e.target.value) || 10)}
                             disabled={!canEdit}
                         />
@@ -765,7 +752,7 @@ export function SiteSettingsForm({
                             type="number"
                             min={1}
                             max={100}
-                            value={formData.media?.image_quality || 85}
+                            value={String(formData.media?.image_quality || 85)}
                             onChange={(e) => updateField('media', 'image_quality', parseInt(e.target.value) || 85)}
                             disabled={!canEdit}
                         />
@@ -810,7 +797,7 @@ export function SiteSettingsForm({
                         </Label>
                         <Input
                             id="category_base"
-                            value={formData.permalinks?.category_base || 'category'}
+                            value={String(formData.permalinks?.category_base || 'category')}
                             onChange={(e) => updateField('permalinks', 'category_base', e.target.value)}
                             disabled={!canEdit}
                             placeholder={t('dashboard.settings.placeholders.category_base')}
@@ -822,7 +809,7 @@ export function SiteSettingsForm({
                         </Label>
                         <Input
                             id="tag_base"
-                            value={formData.permalinks?.tag_base || 'tag'}
+                            value={String(formData.permalinks?.tag_base || 'tag')}
                             onChange={(e) => updateField('permalinks', 'tag_base', e.target.value)}
                             disabled={!canEdit}
                             placeholder={t('dashboard.settings.placeholders.tag_base')}
@@ -855,7 +842,7 @@ export function SiteSettingsForm({
                         </Label>
                         <Textarea
                             id="maintenance_message"
-                            value={formData.advanced?.maintenance_message || ''}
+                            value={String(formData.advanced?.maintenance_message || '')}
                             onChange={(e) => updateField('advanced', 'maintenance_message', e.target.value)}
                             rows={3}
                             disabled={!canEdit}

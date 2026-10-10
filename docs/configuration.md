@@ -20,12 +20,17 @@ are the templates; copy, do not edit in place.
 | `APP_DEBUG` | `false` | Never `true` in production. |
 | `RUN_MIGRATIONS` | `true` (prod) | On container start, migrate a fresh database, or run the guarded `modulo:upgrade` (backup, preflight, maintenance window) when an existing one has pending migrations. Set `false` to run `modulo:upgrade` yourself. |
 | `DEFAULT_THEME` | `modern-react` | Installed on first boot if no theme is active. |
+| `MODULO_DEMO` | `false` | Enables public demo credentials and CMS promotional homepage sections. Leave disabled on normal installations. |
+
+Normal homepages show the site's identity and published content. A configured published
+front page takes precedence, including in demo mode. Production demo seeding also requires
+an explicit `--force`; see [installation](installation.md).
 
 ## Updates and plugins
 
 | Variable | Default | Notes |
 |---|---|---|
-| `MODULO_UPDATE_CHECK` | `true` | Daily check for core and plugin updates (System → Updates). |
+| `MODULO_UPDATE_CHECK` | `true` | Daily check for core and plugin updates (Settings → Updates). |
 | `MODULO_UPDATE_NOTIFY` | `true` | Email administrators once per new set of available updates. |
 | `MODULO_UPDATE_PRERELEASES` | `false` | Offer release candidates as updates. |
 | `MODULO_BACKUP_PATH` | `storage/app/backups` | Where full backups (`modulo:backup`) are written. |
@@ -45,6 +50,7 @@ are the templates; copy, do not edit in place.
 | `MODULO_PASSWORD_UNCOMPROMISED` | `true` | Reject breached passwords (production only). |
 | `MODULO_REQUIRE_2FA_FOR_ADMINS` | `false` | Administrators must use two-factor authentication. |
 | `MODULO_ACTIVITY_RETENTION_DAYS` | `180` | Activity log retention; `0` keeps everything. |
+| `TRUSTED_PROXIES` | private ranges | IPs/CIDRs of reverse proxies allowed to set `X-Forwarded-For`. Behind a public load balancer or CDN, set this to its CIDRs: otherwise every visitor shares one IP, one shared rate-limit bucket (the frontend allows 30 requests/min total), and wrong IPs land in the logs. Never `*` on internet-facing installs (lets anyone spoof their IP past the limits). |
 
 ## Build identity
 

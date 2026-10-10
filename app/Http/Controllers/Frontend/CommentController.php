@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CommentPending;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Models\SiteSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class CommentController extends Controller
@@ -15,7 +17,7 @@ class CommentController extends Controller
     public function store(Request $request, Post $post): RedirectResponse
     {
         // Drafts and scheduled posts are not public, so they take no comments
-        abort_unless(Post::whereKey($post->id)->published()->exists(), 404);
+        abort_unless(Post::whereKey($post->id)->publiclyVisible()->exists(), 404);
 
         if (! $this->commentsEnabled($post)) {
             abort(403, 'Comments are disabled for this content.');
@@ -35,6 +37,7 @@ class CommentController extends Controller
             'content' => ['required', 'string', 'max:2000'],
             'parent_id' => [
                 'nullable',
+                'integer',
                 Rule::exists('comments', 'id')->where(function ($query) use ($post) {
                     return $query->where('post_id', $post->id);
                 }),
@@ -74,6 +77,14 @@ class CommentController extends Controller
 
         $comment->save();
         do_action('comment_posted', $comment, $post);
+
+        if ($held && ($adminEmail = SiteSetting::get('admin_email', config('mail.admin_address')))) {
+            try {
+                Mail::to($adminEmail)->queue(new CommentPending($comment, $post));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         return back()->with('success', $held ? 'Thanks! Your comment will appear once it has been approved.' : 'Thanks! Your comment has been posted.');
     }

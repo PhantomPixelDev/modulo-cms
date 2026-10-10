@@ -2,10 +2,13 @@ import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useTranslation } from '@/hooks/useTranslation';
 import { router, useForm } from '@inertiajs/react';
-import { ArrowRight, Search, Trash2 } from 'lucide-react';
+import { ArrowRight, Pencil, Search, Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
 
@@ -33,8 +36,11 @@ export interface RedirectsProps {
 }
 
 export function RedirectsPage({ data }: { data: RedirectsProps }) {
+    const { t } = useTranslation();
     const form = useForm({ from_path: '', to_url: '', status_code: 301 });
     const [q, setQ] = useState(data.q);
+    const [editing, setEditing] = useState<RedirectItem | null>(null);
+    const editForm = useForm({ from_path: '', to_url: '', status_code: 301 });
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
@@ -45,6 +51,21 @@ export function RedirectsPage({ data }: { data: RedirectsProps }) {
         if (window.confirm(`Remove the redirect from ${item.from_path}?`)) {
             router.delete(route('dashboard.admin.system.redirects.destroy', item.id), { preserveScroll: true });
         }
+    };
+
+    const startEdit = (item: RedirectItem) => {
+        setEditing(item);
+        editForm.setData({ from_path: item.from_path, to_url: item.to_url, status_code: item.status_code });
+        editForm.clearErrors();
+    };
+
+    const saveEdit = (e: FormEvent) => {
+        e.preventDefault();
+        if (!editing) return;
+        editForm.put(route('dashboard.admin.system.redirects.update', editing.id), {
+            preserveScroll: true,
+            onSuccess: () => setEditing(null),
+        });
     };
 
     return (
@@ -141,9 +162,19 @@ export function RedirectsPage({ data }: { data: RedirectsProps }) {
                                             {item.hits}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button size="icon" variant="ghost" aria-label="Remove" onClick={() => remove(item)}>
-                                                <Trash2 className="text-destructive" />
-                                            </Button>
+                                            <div className="flex justify-end gap-1">
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    aria-label={t('dashboard.redirects.edit', {}, 'Edit redirect')}
+                                                    onClick={() => startEdit(item)}
+                                                >
+                                                    <Pencil />
+                                                </Button>
+                                                <Button size="icon" variant="ghost" aria-label="Remove" onClick={() => remove(item)}>
+                                                    <Trash2 className="text-destructive" />
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -172,6 +203,53 @@ export function RedirectsPage({ data }: { data: RedirectsProps }) {
                     </CardContent>
                 </Card>
             </div>
+            <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t('dashboard.redirects.edit', {}, 'Edit redirect')}</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={saveEdit} className="grid gap-3">
+                        <div>
+                            <Label htmlFor="edit-from-path">From</Label>
+                            <Input
+                                id="edit-from-path"
+                                value={editForm.data.from_path}
+                                onChange={(e) => editForm.setData('from_path', e.target.value)}
+                            />
+                            <InputError message={editForm.errors.from_path} />
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-to-url">To</Label>
+                            <Input id="edit-to-url" value={editForm.data.to_url} onChange={(e) => editForm.setData('to_url', e.target.value)} />
+                            <InputError message={editForm.errors.to_url} />
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-status-code">Status code</Label>
+                            <select
+                                id="edit-status-code"
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                                value={editForm.data.status_code}
+                                onChange={(e) => editForm.setData('status_code', Number(e.target.value))}
+                            >
+                                {data.statusCodes.map((code) => (
+                                    <option key={code} value={code}>
+                                        {code} {code === 301 || code === 308 ? '(permanent)' : '(temporary)'}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={editForm.errors.status_code} />
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+                                {t('dashboard.common.cancel', {}, 'Cancel')}
+                            </Button>
+                            <Button type="submit" disabled={editForm.processing}>
+                                {t('dashboard.redirects.update', {}, 'Save changes')}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </SectionWrapper>
     );
 }

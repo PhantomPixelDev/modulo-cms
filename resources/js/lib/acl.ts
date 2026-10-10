@@ -18,11 +18,11 @@ export type AclContext = {
     hasPermission: (perm: string) => boolean;
     canAny: (perms: string[]) => boolean;
     canAll: (perms: string[]) => boolean;
-    isAdmin: () => boolean; // admin or super-admin
+    isAdmin: () => boolean; // policy bypass for a private super-admin
 };
 
 export function useAcl(): AclContext {
-    const page = usePage<{ auth: { user: AclUser } }>();
+    const page = usePage<{ auth: { user: AclUser }; modulo?: { demo?: boolean } }>();
     const user = page.props.auth?.user ?? null;
     const roleSet = new Set((user?.roles ?? []).map((r) => r.name));
     const permSet = new Set((user?.permissions ?? []).map((p) => p.name));
@@ -33,7 +33,9 @@ export function useAcl(): AclContext {
     const hasPermission = (perm: string) => permSet.has(perm);
     const canAny = (perms: string[]) => perms.some((p) => permSet.has(p));
     const canAll = (perms: string[]) => perms.every((p) => permSet.has(p));
-    const isAdmin = () => hasAnyRole(['admin', 'super-admin']);
+    // Only super-admin bypasses server policies. Demo permissions are reduced
+    // by the server even when the shared account has that role.
+    const isAdmin = () => !page.props.modulo?.demo && hasRole('super-admin');
 
     return { user, hasRole, hasAnyRole, hasAllRoles, hasPermission, canAny, canAll, isAdmin };
 }

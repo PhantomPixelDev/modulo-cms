@@ -7,6 +7,7 @@ return [
     ],
     // Navigation
     'nav' => [
+
         'languages' => 'Idiomas',
         'email' => 'Correo',
         'content' => 'Contenido',
@@ -35,10 +36,49 @@ return [
         'roles' => 'Roles',
         'settings' => 'Configuración',
         'themes' => 'Temas',
+        'partials' => 'Módulos de contenido',
         'plugins' => 'Plugins',
         'taxonomies' => 'Taxonomías',
         'templates' => 'Plantillas',
         'post_types' => 'Tipos de contenido',
+    ],
+
+    'partials' => [
+        'insert' => 'Insertar módulo',
+        'edit' => 'Editar módulo',
+        'apply' => 'Aplicar cambios',
+        'configure' => 'Configurar y previsualizar',
+        'picker_description' => 'Elige un módulo, configura sus opciones y previsualízalo con tu tema.',
+        'module_block' => 'Módulo de tema reutilizable',
+        'body_label' => 'Contenido del módulo',
+        'loading' => 'Cargando…',
+        'load_failed' => 'No se pudieron cargar los módulos. Cierra y vuelve a abrir el selector.',
+        'unavailable' => 'Este módulo no está disponible en el tema activo.',
+        'invalid_field' => 'Revisa el valor de :name.',
+        'invalid_attributes' => 'Atributos del módulo no válidos.',
+        'check_field' => 'Revisa este valor.',
+        'choose_value' => 'Elige un valor',
+        'choose_image' => 'Elegir imagen',
+        'body_too_long' => 'El contenido es demasiado largo (máximo 32.768 caracteres).',
+        'preview' => 'Previsualizar módulo',
+        'preview_title' => 'Vista previa del módulo',
+        'preview_failed' => 'No se pudo crear la vista previa. Tus opciones siguen aquí; inténtalo de nuevo.',
+        'preview_unavailable' => 'Este tema no tiene una plantilla de página para previsualizar módulos.',
+        'browse' => 'Explorar módulos',
+        'description' => 'Módulos de contenido reutilizables del tema activo.',
+        'active_theme' => 'Tema activo',
+        'no_theme' => 'Activa un tema React en Apariencia → Temas para usar módulos de contenido.',
+        'no_partials' => 'Este tema no tiene módulos de contenido disponibles.',
+        'instructions' => 'Copia un shortcode y pégalo en su propio párrafo de una página o entrada. Cambia el texto y los atributos según necesites. Los atributos omitidos usan los valores predeterminados indicados abajo.',
+        'shortcode' => 'Shortcode',
+        'copy' => 'Copiar shortcode',
+        'copied' => 'Copiado',
+        'copy_failed' => 'Portapapeles no disponible. El shortcode está seleccionado; cópialo manualmente.',
+        'body_placeholder' => 'Tu contenido aquí.',
+        'attributes' => 'Atributos y valores predeterminados',
+        'empty_value' => '(vacío)',
+        'search' => 'Buscar módulos',
+        'no_results' => 'No hay módulos coincidentes.',
     ],
 
     // Dashboard home
@@ -378,6 +418,7 @@ return [
             'add' => 'Añadir traducción',
             'edit' => 'Editar traducción',
             'delete' => 'Eliminar traducción',
+            'delete_confirm' => '¿Eliminar esta traducción? Se conserva el contenido del idioma principal.',
             'switch_locale' => 'Cambiar idioma',
             'current' => 'Idioma actual',
             'available' => 'Traducciones disponibles',
@@ -1297,6 +1338,19 @@ return [
         'restored' => 'Se restauró la versión del :date.',
     ],
     'editor' => [
+        'create' => 'Crear',
+        'edit' => 'Editar',
+        'show' => 'Ver',
+
+        'unfinished' => 'Trabajo sin terminar',
+        'untitled' => 'Borrador sin título',
+
+        'unpublish' => 'Retirar y guardar borrador',
+        'unpublish_hint' => 'Guardar como borrador retira este contenido del sitio en todos los idiomas.',
+        'schedule' => 'Programar',
+        'all_languages' => 'Las acciones de publicación se aplican a todos los idiomas. Actualizar guarda la traducción sin cambiar su estado.',
+        'preview_after_save' => 'Guarda este contenido para activar la vista previa.',
+
         'preview' => 'Vista previa',
         'preview_failed' => 'No se pudo abrir la vista previa. Inténtalo de nuevo.',
         'autosave' => [
@@ -1454,5 +1508,9 @@ return [
             'default_stays_active' => 'No se puede desactivar el idioma predeterminado. Haz primero predeterminado a otro.',
             'has_content' => ':name todavía tiene contenido. Desactívalo en su lugar o elimina antes sus traducciones.',
         ],
+    ],
+    'redirects' => [
+        'edit' => 'Editar redirección',
+        'update' => 'Guardar cambios',
     ],
 ];

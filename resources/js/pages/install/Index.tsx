@@ -14,6 +14,8 @@ interface Requirement {
 }
 
 interface InstallProps {
+    claimed: boolean;
+    setupStage: 'database' | 'administrator' | 'site' | 'done';
     requirements: Requirement[];
     requirementsSatisfied: boolean;
     database: { connected: boolean; message: string };
@@ -38,16 +40,17 @@ export default function Install() {
     const props = usePage<InstallProps>().props;
     const { requirements, requirementsSatisfied, database, channel, version, timezones } = props;
 
-    const [step, setStep] = useState<StepId>(requirementsSatisfied ? 'database' : 'requirements');
-    const [migrated, setMigrated] = useState(false);
-    const [adminCreated, setAdminCreated] = useState(false);
-    const [configured, setConfigured] = useState(false);
+    const [step, setStep] = useState<StepId>(requirementsSatisfied ? props.setupStage : 'requirements');
+    const [migrated, setMigrated] = useState(props.setupStage !== 'database');
+    const [adminCreated, setAdminCreated] = useState(['site', 'done'].includes(props.setupStage));
+    const [configured, setConfigured] = useState(props.setupStage === 'done');
     const [busy, setBusy] = useState(false);
 
     const errors = (props.errors ?? {}) as Record<string, string>;
     const stepIndex = useMemo(() => STEPS.findIndex((s) => s.id === step), [step]);
 
     const admin = useForm({ name: '', email: '', password: '', password_confirmation: '' });
+    const claim = useForm({ setup_token: '' });
     const site = useForm({
         site_name: 'My Modulo Site',
         site_description: '',
@@ -93,6 +96,52 @@ export default function Install() {
         setBusy(true);
         router.post('/install/finish', {}, { onFinish: () => setBusy(false) });
     };
+
+    if (!props.claimed) {
+        return (
+            <main className="mx-auto max-w-xl px-4 py-16">
+                <Head title="Install Modulo CMS" />
+                <Card>
+                    <CardHeader>
+                        <CardTitle>
+                            <h1>Install Modulo CMS</h1>
+                        </CardTitle>
+                        <CardDescription>Enter the one-time token generated on your server. It expires after one hour.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="mb-4 text-sm">
+                            Generate a token with <code>php artisan modulo:install-token</code>, or run that command inside your PHP container.
+                        </p>
+                        <form
+                            className="space-y-4"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                claim.post('/install/claim', { onSuccess: () => claim.reset() });
+                            }}
+                        >
+                            <Label htmlFor="setup_token">Setup token</Label>
+                            <Input
+                                id="setup_token"
+                                type="password"
+                                autoComplete="off"
+                                value={claim.data.setup_token}
+                                onChange={(event) => claim.setData('setup_token', event.target.value)}
+                                required
+                            />
+                            {claim.errors.setup_token && (
+                                <p role="alert" className="text-sm text-destructive">
+                                    {claim.errors.setup_token}
+                                </p>
+                            )}
+                            <Button disabled={claim.processing} type="submit">
+                                Start setup
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </main>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background text-foreground">

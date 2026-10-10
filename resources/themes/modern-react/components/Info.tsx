@@ -3,12 +3,16 @@ import { ArrowLeft } from 'lucide-react';
 import Layout from './Layout';
 import { Badge, formatDate, useThemeT } from './partials/ui';
 
+import ContentRenderer from '@/components/content/ContentRenderer';
+import type { ContentPartial } from '@/theme-partials';
+
 interface InfoProps {
     post: {
         id: number;
         title: string;
         slug: string;
         content: string;
+        content_partials?: ContentPartial[];
         excerpt?: string;
         featured_image?: string;
         /** Smaller WebP copies ("url 768w, …") when the image is from the media library */
@@ -83,7 +87,7 @@ export default function Info({ post, site, theme, menus }: InfoProps) {
                     </figure>
                 )}
 
-                <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
+                <ContentRenderer className="prose prose-lg max-w-none" html={post.content} partials={post.content_partials} />
 
                 {post.terms && post.terms.length > 0 && (
                     <div className="mt-10 flex flex-wrap items-center gap-2 border-t pt-8">

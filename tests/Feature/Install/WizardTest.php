@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Services\InstallOwnership;
 use App\Services\InstallService;
 use App\Services\SiteSettingsService;
 use Database\Seeders\RolePermissionSeeder;
@@ -10,9 +11,13 @@ beforeEach(function () {
     // These tests are about the uninstalled state, which the suite otherwise
     // suppresses so the redirect does not swallow unrelated requests.
     markNotInstalled();
+    $token = app(InstallOwnership::class)->issue(rotate: true);
+    $this->post('/install/claim', ['setup_token' => $token])->assertRedirect();
+    $this->withCookie(config('session.cookie'), session()->getId());
 });
 
 afterEach(function () {
+    Illuminate\Support\Facades\File::delete(app(InstallOwnership::class)->path());
     markInstalled();
 });
 
@@ -75,6 +80,22 @@ it('refuses to create a second account through the installer', function () {
     expect(User::where('email', 'intruder@example.test')->exists())->toBeFalse();
 });
 
+it('resumes the owned wizard after refresh and operator token rotation', function () {
+    $this->seed(RolePermissionSeeder::class);
+    $this->post('/install/administrator', [
+        'name' => 'First Admin',
+        'email' => 'resume@example.test',
+        'password' => 'a-sufficiently-long-password',
+        'password_confirmation' => 'a-sufficiently-long-password',
+    ])->assertSessionHasNoErrors();
+    $this->get('/install')->assertInertia(fn ($page) => $page->where('setupStage', 'site'));
+
+    $token = app(InstallOwnership::class)->issue(rotate: true);
+    $this->post('/install/claim', ['setup_token' => $token])->assertRedirect();
+    $this->get('/install')->assertInertia(fn ($page) => $page->where('setupStage', 'site'));
+    expect(User::count())->toBe(1);
+});
+
 it('refuses to create an administrator before the database step', function () {
     // Otherwise the account is created with no role and cannot sign in anywhere.
     $this->post('/install/administrator', [
@@ -116,6 +137,7 @@ it('closes itself once installation finishes', function () {
 });
 
 it('treats an existing site with users as already installed', function () {
+    markNotInstalled();
     // An install that predates the wizard has no lock file but plenty of users.
     User::factory()->create();
 

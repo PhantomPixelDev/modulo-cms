@@ -10,6 +10,7 @@ use App\Models\SiteSetting;
 use App\Services\SiteSettingsService;
 use App\Support\ActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -130,8 +131,28 @@ class SiteSettingsController extends Controller
             'reading' => [
                 'posts_per_page' => 'required|integer|min:1|max:100',
                 'show_on_front' => 'required|in:posts,page',
-                'front_page_id' => 'nullable|integer',
-                'posts_page_id' => 'nullable|integer',
+                'front_page_id' => [
+                    'nullable',
+                    'integer',
+                    'exists:posts,id',
+                    Rule::exists('posts', 'id')->where(function ($query) {
+                        $query->where('status', 'published')->whereIn(
+                            'post_type_id',
+                            PostType::where('name', 'page')->pluck('id')
+                        );
+                    }),
+                ],
+                'posts_page_id' => [
+                    'nullable',
+                    'integer',
+                    'exists:posts,id',
+                    Rule::exists('posts', 'id')->where(function ($query) {
+                        $query->where('status', 'published')->whereIn(
+                            'post_type_id',
+                            PostType::where('name', 'page')->pluck('id')
+                        );
+                    }),
+                ],
                 'feed_limit' => 'required|integer|min:1|max:100',
             ],
             'writing' => [

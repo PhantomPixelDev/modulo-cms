@@ -24,7 +24,7 @@ class TaxonomyController extends Controller
         $slug = Str::slug($base);
         $original = $slug;
         $i = 2;
-        while (Taxonomy::where('slug', $slug)
+        while (Taxonomy::whereRaw('LOWER(slug) = LOWER(?)', [$slug])
             ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->exists()) {
             $slug = $original.'-'.$i;

@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
+use App\Support\LikeEscape;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,9 +31,9 @@ class ActivityController extends Controller
 
         $entries = Activity::query()
             ->with('user:id,name,email')
-            ->when($filters['group'] ?? null, fn ($q, $group) => $q->where('event', 'like', $group.'.%'))
+            ->when($filters['group'] ?? null, fn ($q, $group) => $q->whereRaw("LOWER(event) LIKE ? ESCAPE '!'", [Str::lower($group).'.%']))
             ->when($filters['user'] ?? null, fn ($q, $user) => $q->where('user_id', $user))
-            ->when($filters['q'] ?? null, fn ($q, $term) => $q->where('description', 'like', '%'.str_replace(['%', '_'], ['\%', '\_'], $term).'%'))
+            ->when($filters['q'] ?? null, fn ($q, $term) => $q->whereRaw("LOWER(description) LIKE ? ESCAPE '!'", ['%'.LikeEscape::escape(Str::lower($term)).'%']))
             ->orderByDesc('id')
             ->paginate(50)
             ->withQueryString()

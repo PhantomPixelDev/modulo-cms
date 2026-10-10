@@ -42,5 +42,7 @@ it('never caches for signed-in users, flash messages or arbitrary query strings'
     $this->withSession(['_flash.old' => ['status'], 'status' => 'Saved'])->get('/about')->assertHeaderMissing('X-Page-Cache');
 
     $this->get('/about?utm_source=news')->assertHeaderMissing('X-Page-Cache');
+    // A fresh guest session, without the personal/flash state used above.
+    $this->flushSession();
     $this->get('/about?page=2')->assertHeader('X-Page-Cache', 'miss');
 });

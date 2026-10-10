@@ -60,6 +60,44 @@ it('can cache the route table', function () {
     $this->artisan('route:clear')->assertSuccessful();
 });
 
+it('serves the built in announcement prefix instead of reserving it as a system route', function () {
+    $type = PostType::factory()->create(['name' => 'info', 'slug' => 'info', 'route_prefix' => 'infos', 'is_public' => true]);
+    Post::factory()->published()->create(['post_type_id' => $type->id, 'slug' => 'upcoming-webinar-getting-started-with-modulo', 'title' => 'Demo Webinar']);
+    $this->get('/infos')->assertOk();
+    $this->get('/infos/upcoming-webinar-getting-started-with-modulo')->assertOk()->assertSee('Demo Webinar');
+    $this->get('/infos/missing')->assertNotFound();
+    $type->update(['is_public' => false]);
+    $this->get('/infos')->assertNotFound();
+    $this->get('/infos/upcoming-webinar-getting-started-with-modulo')->assertNotFound();
+});
+
+it('does not let a custom type occupy a reserved admin prefix', function () {
+    $type = PostType::factory()->create(['route_prefix' => 'admin', 'is_public' => true]);
+    Post::factory()->published()->create(['post_type_id' => $type->id, 'slug' => 'secret']);
+    $this->get('/admin/secret')->assertNotFound();
+});
+
+it('gives public browsing an independent configurable rate limit', function () {
+    config(['content.public_requests_per_minute' => 2]);
+    makePublishedPage(['slug' => 'limit-probe']);
+    $this->get('/search?q=absent')->assertOk();
+    $this->get('/limit-probe')->assertOk();
+    $this->get('/limit-probe')->assertOk();
+    $this->get('/limit-probe')->assertStatus(429);
+    $this->get('/search?q=absent')->assertOk();
+});
+
+it('resolves translated taxonomy links only within their own locale', function () {
+    Locale::create(['code' => 'en', 'name' => 'English', 'native_name' => 'English', 'is_active' => true, 'is_default' => true]);
+    Locale::create(['code' => 'es', 'name' => 'Spanish', 'native_name' => 'Español', 'is_active' => true, 'is_default' => false]);
+    $taxonomy = Taxonomy::create(['name' => 'category', 'label' => 'Category', 'plural_label' => 'Categories', 'slug' => 'categories', 'is_public' => true, 'post_types' => ['post']]);
+    $term = TaxonomyTerm::create(['taxonomy_id' => $taxonomy->id, 'name' => 'Technology', 'slug' => 'technology']);
+    $term->setTranslation('es', ['name' => 'Tecnología', 'slug' => 'tecnologia']);
+    $this->get('/category/tecnologia')->assertNotFound();
+    $this->get('/es/category/tecnologia')->assertOk();
+    $this->get('/es/category/technology')->assertOk();
+});
+
 it('serves a page at its translated slug in that locale', function () {
     // The sitemap and hreflang links publish /{locale}/{translated-slug};
     // matching only the default slug made every one of them a 404.

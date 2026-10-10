@@ -34,7 +34,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Cache Composer dependencies
@@ -56,15 +56,15 @@ jobs:
       - name: PHP code style (Pint)
         run: vendor/bin/pint --test
 
-      # New PHPStan findings fail the build; existing ones live in phpstan-baseline.neon
+      # New PHPStan findings fail the build; existing ones live in config/tooling/phpstan-baseline.neon
       - name: Static analysis (Larastan)
-        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+        run: vendor/bin/phpstan analyse --configuration=config/tooling/phpstan.neon --memory-limit=1G --no-progress
 
       - name: Frontend formatting (Prettier)
         run: npm run format:check
 
       - name: Frontend lint (ESLint)
-        run: npx eslint . --quiet
+        run: npx eslint --config config/tooling/eslint.config.js . --quiet
 
       - name: TypeScript
         run: npm run types
@@ -74,7 +74,7 @@ jobs:
         run: |
           set -euo pipefail
           recorded=$(node -p "require('./.github/quality-baseline.json').eslint_no_explicit_any")
-          current=$(npx eslint . --format json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{let n=0;for(const f of JSON.parse(s))for(const m of f.messages)if(m.ruleId==="@typescript-eslint/no-explicit-any")n++;console.log(n)})')
+          current=$(npx eslint --config config/tooling/eslint.config.js . --format json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{let n=0;for(const f of JSON.parse(s))for(const m of f.messages)if(m.ruleId==="@typescript-eslint/no-explicit-any")n++;console.log(n)})')
           echo "no-explicit-any: ${current} (recorded ${recorded})"
           if [ "${current}" -gt "${recorded}" ]; then
             echo "::error::TypeScript \`any\` grew from ${recorded} to ${current}. Type the new code instead."
@@ -90,15 +90,15 @@ jobs:
       - name: Static analysis baseline must not grow
         run: |
           set -euo pipefail
-          recorded=$(grep -c 'message:' phpstan-baseline.neon)
+          recorded=$(grep -c 'message:' config/tooling/phpstan-baseline.neon)
           echo "Baseline entries: ${recorded}"
 
           # Regenerate against the current code and compare. A new entry means
           # new code was added with a known problem and then silenced.
-          cp phpstan-baseline.neon /tmp/baseline-before.neon
-          vendor/bin/phpstan analyse --generate-baseline --memory-limit=1G --no-progress >/dev/null 2>&1 || true
-          regenerated=$(grep -c 'message:' phpstan-baseline.neon)
-          cp /tmp/baseline-before.neon phpstan-baseline.neon
+          cp config/tooling/phpstan-baseline.neon /tmp/baseline-before.neon
+          vendor/bin/phpstan analyse --configuration=config/tooling/phpstan.neon --generate-baseline=config/tooling/phpstan-baseline.neon --memory-limit=1G --no-progress >/dev/null 2>&1 || true
+          regenerated=$(grep -c 'message:' config/tooling/phpstan-baseline.neon)
+          cp /tmp/baseline-before.neon config/tooling/phpstan-baseline.neon
 
           echo "Regenerated entries: ${regenerated}"
 
@@ -108,7 +108,7 @@ jobs:
           fi
 
           if [ "${regenerated}" -lt "${recorded}" ]; then
-            echo "::notice::The baseline can shrink from ${recorded} to ${regenerated}. Run phpstan --generate-baseline and commit it."
+            echo "::notice::The baseline can shrink from ${recorded} to ${regenerated}. Run vendor/bin/phpstan analyse --configuration=config/tooling/phpstan.neon --generate-baseline=config/tooling/phpstan-baseline.neon and commit it."
           fi
 
       # Known advisories in locked dependencies fail the build

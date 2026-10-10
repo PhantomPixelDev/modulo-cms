@@ -68,7 +68,7 @@ class Post extends Model
         $candidate = $base;
         $suffix = 2;
 
-        while (static::withTrashed()->where('slug', $candidate)->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))->exists()) {
+        while (static::withTrashed()->whereRaw('LOWER(slug) = LOWER(?)', [$candidate])->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))->exists()) {
             $candidate = $base.'-'.$suffix++;
         }
 
@@ -167,6 +167,15 @@ class Post extends Model
     {
         return $query->where('status', 'published')
             ->where('published_at', '<=', now());
+    }
+
+    /**
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query->published()->whereHas('postType', fn (Builder $type) => $type->where('is_public', true));
     }
 
     public function scopeByPostType($query, $postTypeId)

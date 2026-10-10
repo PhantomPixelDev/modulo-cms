@@ -30,7 +30,7 @@ class BackupController extends Controller
 
     public function index(): Response
     {
-        $this->authorizeAdmin();
+        $this->authorizeBackups('view backups');
 
         return Inertia::render('Dashboard', [
             'adminSection' => 'backups',
@@ -48,7 +48,7 @@ class BackupController extends Controller
 
     public function store(): RedirectResponse
     {
-        $this->authorizeAdmin();
+        $this->authorizeBackups('create backups');
 
         // Media can make this take a while.
         @set_time_limit(0);
@@ -72,7 +72,7 @@ class BackupController extends Controller
 
     public function download(string $backup): BinaryFileResponse
     {
-        $this->authorizeAdmin();
+        $this->authorizeBackups('view backups');
 
         $path = $this->backups->path($backup);
         abort_if($path === null, 404);
@@ -83,7 +83,7 @@ class BackupController extends Controller
 
     public function destroy(string $backup): RedirectResponse
     {
-        $this->authorizeAdmin();
+        $this->authorizeBackups('delete backups');
 
         abort_unless($this->backups->delete($backup), 404);
         ActivityLog::record('backup.deleted', 'Deleted backup '.$backup);
@@ -96,7 +96,7 @@ class BackupController extends Controller
      */
     public function upload(Request $request): RedirectResponse
     {
-        $this->authorizeAdmin();
+        $this->authorizeBackups('restore backups');
         $request->validate(['backup' => ['required', 'file', 'mimes:zip', 'max:'.($this->uploadLimitMb() * 1024)]]);
 
         File::ensureDirectoryExists($this->backups->directory(), 0750);
@@ -125,7 +125,7 @@ class BackupController extends Controller
      */
     public function restore(Request $request, string $backup): RedirectResponse
     {
-        $this->authorizeAdmin();
+        $this->authorizeBackups('restore backups');
         abort_if($this->backups->path($backup) === null, 404);
 
         $data = $request->validate([
@@ -158,8 +158,8 @@ class BackupController extends Controller
         return max(1, intdiv($limits === [] ? 104857600 : min($limits), 1048576));
     }
 
-    protected function authorizeAdmin(): void
+    protected function authorizeBackups(string $permission): void
     {
-        abort_unless(auth()->user()?->hasRole(['admin', 'super-admin']) ?? false, 403);
+        abort_unless(auth()->user()?->can($permission) ?? false, 403);
     }
 }

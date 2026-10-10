@@ -7,7 +7,16 @@ import Footer from './Footer';
 import Navigation from './partials/Navigation';
 import Sidebar from './partials/Sidebar';
 import { Container, normalizeMenuItems } from './partials/ui';
+import { useShortcodeCart } from './Shop/useShortcodeCart';
 import ErrorBoundary from './util/ErrorBoundary';
+
+export interface ContentSeo {
+    title?: string;
+    description?: string;
+    image?: string | null;
+    canonical?: string | null;
+    noindex?: boolean;
+}
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -58,15 +67,10 @@ interface LayoutProps {
             name?: string;
         };
         /** From the post's SEO tab: search and social previews. */
-        seo?: {
-            title?: string;
-            description?: string;
-            image?: string | null;
-            canonical?: string | null;
-            noindex?: boolean;
-        };
+        seo?: ContentSeo;
     };
     page?: {
+        seo?: ContentSeo;
         id?: number;
         title?: string;
         excerpt?: string;
@@ -107,7 +111,7 @@ export default function Layout({
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS', tagline: '' };
     const safeMenus = menus && typeof menus === 'object' ? menus : { header: [], footer: [] };
     const safeAuth = auth && typeof auth === 'object' ? auth : { user: null };
-    const seo = post?.seo;
+    const seo = post?.seo ?? page?.seo;
     const pageTitle = (seo?.title ?? title) ? `${seo?.title ?? title} | ${safeSite.name}` : safeSite.name;
 
     // Only override the design tokens when the theme actually configures them.
@@ -118,6 +122,9 @@ export default function Layout({
         .join(' ');
 
     useDocumentTitle(pageTitle);
+
+    // Shortcode buttons ([add_to_cart], embedded product cards) are plain HTML.
+    useShortcodeCart();
 
     // Enhanced SEO data based on content type
     const isArticle = post && post.id;
@@ -202,7 +209,7 @@ export default function Layout({
                 {themeOverrides && <style>{`:root { ${themeOverrides} }`}</style>}
             </Head>
 
-            <div className="flex min-h-screen flex-col bg-background text-foreground">
+            <div className="theme-frontend flex min-h-screen flex-col bg-background text-foreground">
                 {/* First thing a keyboard or screen reader user reaches: past the navigation */}
                 <a
                     href="#main"

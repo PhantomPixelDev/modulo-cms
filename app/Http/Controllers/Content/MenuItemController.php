@@ -33,7 +33,8 @@ class MenuItemController extends Controller
         $menuId = $request->query('menu_id');
         $query = MenuItem::query()->with(['translations', 'children']);
         if ($menuId) {
-            $query->where('menu_id', $menuId)->whereNull('parent_id');
+            $validated = $request->validate(['menu_id' => ['integer']]);
+            $query->where('menu_id', $validated['menu_id'])->whereNull('parent_id');
         }
         $items = $query->with('children')->orderBy('order')->get();
         if ($request->wantsJson()) {

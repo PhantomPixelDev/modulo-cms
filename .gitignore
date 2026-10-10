@@ -51,6 +51,18 @@ docs/.vitepress/cache
 /coverage
 coverage.xml
 
+# Local tooling
+.omo/
+.playwright-mcp/
+.playwright-cli/
+/.claude/
+/.husky/
+/components.json
+CLAUDE.local.md
+.DS_Store
+Thumbs.db
+.eslintcache
+
 # Plugins are installed per site (from the registry), never part of core
 /plugins/*
 !/plugins/.gitkeep

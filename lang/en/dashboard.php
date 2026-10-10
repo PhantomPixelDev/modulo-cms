@@ -7,6 +7,7 @@ return [
     ],
     // Navigation
     'nav' => [
+
         'languages' => 'Languages',
         'email' => 'Email',
         'content' => 'Content',
@@ -35,10 +36,49 @@ return [
         'roles' => 'Roles',
         'settings' => 'Settings',
         'themes' => 'Themes',
+        'partials' => 'Content partials',
         'plugins' => 'Plugins',
         'taxonomies' => 'Taxonomies',
         'templates' => 'Templates',
         'post_types' => 'Post Types',
+    ],
+
+    'partials' => [
+        'insert' => 'Insert partial',
+        'edit' => 'Edit partial',
+        'apply' => 'Apply changes',
+        'configure' => 'Configure and preview',
+        'picker_description' => 'Choose a module, set its options and preview it in your theme.',
+        'module_block' => 'Reusable theme module',
+        'body_label' => 'Module content',
+        'loading' => 'Loading…',
+        'load_failed' => 'Could not load modules. Close and reopen the picker to try again.',
+        'unavailable' => 'This module is unavailable in the active theme.',
+        'invalid_field' => 'Check the value for :name.',
+        'invalid_attributes' => 'Invalid module attributes.',
+        'check_field' => 'Check this value.',
+        'choose_value' => 'Choose a value',
+        'choose_image' => 'Choose image',
+        'body_too_long' => 'Module content is too long (maximum 32,768 characters).',
+        'preview' => 'Preview module',
+        'preview_title' => 'Module preview',
+        'preview_failed' => 'Could not create the preview. Your options are still here; try again.',
+        'preview_unavailable' => 'This theme has no page template for module previews.',
+        'browse' => 'Browse partials',
+        'description' => 'Reusable content modules from your active theme.',
+        'active_theme' => 'Active theme',
+        'no_theme' => 'Activate a React theme under Appearance → Themes to use content partials.',
+        'no_partials' => 'This theme has no content partials available.',
+        'instructions' => 'Copy a shortcode and paste it into its own paragraph in a page or post. Replace the body text and attribute values as needed. Omitted attributes use the defaults below.',
+        'shortcode' => 'Shortcode',
+        'copy' => 'Copy shortcode',
+        'copied' => 'Copied',
+        'copy_failed' => 'Clipboard unavailable. The shortcode is selected; copy it manually.',
+        'body_placeholder' => 'Your content here.',
+        'attributes' => 'Attributes and defaults',
+        'empty_value' => '(empty)',
+        'search' => 'Search partials',
+        'no_results' => 'No matching partials.',
     ],
 
     // Dashboard home
@@ -319,6 +359,7 @@ return [
             'add' => 'Add translation',
             'edit' => 'Edit translation',
             'delete' => 'Delete translation',
+            'delete_confirm' => 'Delete this translation? The default-language content is kept.',
             'switch_locale' => 'Switch language',
             'current' => 'Current language',
             'available' => 'Available translations',
@@ -1297,6 +1338,19 @@ return [
         'restored' => 'Restored the version from :date.',
     ],
     'editor' => [
+        'create' => 'Create',
+        'edit' => 'Edit',
+        'show' => 'View',
+
+        'unfinished' => 'Unfinished work',
+        'untitled' => 'Untitled draft',
+
+        'unpublish' => 'Unpublish and save draft',
+        'unpublish_hint' => 'Saving as a draft removes this item from public view in every language.',
+        'schedule' => 'Schedule',
+        'all_languages' => 'Publication actions apply to every language. Update saves translation text without changing publication status.',
+        'preview_after_save' => 'Save this item once to enable preview.',
+
         'preview' => 'Preview',
         'preview_failed' => 'The preview could not be opened. Please try again.',
         'autosave' => [
@@ -1454,5 +1508,9 @@ return [
             'default_stays_active' => 'The default language can’t be switched off. Make another one the default first.',
             'has_content' => ':name still has content. Switch it off instead, or delete its translations first.',
         ],
+    ],
+    'redirects' => [
+        'edit' => 'Edit redirect',
+        'update' => 'Save changes',
     ],
 ];

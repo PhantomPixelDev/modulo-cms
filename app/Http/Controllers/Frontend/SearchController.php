@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class SearchController extends BaseFrontendController
 {
@@ -16,7 +17,8 @@ class SearchController extends BaseFrontendController
             return $resp;
         }
 
-        $query = $request->get('q', '');
+        $data = $request->validate(['q' => ['nullable', 'string', 'max:1000']]);
+        $query = $data['q'] ?? '';
 
         if (empty(trim($query))) {
             return $this->reactRenderer->render($this->templateResolver->searchTemplate(), [
@@ -33,6 +35,7 @@ class SearchController extends BaseFrontendController
         $searchTerm = mb_substr(trim($query), 0, 100);
 
         $posts = Post::with([
+            'translations',
             'postType',
             'author',
             'taxonomyTerms.taxonomy',
@@ -59,8 +62,15 @@ class SearchController extends BaseFrontendController
      */
     protected function applySearch(Builder $query, string $term): void
     {
-        if (DB::connection()->getDriverName() === 'pgsql') {
-            $query->whereRaw("search_vector @@ websearch_to_tsquery('simple', ?)", [$term])
+        $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term).'%';
+        $translated = fn ($q) => $q->where('locale', app()->getLocale())->where(function ($q) use ($pattern) {
+            foreach (['title', 'excerpt', 'content'] as $column) {
+                $q->orWhereRaw("LOWER({$column}) LIKE LOWER(?) ESCAPE '!'", [$pattern]);
+            }
+        });
+        if (DB::connection()->getDriverName() === 'pgsql' && Schema::hasColumn('posts', 'search_vector')) {
+            $query->where(fn ($q) => $q->whereRaw("search_vector @@ websearch_to_tsquery('simple', ?)", [$term])
+                ->orWhereHas('translations', $translated))
                 ->orderByRaw("ts_rank(search_vector, websearch_to_tsquery('simple', ?)) DESC", [$term])
                 ->orderBy('published_at', 'desc');
 
@@ -69,12 +79,11 @@ class SearchController extends BaseFrontendController
 
         // Case-insensitive on every driver (plain LIKE is case-sensitive on
         // PostgreSQL), with user-supplied % and _ treated literally.
-        $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term).'%';
-
-        $query->where(function ($q) use ($pattern) {
+        $query->where(function ($q) use ($pattern, $translated) {
             foreach (['title', 'excerpt', 'content'] as $column) {
                 $q->orWhereRaw("LOWER({$column}) LIKE LOWER(?) ESCAPE '!'", [$pattern]);
             }
+            $q->orWhereHas('translations', $translated);
         })->orderBy('published_at', 'desc');
     }
 }

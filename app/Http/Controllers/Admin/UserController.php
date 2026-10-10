@@ -20,6 +20,7 @@ class UserController extends Controller
         $this->middleware('permission:create users')->only(['create', 'store']);
         $this->middleware('permission:edit users')->only(['edit', 'update']);
         $this->middleware('permission:delete users')->only(['destroy']);
+        $this->middleware('permission:assign roles')->only(['assign', 'remove']);
     }
 
     /**
@@ -170,6 +171,50 @@ class UserController extends Controller
 
         return redirect()->route('dashboard.admin.users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Assign a single role to the user.
+     */
+    public function assign(User $user, Role $role)
+    {
+        $this->authorize('assignRole', $user);
+
+        $current = $user->roles->pluck('name')->all();
+        $updated = array_values(array_unique(array_merge($current, [$role->name])));
+
+        if ($error = $this->roleAssignmentError($updated, $user)) {
+            return back()->with('error', $error);
+        }
+
+        if (! $user->hasRole($role->name)) {
+            $user->assignRole($role->name);
+            ActivityLog::record('user.roles', 'Set the roles of "'.$user->email.'"', $user, ['roles' => $updated]);
+        }
+
+        return back()->with('success', 'Role assigned successfully.');
+    }
+
+    /**
+     * Remove a single role from the user.
+     */
+    public function remove(User $user, Role $role)
+    {
+        $this->authorize('assignRole', $user);
+
+        $current = $user->roles->pluck('name')->all();
+        $updated = array_values(array_diff($current, [$role->name]));
+
+        if ($error = $this->roleAssignmentError($updated, $user)) {
+            return back()->with('error', $error);
+        }
+
+        if ($user->hasRole($role->name)) {
+            $user->removeRole($role->name);
+            ActivityLog::record('user.roles', 'Set the roles of "'.$user->email.'"', $user, ['roles' => $updated]);
+        }
+
+        return back()->with('success', 'Role removed successfully.');
     }
 
     /**

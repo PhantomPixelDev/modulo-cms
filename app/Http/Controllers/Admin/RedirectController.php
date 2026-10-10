@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRedirectRequest;
 use App\Http\Requests\UpdateRedirectRequest;
 use App\Models\Redirect;
 use App\Support\ActivityLog;
+use App\Support\LikeEscape;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -21,8 +22,8 @@ class RedirectController extends Controller
 
         $redirects = Redirect::query()
             ->when($request->string('q')->toString(), fn ($q, $term) => $q->where(fn ($w) => $w
-                ->where('from_path', 'like', '%'.$term.'%')
-                ->orWhere('to_url', 'like', '%'.$term.'%')))
+                ->whereRaw("LOWER(from_path) LIKE ? ESCAPE '!'", ['%'.strtolower(LikeEscape::escape($term)).'%'])
+                ->orWhereRaw("LOWER(to_url) LIKE ? ESCAPE '!'", ['%'.strtolower(LikeEscape::escape($term)).'%'])))
             ->orderByDesc('updated_at')
             ->paginate(50)
             ->withQueryString();

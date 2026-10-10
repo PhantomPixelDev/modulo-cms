@@ -32,6 +32,7 @@ class PostResource extends JsonResource
         /** @var Post $post */
         $post = $this->resource;
         $meta = is_array($post->meta_data) ? $post->meta_data : [];
+        $privileged = $request->attributes->get('api_token')?->can('read') && $request->user()?->can('view posts');
 
         return [
             'id' => $post->id,
@@ -47,7 +48,7 @@ class PostResource extends JsonResource
             'updated_at' => $post->updated_at?->toIso8601String(),
             'author' => $post->relationLoaded('author') && $post->author !== null ? ['id' => $post->author->id, 'name' => $post->author->name] : null,
             'terms' => $post->relationLoaded('taxonomyTerms')
-                ? $post->taxonomyTerms->map(fn ($term) => [
+                ? $post->taxonomyTerms->filter(fn ($term) => $privileged || $term->taxonomy?->is_public)->map(fn ($term) => [
                     'id' => $term->id,
                     'name' => $term->name,
                     'slug' => $term->slug,

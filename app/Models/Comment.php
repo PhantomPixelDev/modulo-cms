@@ -31,6 +31,21 @@ class Comment extends Model
     ];
 
     /**
+     * Comments are plain text everywhere they render (React text nodes, RSS,
+     * emails). Strip markup on write so a future v-html consumer cannot turn
+     * stored content into stored XSS.
+     */
+    public function setContentAttribute(mixed $value): void
+    {
+        $this->attributes['content'] = is_string($value) ? strip_tags($value) : $value;
+    }
+
+    public function setAuthorNameAttribute(mixed $value): void
+    {
+        $this->attributes['author_name'] = is_string($value) ? strip_tags($value) : $value;
+    }
+
+    /**
      * @return BelongsTo<Post, $this>
      */
     public function post(): BelongsTo

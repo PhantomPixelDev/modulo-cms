@@ -1,13 +1,13 @@
 # Security
 
-For reporting a vulnerability, see [../SECURITY.md](../SECURITY.md). This is
+For reporting a vulnerability, see the [security policy](https://github.com/PhantomPixelDev/modulo-cms/blob/main/.github/SECURITY.md). This is
 about running the thing safely.
 
 ## The short list
 
 - **Never seed demo content on a live site.** Those accounts have passwords
   published in the README. `modulo:seed-demo` refuses production without
-  `--force`, and the installer leaves the box unchecked.
+  both `MODULO_DEMO=true` and `--force`, and the installer leaves the box unchecked.
 - **Unique `APP_KEY` per install.** It encrypts sessions and cookies. Never
   copy one between environments.
 - **`APP_DEBUG=false`, `APP_ENV=production`.** Debug mode exposes configuration
@@ -45,10 +45,32 @@ Said plainly, because the gap matters more than the list above:
 
 - **Plugin packages are checksum-verified, not signed.** The registry is the
   only authority; whoever controls it controls what installs.
-- **No rate limiting on the installer.** It is unreachable once a user exists,
-  which is the actual protection.
-- **No 2FA.**
-- **No audit log** of administrator actions.
+- Packages contain executable trusted code. Checksum verification does not
+  establish that a publisher's code is safe; install extensions you trust.
+
+## Public demos and setup
+
+`MODULO_DEMO=true` restricts server administration even for the shared super-admin
+account. Visitors can edit content, products, and media. Backup administration,
+extension installation/removal, users/roles, credentials, API tokens, and mail or
+payment configuration are blocked on the server. Operators use private CLI access.
+
+The web installer requires a one-time token from `php artisan modulo:install-token`.
+Only its SHA-256 hash is stored. Tokens expire after one hour, are claimed by one
+session, and disappear when setup finishes. `--rotate` replaces a lost or expired
+claim. Setup and first-administrator creation are serialized using locks on the
+shared storage volume. Replicas must share that volume during setup.
+
+Core and plugin admin routes use the `admin.access` middleware group. Older plugin
+routes beneath `/dashboard` also receive mandatory two-factor enrollment checks.
+When required, administrator API tokens are refused until their owner enrolls.
+Setup, login, logout, and two-factor recovery stay accessible.
+
+Publication permissions cover scheduling and publication-date changes, including
+date-only API updates. Editing the text of an already-public item remains allowed
+with its edit permission. Backup upload, restore, and download require a recently
+confirmed password on normal installations. Package downloads validate every
+redirect and pin public DNS answers; downloads and archive expansion are bounded.
 
 ## Dependencies
 
@@ -62,20 +84,19 @@ npm audit --audit-level=high
 Dependabot raises updates weekly. Majors are grouped by toolchain, because
 packages with peer dependencies on each other cannot be upgraded one at a time.
 
-
 ## Security headers
 
 The application sends these on every web response, so a bare-metal or tarball
 install is covered without web server configuration:
 
-| Header | Value |
-|---|---|
-| `X-Content-Type-Options` | `nosniff` |
-| `X-Frame-Options` | `SAMEORIGIN` |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `Permissions-Policy` | camera, microphone, geolocation off |
-| `Cross-Origin-Opener-Policy` | `same-origin` |
-| `Strict-Transport-Security` | on HTTPS responses, 180 days (`MODULO_HSTS_MAX_AGE`, 0 = off) |
+| Header                       | Value                                                         |
+| ---------------------------- | ------------------------------------------------------------- |
+| `X-Content-Type-Options`     | `nosniff`                                                     |
+| `X-Frame-Options`            | `SAMEORIGIN`                                                  |
+| `Referrer-Policy`            | `strict-origin-when-cross-origin`                             |
+| `Permissions-Policy`         | camera, microphone, geolocation off                           |
+| `Cross-Origin-Opener-Policy` | `same-origin`                                                 |
+| `Strict-Transport-Security`  | on HTTPS responses, 180 days (`MODULO_HSTS_MAX_AGE`, 0 = off) |
 
 **Content-Security-Policy** is nonce-based: every inline script the core emits (Ziggy
 routes, the plugin import map, Google Tag Manager/Analytics) carries a per-request
@@ -119,7 +140,7 @@ php artisan tinker --execute="App\\Models\\User::where('email', 'someone@example
 
 ## Activity log
 
-**System → Activity** (administrators only) is the audit trail: sign-ins, failed and
+**Settings → Activity** (administrators only) is the audit trail: sign-ins, failed and
 locked-out sign-ins, wrong two-factor codes, password resets; creating, changing and
 deleting posts, pages, users, roles, post types, taxonomies and menus; role and
 permission assignments; settings saved; plugins and themes installed, activated,

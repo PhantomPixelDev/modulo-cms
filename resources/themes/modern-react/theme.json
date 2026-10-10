@@ -94,6 +94,37 @@
         }
     },
     "partials": {
+        "callout": {
+            "component": "components/partials/Callout.tsx",
+            "shortcode": true,
+            "label": "Callout",
+            "description": "Highlight useful information. Tone can be info, success or warning.",
+            "fields": {
+                "title": { "type": "text", "label": "Title" },
+                "tone": {
+                    "type": "select",
+                    "label": "Tone",
+                    "required": true,
+                    "options": [
+                        { "value": "info", "label": "Information" },
+                        { "value": "success", "label": "Success" },
+                        { "value": "warning", "label": "Warning" }
+                    ]
+                }
+            },
+            "defaults": { "tone": "info", "title": "" }
+        },
+        "disclosure": {
+            "component": "components/partials/Disclosure.tsx",
+            "shortcode": true,
+            "label": "Collapsible section",
+            "description": "Content readers can expand. Set open to true to start expanded.",
+            "fields": {
+                "title": { "type": "text", "label": "Title", "required": true },
+                "open": { "type": "boolean", "label": "Start expanded" }
+            },
+            "defaults": { "title": "Details", "open": "false" }
+        },
         "navigation": {
             "component": "components/partials/Navigation.tsx"
         },

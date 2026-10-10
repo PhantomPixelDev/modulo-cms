@@ -181,6 +181,7 @@ fi
 printf '\n  \033[32mReady.\033[0m Open this to finish setup:\n\n'
 printf '    http://localhost:%s/install\n\n' "$WEB_PORT"
 info "Your secrets are in ${TARGET_DIR}/.env - keep it, and do not commit it."
+info "Generate your one-time setup token: cd ${TARGET_DIR} && $RUNTIME compose exec app php artisan modulo:install-token"
 info "Update it with:      cd ${TARGET_DIR} && ./modulo update"
 info "Stop the site with:  cd ${TARGET_DIR} && $RUNTIME compose down"
 printf '\n'

@@ -6,7 +6,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 function pageEditor()
 {
-    return makeAdminUserWithPermissions(['view posts', 'create posts', 'edit posts', 'publish content']);
+    return makeAdminUserWithPermissions(['view pages', 'create pages', 'edit pages', 'delete pages', 'publish content']);
 }
 
 function pagePayload(array $overrides = []): array

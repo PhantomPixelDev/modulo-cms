@@ -35,17 +35,17 @@ resolved by a glob in `resources/js/app.tsx`; child themes fall back to their pa
 
 ## Where things live
 
-| Area | Code |
-|---|---|
-| Content | `app/Models/Post.php` (pages are posts of type `page`), `PostObserver` (revisions, redirects, cache), `PostPresenter` (what themes get) |
-| Settings | `SiteSetting` model + `SiteSettingsService` (cached) |
-| Plugins | `PluginManager` (discover, activate, requirements, hooks), `Plugins/{PluginRegistry,PluginInstaller,ArchiveExtractor,PackageDownloader}` |
-| Themes | `ThemeManager`, `ThemeInstaller` (registry child themes), `ReactTemplateRenderer` |
-| Updates | `UpdateChecker` (GitHub + `release.json`), `UpdateCenter` (stored results, badge), `modulo:check-updates`, `modulo:upgrade`, `modulo:update` (tarball), `docker/modulo` (Docker) |
-| Backups | `BackupManager`, `modulo:backup` / `modulo:restore`, `modulo:db-backup` |
-| Security | `SecurityHeaders`, `Support/Totp` + `TwoFactorController`, `ActivityLog` + `Listeners/RecordActivity`, `ApiToken` |
-| Schema guard | `Support/SchemaVersion` (`modulo_meta` table), `Support/Version`, `Support/InstallChannel` |
-| Hooks | `HookRegistry` with `add_action`/`do_action`/`add_filter`/`apply_filters` in `app/helpers.php` |
+| Area         | Code                                                                                                                                                                             |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Content      | `app/Models/Post.php` (pages are posts of type `page`), `PostObserver` (revisions, redirects, cache), `PostPresenter` (what themes get)                                          |
+| Settings     | `SiteSetting` model + `SiteSettingsService` (cached)                                                                                                                             |
+| Plugins      | `PluginManager` (discover, activate, requirements, hooks), `Plugins/{PluginRegistry,PluginInstaller,ArchiveExtractor,PackageDownloader}`                                         |
+| Themes       | `ThemeManager`, `ThemeInstaller` (registry child themes), `ReactTemplateRenderer`                                                                                                |
+| Updates      | `UpdateChecker` (GitHub + `release.json`), `UpdateCenter` (stored results, badge), `modulo:check-updates`, `modulo:upgrade`, `modulo:update` (tarball), `docker/modulo` (Docker) |
+| Backups      | `BackupManager`, `modulo:backup` / `modulo:restore`, `modulo:db-backup`                                                                                                          |
+| Security     | `SecurityHeaders`, `Support/Totp` + `TwoFactorController`, `ActivityLog` + `Listeners/RecordActivity`, `ApiToken`                                                                |
+| Schema guard | `Support/SchemaVersion` (`modulo_meta` table), `Support/Version`, `Support/InstallChannel`                                                                                       |
+| Hooks        | `HookRegistry` with `add_action`/`do_action`/`add_filter`/`apply_filters` in `app/helpers.php`                                                                                   |
 
 ## Background work
 
@@ -60,4 +60,4 @@ Every pull request runs Pest on SQLite and PostgreSQL, a coverage job, upgrades 
 last three releases, Pint, Larastan (the baseline may only shrink), Prettier, ESLint
 (the count of `any` may only shrink), TypeScript, Vitest with coverage thresholds, the
 Playwright end-to-end suite (install wizard, admin system screens, API), and dependency
-audits. Ratchet values live in `.github/quality-baseline.json` and `phpstan-baseline.neon`.
+audits. Ratchet values live in `.github/quality-baseline.json` and `config/tooling/phpstan-baseline.neon`.

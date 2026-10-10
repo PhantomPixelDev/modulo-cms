@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Content;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Models\PostTranslation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 /**
  * Per-locale translations of a post.
@@ -31,6 +33,15 @@ class PostTranslationController extends Controller
 
         $locale = $validated['locale'];
         unset($validated['locale']);
+
+        // Translation slugs are unique per locale at the DB level; dedupe
+        // here so a collision becomes a "-2" suffix, not a 500.
+        $existingId = $post->translation($locale)?->id;
+        $validated['slug'] = PostTranslation::generateUniqueSlug(
+            Str::slug($validated['slug']),
+            $locale,
+            $existingId
+        );
 
         $post->setTranslation($locale, $validated);
 

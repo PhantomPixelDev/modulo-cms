@@ -1,9 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
+import { submitEditor, type EditorContent, type EditorSubmission } from '../../components/common/editor';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
-import { PageForm } from '../../components/pages/PageForm';
+import { PageForm, type PageFormProps } from '../../components/pages/PageForm';
 import { PostList } from '../../components/posts/PostList';
+import type { ROUTE as DashboardRoutes } from '../../routes';
 import type { CustomFieldDefinition } from '../../types';
 
 export function getPagesSections({
@@ -16,49 +18,41 @@ export function getPagesSections({
     pageFields,
     defaultStatus,
     canEditAuthorFlag,
+    locales,
+    currentLocale,
+    translation,
     can,
     showSuccess,
     showError,
     ROUTE,
     t,
 }: {
-    postsProp: any;
-    post: any;
-    editPost: any;
+    postsProp?: ComponentProps<typeof PostList>['posts'];
+    post?: EditorContent;
+    editPost?: EditorContent;
     authors?: Array<{ id: number; name: string }>;
     filters?: Record<string, string>;
     pageParents?: Array<{ id: number; title: string }>;
     pageFields?: CustomFieldDefinition[];
     defaultStatus?: string;
     canEditAuthorFlag?: boolean;
+    locales?: ComponentProps<typeof PostList>['locales'];
+    currentLocale?: string;
+    translation?: PageFormProps['translation'];
     can: (perm: string) => boolean;
     showSuccess: (msg: string) => void;
     showError: (msg: string) => void;
-    ROUTE: any;
+    ROUTE: typeof DashboardRoutes;
     t: (key: string, replacements?: Record<string, string | number>) => string;
 }): Record<string, () => ReactNode> {
-    const handlePageSubmit = async (formData: any, editId?: number) => {
-        const url = editId ? ROUTE.pages.update(editId) : ROUTE.pages.store();
-        const method = editId ? 'put' : 'post';
-        try {
-            router[method](url, formData, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    showSuccess(t(editId ? 'dashboard.pages.messages.updated' : 'dashboard.pages.messages.created'));
-                    router.visit(ROUTE.pages.index());
-                },
-                onError: (errors) => {
-                    console.error('Validation errors:', errors);
-                    showError(t(editId ? 'dashboard.pages.messages.update_failed' : 'dashboard.pages.messages.create_failed'));
-                },
-            });
-        } catch (error) {
-            console.error('Error saving page:', error);
-            showError(t(editId ? 'dashboard.pages.messages.update_failed' : 'dashboard.pages.messages.create_failed'));
-        }
-    };
+    const handlePageSubmit = (formData: EditorSubmission, editId?: number) =>
+        submitEditor(editId ? ROUTE.pages.update(editId) : ROUTE.pages.store(), editId ? 'put' : 'post', {
+            ...formData,
+            locale: currentLocale || 'en',
+        });
 
-    const handleDeletePage = async (page: any) => {
+    const handleDeletePage = async (page: EditorContent | undefined) => {
+        if (!page?.id) return;
         const name = page?.title || t('dashboard.common.item');
         if (!window.confirm(t('dashboard.pages.confirm_delete', { name }))) return;
         try {
@@ -76,12 +70,16 @@ export function getPagesSections({
         }
     };
 
+    const handleLocaleChange = (locale: string) => {
+        router.visit(`${window.location.pathname}?locale=${encodeURIComponent(locale)}`);
+    };
+
     const renderPagesList = () => (
         <SectionWrapper
             title={t('dashboard.pages.title')}
             description={t('dashboard.pages.list_description')}
             actions={
-                can('create posts') ? (
+                can('create pages') ? (
                     <Button size="sm" onClick={() => router.visit(ROUTE.pages.create())}>
                         {t('dashboard.pages.actions.new')}
                     </Button>
@@ -93,8 +91,9 @@ export function getPagesSections({
                 filters={filters}
                 authors={authors}
                 showTypeFilter={false}
-                canEdit={can('edit posts')}
-                canDelete={can('delete posts')}
+                locales={locales}
+                canEdit={can('edit pages')}
+                canDelete={can('delete pages')}
                 canPublish={can('publish content')}
                 editHref={(item) => ROUTE.pages.edit(item.id)}
                 viewHref={(item) => (item.status === 'published' && !item.is_scheduled && item.slug ? `/${item.slug}` : null)}
@@ -115,12 +114,17 @@ export function getPagesSections({
             }
         >
             <PageForm
+                key={`new-page-${currentLocale || 'en'}`}
                 isEditing={false}
                 parents={pageParents}
                 fields={pageFields}
                 authors={authors}
                 canEditAuthor={canEditAuthorFlag}
+                canPublish={can('publish content')}
                 defaultStatus={defaultStatus}
+                locales={locales}
+                currentLocale={currentLocale || 'en'}
+                onLocaleChange={handleLocaleChange}
                 onSubmit={(data) => handlePageSubmit(data)}
                 onCancel={() => router.visit(ROUTE.pages.index())}
             />
@@ -133,8 +137,8 @@ export function getPagesSections({
             description={t('dashboard.pages.edit_description')}
             actions={
                 <div className="flex gap-2">
-                    {can('delete posts') && (
-                        <Button variant="destructive" size="sm" onClick={() => handleDeletePage((post as any) || (editPost as any))}>
+                    {can('delete pages') && (
+                        <Button variant="destructive" size="sm" onClick={() => handleDeletePage(post || editPost)}>
                             {t('dashboard.pages.actions.delete')}
                         </Button>
                     )}
@@ -145,13 +149,27 @@ export function getPagesSections({
             }
         >
             <PageForm
-                page={(post as any) || (editPost as any)}
+                key={`page-${(post || editPost)?.id ?? 'new'}-${currentLocale || 'en'}`}
+                page={post || editPost}
                 isEditing={true}
                 parents={pageParents}
                 fields={pageFields}
                 authors={authors}
                 canEditAuthor={canEditAuthorFlag}
-                onSubmit={(data) => handlePageSubmit(data, ((post as any) || (editPost as any))?.id)}
+                canPublish={can('publish content')}
+                locales={locales}
+                currentLocale={currentLocale || 'en'}
+                translation={translation}
+                onLocaleChange={handleLocaleChange}
+                deleteTranslationRoute={
+                    translation && (post || editPost)?.id
+                        ? route('dashboard.admin.pages.translations.destroy', {
+                              post: (post || editPost)?.id,
+                              locale: currentLocale || 'en',
+                          })
+                        : undefined
+                }
+                onSubmit={(data) => handlePageSubmit(data, (post || editPost)?.id)}
                 onCancel={() => router.visit(ROUTE.pages.index())}
             />
         </SectionWrapper>

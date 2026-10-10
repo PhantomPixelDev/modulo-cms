@@ -50,6 +50,10 @@ class RegisteredUserController extends Controller
      */
     public function store(RegisteredUserRequest $request): SymfonyResponse
     {
+        if (! SiteSetting::get('registration_enabled', false)) {
+            abort(403, 'Registration is currently disabled.');
+        }
+
         $data = $request->validated();
         $user = User::create([
             'name' => $data['name'],
@@ -62,6 +66,7 @@ class RegisteredUserController extends Controller
         $this->sendRegistrationEmails($user);
 
         Auth::login($user);
+        $request->session()->regenerate();
         // Force a full reload so we switch from themed auth root to standard app root
         $intended = $request->session()->pull('url.intended', route('dashboard', absolute: false));
 
@@ -71,9 +76,9 @@ class RegisteredUserController extends Controller
     protected function sendRegistrationEmails(User $user): void
     {
         try {
-            Mail::to($user->email)->send(new UserWelcome($user));
+            Mail::to($user->email)->queue(new UserWelcome($user));
         } catch (\Throwable $e) {
-            logger()->error('Failed to send user welcome email: '.$e->getMessage());
+            logger()->error('Failed to queue user welcome email: '.$e->getMessage());
         }
 
         $adminEmail = SiteSetting::get('admin_email', config('mail.admin_address'))
@@ -81,9 +86,9 @@ class RegisteredUserController extends Controller
 
         if ($adminEmail) {
             try {
-                Mail::to($adminEmail)->send(new AdminNewUser($user));
+                Mail::to($adminEmail)->queue(new AdminNewUser($user));
             } catch (\Throwable $e) {
-                logger()->error('Failed to send admin new user email: '.$e->getMessage());
+                logger()->error('Failed to queue admin new user email: '.$e->getMessage());
             }
         }
     }

@@ -1,5 +1,0 @@
-{
-    "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
-    "*.php": ["vendor/bin/pint --test"],
-    "*.{json,md,yml,yaml}": ["prettier --write"]
-}

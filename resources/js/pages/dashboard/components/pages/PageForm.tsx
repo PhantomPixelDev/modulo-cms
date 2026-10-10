@@ -1,6 +1,5 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ActionButtonGroup } from '@/components/ui/button-groups';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -10,30 +9,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePage } from '@inertiajs/react';
-import { Image as ImageIcon, Loader2, X } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { Image as ImageIcon, X } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import type { CustomFieldDefinition } from '../../types';
-import { AutosaveStatus, PreviewButton, RecoverAutosave, useAutosave, type AutosaveFields } from '../common/Autosave';
+import { normalizeFeaturedImage, type EditorContent, type EditorSubmission } from '../common/editor';
+import { EditorControls } from '../common/EditorControls';
 import { RevisionsDialog } from '../common/RevisionsDialog';
-import { CustomFieldInputs, type CustomFieldValues } from '../posts/CustomFieldInputs';
+import { useContentEditor } from '../common/useContentEditor';
+import { CustomFieldInputs } from '../posts/CustomFieldInputs';
 
 import type { FeaturedImagePreview } from '../posts/types';
 
+import { PartialCatalogLink } from '@/components/content/PartialCatalogLink';
 import MediaPickerDialog from '../media/MediaPickerDialog';
+import { LocaleDropdown, type LocaleOption } from '../posts/LocaleDropdown';
 import SlateEditor from '../posts/SlateEditor';
 
 export interface PageFormProps {
-    page?: any;
+    page?: EditorContent;
     isEditing: boolean;
-    onSubmit: (data: any) => Promise<void> | void;
+    onSubmit: (data: EditorSubmission) => Promise<boolean>;
     onCancel: () => void;
     authors?: Array<{ id: number; name: string }>;
     canEditAuthor?: boolean;
+    canPublish?: boolean;
     defaultStatus?: string;
     /** Pages this one can sit under */
     parents?: Array<{ id: number; title: string }>;
     /** The page type's custom fields */
     fields?: CustomFieldDefinition[];
+    locales?: LocaleOption[];
+    currentLocale?: string;
+    translation?: unknown;
+    onLocaleChange?: (code: string) => void;
+    /** Fully built translation-delete URL; enables the delete item. */
+    deleteTranslationRoute?: string;
 }
 
 const slugify = (text: string) => {
@@ -48,109 +58,29 @@ const slugify = (text: string) => {
         .replace(/-+$/, '');
 };
 
-const normalizeFeaturedImage = (source: any): FeaturedImagePreview | null => {
-    if (!source) return null;
-
-    if (typeof source === 'string') {
-        return { url: source };
-    }
-
-    if (typeof source === 'object') {
-        const url = source.url ?? source.src ?? '';
-        if (!url) return null;
-        return {
-            id: typeof source.id === 'number' ? source.id : undefined,
-            url,
-            thumb: source.thumb ?? source.preview_url ?? undefined,
-            name: source.name ?? source.file_name ?? source.alt ?? undefined,
-            mime_type: source.mime_type,
-            file_name: source.file_name,
-        };
-    }
-
-    return null;
-};
-
 export function PageForm({
     page,
     isEditing,
     authors = [],
     canEditAuthor = false,
+    canPublish = false,
     defaultStatus = 'draft',
     parents = [],
     fields = [],
+    locales = [],
+    currentLocale = 'en',
+    translation,
+    onLocaleChange,
+    deleteTranslationRoute,
     onSubmit,
     onCancel,
 }: PageFormProps) {
     const { t } = useTranslation();
     const errors = (usePage().props.errors ?? {}) as Record<string, string>;
-    const [fieldValues, setFieldValues] = useState<CustomFieldValues>(page?.meta_data?.fields ?? {});
-    const formRef = useRef<HTMLFormElement | null>(null);
+    const editor = useContentEditor(page, 'page', currentLocale, onSubmit, defaultStatus);
+    const { form, setForm, fieldValues, setFieldValues, editorKey, handleSubmit, timezone, isSubmitting } = editor;
     const [activeTab, setActiveTab] = useState('content');
     const [showMediaPicker, setShowMediaPicker] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const initialFeaturedImage = normalizeFeaturedImage(page?.featured_image);
-
-    const [form, setForm] = useState(() => {
-        // Initialize with empty content by default
-        let initialContent = '';
-
-        try {
-            if (page?.content) {
-                // If content is already a string, use it directly
-                if (typeof page.content === 'string') {
-                    // Check if it's a JSON string or HTML
-                    try {
-                        const parsed = JSON.parse(page.content);
-                        // If it parses to an array, it's likely Slate JSON
-                        if (Array.isArray(parsed)) {
-                            initialContent = page.content; // Keep as JSON string
-                        } else {
-                            initialContent = page.content; // Use as is (might be HTML)
-                        }
-                    } catch {
-                        // If it's not valid JSON, use as is (might be HTML)
-                        initialContent = page.content;
-                    }
-                } else {
-                    // If it's an object/array, stringify it
-                    initialContent = JSON.stringify(page.content);
-                }
-            }
-        } catch (e) {
-            console.error('Error parsing page content:', e);
-        }
-
-        return {
-            title: page?.title ?? '',
-            slug: page?.slug ?? '',
-            status: page?.status ?? defaultStatus,
-            content: initialContent, // This is a string (JSON or HTML)
-            excerpt: page?.excerpt ?? '',
-            featured_image: initialFeaturedImage,
-            meta_title: page?.meta_title ?? '',
-            meta_description: page?.meta_description ?? '',
-            author_id: page?.author_id?.toString() ?? '',
-            published_at: page?.published_at ? new Date(page.published_at).toISOString().slice(0, 16) : '',
-            parent_id: page?.parent_id ? String(page.parent_id) : 'none',
-            meta_data: (() => {
-                const rest = { ...(page?.meta_data ?? {}) };
-                delete rest.fields;
-                return rest as Record<string, unknown>;
-            })(),
-        };
-    });
-
-    const autosave = useAutosave(page?.id, { title: form.title, excerpt: form.excerpt, content: form.content }, Boolean(isEditing));
-    const [editorKey, setEditorKey] = useState(0);
-    const restoreAutosave = (fields: AutosaveFields) => {
-        setForm((prev) => ({ ...prev, title: fields.title ?? '', excerpt: fields.excerpt ?? '', content: fields.content ?? '' }));
-        // The editor keeps its own state; remount it with the restored text
-        setEditorKey((key) => key + 1);
-        autosave.setRecovered(null);
-    };
-
     // Handle content changes from SlateEditor
     const handleContentChange = useCallback((html: string) => {
         setForm((f) => ({
@@ -159,45 +89,7 @@ export function PageForm({
         }));
     }, []);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        try {
-            // The content should already be a string (JSON or HTML) from the SlateEditor
-            let contentToSubmit = form.content;
-
-            // If it's not a string, try to stringify it
-            if (contentToSubmit && typeof contentToSubmit !== 'string') {
-                contentToSubmit = JSON.stringify(contentToSubmit);
-            }
-
-            // Prepare the form data
-            const featuredImageUrl = form.featured_image
-                ? typeof form.featured_image === 'string'
-                    ? form.featured_image
-                    : form.featured_image.url
-                : null;
-
-            const formData = {
-                ...form,
-                featured_image: featuredImageUrl,
-                content: contentToSubmit,
-                author_id: form.author_id ? parseInt(form.author_id, 10) : null,
-                parent_id: form.parent_id !== 'none' ? parseInt(form.parent_id, 10) : null,
-                published_at: form.published_at || null,
-                meta_data: { ...form.meta_data, fields: fieldValues },
-            };
-
-            await onSubmit(formData);
-        } catch (error) {
-            console.error('Error submitting form:', error);
-            throw error; // Re-throw to let the parent component handle the error
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleFeaturedImageSelect = (media: any) => {
+    const handleFeaturedImageSelect = (media: FeaturedImagePreview) => {
         const normalized = normalizeFeaturedImage(media);
         setForm((f) => ({
             ...f,
@@ -236,8 +128,7 @@ export function PageForm({
     };
 
     return (
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-            <RecoverAutosave recovered={autosave.recovered} onRestore={restoreAutosave} onDiscard={autosave.discardRecovered} />
+        <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2 sm:flex sm:items-start sm:justify-between sm:space-y-0">
                 <div className="max-w-xl text-sm text-muted-foreground">
                     <p>{isEditing ? t('dashboard.pages.form.description.edit') : t('dashboard.pages.form.description.create')}</p>
@@ -248,8 +139,14 @@ export function PageForm({
                     </ul>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    {isEditing && <AutosaveStatus status={autosave.status} savedAt={autosave.savedAt} />}
-                    <Select value={form.status} onValueChange={(status) => setForm((f) => ({ ...f, status }))}>
+                    <LocaleDropdown
+                        locales={locales}
+                        currentLocale={currentLocale}
+                        onLocaleChange={onLocaleChange}
+                        hasTranslation={Boolean(translation)}
+                        deleteRoute={deleteTranslationRoute}
+                    />
+                    <Select disabled value={form.status} onValueChange={(status) => setForm((f) => ({ ...f, status }))}>
                         <SelectTrigger className="h-9 w-36" aria-label={t('dashboard.pages.form.fields.status')}>
                             <SelectValue />
                         </SelectTrigger>
@@ -261,22 +158,9 @@ export function PageForm({
                             ))}
                         </SelectContent>
                     </Select>
-                    {isEditing && page?.id && <PreviewButton postId={page.id} flush={autosave.flush} />}
                     {isEditing && page?.id && <RevisionsDialog postId={page.id} />}
                     <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
                         {t('dashboard.common.cancel')}
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                {isEditing ? t('dashboard.pages.form.actions.saving_edit') : t('dashboard.pages.form.actions.saving_create')}
-                            </>
-                        ) : isEditing ? (
-                            t('dashboard.pages.form.actions.update')
-                        ) : (
-                            t('dashboard.pages.form.actions.create')
-                        )}
                     </Button>
                 </div>
             </div>
@@ -378,7 +262,10 @@ export function PageForm({
                         )}
 
                         <div className="space-y-2">
-                            <Label>{t('dashboard.pages.form.fields.content')}</Label>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <Label>{t('dashboard.pages.form.fields.content')}</Label>
+                                <PartialCatalogLink />
+                            </div>
                             <div className="rounded-md border">
                                 <SlateEditor
                                     key={`${page?.id || 'new-page'}-${editorKey}`}
@@ -511,7 +398,9 @@ export function PageForm({
                             </div>
 
                             <div>
-                                <Label htmlFor="published_at">{t('dashboard.pages.form.fields.publish_date')}</Label>
+                                <Label htmlFor="published_at">
+                                    {t('dashboard.pages.form.fields.publish_date')} ({timezone})
+                                </Label>
                                 <input
                                     type="datetime-local"
                                     id="published_at"
@@ -527,14 +416,7 @@ export function PageForm({
 
             <MediaPickerDialog open={showMediaPicker} onOpenChange={setShowMediaPicker} onSelect={handleFeaturedImageSelect} />
 
-            <ActionButtonGroup
-                onCancel={onCancel}
-                saveLabel={isEditing ? t('dashboard.pages.form.actions.update') : t('dashboard.pages.form.actions.create')}
-                cancelLabel={t('dashboard.common.cancel')}
-                isSubmitting={isSubmitting}
-                onSave={() => formRef.current?.requestSubmit()}
-                className="mt-6"
-            />
+            <EditorControls editor={editor} postId={page?.id} locale={currentLocale} canPublish={canPublish} onCancel={onCancel} />
         </form>
     );
 }

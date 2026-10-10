@@ -104,7 +104,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        image: public.ecr.aws/docker/library/postgres:16-alpine
         env:
           POSTGRES_DB: modulo_test
           POSTGRES_USER: modulo
@@ -161,7 +161,29 @@ jobs:
           php artisan migrate:status
 
       - name: Tests (PostgreSQL)
-        run: ./vendor/bin/pest -c phpunit.pgsql.xml
+        run: ./vendor/bin/pest -c config/testing/phpunit.pgsql.xml
+
+      - name: Concurrent first-administrator creation (PostgreSQL)
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: pgsql
+          DB_DATABASE: modulo_test
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+        run: php tests/Integration/install-concurrency.php
+
+      - name: Concurrent two-factor challenges (PostgreSQL)
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_DATABASE: modulo_test
+          APP_KEY: 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+        run: php tests/Integration/two-factor-concurrency.php
 
   upgrade-bases:
     name: pick releases to upgrade from
@@ -207,7 +229,7 @@ jobs:
     # which is the case that actually breaks.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: public.ecr.aws/docker/library/postgres:16-alpine
         env:
           POSTGRES_DB: modulo_upgrade
           POSTGRES_USER: modulo
@@ -340,7 +362,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -349,8 +371,24 @@ jobs:
       - name: Frontend tests (Vitest)
         run: npm run test:js
 
-      - name: Build assets
-        run: npm run build
+      - name: Build client and server assets
+        run: npm run build:ssr
+
+      - name: Server rendering bundle starts
+        run: |
+          set -euo pipefail
+          node bootstrap/ssr/ssr.js >/tmp/modulo-ssr.log 2>&1 &
+          ssr_pid=$!
+          trap 'kill "$ssr_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 10); do
+            if curl -fsS http://127.0.0.1:13714/health | grep -q '"status":"OK"'; then
+              exit 0
+            fi
+            if ! kill -0 "$ssr_pid" 2>/dev/null; then break; fi
+            sleep 1
+          done
+          cat /tmp/modulo-ssr.log
+          exit 1
 
       # Kept so a broken bundle can be inspected without reproducing the build.
       - name: Upload built assets

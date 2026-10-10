@@ -41,7 +41,7 @@ export default function Footer({ site, menu }: FooterProps) {
 
     return (
         <footer className="border-t bg-muted/30">
-            <Container className="py-12">
+            <Container className="py-14">
                 <div className="grid gap-10 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]">
                     <div className="max-w-sm space-y-3">
                         <Link href="/" className="inline-flex items-center gap-2.5 font-semibold tracking-tight text-foreground">

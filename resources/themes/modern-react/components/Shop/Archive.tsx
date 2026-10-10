@@ -1,6 +1,8 @@
 import { Filter, Grid, List, Search, ShoppingCart, X } from 'lucide-react';
 import React, { useState } from 'react';
 import Layout from '../Layout';
+import { useThemeT } from '../partials/ui';
+import { cartCountFromAddResponse, fetchCartCount, notifyCartUpdated, shopAddToCart, toastAddedToCart, toastCartError } from './shopCart';
 import { configureMoney, formatMoney, type MoneyFormat } from './totals';
 
 interface Product {
@@ -53,6 +55,7 @@ interface ShopArchiveProps {
 
 export default function Archive({ products, categories, filters, pagination, site, theme, menus, money }: ShopArchiveProps) {
     configureMoney(money);
+    const tt = useThemeT();
     const safeSite = site && typeof site === 'object' ? site : { name: 'Modulo CMS' };
     const safeTheme = theme && typeof theme === 'object' ? theme : {};
     const safeMenus = menus && typeof menus === 'object' ? menus : {};
@@ -63,7 +66,6 @@ export default function Archive({ products, categories, filters, pagination, sit
     const [showFilters, setShowFilters] = useState(false);
     const [searchQuery, setSearchQuery] = useState(filters?.search || '');
     const [addingId, setAddingId] = useState<number | null>(null);
-    const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     const formatPrice = formatMoney;
 
@@ -77,27 +79,19 @@ export default function Archive({ products, categories, filters, pagination, sit
         window.location.href = `/shop?search=${encodeURIComponent(searchQuery)}`;
     };
 
-    const addToCart = async (productId: number) => {
-        setAddingId(productId);
-        setCartMessage(null);
+    const addToCart = async (item: Product) => {
+        setAddingId(item.id);
         try {
-            const response = await fetch('/shop/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({ product_id: productId, quantity: 1 }),
-            });
-            const data = await response.json();
+            const { data } = await shopAddToCart(item.id, 1);
             if (data.success) {
-                setCartMessage({ type: 'success', text: 'Added to cart!' });
-                setTimeout(() => setCartMessage(null), 3000);
+                const count = cartCountFromAddResponse(data) ?? (await fetchCartCount());
+                if (typeof count === 'number') notifyCartUpdated(count);
+                toastAddedToCart(tt('shop.added_to_cart', 'Added to cart: :title', { title: item.title }), tt('shop.view_cart', 'View cart'));
             } else {
-                setCartMessage({ type: 'error', text: data.message || 'Failed to add to cart' });
+                toastCartError(data.message || tt('shop.add_failed', 'Failed to add to cart'));
             }
-        } catch (error) {
-            setCartMessage({ type: 'error', text: 'Failed to add to cart' });
+        } catch {
+            toastCartError(tt('shop.add_failed', 'Failed to add to cart'));
         }
         setAddingId(null);
     };
@@ -125,15 +119,6 @@ export default function Archive({ products, categories, filters, pagination, sit
                         />
                     </form>
                 </header>
-
-                {/* Cart Message */}
-                {cartMessage && (
-                    <div
-                        className={`flex items-center gap-3 rounded-xl p-4 ${cartMessage.type === 'success' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}
-                    >
-                        {cartMessage.text}
-                    </div>
-                )}
 
                 {/* Toolbar */}
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-4 shadow-xs">
@@ -356,7 +341,7 @@ export default function Archive({ products, categories, filters, pagination, sit
                                                     </span>
                                                 </div>
                                                 <button
-                                                    onClick={() => addToCart(p.id)}
+                                                    onClick={() => addToCart(p)}
                                                     className={`w-full rounded-xl py-2.5 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                                                         p.in_stock === false || addingId === p.id
                                                             ? 'bg-muted text-muted-foreground/80'
@@ -427,7 +412,7 @@ export default function Archive({ products, categories, filters, pagination, sit
                                                         </span>
                                                     </div>
                                                     <button
-                                                        onClick={() => addToCart(p.id)}
+                                                        onClick={() => addToCart(p)}
                                                         className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                                                             p.in_stock === false || addingId === p.id
                                                                 ? 'cursor-not-allowed bg-muted text-muted-foreground/80'

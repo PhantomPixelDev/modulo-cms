@@ -7,9 +7,9 @@ measurements, so nobody has to rediscover this.
 
 Taken inside the running containers on a Windows host with the repository under `C:\`:
 
-| | named volume | `C:\` bind mount |
-|---|---|---|
-| per-file `stat()` | 0.09ms | **2.2ms (~25x)** |
+|                   | named volume | `C:\` bind mount |
+| ----------------- | ------------ | ---------------- |
+| per-file `stat()` | 0.09ms       | **2.2ms (~25x)** |
 
 Laravel touches roughly 790 files per request, so path resolution — not PHP — dominates
 the response time. `vendor/`, `storage/` and `node_modules/` already live on named
@@ -54,7 +54,7 @@ The symptom was wild variance rather than uniform slowness. The same
 `Schema::hasTable()` query measured 2.4ms and 505ms in different traces, depending on
 what the watcher happened to be doing.
 
-Two things in `vite.config.ts` fix it, and both are load-bearing:
+Two things in `config/tooling/vite.config.ts` fix it, and both are load-bearing:
 
 1. **`server.watch.ignored` must be a function, not globs.** chokidar 4 — which Vite 7
    ships — dropped glob support in `ignored`. A `'**/storage/**'` string silently

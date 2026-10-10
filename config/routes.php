@@ -26,7 +26,6 @@ return [
         'admin',
         'posts',
         'pages',
-        'infos',
         'up',
         'api',
         'sitemap.xml',

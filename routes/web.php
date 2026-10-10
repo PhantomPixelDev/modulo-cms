@@ -36,7 +36,7 @@ Route::prefix('api/menus')->middleware('throttle:api')->group(function () {
 });
 
 // Auth/Dashboard/Admin routes must be registered before frontend catch-all routes
-Route::middleware(['auth', 'two-factor.admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'two-factor.admin'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
@@ -77,7 +77,7 @@ $segment = '[a-zA-Z0-9\-_]+';
 $reserved = implode('|', array_map('preg_quote', config('routes.reserved_slugs', [])));
 $firstSegment = '(?!(?:'.$reserved.')(?:/|$))'.$segment;
 
-Route::middleware('throttle:30,1')->group(function () use ($segment, $firstSegment) {
+Route::middleware('throttle:public-content')->group(function () use ($segment, $firstSegment) {
     Route::get('/{one}', FrontendRouterController::class)
         ->where('one', $firstSegment)
         ->name('frontend.one');

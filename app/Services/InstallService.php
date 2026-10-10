@@ -172,6 +172,26 @@ class InstallService
      */
     public function createAdministrator(string $name, string $email, string $password): User
     {
+        $handle = fopen($this->progressPath().'.administrator-lock', 'c');
+        if ($handle === false || ! flock($handle, LOCK_EX)) {
+            throw new RuntimeException('Cannot lock administrator creation.');
+        }
+        try {
+            return DB::transaction(function () use ($name, $email, $password) {
+                if (User::query()->exists()) {
+                    throw new RuntimeException('An administrator already exists.');
+                }
+
+                return $this->createFirstAdministrator($name, $email, $password);
+            });
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
+    }
+
+    private function createFirstAdministrator(string $name, string $email, string $password): User
+    {
         // Without the role this produces an account that cannot reach the
         // admin area -- the locked room the installer exists to prevent. Fail
         // loudly rather than leaving a useless user behind.
@@ -229,8 +249,12 @@ class InstallService
 
     public function finish(): void
     {
-        File::delete($this->progressPath());
         $this->writeLock();
+        if (! File::exists($this->lockPath())) {
+            throw new RuntimeException('Cannot close installation. Check storage permissions.');
+        }
+        File::delete($this->progressPath());
+        File::delete(app(InstallOwnership::class)->path());
         SchemaVersion::recordCurrent();
 
         // Drop caches built while the site was half-configured, then rebuild them

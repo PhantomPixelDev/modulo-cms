@@ -4,7 +4,12 @@ namespace App\Providers;
 
 use App\Http\Middleware\CachePublicPages;
 use App\Listeners\RecordActivity;
+use App\Models\Activity;
+use App\Models\ApiToken;
+use App\Models\EditorDraft;
 use App\Models\Post;
+use App\Models\PostAutosave;
+use App\Models\PostRevision;
 use App\Models\PostTranslation;
 use App\Models\User;
 use App\Observers\PostObserver;
@@ -14,12 +19,14 @@ use App\Services\MailSettings;
 use App\Services\MenuService;
 use App\Services\PostService;
 use App\Services\ResponsiveImages;
+use App\Services\RuntimeHealth;
 use App\Services\ShortcodeService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -48,6 +55,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('install', fn (Request $request) => Limit::perMinute(30)->by('install:'.$request->ip()));
+        RateLimiter::for('install-claim', fn (Request $request) => Limit::perMinute(6)->by('install-claim:'.$request->ip()));
+        // {post} resolves by numeric ID or slug. The editor saves by ID while
+        // list links use slugs (and a translation slug may differ from the
+        // base slug). Registered here — not in a route file — so it also
+        // applies when the route table is cached and route files never load.
+        Route::bind('post', fn ($value) => ctype_digit((string) $value)
+            ? Post::findOrFail($value)
+            : Post::where('slug', $value)->firstOrFail());
+
         // Email settings from the admin (System -> Email) override .env; a worker
         // re-reads them before each job so it doesn't keep sending the old way
         $applyMail = function () {
@@ -59,9 +76,15 @@ class AppServiceProvider extends ServiceProvider
         };
         $applyMail();
         Queue::before($applyMail);
+        Queue::looping(fn () => app(RuntimeHealth::class)->heartbeat('queue'));
 
-        // Any content change through a model makes every cached public page stale
-        Event::listen(['eloquent.saved: *', 'eloquent.deleted: *', 'eloquent.restored: *'], fn () => CachePublicPages::bumpVersion());
+        // Invalidate for core and plugin content, but not bookkeeping or unsaved drafts.
+        Event::listen(['eloquent.saved: *', 'eloquent.deleted: *', 'eloquent.restored: *'], function (string $event, array $payload): void {
+            $model = $payload[0] ?? null;
+            if ($model !== null && ! in_array($model::class, [Activity::class, ApiToken::class, EditorDraft::class, PostAutosave::class, PostRevision::class], true)) {
+                CachePublicPages::bumpVersion();
+            }
+        });
 
         // Every password rule in the app uses Password::defaults(). Production
         // asks for a real password; elsewhere (tests, local) the framework's
@@ -112,6 +135,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Define global rate limiters used by routes
+        RateLimiter::for('public-content', fn (Request $request) => Limit::perMinute(
+            max(1, (int) config('content.public_requests_per_minute', 120))
+        )->by('public-content:'.$request->ip()));
+
         RateLimiter::for('api', function (Request $request) {
             $key = optional($request->user())->id ? 'user:'.$request->user()->id : 'ip:'.$request->ip();
 
@@ -130,7 +157,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Stricter limits for auth-related endpoints to mitigate brute force
         RateLimiter::for('auth', function (Request $request) {
-            $key = strtolower((string) $request->input('email')).'|'.$request->ip();
+            $email = $request->input('email');
+            $key = (is_string($email) ? strtolower($email) : '').'|'.$request->ip();
 
             return [
                 Limit::perMinute(10)->by($key),

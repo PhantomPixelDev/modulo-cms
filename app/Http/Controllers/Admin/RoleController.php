@@ -57,6 +57,8 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Role::class);
+
         $request->validate([
             'name' => 'required|string|max:255|unique:roles',
             'permissions' => 'array',
@@ -129,8 +131,8 @@ class RoleController extends Controller
     public function destroy(Role $role)
     {
         $this->authorize('delete', $role);
-        if ($role->name === 'super-admin') {
-            return back()->with('error', 'Cannot delete super admin role.');
+        if (in_array($role->name, RolePolicy::SYSTEM_ROLES, true)) {
+            return back()->with('error', 'System roles cannot be deleted.');
         }
 
         $role->delete();

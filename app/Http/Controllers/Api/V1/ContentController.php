@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\PostResource;
+use App\Models\Page;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Rules\CanPublish;
+use App\Support\LikeEscape;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,10 +45,11 @@ class ContentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $this->authorize('create', Post::class);
-
-        $data = $this->validated($request);
-        $type = PostType::where('name', $data['type'] ?? 'post')->orWhere('slug', $data['type'] ?? 'post')->firstOrFail();
+        $typeData = $request->validate(['type' => ['sometimes', 'string', 'max:100']]);
+        $typeName = $typeData['type'] ?? 'post';
+        $type = PostType::where('name', $typeName)->orWhere('slug', $typeName)->firstOrFail();
+        $this->authorize('create', $type->name === 'page' ? Page::class : Post::class);
+        $data = $this->validated($request, type: $type);
 
         $post = Post::create([
             'post_type_id' => $type->id,
@@ -73,7 +76,7 @@ class ContentController extends Controller
     public function update(Request $request, int $id): PostResource
     {
         $post = Post::findOrFail($id);
-        $this->authorize('update', $post);
+        $this->authorizePost($post, 'update');
 
         $data = $this->validated($request, $post);
         $changes = collect($data)->only(['title', 'excerpt', 'content', 'status', 'featured_image', 'meta_title', 'meta_description'])->all();
@@ -98,7 +101,7 @@ class ContentController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $post = Post::findOrFail($id);
-        $this->authorize('delete', $post);
+        $this->authorizePost($post, 'delete');
 
         $post->delete();
 
@@ -119,10 +122,15 @@ class ContentController extends Controller
         $query = $this->baseQuery($request, $pages, $filters['status'] ?? null)
             ->with(['postType', 'author', 'taxonomyTerms.taxonomy'])
             ->when(! $pages && ($filters['type'] ?? null), fn (Builder $q) => $q->whereHas('postType', fn ($t) => $t->where('name', $filters['type'])->orWhere('slug', $filters['type'])))
-            ->when($filters['term'] ?? null, fn (Builder $q, $term) => $q->whereHas('taxonomyTerms', fn ($t) => $t->where('slug', $term)))
+            ->when($filters['term'] ?? null, fn (Builder $q, $term) => $q->whereHas('taxonomyTerms', function ($t) use ($request, $term) {
+                $t->where('slug', $term);
+                if (! ($request->attributes->get('api_token')?->can('read') && $request->user()?->can('view posts'))) {
+                    $t->whereHas('taxonomy', fn ($taxonomy) => $taxonomy->where('is_public', true));
+                }
+            }))
             ->when($filters['search'] ?? null, fn (Builder $q, $search) => $q->where(fn ($w) => $w
-                ->where('title', 'like', '%'.$search.'%')
-                ->orWhere('excerpt', 'like', '%'.$search.'%')));
+                ->whereRaw("LOWER(title) LIKE ? ESCAPE '!'", ['%'.strtolower(LikeEscape::escape($search)).'%'])
+                ->orWhereRaw("LOWER(excerpt) LIKE ? ESCAPE '!'", ['%'.strtolower(LikeEscape::escape($search)).'%'])));
 
         $sort = $filters['sort'] ?? '-published_at';
         $query->orderBy(ltrim($sort, '-'), str_starts_with($sort, '-') ? 'desc' : 'asc')->orderByDesc('id');
@@ -145,10 +153,16 @@ class ContentController extends Controller
      */
     protected function baseQuery(Request $request, bool $pages, ?string $status): Builder
     {
-        $query = Post::query()->whereHas('postType', fn ($t) => $pages ? $t->where('name', 'page') : $t->where('name', '!=', 'page'));
-
         // Unpublished content only for a token whose user may see it.
-        $privileged = $request->user() !== null && $request->user()->can('view posts');
+        $token = $request->attributes->get('api_token');
+        $privileged = $token?->can('read') && $request->user()?->can($pages ? 'view pages' : 'view posts');
+
+        $query = Post::query()->whereHas('postType', function ($t) use ($pages, $privileged) {
+            $t->where('name', $pages ? '=' : '!=', 'page');
+            if (! $privileged) {
+                $t->where('is_public', true);
+            }
+        });
 
         if (! $privileged || $status === null || $status === 'published') {
             return $query->published();
@@ -162,23 +176,32 @@ class ContentController extends Controller
     }
 
     /**
+     * Authorize against the page policy for pages, the post policy otherwise.
+     */
+    protected function authorizePost(Post $post, string $ability): void
+    {
+        if ($post->postType->name === 'page') {
+            $this->authorize($ability, Page::findOrFail($post->id));
+
+            return;
+        }
+        $this->authorize($ability, $post);
+    }
+
+    /**
      * @return array<string, mixed>
      */
-    protected function validated(Request $request, ?Post $post = null): array
+    protected function validated(Request $request, ?Post $post = null, ?PostType $type = null): array
     {
         $required = $post === null ? 'required' : 'sometimes';
 
-        return $request->validate([
+        $data = $request->validate([
             'type' => ['sometimes', 'string', 'max:100'],
             'title' => [$required, 'string', 'max:255'],
             'slug' => ['sometimes', 'nullable', 'string', 'max:255', 'regex:/^[a-z0-9-]+$/'],
             'excerpt' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'content' => ['sometimes', 'nullable', 'string'],
-            'status' => ['sometimes', Rule::in(['draft', 'published', 'private', 'archived']), new CanPublish(
-                $request->user(),
-                $post,
-                isPage: ($post?->postType->name ?? $request->input('type', 'post')) === 'page',
-            )],
+            'status' => ['sometimes', Rule::in(['draft', 'published', 'private', 'archived'])],
             'published_at' => ['sometimes', 'nullable', 'date'],
             'featured_image' => ['sometimes', 'nullable', 'string', 'max:1000', 'regex:#^(/|https?://)#i'],
             'meta_title' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -186,6 +209,10 @@ class ContentController extends Controller
             'terms' => ['sometimes', 'array'],
             'terms.*' => ['integer', 'exists:taxonomy_terms,id'],
         ]);
+
+        CanPublish::checkRequest($request, $post, isPage: ($post?->postType->name ?? $type?->name) === 'page');
+
+        return $data;
     }
 
     /**

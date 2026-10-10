@@ -2,22 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\PostResource;
-use App\Http\Resources\PostTypeResource;
-use App\Http\Resources\RoleResource;
-use App\Http\Resources\UserResource;
-use App\Models\Post;
-use App\Models\PostType;
 use App\Models\SiteSetting;
-use App\Models\User;
 use App\Services\AdminStatsService;
 use App\Services\DashboardOverview;
+use App\Services\RuntimeHealth;
 use App\Services\SiteSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 class DashboardController extends Controller
 {
@@ -42,25 +35,6 @@ class DashboardController extends Controller
             // System Status
             $data['systemStatus'] = $this->getSystemStatus();
 
-            $perPage = $this->settings->get('posts_per_page', 5);
-
-            $data['users'] = UserResource::collection(
-                User::with('roles')->orderByDesc('created_at')->paginate(5)
-            );
-
-            $data['roles'] = RoleResource::collection(
-                Role::with('permissions')->orderBy('name')->paginate(5)
-            );
-
-            $data['posts'] = PostResource::collection(
-                Post::with(['postType', 'author'])->orderByDesc('created_at')->paginate(5)
-            );
-
-            $data['postTypes'] = PostTypeResource::collection(
-                PostType::orderBy('menu_position')->get()
-            );
-
-            $data['globalCommentsEnabled'] = (bool) $this->settings->get('enable_comments', false);
         }
 
         return Inertia::render('Dashboard', $data);
@@ -81,6 +55,10 @@ class DashboardController extends Controller
     private function getSystemStatus(): array
     {
         $lastCheckedAt = now()->toIso8601String();
+        $health = app(RuntimeHealth::class);
+        $checks = $health->readiness();
+        $queueStatus = $health->backgroundStatus('queue');
+        $schedulerStatus = $health->backgroundStatus('scheduler');
         $loadAverage = $this->formatLoadAverage($this->getServerLoadAverage());
         $storage = $this->getStorageUsage();
 
@@ -108,23 +86,23 @@ class DashboardController extends Controller
                 ]),
             ],
             'uptime' => [
-                'status' => 'running',
+                'status' => $health->startedAt() !== null ? 'running' : 'unavailable',
                 'label' => 'Server Uptime',
                 'value' => $this->getServerUptime(),
-                'color' => 'green',
+                'color' => $health->startedAt() !== null ? 'green' : 'gray',
                 'indicator' => 'solid',
-                'detail' => 'Application runtime has been stable since the last restart.',
+                'detail' => 'Time since this application container started. Unavailable without a reliable startup timestamp.',
                 'last_checked_at' => $lastCheckedAt,
                 'meta' => [
-                    'App started' => $this->getApplicationBootTime()->toDateTimeString(),
+                    'App started' => $health->startedAt() ? Carbon::createFromTimestamp($health->startedAt())->toDateTimeString() : 'Unavailable',
                     'Environment' => config('app.env'),
                 ],
             ],
             'database' => [
-                'status' => $this->checkDatabaseConnection() ? 'connected' : 'disconnected',
+                'status' => $checks['database'] ? 'connected' : 'disconnected',
                 'label' => 'Database',
-                'value' => $this->checkDatabaseConnection() ? 'Connected' : 'Disconnected',
-                'color' => $this->checkDatabaseConnection() ? 'green' : 'red',
+                'value' => $checks['database'] ? 'Connected' : 'Disconnected',
+                'color' => $checks['database'] ? 'green' : 'red',
                 'indicator' => 'solid',
                 'detail' => 'Verifies the primary database connection and driver.',
                 'last_checked_at' => $lastCheckedAt,
@@ -135,10 +113,10 @@ class DashboardController extends Controller
                 ]),
             ],
             'cache' => [
-                'status' => 'active',
+                'status' => $checks['cache'] ? 'active' : 'unavailable',
                 'label' => 'Cache',
-                'value' => 'Active',
-                'color' => 'blue',
+                'value' => $checks['cache'] ? 'Active' : 'Unavailable',
+                'color' => $checks['cache'] ? 'green' : 'red',
                 'indicator' => 'solid',
                 'detail' => 'Ensures the caching layer is available for quick responses.',
                 'last_checked_at' => $lastCheckedAt,
@@ -160,13 +138,18 @@ class DashboardController extends Controller
                     'Path' => $storage['path'],
                 ],
             ],
+            'scheduler' => [
+                'status' => $schedulerStatus, 'label' => 'Scheduler', 'value' => ucfirst($schedulerStatus),
+                'color' => $schedulerStatus === 'active' ? 'green' : 'yellow', 'indicator' => 'solid',
+                'detail' => 'Scheduler heartbeat; stale after three minutes.', 'last_checked_at' => $lastCheckedAt,
+            ],
             'queue' => [
-                'status' => 'active',
+                'status' => $queueStatus,
                 'label' => 'Queue Worker',
-                'value' => ucfirst($queueConnection),
-                'color' => 'blue',
+                'value' => $queueStatus === 'inline' ? 'Inline processing' : ucfirst($queueStatus),
+                'color' => in_array($queueStatus, ['active', 'inline'], true) ? 'green' : 'yellow',
                 'indicator' => 'solid',
-                'detail' => 'Monitors the background processing pipeline.',
+                'detail' => 'Queue loop heartbeat; stale after three minutes. Independent of web readiness.',
                 'last_checked_at' => $lastCheckedAt,
                 'meta' => array_filter([
                     'Connection' => $queueConnection,
@@ -175,17 +158,6 @@ class DashboardController extends Controller
                 ]),
             ],
         ];
-    }
-
-    private function checkDatabaseConnection(): bool
-    {
-        try {
-            \DB::connection()->getPdo();
-
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
     }
 
     private function getStorageUsage(): array
@@ -243,16 +215,12 @@ class DashboardController extends Controller
         );
     }
 
-    private function getApplicationBootTime(): Carbon
-    {
-        $startTimestamp = defined('LARAVEL_START') ? LARAVEL_START : time();
-
-        return Carbon::createFromTimestamp($startTimestamp);
-    }
-
     private function getServerUptime(): string
     {
-        $startTime = defined('LARAVEL_START') ? LARAVEL_START : time();
+        $startTime = app(RuntimeHealth::class)->startedAt();
+        if ($startTime === null) {
+            return 'Unavailable';
+        }
         $uptimeSeconds = (int) (time() - $startTime);
 
         $days = floor($uptimeSeconds / 86400);

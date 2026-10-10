@@ -25,6 +25,7 @@ class ThemeValidator
         $this->validateRequiredFields($config);
         $this->validateSlug($config);
         $this->validateVersion($config);
+        $this->validateContentPartials($config, $themePath);
 
         // A child theme may list no templates at all: its parent renders them.
         if (! isset($config['parent']) || isset($config['templates'])) {
@@ -32,6 +33,47 @@ class ThemeValidator
         }
 
         return empty($this->errors);
+    }
+
+    private function validateContentPartials(array $config, string $themePath): void
+    {
+        $partials = $config['partials'] ?? [];
+        if (! is_array($partials)) {
+            $this->errors[] = 'Partials configuration must be an object.';
+
+            return;
+        }
+        foreach ($partials as $name => $partial) {
+            // Legacy structural partials are unchanged. Only opted-in content modules use this contract.
+            if (! is_array($partial) || ($partial['shortcode'] ?? false) !== true) {
+                continue;
+            }
+            $component = $partial['component'] ?? '';
+            if (! preg_match('/^[a-z][a-z0-9_-]*$/D', (string) $name)
+                || ! is_string($component) || ! preg_match(ThemePartialService::COMPONENT_PATTERN, $component)) {
+                $this->errors[] = "Invalid content partial '{$name}': use a named .tsx component inside partials/.";
+
+                continue;
+            }
+            if (! isset($config['parent']) && ! File::isFile($themePath.'/'.$component)) {
+                $this->errors[] = "Content partial component not found: {$component}";
+            }
+            $defaults = $partial['defaults'] ?? [];
+            foreach (app(ThemePartialFields::class)->manifestErrors($partial) as $error) {
+                $this->errors[] = "Content partial '{$name}' {$error}";
+            }
+            foreach (['label', 'description'] as $field) {
+                if (isset($partial[$field]) && ! is_string($partial[$field])) {
+                    $this->errors[] = "Content partial '{$name}' {$field} must be a string.";
+                }
+            }
+            if (isset($partial['body']) && ! is_bool($partial['body'])) {
+                $this->errors[] = "Content partial '{$name}' body must be a boolean.";
+            }
+            if (! is_array($defaults) || count(array_filter($defaults, fn ($value) => is_string($value))) !== count($defaults)) {
+                $this->errors[] = "Content partial '{$name}' defaults must contain string values.";
+            }
+        }
     }
 
     /**
