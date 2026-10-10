@@ -1,0 +1,93 @@
+name: supported runtimes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runtime-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  development-image:
+    name: PHP 8.5 development image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target app -f docker-dev/Dockerfile -t modulo-development-test .
+      - run: docker run --rm --entrypoint php modulo-development-test -r 'foreach (["gd", "pdo_pgsql", "pdo_mysql", "intl", "zip", "Zend OPcache"] as $extension) { if (!extension_loaded($extension)) { throw new RuntimeException($extension); } } echo PHP_VERSION, PHP_EOL;'
+
+  php85:
+    name: PHP 8.5 (${{ matrix.database }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        database: [sqlite, postgres]
+    services:
+      postgres:
+        image: public.ecr.aws/docker/library/postgres:16-alpine
+        env:
+          POSTGRES_DB: modulo_test
+          POSTGRES_USER: modulo_test
+          POSTGRES_PASSWORD: modulo_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U modulo_test -d modulo_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_USERNAME: modulo_test
+      DB_PASSWORD: modulo_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+          tools: composer:v2
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer check-platform-reqs
+      - run: |
+          if [ '${{ matrix.database }}' = postgres ]; then
+            vendor/bin/pest -c config/testing/phpunit.pgsql.xml
+          else
+            vendor/bin/pest
+          fi
+
+  redis:
+    name: Redis compatibility (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        php: ['8.4', '8.5']
+    services:
+      redis:
+        image: public.ecr.aws/docker/library/redis:7.4.11-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      MODULO_REDIS_TESTS: 'true'
+      REDIS_HOST: 127.0.0.1
+      REDIS_CLIENT: phpredis
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+          extensions: redis
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: vendor/bin/pest tests/Feature/RedisCompatibilityTest.php

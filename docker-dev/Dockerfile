@@ -1,6 +1,8 @@
 # Dev-focused images for Modulo CMS
 
-FROM php:8.4-fpm AS app
+ARG PHP_VERSION=8.5
+ARG DOCKER_LIBRARY=docker.io/library
+FROM ${DOCKER_LIBRARY}/php:${PHP_VERSION}-fpm AS app
 WORKDIR /var/www/html
 
 RUN set -eux; \
@@ -12,7 +14,8 @@ RUN set -eux; \
       libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libicu-dev; \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
     docker-php-ext-install -j"$(nproc)" \
-      gd pdo pdo_mysql pgsql pdo_pgsql opcache exif bcmath zip intl; \
+      gd pdo pdo_mysql pgsql pdo_pgsql exif bcmath zip intl; \
+    if [ "$(php -r 'echo PHP_VERSION_ID;')" -lt 80500 ]; then docker-php-ext-install opcache; fi; \
     rm -rf /var/lib/apt/lists/*; \
     sed -ri \
       -e 's#^listen\s*=\s*.*#listen = 0.0.0.0:9000#' \
@@ -22,7 +25,7 @@ RUN set -eux; \
 COPY docker-dev/php.ini "$PHP_INI_DIR/conf.d/zz-modulo-dev.ini"
 
 # Composer (for dev container)
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY --from=${DOCKER_LIBRARY}/composer:2 /usr/bin/composer /usr/local/bin/composer
 
 COPY docker-dev/entrypoint.sh /usr/local/bin/app-entrypoint
 RUN chmod +x /usr/local/bin/app-entrypoint
@@ -32,7 +35,7 @@ ENTRYPOINT ["/bin/sh","/usr/local/bin/app-entrypoint"]
 CMD ["php-fpm"]
 
 
-FROM node:24-bookworm-slim AS vite
+FROM ${DOCKER_LIBRARY}/node:24-bookworm-slim AS vite
 WORKDIR /app
 
 RUN set -eux; \

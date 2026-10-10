@@ -7,6 +7,7 @@
 
 # CI can select another Docker Official Images registry without changing tags.
 ARG DOCKER_LIBRARY=docker.io/library
+ARG PHP_VERSION=8.5
 
 # --- Composer dependencies (no dev packages) ---------------------------------
 FROM --platform=$BUILDPLATFORM ${DOCKER_LIBRARY}/composer:2 AS vendor
@@ -32,7 +33,7 @@ RUN npm run build
 
 
 # --- PHP-FPM application -------------------------------------------------------
-FROM ${DOCKER_LIBRARY}/php:8.4-fpm AS app
+FROM ${DOCKER_LIBRARY}/php:${PHP_VERSION}-fpm AS app
 WORKDIR /var/www/html
 
 RUN set -eux; \
@@ -41,7 +42,8 @@ RUN set -eux; \
       libpq-dev libzip-dev libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libicu-dev \
       postgresql-client; \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
-    docker-php-ext-install -j"$(nproc)" gd pdo_pgsql pgsql opcache exif bcmath zip pcntl intl; \
+    docker-php-ext-install -j"$(nproc)" gd pdo_pgsql pgsql exif bcmath zip pcntl intl; \
+    if [ "$(php -r 'echo PHP_VERSION_ID;')" -lt 80500 ]; then docker-php-ext-install opcache; fi; \
     pecl install redis; \
     docker-php-ext-enable redis; \
     # Keep extension runtime libraries, then remove compilers and headers.
