@@ -183,6 +183,7 @@ jobs:
           done
           php artisan plugin:install modulo-shop --release=1.10.1 --activate
           php artisan modulo:seed-demo --reset-content --force
+          php artisan storage:link --force
           php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); App\Models\SiteSetting::set("site_url", getenv("APP_URL"));'
           # Earlier restore/package checks may have cached normal-site URLs.
           # The demo server must boot with this step's environment.
