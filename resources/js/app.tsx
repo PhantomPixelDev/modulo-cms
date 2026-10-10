@@ -116,7 +116,9 @@ createInertiaApp({
                 <App {...props} />
             </ApplicationProviders>
         );
-        if (el.hasChildNodes()) {
+        // Plugins register browser-only components; the SSR placeholder cannot
+        // be hydrated into the plugin's actual screen.
+        if (el.hasChildNodes() && !props.initialPage.component.startsWith('Plugins/')) {
             hydrateRoot(el, content);
         } else {
             createRoot(el).render(content);

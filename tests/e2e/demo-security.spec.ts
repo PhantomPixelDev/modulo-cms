@@ -21,4 +21,11 @@ test('public demo credentials cannot administer the server through direct reques
     expect((await page.request.put('/settings/password', { headers, data: {} })).status()).toBe(403);
     expect((await page.request.get('/dashboard/admin/posts', { headers })).status()).toBe(200);
     expect((await page.request.get('/dashboard/admin/media', { headers })).status()).toBe(200);
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('/dashboard/admin/shop/products');
+    await expect(page.getByRole('heading', { name: 'Products', exact: true })).toBeVisible();
+    await expect(page.getByText('Field Notebook A5', { exact: true })).toBeVisible();
+    await expect(page.locator('[data-sonner-toaster]')).toHaveCount(1);
+    expect(errors).toEqual([]);
 });

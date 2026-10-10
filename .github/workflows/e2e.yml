@@ -171,7 +171,16 @@ jobs:
           ASSET_URL: http://127.0.0.1:8001
           MODULO_E2E_DEMO: '1'
           MODULO_E2E_SHOP: '1'
+          INERTIA_SSR_ENABLED: 'true'
         run: |
+          set -euo pipefail
+          node bootstrap/ssr/ssr.js >/tmp/modulo-demo-ssr.log 2>&1 &
+          ssr_pid=$!
+          trap 'kill "$ssr_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 15); do
+            if curl -fsS http://127.0.0.1:13714/health >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
           php artisan plugin:install modulo-shop --release=1.10.0 --activate
           php artisan modulo:seed-demo --reset-content --force
           php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); App\Models\SiteSetting::set("site_url", getenv("APP_URL"));'
