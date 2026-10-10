@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
+import { fileURLToPath } from 'node:url';
 import path from 'path';
 import { defineConfig } from 'vite';
 
@@ -10,6 +11,7 @@ const vitePort = parseInt(process.env.VITE_PORT || '5173', 10);
 const serverHost = process.env.VITE_SERVER_HOST || (process.env.VITE_HOST?.includes('localhost') ? '0.0.0.0' : 'localhost');
 const isDocker = !!process.env.VITE_HOST && process.env.VITE_HOST !== 'localhost';
 const hmrEnabled = process.env.VITE_HMR_ENABLED !== 'false';
+const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
 
 // Set dev server URL for Laravel Vite plugin
 process.env.VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || `http://localhost:${vitePort}`;
@@ -77,32 +79,27 @@ export default defineConfig(({ command, isSsrBuild }) => ({
     },
     build: {
         target: process.env.VITE_BUILD_TARGET || 'es2022',
-        minify: process.env.VITE_BUILD_MINIFY !== 'false' ? 'esbuild' : false,
+        minify: process.env.VITE_BUILD_MINIFY !== 'false',
         sourcemap: process.env.VITE_BUILD_SOURCEMAP === 'true',
-        rollupOptions: {
+        rolldownOptions: {
             output: {
                 manualChunks: isSsrBuild
                     ? undefined
-                    : {
-                          vendor: ['react', 'react-dom', '@inertiajs/react'],
-                          ui: [
-                              '@radix-ui/react-dialog',
-                              '@radix-ui/react-dropdown-menu',
-                              '@radix-ui/react-select',
-                              '@radix-ui/react-tabs',
-                              '@radix-ui/react-tooltip',
-                              '@headlessui/react',
-                          ],
-                          editor: ['slate', 'slate-react', 'slate-history', 'slate-dom'],
-                          utils: ['date-fns', 'clsx', 'tailwind-merge', 'class-variance-authority'],
+                    : (id: string) => {
+                          const module = id.replaceAll('\\', '/');
+                          if (!module.includes('/node_modules/')) return;
+                          if (/\/node_modules\/(react|react-dom|@inertiajs)\//.test(module)) return 'vendor';
+                          if (/\/node_modules\/(slate|slate-react|slate-history|slate-dom)\//.test(module)) return 'editor';
+                          if (/\/node_modules\/(@radix-ui|@headlessui)\//.test(module)) return 'ui';
+                          if (/\/node_modules\/(date-fns|clsx|tailwind-merge|class-variance-authority)\//.test(module)) return 'utils';
                       },
             },
         },
     },
     resolve: {
         alias: {
-            '@': path.resolve(__dirname, '../../resources/js'),
-            '@themes': path.resolve(__dirname, '../../resources/themes'),
+            '@': path.resolve(projectRoot, 'resources/js'),
+            '@themes': path.resolve(projectRoot, 'resources/themes'),
         },
     },
 }));

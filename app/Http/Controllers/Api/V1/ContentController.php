@@ -8,6 +8,7 @@ use App\Models\Page;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Rules\CanPublish;
+use App\Support\ContentRules;
 use App\Support\LikeEscape;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -195,9 +196,8 @@ class ContentController extends Controller
     {
         $required = $post === null ? 'required' : 'sometimes';
 
-        $data = $request->validate([
+        $data = $request->validate(array_replace(ContentRules::text($required), [
             'type' => ['sometimes', 'string', 'max:100'],
-            'title' => [$required, 'string', 'max:255'],
             'slug' => ['sometimes', 'nullable', 'string', 'max:255', 'regex:/^[a-z0-9-]+$/'],
             'excerpt' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'content' => ['sometimes', 'nullable', 'string'],
@@ -208,7 +208,7 @@ class ContentController extends Controller
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
             'terms' => ['sometimes', 'array'],
             'terms.*' => ['integer', 'exists:taxonomy_terms,id'],
-        ]);
+        ]));
 
         CanPublish::checkRequest($request, $post, isPage: ($post?->postType->name ?? $type?->name) === 'page');
 

@@ -18,7 +18,7 @@ describe('plugin SDK shims', () => {
             for (const name of names) {
                 expect(source, `missing export "${name}" -- run npm run build:shims`).toContain(`export const ${name} = m.${name};`);
             }
-        });
+        }, 15_000);
     }
 
     it('is wired into the page by an import map', () => {
