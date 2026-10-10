@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, CreditCard, Loader2, MapPin, ShoppingBag, Truck } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Layout from '../Layout';
 import { configureMoney, formatMoney, type MoneyFormat, shopRequest, type ShopTotals, TotalsRows } from './totals';
 
@@ -61,6 +61,7 @@ export default function Checkout({
     const countryList = countries ?? { US: 'United States' };
 
     const [submitting, setSubmitting] = useState(false);
+    const submissionPending = useRef(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const saved = saved_address ?? {};
     const pick = (key: string, fallback = '') => (typeof saved[key] === 'string' ? (saved[key] as string) : fallback);
@@ -119,6 +120,8 @@ export default function Checkout({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (submissionPending.current) return;
+        submissionPending.current = true;
         setSubmitting(true);
         setErrors({});
 
@@ -137,6 +140,7 @@ export default function Checkout({
 
             if (data.success) {
                 window.location.href = data.redirect;
+                return;
             } else if (data.errors) {
                 // Laravel sends each field's messages as an array; stock and cart
                 // problems arrive under "cart", which has no field of its own.
@@ -158,6 +162,7 @@ export default function Checkout({
             setErrors({ general: 'An error occurred. Please try again.' });
         }
 
+        submissionPending.current = false;
         setSubmitting(false);
     };
 
