@@ -1,0 +1,69 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source:
+    name: PHP and TypeScript security analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Scan application boundaries
+        run: |
+          mkdir -p security-reports
+          docker run --rm -v "$PWD:/src" -w /src mirror.gcr.io/semgrep/semgrep:1.180.0 \
+            semgrep scan --config p/php --config p/typescript --metrics=off \
+            --disable-version-check --error --json --output security-reports/semgrep.json app resources/js
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: source-security
+          path: security-reports/
+          retention-days: 14
+
+  containers:
+    name: Container vulnerability analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install verified Trivy
+        run: |
+          curl -fsSL --retry 3 -o /tmp/trivy.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.75.0/trivy_0.75.0_Linux-64bit.tar.gz
+          echo 'c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f  /tmp/trivy.tar.gz' | sha256sum --check
+          tar -xzf /tmp/trivy.tar.gz -C /tmp trivy
+      - name: Build shipped images
+        run: |
+          docker build --pull --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target app -f docker/Dockerfile -t modulo-security-app .
+          docker build --pull --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target web -f docker/Dockerfile -t modulo-security-web .
+      - name: Report every finding and reject available high-severity fixes
+        run: |
+          mkdir -p security-reports
+          result=0
+          for image in app web; do
+            /tmp/trivy image --scanners vuln --format json --output "security-reports/$image.json" "modulo-security-$image"
+            # Unfixed distribution advisories remain in the full report. They
+            # are reviewed separately rather than hidden with CVE exclusions.
+            /tmp/trivy image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "modulo-security-$image" || result=1
+          done
+          exit "$result"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: container-security
+          path: security-reports/
+          retention-days: 14
