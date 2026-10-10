@@ -94,6 +94,11 @@ dist
 .vite/
 
 # Local artifacts
+.admin-credentials
+.ssh/
+*.pem
+id_*
+compose.vps.yaml*
 cookies.txt
 storage/media-library/
 bootstrap/cache/*.php
