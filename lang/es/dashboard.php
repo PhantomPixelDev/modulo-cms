@@ -969,6 +969,8 @@ return [
         'branding' => 'Logotipo e identidad', 'header' => 'Cabecera', 'footer' => 'Pie de página',
         'choose_image' => 'Elegir de la biblioteca', 'remove_image' => 'Quitar',
         'logo_text_hint' => 'Deja vacío para usar el nombre del sitio. No cambia la identidad ni los títulos de las páginas.',
+        'logo_mode_hint' => 'Elegir un icono activa el modo Icono. Elegir una imagen activa el modo Imagen. Guarda para actualizar el logotipo del sitio y la administración.',
+        'choose_icon' => 'Elige un icono…',
         'footer_text_hint' => 'Deja vacío para el valor predeterminado. Usa {year} para el año y {site} para el nombre del sitio.',
         'title' => 'Ajustes del tema',
         'description' => 'Cambia la apariencia del sitio sin editar los archivos del tema.',

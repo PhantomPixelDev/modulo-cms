@@ -24,6 +24,7 @@ it('keeps admin routes and sidebar data away from visitors', function () {
             ->where('ziggy.routes', lacksRoute('dashboard.admin.users.index'))
             ->where('ziggy.routes', hasRoute('login'))
             ->where('dynamicMenu.postTypes', [])
+            ->where('branding', null)
         );
 });
 
@@ -49,5 +50,6 @@ it('does not share admin data with signed-in non-admins', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('ziggy.routes', lacksRoute('dashboard.admin.users.index'))
+            ->where('branding', null)
         );
 });

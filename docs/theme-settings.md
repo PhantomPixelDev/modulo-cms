@@ -23,7 +23,14 @@ These theme overrides do not rename the site or change SEO page titles.
 Header settings control sticky positioning, spacing, and the light/dark switch.
 Footer settings control the logo, tagline, CMS credit, and copyright text.
 Use `{year}` and `{site}` in copyright text; leave it blank for the standard footer.
-The same branding appears in the header, footer, and public authentication pages.
+Choosing an icon automatically switches to **Icon** mode; choosing or entering
+an image switches to **Image** mode. **Automatic** uses the site logo or the first
+letter of the logo text. A dark-only image works in both modes until a light image
+is provided. Unavailable images show a fallback mark instead of a broken image.
+The preview shows header spacing and footer visibility/text as you edit.
+The same saved branding appears in the header, footer, public authentication
+pages and admin navigation. Admin marks use a compact size so navigation remains
+usable even when the public logo is large.
 Theme developers can reuse `ThemeBrand` for consistent rendering.
 The media picker includes a folder selector for top-level and nested folders.
 The upgrade also repairs older library seeds saved in the wrong media collection,

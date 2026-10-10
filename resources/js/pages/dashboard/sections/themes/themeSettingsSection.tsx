@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/useTranslation';
-import { themeDeclarations, type ThemeSettingsData, type ThemeSettingValues } from '@/theme-settings';
+import { themeDeclarations, updateThemeSetting, type ThemeSettingsData, type ThemeSettingValue, type ThemeSettingValues } from '@/theme-settings';
 import { useForm } from '@inertiajs/react';
 import { useState, type CSSProperties } from 'react';
 import { SectionWrapper } from '../../components/common/SectionWrapper';
@@ -16,6 +16,8 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
     const { setData } = form;
     const [darkPreview, setDarkPreview] = useState(false);
     const [imageField, setImageField] = useState<string | null>(null);
+    const iconPickerInactive = Object.hasOwn(settings.fields, 'logo_style') && form.data.values.logo_style !== 'icon';
+    const change = (key: string, value: ThemeSettingValue) => setData('values', updateThemeSetting(form.data.values, key, value));
     const label = (key: string, fallback: string) => t(`dashboard.theme_settings.fields.${key}`, {}, fallback);
     const previewStyle = Object.fromEntries(
         [themeDeclarations(form.data.values), darkPreview ? themeDeclarations(form.data.values, true) : '']
@@ -33,7 +35,8 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
         <form
             onSubmit={(event) => {
                 event.preventDefault();
-                if (!form.processing) form.put(route('dashboard.admin.themes.settings.update', settings.id), { preserveScroll: true });
+                if (!form.processing && !cacheForm.processing)
+                    form.put(route('dashboard.admin.themes.settings.update', settings.id), { preserveScroll: true });
             }}
             className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(240px,340px)]"
         >
@@ -45,7 +48,7 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                     const fields = Object.entries(settings.fields).filter(([, field]) => field.group === group);
                     if (!fields.length) return null;
                     return (
-                        <fieldset key={group} disabled={form.processing} className="space-y-4 rounded-lg border p-5">
+                        <fieldset key={group} disabled={form.processing || cacheForm.processing} className="space-y-4 rounded-lg border p-5">
                             <legend className="px-2 text-sm font-semibold">{t(`dashboard.theme_settings.${group}`)}</legend>
                             <div className="grid gap-5 sm:grid-cols-2">
                                 {fields.map(([key, field]) => (
@@ -61,14 +64,14 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                                                             ? String(form.data.values[key])
                                                             : String(field.default)
                                                     }
-                                                    onChange={(event) => setData('values', { ...form.data.values, [key]: event.target.value })}
+                                                    onChange={(event) => change(key, event.target.value)}
                                                     className="h-9 w-11 shrink-0 cursor-pointer rounded border bg-transparent p-1"
                                                 />
                                                 <Input
                                                     id={`theme-${key}`}
                                                     value={String(form.data.values[key] ?? '')}
                                                     maxLength={7}
-                                                    onChange={(event) => setData('values', { ...form.data.values, [key]: event.target.value })}
+                                                    onChange={(event) => change(key, event.target.value)}
                                                     aria-invalid={Boolean(form.errors[`values.${key}`])}
                                                     className="font-mono"
                                                 />
@@ -76,10 +79,16 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                                         ) : field.type === 'select' ? (
                                             <select
                                                 id={`theme-${key}`}
-                                                value={String(form.data.values[key])}
-                                                onChange={(event) => setData('values', { ...form.data.values, [key]: event.target.value })}
+                                                value={key === 'logo_icon' && iconPickerInactive ? '' : String(form.data.values[key])}
+                                                onChange={(event) => change(key, event.target.value)}
+                                                aria-invalid={Boolean(form.errors[`values.${key}`])}
                                                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                                             >
+                                                {key === 'logo_icon' && iconPickerInactive && (
+                                                    <option value="" disabled>
+                                                        {t('dashboard.theme_settings.choose_icon')}
+                                                    </option>
+                                                )}
                                                 {Object.entries(field.options).map(([value, text]) => (
                                                     <option key={value} value={value}>
                                                         {t(`dashboard.theme_settings.options.${value}`, {}, text)}
@@ -100,7 +109,8 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                                                     value={String(form.data.values[key] ?? '')}
                                                     maxLength={1000}
                                                     placeholder="/storage/…"
-                                                    onChange={(event) => setData('values', { ...form.data.values, [key]: event.target.value })}
+                                                    onChange={(event) => change(key, event.target.value)}
+                                                    aria-invalid={Boolean(form.errors[`values.${key}`])}
                                                 />
                                                 <div className="flex flex-wrap gap-2">
                                                     <Button
@@ -117,7 +127,7 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                                                         variant="ghost"
                                                         size="sm"
                                                         disabled={!form.data.values[key]}
-                                                        onClick={() => setData('values', { ...form.data.values, [key]: '' })}
+                                                        onClick={() => change(key, '')}
                                                     >
                                                         {t('dashboard.theme_settings.remove_image')}
                                                     </Button>
@@ -132,13 +142,12 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                                                 max={field.max}
                                                 maxLength={field.type === 'text' ? 500 : undefined}
                                                 onChange={(event) =>
-                                                    setData('values', {
-                                                        ...form.data.values,
-                                                        [key]:
-                                                            field.type === 'number' && event.target.value !== ''
-                                                                ? Number(event.target.value)
-                                                                : event.target.value,
-                                                    })
+                                                    change(
+                                                        key,
+                                                        field.type === 'number' && event.target.value !== ''
+                                                            ? Number(event.target.value)
+                                                            : event.target.value,
+                                                    )
                                                 }
                                                 aria-invalid={Boolean(form.errors[`values.${key}`])}
                                             />
@@ -147,12 +156,15 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                                                 id={`theme-${key}`}
                                                 type="checkbox"
                                                 checked={form.data.values[key] === true}
-                                                onChange={(event) => setData('values', { ...form.data.values, [key]: event.target.checked })}
+                                                onChange={(event) => change(key, event.target.checked)}
                                                 className="size-4 accent-primary"
                                             />
                                         )}
                                         {key === 'logo_text' && (
                                             <p className="text-xs text-muted-foreground">{t('dashboard.theme_settings.logo_text_hint')}</p>
+                                        )}
+                                        {key === 'logo_icon' && (
+                                            <p className="text-xs text-muted-foreground">{t('dashboard.theme_settings.logo_mode_hint')}</p>
                                         )}
                                         {key === 'footer_text' && (
                                             <p className="text-xs text-muted-foreground">{t('dashboard.theme_settings.footer_text_hint')}</p>
@@ -175,13 +187,13 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                 )}
                 {!Object.keys(settings.fields).length && <p className="text-sm text-muted-foreground">{t('dashboard.theme_settings.no_controls')}</p>}
                 <div className="flex flex-wrap gap-3">
-                    <Button type="submit" disabled={form.processing || !form.isDirty || !Object.keys(settings.fields).length}>
+                    <Button type="submit" disabled={form.processing || cacheForm.processing || !form.isDirty || !Object.keys(settings.fields).length}>
                         {t(`dashboard.theme_settings.${form.processing ? 'saving' : 'save'}`)}
                     </Button>
                     <Button
                         type="button"
                         variant="outline"
-                        disabled={form.processing}
+                        disabled={form.processing || cacheForm.processing}
                         onClick={() => {
                             if (confirm(t('dashboard.theme_settings.reset_confirm')))
                                 form.delete(route('dashboard.admin.themes.settings.reset', settings.id), { preserveScroll: true });
@@ -207,9 +219,29 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                     className="theme-frontend overflow-hidden rounded-lg border bg-background text-foreground"
                 >
                     <div className={darkPreview ? 'dark' : ''}>
-                        <div className="border-b bg-muted px-6 py-4 font-semibold">
+                        <div
+                            data-testid="theme-preview-header"
+                            className={`flex items-center justify-between gap-3 border-b bg-muted px-6 font-semibold ${form.data.values.header_density === 'compact' ? 'py-2' : form.data.values.header_density === 'roomy' ? 'py-6' : 'py-4'}`}
+                        >
                             <ThemeBrand site={settings.site} values={form.data.values} dark={darkPreview} />
+                            {form.data.values.header_theme_toggle !== false && (
+                                <span aria-hidden="true" className="shrink-0 text-sm">
+                                    ☀ / ☾
+                                </span>
+                            )}
                         </div>
+                    </div>
+                    <div data-testid="theme-preview-footer" className="space-y-3 border-t bg-muted p-6 text-sm">
+                        {form.data.values.footer_show_brand !== false && (
+                            <ThemeBrand site={settings.site} values={form.data.values} dark={darkPreview} />
+                        )}
+                        {form.data.values.footer_show_tagline !== false && settings.site?.tagline && <p>{settings.site.tagline}</p>}
+                        <p>
+                            {String(form.data.values.footer_text || '© {year} {site}')
+                                .replaceAll('{year}', String(new Date().getFullYear()))
+                                .replaceAll('{site}', settings.site?.name || 'Modulo CMS')}
+                        </p>
+                        {form.data.values.footer_powered_by !== false && <p>Modulo CMS</p>}
                     </div>
                     <div className="space-y-4 p-6">
                         <div className="h-24 rounded-md bg-muted" />
@@ -245,7 +277,7 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                     if (!open) setImageField(null);
                 }}
                 onSelect={(item) => {
-                    if (imageField) setData('values', { ...form.data.values, [imageField]: item.url });
+                    if (imageField) change(imageField, item.url);
                     setImageField(null);
                 }}
             />

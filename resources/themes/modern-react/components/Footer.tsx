@@ -42,21 +42,24 @@ export default function Footer({ site, menu }: FooterProps) {
     // Items with children become their own column; the rest share one.
     const groups = items.filter((item) => normalizeMenuItems(item.children).length > 0);
     const singles = items.filter((item) => normalizeMenuItems(item.children).length === 0);
+    const showIdentity = values.footer_show_brand !== false || (values.footer_show_tagline !== false && Boolean(site?.tagline));
 
     return (
         <footer className="border-t bg-muted/30">
             <Container className="py-14">
-                <div className="grid gap-10 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]">
-                    <div className="max-w-sm space-y-3">
-                        {values.footer_show_brand !== false && (
-                            <Link href="/" className="inline-flex max-w-full font-semibold tracking-tight text-foreground">
-                                <ThemeBrand site={site} values={values} />
-                            </Link>
-                        )}
-                        {values.footer_show_tagline !== false && site?.tagline && (
-                            <p className="text-sm leading-relaxed text-muted-foreground">{site.tagline}</p>
-                        )}
-                    </div>
+                <div className={`grid gap-10 ${showIdentity ? 'md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]' : 'md:grid-cols-2'}`}>
+                    {showIdentity && (
+                        <div className="max-w-sm space-y-3">
+                            {values.footer_show_brand !== false && (
+                                <Link href="/" className="inline-flex max-w-full font-semibold tracking-tight text-foreground">
+                                    <ThemeBrand site={site} values={values} />
+                                </Link>
+                            )}
+                            {values.footer_show_tagline !== false && site?.tagline && (
+                                <p className="text-sm leading-relaxed text-muted-foreground">{site.tagline}</p>
+                            )}
+                        </div>
+                    )}
 
                     {singles.length > 0 && (
                         <nav aria-label={tt('footer.navigation', 'Navigation')}>

@@ -30,6 +30,18 @@ it('requires customization permission for reading saving and resetting', functio
     $this->deleteJson(route('dashboard.admin.themes.settings.reset', $this->theme))->assertForbidden();
 });
 
+it('shares the active saved brand with admin navigation and refreshes it after changes', function () {
+    $values = array_replace(app(ThemeSettings::class)->values($this->theme), [
+        'logo_style' => 'icon', 'logo_icon' => 'leaf', 'logo_text' => 'Studio',
+    ]);
+    $this->actingAs($this->owner)->put(route('dashboard.admin.themes.settings.update', $this->theme), ['values' => $values])->assertRedirect();
+    $this->get(route('dashboard.admin.themes.settings.edit', $this->theme))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('branding.values.logo_icon', 'leaf')->where('branding.values.logo_text', 'Studio'));
+    $this->delete(route('dashboard.admin.themes.settings.reset', $this->theme))->assertRedirect();
+    $this->get(route('dashboard.admin.themes.settings.edit', $this->theme))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('branding.values.logo_style', 'auto')->where('branding.values.logo_text', ''));
+});
+
 it('saves settings without writing files and invalidates active-theme and page caches', function () {
     $manifest = File::get($this->theme->full_path.'/theme.json');
     app(ThemeManager::class)->getActiveTheme();

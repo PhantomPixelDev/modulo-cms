@@ -14,7 +14,6 @@ import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu, Search } from 'lucide-react';
 import AppLogo from './app-logo';
-import AppLogoIcon from './app-logo-icon';
 
 const activeItemStyles = 'bg-accent text-accent-foreground';
 
@@ -41,7 +40,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             <SheetContent side="left" className="flex h-full w-64 flex-col items-stretch justify-between bg-sidebar">
                                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                                 <SheetHeader className="flex justify-start text-left">
-                                    <AppLogoIcon className="h-6 w-6 fill-current text-black dark:text-white" />
+                                    <AppLogo />
                                 </SheetHeader>
                                 <div className="flex h-full flex-1 flex-col px-4 py-6">
                                     <div className="flex h-full flex-col justify-between text-sm">

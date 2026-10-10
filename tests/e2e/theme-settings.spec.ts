@@ -58,7 +58,9 @@ test('branding uses media images, updates public header/footer and cache clearin
     const url = new URL(page.url());
     const endpoint = `${url.origin}${url.pathname}`;
     try {
-        await page.locator('#theme-logo_style').selectOption('image');
+        await page.locator('#theme-logo_icon').selectOption('leaf');
+        await expect(page.locator('#theme-logo_style')).toHaveValue('icon');
+        await expect(page.getByTestId('theme-preview-header').locator('.lucide-leaf')).toBeVisible();
         await page.locator('#theme-logo_text').fill('Studio branding test');
         await page.locator('#theme-logo_height').fill('48');
         await page.getByRole('button', { name: 'Choose from media', exact: true }).first().click();
@@ -74,7 +76,8 @@ test('branding uses media images, updates public header/footer and cache clearin
         await expect(dialog).not.toBeVisible();
         const image = await page.locator('#theme-logo_image').inputValue();
         expect(image).toBeTruthy();
-        await expect(page.getByTestId('theme-settings-preview').getByTestId('theme-brand')).toContainText('Studio branding test');
+        await expect(page.locator('#theme-logo_style')).toHaveValue('image');
+        await expect(page.getByTestId('theme-preview-header').getByTestId('theme-brand')).toContainText('Studio branding test');
         await page.locator('#theme-header_sticky').uncheck();
         await page.locator('#theme-footer_text').fill('Studio © {year}');
         await page.locator('#theme-footer_powered_by').uncheck();
@@ -105,6 +108,71 @@ test('branding uses media images, updates public header/footer and cache clearin
         await expect(page.locator('#theme-logo_text')).toHaveValue('Unsaved branding');
         await page.setViewportSize({ width: 390, height: 844 });
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    } finally {
+        const cookie = (await page.context().cookies()).find((entry) => entry.name === 'XSRF-TOKEN');
+        expect(cookie).toBeDefined();
+        const reset = await page.request.delete(endpoint, {
+            maxRedirects: 0,
+            headers: { Accept: 'application/json', 'X-XSRF-TOKEN': decodeURIComponent(cookie!.value) },
+        });
+        expect(reset.status()).toBe(302);
+    }
+});
+
+test('icon choices replace the initial in admin and public pages and layout controls change the visible theme', async ({ page, browser }) => {
+    await page.goto('/login?lang=en');
+    await page.getByLabel('Email address').fill('admin@example.com');
+    await page.getByLabel('Password', { exact: true }).fill('admin123');
+    await page.getByRole('button', { name: 'Log in', exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard/);
+    await page.goto('/dashboard/admin/theme-settings?lang=en');
+    const endpoint = `${new URL(page.url()).origin}${new URL(page.url()).pathname}`;
+    try {
+        await page.locator('#theme-logo_style').selectOption('auto');
+        await page.locator('#theme-logo_icon').selectOption('layers');
+        await expect(page.getByTestId('theme-preview-header').locator('.lucide-layers')).toBeVisible();
+        await page.locator('#theme-logo_icon').selectOption('globe');
+        await page.locator('#theme-logo_text').fill('Globe studio');
+        await page.locator('#theme-logo_height').fill('64');
+        await page.locator('#theme-logo_text_size').fill('24');
+        await page.locator('#theme-header_density').selectOption('roomy');
+        await page.locator('#theme-header_theme_toggle').uncheck();
+        await page.locator('#theme-footer_show_brand').uncheck();
+        await page.locator('#theme-footer_show_tagline').uncheck();
+        await page.locator('#theme-footer_powered_by').uncheck();
+        await page.locator('#theme-footer_text').fill('{site} / {year}');
+        await page.locator('#theme-font_family').selectOption('mono');
+        await page.locator('#theme-container_width').selectOption('compact');
+        await page.locator('#theme-corner_style').selectOption('square');
+        await expect(page.getByTestId('theme-preview-footer').getByTestId('theme-brand')).toHaveCount(0);
+        await expect(page.getByTestId('theme-preview-header').locator('.lucide-globe')).toBeVisible();
+        await page.getByRole('button', { name: 'Save settings', exact: true }).click();
+        await expect(page.getByRole('button', { name: 'Save settings', exact: true })).toBeDisabled();
+        await expect(page.locator('[data-sidebar="header"]').locator('.lucide-globe')).toBeVisible();
+        await page.reload();
+        await expect(page.locator('[data-sidebar="header"]').getByTestId('theme-brand')).toContainText('Globe studio');
+        const publicPage = await browser.newPage();
+        await publicPage.goto('/?lang=en');
+        await expect(publicPage.getByTestId('theme-brand').first()).toBeVisible();
+        const paths = ['/', '/posts', '/login'];
+        if (await publicPage.locator('header a[href^="/shop"]').count()) paths.push('/shop/field-notebook-a5');
+        for (const path of paths) {
+            await publicPage.goto(`${path}?lang=en`);
+            await expect(publicPage.getByTestId('theme-brand').first().locator('.lucide-globe')).toBeVisible();
+            await expect(publicPage.getByTestId('theme-brand').first()).toContainText('Globe studio');
+        }
+        await publicPage.goto('/?lang=en');
+        await expect(publicPage.locator('header [data-brand-kind="icon"]')).toHaveCSS('height', '64px');
+        await expect(publicPage.locator('header').getByTestId('theme-brand').locator('span').last()).toHaveCSS('font-size', '24px');
+        await expect(publicPage.locator('footer').getByTestId('theme-brand')).toHaveCount(0);
+        await expect(publicPage.getByRole('button', { name: 'Toggle color theme', exact: true })).toHaveCount(0);
+        await expect(publicPage.locator('footer a[href="https://github.com/PhantomPixelDev/modulo-cms"]')).toHaveCount(0);
+        await expect(publicPage.locator('footer')).toContainText(String(new Date().getFullYear()));
+        await expect(publicPage.locator('.theme-frontend').first()).toHaveCSS('--theme-container-width', '64rem');
+        await expect(publicPage.locator('.theme-frontend').first()).toHaveCSS('--radius', '0px');
+        await publicPage.setViewportSize({ width: 390, height: 844 });
+        expect(await publicPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+        await publicPage.close();
     } finally {
         const cookie = (await page.context().cookies()).find((entry) => entry.name === 'XSRF-TOKEN');
         expect(cookie).toBeDefined();

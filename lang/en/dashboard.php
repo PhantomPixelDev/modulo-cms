@@ -969,6 +969,8 @@ return [
         'branding' => 'Logo and branding', 'header' => 'Header', 'footer' => 'Footer',
         'choose_image' => 'Choose from media', 'remove_image' => 'Remove',
         'logo_text_hint' => 'Leave empty to use the site name. This does not change your site identity or page titles.',
+        'logo_mode_hint' => 'Choosing an icon switches to Icon mode. Choosing an image switches to Image mode. Save to update the site and admin logo.',
+        'choose_icon' => 'Choose an icon…',
         'footer_text_hint' => 'Leave empty for the default. Use {year} for the current year and {site} for the site name.',
         'title' => 'Theme settings',
         'description' => 'Change your site’s appearance without editing theme files.',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contrastingText, themeSettingsCss } from './theme-settings';
+import { contrastingText, themeSettingsCss, updateThemeSetting } from './theme-settings';
 
 describe('theme appearance styles', () => {
     it('scopes light and dark palettes to the public theme and maps layout options', () => {
@@ -33,5 +33,11 @@ describe('theme appearance styles', () => {
     it('uses readable text on very light and dark brand colors', () => {
         expect(contrastingText('#ffffff')).toBe('#111111');
         expect(contrastingText('#000000')).toBe('#ffffff');
+    });
+    it('makes icon and image choices visible while respecting custom theme schemas', () => {
+        expect(updateThemeSetting({ logo_style: 'auto', logo_image: '/old.png' }, 'logo_icon', 'leaf').logo_style).toBe('icon');
+        expect(updateThemeSetting({ logo_style: 'text' }, 'dark_logo_image', '/dark.png').logo_style).toBe('image');
+        expect(updateThemeSetting({ logo_style: 'image', logo_image: '/old.png', dark_logo_image: '' }, 'logo_image', '').logo_style).toBe('auto');
+        expect(updateThemeSetting({}, 'logo_icon', 'leaf')).toEqual({ logo_icon: 'leaf' });
     });
 });

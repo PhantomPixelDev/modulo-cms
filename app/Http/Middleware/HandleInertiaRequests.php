@@ -9,6 +9,8 @@ use App\Models\TaxonomyTerm;
 use App\Services\AdminStatsService;
 use App\Services\Plugins\PluginAdminMenu;
 use App\Services\SiteSettingsService;
+use App\Services\ThemeManager;
+use App\Services\ThemeSettings;
 use App\Services\TranslationService;
 use App\Services\UpdateCenter;
 use App\Support\InstallChannel;
@@ -144,6 +146,14 @@ class HandleInertiaRequests extends Middleware
             'tags' => fn () => $this->getSidebarDataCached()['tags'],
             // Pass all public settings to frontend
             'settings' => $this->settings->getPublicSettings(),
+            'branding' => fn () => $canAccessAdmin ? [
+                'site' => [
+                    'name' => $this->settings->siteName(),
+                    'logo' => $this->settings->get('site_logo', '') ?: null,
+                ],
+                'values' => ($theme = app(ThemeManager::class)->getActiveTheme())
+                    ? app(ThemeSettings::class)->values($theme) : [],
+            ] : null,
             // Expose session flash messages for toasts
             'flash' => [
                 'message' => fn () => $request->session()->get('message'),

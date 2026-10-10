@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ThemeBrand, safeLogoUrl } from './theme-brand';
 
@@ -28,5 +28,13 @@ describe('theme branding', () => {
         for (const url of ['javascript:alert(1)', 'data:image/svg+xml,bad', '//example.com/a.png', '/a b.png'])
             expect(safeLogoUrl(url)).toBeUndefined();
         expect(safeLogoUrl('https://example.com/logo.png')).toBe('https://example.com/logo.png');
+    });
+
+    it('uses a dark-only image and recovers from broken images and changed URLs', () => {
+        const { rerender } = render(<ThemeBrand values={{ logo_style: 'image', dark_logo_image: '/dark-only.png', logo_icon: 'leaf' }} />);
+        fireEvent.error(screen.getByTestId('theme-brand').querySelector('img')!);
+        expect(screen.getByTestId('theme-brand').querySelector('.lucide-leaf')).not.toBeNull();
+        rerender(<ThemeBrand values={{ logo_style: 'image', logo_image: '/working.png' }} />);
+        expect(screen.getByTestId('theme-brand').querySelector('img')).toHaveAttribute('src', '/working.png');
     });
 });

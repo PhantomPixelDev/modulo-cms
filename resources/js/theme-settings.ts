@@ -19,6 +19,19 @@ export interface ThemeSettingsData {
     canSelectMedia?: boolean;
 }
 
+/** Choosing a logo asset must also choose the mode that displays it. */
+export function updateThemeSetting(values: ThemeSettingValues, key: string, value: ThemeSettingValue): ThemeSettingValues {
+    const next = { ...values, [key]: value };
+    if (Object.hasOwn(values, 'logo_style')) {
+        if (key === 'logo_icon') next.logo_style = 'icon';
+        if (key === 'logo_image' || key === 'dark_logo_image') {
+            if (value) next.logo_style = 'image';
+            else if (!next.logo_image && !next.dark_logo_image && next.logo_style === 'image') next.logo_style = 'auto';
+        }
+    }
+    return next;
+}
+
 const fonts: Record<string, string> = {
     system: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     helvetica: 'Helvetica, Arial, sans-serif',
