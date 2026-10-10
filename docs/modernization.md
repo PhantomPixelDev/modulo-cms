@@ -133,10 +133,17 @@ to 284,761 gzip bytes, **36.9% smaller**. Other admin sections load when opened.
 These are build-size measurements, not request latency; use
 `node scripts/measure-admin-bundle.mjs` with each build to compare.
 
-Composer/npm audits report no known advisories. The patched nginx/PostgreSQL and
-Redis images have no high/critical findings in the measured scans. The PHP image still has 64 unfixed
-high/critical distribution findings; full reports are retained rather than
-ignored. SVG input now rejects DTD/entity declarations and unsupported encodings
+Production and development PHP images now use the official PHP 8.5 Alpine 3.24
+variant. Redis, nginx and PostgreSQL also use Alpine variants. PHP compilation
+dependencies are removed from the runtime; PostgreSQL client tools stay on major
+16 for backup compatibility. The PHP user retains UID/GID 33 so existing named
+volumes remain writable. Full ICU locale data supports multilingual formatting.
+Node and Composer run in build stages and are absent from the production runtime.
+
+Composer/npm audits report no known advisories. Earlier Debian PHP scans reported
+64 unfixed high/critical package findings; keep historical reports and scan the
+complete Alpine application image after adding its dependencies. SVG input
+rejects DTD/entity declarations and unsupported encodings
 before libxml parsing, mitigating its exposed parsing path while awaiting
 distribution fixes. See [Security](security.md) for the upstream advisory and
 limitations. A passing scan gate does not mean OS packages have no advisories.

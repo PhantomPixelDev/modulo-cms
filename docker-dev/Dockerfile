@@ -4,21 +4,15 @@ ARG PHP_VERSION=8.5
 ARG DOCKER_LIBRARY=docker.io/library
 FROM ${DOCKER_LIBRARY}/composer:2 AS composer
 
-FROM ${DOCKER_LIBRARY}/php:${PHP_VERSION}-fpm AS app
+FROM ${DOCKER_LIBRARY}/php:${PHP_VERSION}-fpm-alpine3.24 AS app
 WORKDIR /var/www/html
 
-COPY docker/install-postgres-client.sh /tmp/install-postgres-client.sh
+COPY docker/install-php-runtime.sh /tmp/install-php-runtime.sh
 RUN set -eux; \
-    sh /tmp/install-postgres-client.sh; \
-    apt-get update; \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      bash git unzip curl libpq-dev libzip-dev \
-      libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libicu-dev; \
-    docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
-    docker-php-ext-install -j"$(nproc)" \
-      gd pdo pdo_mysql pgsql pdo_pgsql exif bcmath zip intl; \
-    if [ "$(php -r 'echo PHP_VERSION_ID;')" -lt 80500 ]; then docker-php-ext-install opcache; fi; \
-    rm -rf /var/lib/apt/lists/* /tmp/install-postgres-client.sh; \
+    sh /tmp/install-php-runtime.sh; \
+    apk add --no-cache bash git unzip; \
+    rm /tmp/install-php-runtime.sh; \
+    cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; \
     sed -ri \
       -e 's#^listen\s*=\s*.*#listen = 0.0.0.0:9000#' \
       -e 's#^;?\s*clear_env\s*=\s*.*#clear_env = no#' \
