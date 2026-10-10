@@ -56,6 +56,7 @@ jobs:
       SESSION_DRIVER: file
       QUEUE_CONNECTION: sync
       MAIL_MAILER: log
+      PHP_CLI_SERVER_WORKERS: '4'
       MODULO_E2E_URL: http://127.0.0.1:8000
       # Asset and link URLs must match where the browser reaches the app.
       APP_URL: http://127.0.0.1:8000
