@@ -133,6 +133,7 @@ class HandleInertiaRequests extends Middleware
             // Build identity, for the admin footer and the update panel. Cheap
             // enough to share unconditionally: it is config reads, no queries.
             'modulo' => [
+                'demo' => (bool) config('demo.enabled'),
                 'version' => Version::current(),
                 'channel' => InstallChannel::detect(),
                 'isDev' => Version::isDev(),
@@ -162,12 +163,14 @@ class HandleInertiaRequests extends Middleware
                             'name' => $role->name,
                         ];
                     }),
-                    'permissions' => $request->user()->getAllPermissions()->map(function ($permission) {
-                        return [
-                            'id' => $permission->id,
-                            'name' => $permission->name,
-                        ];
-                    }),
+                    'permissions' => $request->user()->getAllPermissions()
+                        ->filter(fn ($permission) => ! config('demo.enabled') || RestrictPublicDemo::permissionAllowed($permission->name))
+                        ->values()->map(function ($permission) {
+                            return [
+                                'id' => $permission->id,
+                                'name' => $permission->name,
+                            ];
+                        }),
                 ] : null,
             ],
             // Visitors don't get the admin route map (smaller payload, less exposed surface).

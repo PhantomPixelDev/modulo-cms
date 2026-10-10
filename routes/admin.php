@@ -35,7 +35,7 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // All admin routes are protected by auth, verified, and admin role check
-Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|access admin', 'two-factor.admin'])
+Route::middleware('admin.access')
     ->prefix('dashboard/admin')
     ->name('dashboard.admin.')
     ->group(function () {
@@ -170,9 +170,9 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
 
             Route::get('/backups', [BackupController::class, 'index'])->name('backups');
             Route::post('/backups', [BackupController::class, 'store'])->middleware('throttle:6,1')->name('backups.store');
-            Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware('throttle:6,1')->name('backups.upload');
-            Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware('throttle:6,1')->name('backups.restore');
-            Route::get('/backups/{backup}', [BackupController::class, 'download'])->name('backups.download');
+            Route::post('/backups/upload', [BackupController::class, 'upload'])->middleware(['password.confirm', 'throttle:6,1'])->name('backups.upload');
+            Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->middleware(['password.confirm', 'throttle:6,1'])->name('backups.restore');
+            Route::get('/backups/{backup}', [BackupController::class, 'download'])->middleware('password.confirm')->name('backups.download');
             Route::delete('/backups/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy');
         });
 
@@ -191,7 +191,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:super-admin|admin|acc
         Route::get('plugins', [PluginController::class, 'index'])->name('plugins.index');
         Route::post('plugins/discover', [PluginController::class, 'discover'])->name('plugins.discover');
         Route::get('plugins/registry', [PluginController::class, 'registry'])->name('plugins.registry');
-        Route::post('plugins/install', [PluginController::class, 'install'])->middleware('throttle:6,1')->name('plugins.install');
+        Route::post('plugins/install', [PluginController::class, 'install'])->middleware(['password.confirm', 'throttle:6,1'])->name('plugins.install');
         Route::post('plugins/{slug}/activate', [PluginController::class, 'activate'])->middleware('throttle:6,1')->name('plugins.activate');
         Route::post('plugins/{slug}/deactivate', [PluginController::class, 'deactivate'])->middleware('throttle:6,1')->name('plugins.deactivate');
         Route::get('plugins/{slug}/settings', [PluginController::class, 'settings'])->name('plugins.settings');

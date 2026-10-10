@@ -271,7 +271,8 @@ class BackupManager
             return null;
         }
 
-        $raw = $zip->getFromName('manifest.json');
+        $stat = $zip->statName('manifest.json');
+        $raw = $stat !== false && $stat['size'] <= 1048576 ? $zip->getFromName('manifest.json', 1048577) : false;
         $zip->close();
 
         $manifest = is_string($raw) ? json_decode($raw, true) : null;
@@ -318,7 +319,7 @@ class BackupManager
                     throw new RuntimeException("The backup's database is {$driver}; this install uses ".DB::connection()->getDriverName().'.');
                 }
 
-                if (! File::isFile($dump) || ! str_starts_with((string) realpath($dump), (string) realpath($scratch))) {
+                if (! File::isFile($dump) || ! str_starts_with((string) realpath($dump), realpath($scratch).DIRECTORY_SEPARATOR)) {
                     throw new RuntimeException('The backup has no database dump.');
                 }
 
@@ -397,6 +398,28 @@ class BackupManager
         }
 
         try {
+            $total = 0;
+            if ($zip->numFiles > (int) config('backups.max_entries', 100000)) {
+                throw new RuntimeException('Backup contains too many entries.');
+            }
+            // Inspect before writing any bytes, including entries not selected
+            // for restore. Header sizes and streamed sizes are both bounded.
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $stat = $zip->statIndex($i);
+                if ($stat === false || $stat['size'] > (int) config('backups.max_entry_bytes', 2147483648)) {
+                    throw new RuntimeException('Backup entry exceeds the extraction limit.');
+                }
+                $total += $stat['size'];
+                if (! $zip->getExternalAttributesIndex($i, $opsys, $attributes)) {
+                    throw new RuntimeException('Unreadable backup entry attributes.');
+                }
+                if ((($attributes >> 16) & 0170000) === 0120000) {
+                    throw new RuntimeException('Backup links are not allowed.');
+                }
+                if ($total > (int) config('backups.max_total_bytes', 8589934592)) {
+                    throw new RuntimeException('Backup exceeds the extraction limit.');
+                }
+            }
             File::ensureDirectoryExists($destination, 0700);
 
             for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -420,9 +443,15 @@ class BackupManager
                 if ($in === false || $out === false) {
                     throw new RuntimeException("Could not extract '{$name}'.");
                 }
-                stream_copy_to_stream($in, $out);
-                fclose($in);
-                fclose($out);
+                try {
+                    $copied = stream_copy_to_stream($in, $out, (int) config('backups.max_entry_bytes', 2147483648) + 1);
+                    if ($copied === false || $copied > (int) config('backups.max_entry_bytes', 2147483648)) {
+                        throw new RuntimeException('Backup entry exceeds the extraction limit.');
+                    }
+                } finally {
+                    fclose($in);
+                    fclose($out);
+                }
             }
         } finally {
             $zip->close();

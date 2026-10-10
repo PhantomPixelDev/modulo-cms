@@ -200,6 +200,7 @@ if (-not $ready) {
 Write-Host "`n  Ready. Open this to finish setup:`n" -ForegroundColor Green
 Write-Host "    http://localhost:$WebPort/install`n"
 Write-Info "Your secrets are in $Directory\.env - keep it, and do not commit it."
+Write-Info "Generate your one-time setup token: $runtime compose exec app php artisan modulo:install-token"
 Write-Info "Stop the site with:  cd $Directory; $runtime compose down"
 Write-Info "To update later: set MODULO_TAG in .env to the new version, then run"
 Write-Info "                 $runtime compose pull; $runtime compose up -d   (or ./modulo update from WSL/Git Bash)"

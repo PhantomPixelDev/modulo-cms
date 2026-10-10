@@ -5,8 +5,11 @@
 #
 # Built by docker/docker-compose.yml; see README "Production".
 
+# CI can select another Docker Official Images registry without changing tags.
+ARG DOCKER_LIBRARY=docker.io/library
+
 # --- Composer dependencies (no dev packages) ---------------------------------
-FROM --platform=$BUILDPLATFORM composer:2 AS vendor
+FROM --platform=$BUILDPLATFORM ${DOCKER_LIBRARY}/composer:2 AS vendor
 WORKDIR /app
 
 COPY composer.json composer.lock ./
@@ -18,7 +21,7 @@ RUN composer dump-autoload --no-dev --optimize --no-scripts
 
 
 # --- Frontend build ------------------------------------------------------------
-FROM --platform=$BUILDPLATFORM node:25-bookworm-slim AS assets
+FROM --platform=$BUILDPLATFORM ${DOCKER_LIBRARY}/node:25-bookworm-slim AS assets
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -29,7 +32,7 @@ RUN npm run build
 
 
 # --- PHP-FPM application -------------------------------------------------------
-FROM php:8.4-fpm AS app
+FROM ${DOCKER_LIBRARY}/php:8.4-fpm AS app
 WORKDIR /var/www/html
 
 RUN set -eux; \
@@ -82,7 +85,7 @@ CMD ["php-fpm"]
 
 
 # --- nginx ---------------------------------------------------------------------
-FROM nginx:1.29-alpine AS web
+FROM ${DOCKER_LIBRARY}/nginx:1.29-alpine AS web
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/nginx-entrypoint.sh /usr/local/bin/modulo-nginx-entrypoint

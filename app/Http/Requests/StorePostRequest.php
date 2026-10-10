@@ -47,7 +47,7 @@ class StorePostRequest extends FormRequest
             ],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
-            'status' => ['required', 'string', Rule::in(['draft', 'published', 'archived']), new CanPublish($this->user())],
+            'status' => ['required', 'string', Rule::in(['draft', 'published', 'archived']), CanPublish::forRequest($this)],
             'published_at' => ['nullable', 'date'],
             'featured_image' => ['nullable', 'string', 'max:255'],
             'post_type_id' => ['required', 'integer', 'exists:post_types,id'],

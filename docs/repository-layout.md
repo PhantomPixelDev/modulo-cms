@@ -8,7 +8,7 @@ under `config/`.
 | ------------------------------- | --------------------------------------------------------------------- |
 | `app/`, `bootstrap/`, `routes/` | Laravel application and entry points                                  |
 | `config/*.php`                  | Runtime application configuration                                     |
-| `config/tooling/`               | Vite, ESLint, Prettier, TypeScript, PHPStan and release configuration |
+| `config/tooling/`               | Vite, ESLint, Prettier, TypeScript, PHPStan, BuildKit and release configuration |
 | `config/testing/`               | PostgreSQL, Vitest and Playwright configuration                       |
 | `database/`, `tests/`           | Migrations, seeders and automated tests                               |
 | `resources/`, `public/`         | Frontend source, themes and public assets                             |

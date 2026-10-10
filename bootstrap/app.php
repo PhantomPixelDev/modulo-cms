@@ -6,6 +6,7 @@ use App\Http\Middleware\CacheResponseHeaders;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\EnforceAdminSecurity;
 use App\Http\Middleware\EnsureApiTokenAbility;
 use App\Http\Middleware\EnsureNotInstalled;
 use App\Http\Middleware\EnsureSchemaIsCompatible;
@@ -13,8 +14,10 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\HandleRedirects;
 use App\Http\Middleware\LocaleFromUrl;
+use App\Http\Middleware\OwnInstallation;
 use App\Http\Middleware\RedirectToInstaller;
 use App\Http\Middleware\RequireTwoFactorForAdmins;
+use App\Http\Middleware\RestrictPublicDemo;
 use App\Http\Middleware\RoleOrPermission;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
@@ -62,6 +65,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             // Invalidates a user's other sessions when their password changes
             AuthenticateSession::class,
+            RestrictPublicDemo::class,
+            EnforceAdminSecurity::class,
             CheckMaintenanceMode::class,
             SetLocale::class,
             HandleAppearance::class,
@@ -70,6 +75,9 @@ return Application::configure(basePath: dirname(__DIR__))
             // Last: a cached page skips only the controller and rendering
             CachePublicPages::class,
         ]);
+
+        $middleware->api(append: [RestrictPublicDemo::class]);
+        $middleware->group('admin.access', ['auth', 'verified', 'role_or_permission:super-admin|admin|access admin', 'two-factor.admin']);
 
         // Register middleware aliases
         // Use custom permission middleware (supports pipe-delimited OR: 'edit media|delete media')
@@ -84,6 +92,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'locale.url' => LocaleFromUrl::class,
             // 404s the installer once setup has completed
             'install.guard' => EnsureNotInstalled::class,
+            'install.owner' => OwnInstallation::class,
             // Administrators must have 2FA when security.require_two_factor_for_admins is on
             'two-factor.admin' => RequireTwoFactorForAdmins::class,
             // Headless API bearer tokens (routes/api.php)

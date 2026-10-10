@@ -11,6 +11,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
+    $this->withSession(['auth.password_confirmed_at' => time()]);
     $this->work = storage_path('framework/testing/backups-admin-'.uniqid());
     config(['backups.path' => $this->work.'/backups']);
     File::ensureDirectoryExists($this->work.'/backups');

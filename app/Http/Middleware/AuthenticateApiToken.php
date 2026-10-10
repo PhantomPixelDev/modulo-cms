@@ -46,7 +46,7 @@ class AuthenticateApiToken
         $request->setUserResolver(fn () => $token->user);
         $request->attributes->set('api_token', $token);
 
-        return $next($request);
+        return app(RequireTwoFactorForAdmins::class)->handle($request, $next);
     }
 
     protected function unauthorized(string $message): Response

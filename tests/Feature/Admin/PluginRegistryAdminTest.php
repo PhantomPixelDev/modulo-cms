@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
+    $this->withSession(['auth.password_confirmed_at' => time()]);
     Cache::forget(PluginRegistry::CACHE_KEY);
     config([
         'plugins.registry_url' => 'https://raw.githubusercontent.com/owner/registry/main/registry.json',
