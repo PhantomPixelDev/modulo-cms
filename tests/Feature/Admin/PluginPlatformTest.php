@@ -73,6 +73,36 @@ it('leaves inactive plugins out of the sidebar', function () {
     expect(app(PluginAdminMenu::class)->for(platformAdmin()))->toBe([]);
 });
 
+it('keeps privileged plugin links out of public demo navigation', function () {
+    config(['demo.enabled' => true]);
+    demoPlugin(['admin' => ['menu' => [[
+        'label' => 'Shop', 'href' => '/dashboard/admin/shop/products',
+        'permissions' => ['view shop products', 'manage shop settings'],
+        'children' => [
+            ['label' => 'Products', 'href' => '/dashboard/admin/shop/products', 'permissions' => ['view shop products']],
+            ['label' => 'Payments', 'href' => '/dashboard/admin/shop/payments'],
+            ['label' => 'Settings', 'href' => '/dashboard/admin/shop/settings', 'permissions' => ['manage shop settings']],
+        ],
+    ]]]]);
+    $user = makeAdminUserWithPermissions(['view shop products', 'manage shop settings']);
+    $user->assignRole(Role::findOrCreate('super-admin', 'web'));
+
+    expect(app(PluginAdminMenu::class)->for($user)[0]['children'])->toBe([
+        ['label' => 'Products', 'href' => '/dashboard/admin/shop/products'],
+    ]);
+});
+
+it('does not give limited admin roles a plugin navigation policy bypass', function () {
+    demoPlugin(['admin' => ['menu' => [[
+        'label' => 'Reports', 'href' => '/dashboard/admin/demo', 'permissions' => ['view demo reports'],
+    ]]]]);
+    $user = platformAdmin();
+    expect(app(PluginAdminMenu::class)->for($user))->toBe([]);
+
+    $user->assignRole(Role::findOrCreate('super-admin', 'web'));
+    expect(app(PluginAdminMenu::class)->for($user))->toHaveCount(1);
+});
+
 it('shares the plugin menu with admin pages', function () {
     demoPlugin(['admin' => ['menu' => [['label' => 'Demo', 'href' => '/dashboard/admin/demo']]]]);
 

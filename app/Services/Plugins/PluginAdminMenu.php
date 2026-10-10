@@ -2,6 +2,7 @@
 
 namespace App\Services\Plugins;
 
+use App\Http\Middleware\RestrictPublicDemo;
 use App\Models\Plugin;
 use App\Models\User;
 use App\Services\PluginManager;
@@ -19,8 +20,8 @@ use Illuminate\Support\Facades\Route;
  *     }]
  *   }
  *
- * An entry shows when the user has any of its permissions (administrators
- * see everything). Links are a route name or a path inside /dashboard.
+ * An entry shows when the user has any of its permissions (private super-admins
+ * bypass policies). Links are a route name or a path inside /dashboard.
  */
 class PluginAdminMenu
 {
@@ -76,12 +77,12 @@ class PluginAdminMenu
     protected function allowed(User $user, array $entry): bool
     {
         $permissions = array_filter((array) ($entry['permissions'] ?? []), 'is_string');
-        if ($permissions === [] || $user->hasRole(['admin', 'super-admin'])) {
+        if ($permissions === [] || (! config('demo.enabled') && $user->hasRole('super-admin'))) {
             return true;
         }
 
         foreach ($permissions as $permission) {
-            if ($user->can($permission)) {
+            if ((! config('demo.enabled') || RestrictPublicDemo::permissionAllowed($permission)) && $user->can($permission)) {
                 return true;
             }
         }
@@ -110,10 +111,14 @@ class PluginAdminMenu
     protected function href(array $entry): ?string
     {
         if (isset($entry['route']) && is_string($entry['route']) && Route::has($entry['route'])) {
-            return route($entry['route'], [], false);
+            $path = route($entry['route'], [], false);
+        } else {
+            $path = $entry['href'] ?? null;
         }
 
-        $path = $entry['href'] ?? null;
+        if (is_string($path) && config('demo.enabled') && ! RestrictPublicDemo::pathAllowed($path)) {
+            return null;
+        }
 
         return is_string($path) && preg_match('#^/dashboard(/[A-Za-z0-9._~/-]*)?$#', $path) === 1 ? $path : null;
     }
