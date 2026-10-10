@@ -26,6 +26,8 @@ test('public demo credentials cannot administer the server through direct reques
     await page.goto('/dashboard/admin/shop/products');
     await expect(page.getByRole('heading', { name: 'Products', exact: true })).toBeVisible();
     await expect(page.getByText('Field Notebook A5', { exact: true })).toBeVisible();
-    await expect(page.locator('[data-sonner-toaster]')).toHaveCount(1);
+    // Sonner creates its list only when a toast exists; the provider's region
+    // is present even when this read-only visit has no notification.
+    await expect(page.getByRole('region', { name: 'Notifications alt+T', exact: true })).toHaveCount(1);
     expect(errors).toEqual([]);
 });
