@@ -37,7 +37,7 @@ services:
     environment:
       CONTAINER_ROLE: app
     healthcheck:
-      test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\", 9000) ? 0 : 1);'"]
+      test: ['CMD-SHELL', 'php -r ''exit(@fsockopen("127.0.0.1", 9000) ? 0 : 1);''']
       interval: 15s
       timeout: 5s
       retries: 5
@@ -48,7 +48,7 @@ services:
     container_name: modulo-queue
     environment:
       CONTAINER_ROLE: queue
-    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+    command: ['php', 'artisan', 'queue:work', '--sleep=3', '--tries=3', '--max-time=3600']
     depends_on:
       app:
         condition: service_started
@@ -58,7 +58,7 @@ services:
     container_name: modulo-scheduler
     environment:
       CONTAINER_ROLE: scheduler
-    command: ["php", "artisan", "schedule:work"]
+    command: ['php', 'artisan', 'schedule:work']
     depends_on:
       app:
         condition: service_started
@@ -67,7 +67,7 @@ services:
     container_name: modulo-web
     image: ${MODULO_WEB_IMAGE:-ghcr.io/phantompixeldev/modulo-cms-web}:${MODULO_TAG:-latest}
     ports:
-      - "${WEB_PORT:-8080}:80"
+      - '${WEB_PORT:-8080}:80'
     volumes:
       - storage:/var/www/html/storage:ro
       - theme_assets:/var/www/html/public/themes:ro
@@ -77,7 +77,7 @@ services:
         condition: service_started
     healthcheck:
       # End to end: nginx -> php-fpm -> database and cache
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health | grep -q '\"status\":\"ok\"'"]
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/health | grep -q ''"status":"ok"''']
       interval: 15s
       timeout: 5s
       retries: 5
@@ -96,7 +96,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 5s
       timeout: 5s
       retries: 20
@@ -106,12 +106,12 @@ services:
 
   redis:
     container_name: modulo-redis
-    image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
+    image: redis:8.10.2-alpine
+    command: ['redis-server', '--appendonly', 'yes']
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 20
