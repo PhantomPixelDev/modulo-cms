@@ -334,13 +334,13 @@ jobs:
           fetch-depth: 0
 
       - name: Download tarball
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-tarball
           path: dist
 
       - name: Download image digests
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: image-digest-*
           merge-multiple: true

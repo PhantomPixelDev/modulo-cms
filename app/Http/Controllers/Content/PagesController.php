@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Rules\CanPublish;
 use App\Services\SiteSettingsService;
 use App\Support\ContentListFilters;
+use App\Support\ContentRules;
 use App\Support\CustomFields;
 use App\Support\EditorSave;
 use Illuminate\Database\Eloquent\Collection;
@@ -294,20 +295,18 @@ class PagesController extends Controller
      */
     protected function rules(Request $request, ?Post $page = null): array
     {
-        return [
-            'title' => 'required|string|max:255',
+        return array_replace(ContentRules::text(), [
             'slug' => 'nullable|string|max:255|unique:posts,slug'.($page ? ','.$page->id : ''),
             'status' => ['required', 'in:draft,published,private,archived', CanPublish::forRequest($request, $page, isPage: true)],
             'content' => 'required', // Content can be string or array
             'excerpt' => 'nullable|string',
             'featured_image' => 'nullable|string',
-            'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'author_id' => 'nullable|exists:users,id',
             'published_at' => 'nullable|date',
             'parent_id' => ['nullable', 'integer', Rule::in($this->possibleParents($page)->pluck('id')->all())],
             'meta_data' => 'nullable|array',
-        ] + CustomFields::valueRules($this->resolvePageType());
+        ]) + CustomFields::valueRules($this->resolvePageType());
     }
 
     /**
