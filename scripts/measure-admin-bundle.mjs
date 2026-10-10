@@ -2,6 +2,7 @@
 // Dynamic screen imports are excluded until the visitor opens that screen.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import process from 'node:process';
 import { gzipSync } from 'node:zlib';
 
 const root = resolve(process.argv[2] ?? 'public/build');
