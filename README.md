@@ -92,7 +92,7 @@ Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <ht
 
 ## Keeping it running
 
-- **Updates:** open _Settings → Updates_ in the admin panel — it tells you when a new version exists and installs it with one click (a backup is taken first, automatically).
+- **Updates:** open _Settings → Updates_ for available versions and the upgrade commands for your installation. Core upgrades take a backup first; plugin updates are available from the dashboard on normal installations.
 - **Backups:** the scheduler creates nightly database dumps and weekly full backups. _Settings → Backups_ lists full backups for download and restore; see the [backup guide](docs/backup-restore.md).
 - **Plugins:** _Extensions → Plugins → Browse registry_ — the [Shop](https://github.com/PhantomPixelDev/modulo-plugin-shop), [Contact Form](https://github.com/PhantomPixelDev/modulo-plugin-contact-form) and more install in one click. Every package is checksum-verified before installing.
 
