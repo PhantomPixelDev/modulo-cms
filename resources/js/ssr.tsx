@@ -2,7 +2,8 @@ import { createInertiaApp } from '@inertiajs/react';
 import createServer from '@inertiajs/react/server';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import ReactDOMServer from 'react-dom/server';
-import { type RouteName, route } from 'ziggy-js';
+import { route } from 'ziggy-js';
+import type { SharedData } from './types';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Modulo CMS';
 
@@ -58,16 +59,12 @@ createServer((page) =>
             throw new Error(`Page not found: ${name}`);
         },
         setup: ({ App, props }) => {
-            /* eslint-disable */
-            // @ts-expect-error
-            global.route<RouteName> = (name, params, absolute) =>
-                route(name, params as any, absolute, {
-                    // @ts-expect-error
-                    ...page.props.ziggy,
-                    // @ts-expect-error
-                    location: new URL(page.props.ziggy.location),
-                });
-            /* eslint-enable */
+            const ziggy = page.props.ziggy as SharedData['ziggy'];
+            Object.defineProperty(globalThis, 'route', {
+                configurable: true,
+                value: (...[name, params, absolute]: Parameters<typeof route>) =>
+                    route(name, params, absolute, { ...ziggy, location: new URL(ziggy.location) }),
+            });
 
             return <App {...props} />;
         },
