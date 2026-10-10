@@ -4,6 +4,12 @@ test.skip(process.env.MODULO_E2E_DEMO !== '1', 'Requires a disposable public dem
 
 test('public demo credentials cannot administer the server through direct requests', async ({ page }) => {
     await page.goto('/login');
+    const guestCookie = (await page.context().cookies()).find((entry) => entry.name === 'XSRF-TOKEN');
+    expect(guestCookie).toBeDefined();
+    const guestHeaders = { Accept: 'application/json', 'X-XSRF-TOKEN': decodeURIComponent(guestCookie!.value) };
+    for (const path of ['/forgot-password', '/reset-password']) {
+        expect((await page.request.post(path, { headers: guestHeaders, data: { email: 'admin@example.com' } })).status(), path).toBe(403);
+    }
     await page.getByLabel('Email address').fill('admin@example.com');
     await page.getByLabel('Password', { exact: true }).fill('admin123');
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
@@ -15,7 +21,13 @@ test('public demo credentials cannot administer the server through direct reques
     const cookie = (await page.context().cookies()).find((entry) => entry.name === 'XSRF-TOKEN');
     expect(cookie).toBeDefined();
     const headers = { Accept: 'application/json', 'X-XSRF-TOKEN': decodeURIComponent(cookie!.value) };
-    for (const path of ['/dashboard/admin/system/backups/upload', '/dashboard/admin/plugins/install', '/settings/api-tokens']) {
+    for (const path of [
+        '/dashboard/admin/system/backups/upload',
+        '/dashboard/admin/plugins/install',
+        '/settings/api-tokens',
+        '/forgot-password',
+        '/reset-password',
+    ]) {
         expect((await page.request.post(path, { headers, data: {} })).status(), path).toBe(403);
     }
     expect((await page.request.put('/settings/password', { headers, data: {} })).status()).toBe(403);

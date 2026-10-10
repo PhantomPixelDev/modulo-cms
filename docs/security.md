@@ -60,7 +60,8 @@ report and gates every fixable high/critical finding.
 
 `MODULO_DEMO=true` restricts server administration even for the shared super-admin
 account. Visitors can edit content, products, and media. Backup administration,
-extension installation/removal, users/roles, credentials, API tokens, and mail or
+extension installation/removal, users/roles, credentials (including public
+password-reset requests and token redemption), API tokens, and mail or
 payment configuration are blocked on the server. Operators use private CLI access.
 
 The web installer requires a one-time token from `php artisan modulo:install-token`.

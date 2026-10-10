@@ -119,7 +119,7 @@ and independent plugin builds. Release packages also require runtime/security
 checks. Semgrep scans PHP/TypeScript; Trivy retains complete container reports
 and rejects fixable high/critical findings.
 
-Measured PHP line coverage is **71.29%**, recorded as a **71.2%** baseline rounded
+Measured PHP line coverage is **71.30%**, recorded as a **71.3%** baseline rounded
 down. Reproduce it from a Clover report with
 `php scripts/measure-coverage.php storage/coverage-final.xml`.
 The JavaScript suite contains 102 tests; measured line coverage is 81.93%.

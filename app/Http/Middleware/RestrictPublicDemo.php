@@ -47,6 +47,7 @@ class RestrictPublicDemo
         $forbiddenWrite = ! $safe
             && (($is(['dashboard/*']) && ! $allowedWrite)
                 || $is(['settings/profile', 'settings/password', 'settings/two-factor', 'settings/two-factor/*'])
+                || $is(['forgot-password', 'reset-password'])
                 || $is(['dashboard/admin/shop/orders/*/refund']));
 
         return ! $sensitive && ! $forbiddenWrite;

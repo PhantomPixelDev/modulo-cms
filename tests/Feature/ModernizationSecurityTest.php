@@ -9,6 +9,8 @@ use App\Services\MailSettings;
 use App\Services\Plugins\PackageDownloader;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
@@ -30,9 +32,35 @@ it('rejects every dangerous demo request before controller validation', function
     ['POST', '/dashboard/admin/roles'],
     ['POST', '/settings/api-tokens'],
     ['PUT', '/settings/password'],
+    ['POST', '/forgot-password'],
+    ['POST', '/reset-password'],
+    ['POST', '/%72eset-password'],
     ['PATCH', '/settings/profile'],
     ['PUT', '/dashboard/admin/system/email'],
 ]);
+
+it('does not issue public demo password reset links to guests', function () {
+    config(['demo.enabled' => true]);
+    Notification::fake();
+    $user = User::factory()->create();
+    $this->post('/forgot-password', ['email' => $user->email])->assertForbidden();
+    Notification::assertNothingSent();
+    $this->assertDatabaseCount('password_reset_tokens', 0);
+});
+
+it('rejects even a valid public demo password reset token without changing credentials', function () {
+    config(['demo.enabled' => true]);
+    $user = User::factory()->create();
+    $original = $user->password;
+    $token = Password::createToken($user);
+    $this->post('/reset-password', [
+        'email' => $user->email, 'token' => $token,
+        'password' => 'Replacement-password-2026!',
+        'password_confirmation' => 'Replacement-password-2026!',
+    ])->assertForbidden();
+    expect($user->fresh()->password)->toBe($original)
+        ->and(Password::tokenExists($user, $token))->toBeTrue();
+});
 
 it('keeps editing available on the public demo', function () {
     config(['demo.enabled' => true]);
