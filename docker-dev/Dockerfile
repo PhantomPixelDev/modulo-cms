@@ -7,18 +7,18 @@ FROM ${DOCKER_LIBRARY}/composer:2 AS composer
 FROM ${DOCKER_LIBRARY}/php:${PHP_VERSION}-fpm AS app
 WORKDIR /var/www/html
 
+COPY docker/install-postgres-client.sh /tmp/install-postgres-client.sh
 RUN set -eux; \
+    sh /tmp/install-postgres-client.sh; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       bash git unzip curl libpq-dev libzip-dev \
-      # psql: Laravel loads database/schema/pgsql-schema.sql with it on fresh migrations
-      postgresql-client \
       libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libicu-dev; \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
     docker-php-ext-install -j"$(nproc)" \
       gd pdo pdo_mysql pgsql pdo_pgsql exif bcmath zip intl; \
     if [ "$(php -r 'echo PHP_VERSION_ID;')" -lt 80500 ]; then docker-php-ext-install opcache; fi; \
-    rm -rf /var/lib/apt/lists/*; \
+    rm -rf /var/lib/apt/lists/* /tmp/install-postgres-client.sh; \
     sed -ri \
       -e 's#^listen\s*=\s*.*#listen = 0.0.0.0:9000#' \
       -e 's#^;?\s*clear_env\s*=\s*.*#clear_env = no#' \

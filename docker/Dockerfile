@@ -37,11 +37,13 @@ RUN npm run build
 FROM ${DOCKER_LIBRARY}/php:${PHP_VERSION}-fpm AS app
 WORKDIR /var/www/html
 
+COPY docker/install-postgres-client.sh /tmp/install-postgres-client.sh
 RUN set -eux; \
+    sh /tmp/install-postgres-client.sh; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       libpq-dev libzip-dev libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libicu-dev \
-      postgresql-client; \
+      libpq5; \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
     docker-php-ext-install -j"$(nproc)" gd pdo_pgsql pgsql exif bcmath zip pcntl intl; \
     if [ "$(php -r 'echo PHP_VERSION_ID;')" -lt 80500 ]; then docker-php-ext-install opcache; fi; \
@@ -56,7 +58,7 @@ RUN set -eux; \
     apt-get purge -y --auto-remove $PHPIZE_DEPS \
       libpq-dev libzip-dev libfreetype6-dev libjpeg62-turbo-dev \
       libpng-dev libwebp-dev libicu-dev linux-libc-dev; \
-    rm -rf /var/lib/apt/lists/* /tmp/pear; \
+    rm -rf /var/lib/apt/lists/* /tmp/pear /tmp/install-postgres-client.sh; \
     cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY docker/php.ini "$PHP_INI_DIR/conf.d/zz-modulo.ini"

@@ -346,6 +346,11 @@ class BackupManager
     {
         $config = DB::connection()->getConfig();
 
+        if ($driver === 'pgsql') {
+            $version = (int) DB::scalar('SHOW server_version_num');
+            app(PostgresDumpCompatibility::class)->prepare($dump, $version);
+        }
+
         if ($driver === 'sqlite') {
             $database = (string) $config['database'];
             if ($database === ':memory:' || $database === '') {
@@ -364,7 +369,7 @@ class BackupManager
             // stop at the first error, and do it all in one transaction so a
             // failed restore leaves the current data in place.
             'pgsql' => [[
-                'psql', '--host='.$config['host'], '--port='.$config['port'], '--username='.$config['username'],
+                'psql', '--no-psqlrc', '--host='.$config['host'], '--port='.$config['port'], '--username='.$config['username'],
                 '--dbname='.$config['database'], '--quiet', '--set=ON_ERROR_STOP=1', '--single-transaction',
                 '--command=DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;', '--file='.$dump,
             ], ['PGPASSWORD' => (string) $config['password']], null],

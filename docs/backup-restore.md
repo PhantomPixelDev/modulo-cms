@@ -63,6 +63,16 @@ MODULO_ENV=prod ./modulo.sh artisan modulo:db-backup --keep=30
 PostgreSQL dumps use `pg_dump --no-owner --no-acl`, so a dump restores into a
 database owned by a different role than the one that made it.
 
+The shipped PHP images install PostgreSQL 16 client tools from the signed
+[official PostgreSQL repository](https://www.postgresql.org/download/linux/debian/),
+matching the database engine. On other installations, use a `pg_dump` major
+version matching the server: newer client output is not guaranteed to restore
+on an older server. Restores to PostgreSQL 16 accommodate the default
+`transaction_timeout` preamble added by the previously shipped PostgreSQL 17
+client, without altering stored content. Other SQL features from newer server
+versions still require a compatible server. CI tests a full archive roundtrip
+and verifies a failed database restore rolls back atomically.
+
 ## Restoring
 
 ```bash

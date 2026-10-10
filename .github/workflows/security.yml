@@ -51,6 +51,8 @@ jobs:
           docker build --pull --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target app -f docker/Dockerfile -t modulo-security-app .
           docker build --pull --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target web -f docker/Dockerfile -t modulo-security-web .
           docker build --pull --build-arg DOCKER_LIBRARY=public.ecr.aws/docker/library --target database -f docker/Dockerfile -t modulo-security-database .
+      - name: Restore an actual production backup and verify failure rollback
+        run: bash scripts/test-backup-roundtrip.sh modulo-security-app
       - name: Report every finding and reject available high-severity fixes
         run: |
           mkdir -p security-reports
