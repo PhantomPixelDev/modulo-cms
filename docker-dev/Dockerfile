@@ -2,6 +2,8 @@
 
 ARG PHP_VERSION=8.5
 ARG DOCKER_LIBRARY=docker.io/library
+FROM ${DOCKER_LIBRARY}/composer:2 AS composer
+
 FROM ${DOCKER_LIBRARY}/php:${PHP_VERSION}-fpm AS app
 WORKDIR /var/www/html
 
@@ -25,7 +27,7 @@ RUN set -eux; \
 COPY docker-dev/php.ini "$PHP_INI_DIR/conf.d/zz-modulo-dev.ini"
 
 # Composer (for dev container)
-COPY --from=${DOCKER_LIBRARY}/composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 COPY docker-dev/entrypoint.sh /usr/local/bin/app-entrypoint
 RUN chmod +x /usr/local/bin/app-entrypoint
