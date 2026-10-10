@@ -48,6 +48,14 @@ Said plainly, because the gap matters more than the list above:
 - Packages contain executable trusted code. Checksum verification does not
   establish that a publisher's code is safe; install extensions you trust.
 
+Container scans retain distribution advisories even when no stable package fix
+exists. In particular, Debian currently lists [CVE-2026-6653 in libxml2](https://security-tracker.debian.org/tracker/CVE-2026-6653)
+as a postponed parser denial-of-service issue. SVG uploads accept UTF-8 only and
+reject DTD/entity declarations before XML parsing, limiting exposure to that
+internal-subset parser path. This mitigation does not mean the underlying package
+is patched. Upgrade base images when Debian publishes fixes; CI retains the full
+report and gates every fixable high/critical finding.
+
 ## Public demos and setup
 
 `MODULO_DEMO=true` restricts server administration even for the shared super-admin

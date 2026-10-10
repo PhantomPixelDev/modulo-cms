@@ -22,6 +22,17 @@ class SvgValidator
 
     public function isSafe(string $svg): bool
     {
+        // Reject declarations before libxml sees the internal subset. Checking
+        // DOMDocument::doctype afterwards is too late for parser-level bugs.
+        // A single byte encoding makes this preflight unambiguous.
+        if (! mb_check_encoding($svg, 'UTF-8') || str_contains($svg, "\0")
+            || preg_match('/<!DOCTYPE|<!ENTITY/i', $svg)) {
+            return false;
+        }
+        if (preg_match('/<\?xml[^>]*\bencoding\s*=\s*["\']([^"\']+)["\']/i', $svg, $encoding)
+            && ! in_array(strtolower($encoding[1]), ['utf-8', 'utf8', 'us-ascii', 'ascii'], true)) {
+            return false;
+        }
         $doc = new DOMDocument;
         $previous = libxml_use_internal_errors(true);
         try {
