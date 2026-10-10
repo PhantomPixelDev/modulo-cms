@@ -23,6 +23,8 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
         total: 0,
     });
     const [folders, setFolders] = useState<MediaFolder[]>([]);
+    const [allFolders, setAllFolders] = useState<MediaFolder[]>([]);
+    const [loadError, setLoadError] = useState(false);
     const [breadcrumb, setBreadcrumb] = useState<MediaFolder[]>([]);
     const [folderId, setFolderId] = useState<number | null>(initialFolderId ?? null);
     const [q, setQ] = useState('');
@@ -45,6 +47,7 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
 
     const load = async (page?: number) => {
         setLoading(true);
+        setLoadError(false);
         try {
             const url = ROUTE.media.index({
                 folder_id: folderId ?? undefined,
@@ -53,7 +56,12 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                 page: page || undefined,
                 perPage: pagination.per_page,
             });
-            const data = await apiGet<{ media: MediaItem[] | Paginated<MediaItem>; folders: MediaFolder[]; breadcrumb: MediaFolder[] }>(url);
+            const data = await apiGet<{
+                media: MediaItem[] | Paginated<MediaItem>;
+                folders: MediaFolder[];
+                allFolders?: MediaFolder[];
+                breadcrumb: MediaFolder[];
+            }>(url);
             if (!mounted.current) return;
             const media = data.media;
             const arr: MediaItem[] = Array.isArray(media) ? media : media?.data || [];
@@ -64,9 +72,10 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                 setPagination({ current_page: 1, last_page: 1, per_page: 24, total: arr.length });
             }
             setFolders(Array.isArray(data.folders) ? data.folders : []);
+            setAllFolders(Array.isArray(data.allFolders) ? data.allFolders : []);
             setBreadcrumb(Array.isArray(data.breadcrumb) ? data.breadcrumb : []);
         } catch {
-            // noop
+            if (mounted.current) setLoadError(true);
         } finally {
             if (mounted.current) setLoading(false);
         }
@@ -88,6 +97,30 @@ export const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOp
                     <DialogDescription>Pick an item from the media library.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3">
+                    <label className="flex items-center gap-3 text-sm">
+                        <span>Media folder</span>
+                        <select
+                            aria-label="Media folder"
+                            value={folderId ?? ''}
+                            onChange={(event) => setFolderId(event.target.value ? Number(event.target.value) : null)}
+                            className="min-w-0 flex-1 rounded border bg-background px-2 py-1"
+                        >
+                            <option value="">Default folder</option>
+                            {allFolders.map((folder) => (
+                                <option key={folder.id} value={folder.id}>
+                                    {folder.path || folder.name}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    {loadError && (
+                        <div role="alert" className="flex items-center justify-between gap-3 text-sm text-destructive">
+                            <span>Could not load media. Try again.</span>
+                            <Button type="button" variant="outline" size="sm" onClick={() => load(1)} disabled={loading}>
+                                Retry
+                            </Button>
+                        </div>
+                    )}
                     {/* Breadcrumb */}
                     {breadcrumb.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">

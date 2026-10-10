@@ -2,6 +2,7 @@
 
 use App\Models\MediaBucket;
 use App\Models\User;
+use Database\Seeders\MediaSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -30,6 +31,21 @@ function mediaUser($perms = ['view media', 'upload media', 'edit media', 'delete
 it('allows media index with permission', function () {
     $user = mediaUser(['view media']);
     $this->actingAs($user)->get(route('dashboard.admin.media.index'))->assertOk();
+});
+
+it('makes seeded and legacy bucket images visible to the image picker', function () {
+    Storage::fake('public');
+    $this->seed(MediaSeeder::class);
+    $seeded = Media::where('file_name', 'demo-logo.png')->firstOrFail();
+    expect($seeded->collection_name)->toBe('library');
+    $this->actingAs(mediaUser(['view media']))->getJson(route('dashboard.admin.media.index', [
+        'folder_id' => $seeded->model_id, 'type' => 'image',
+    ]))->assertOk()->assertJsonPath('media.data.0.name', 'Modulo demo logo');
+    $seeded->update(['collection_name' => 'default']);
+    $migration = require database_path('migrations/2026_10_10_000002_normalize_library_media_collection.php');
+    $migration->up();
+    expect($seeded->fresh()->collection_name)->toBe('library')
+        ->and(Storage::disk('public')->exists($seeded->getPathRelativeToRoot()))->toBeTrue();
 });
 
 it('denies media index without permission', function () {
