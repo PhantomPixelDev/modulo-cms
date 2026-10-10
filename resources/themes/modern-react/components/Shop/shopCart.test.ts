@@ -87,7 +87,7 @@ describe('shopCart', () => {
     });
 
     it('reads the cart count endpoint', async () => {
-        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ json: async () => ({ count: 6 }) }));
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ count: 6 }) }));
 
         await expect(fetchCartCount()).resolves.toBe(6);
     });
@@ -96,6 +96,13 @@ describe('shopCart', () => {
         vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
 
         await expect(fetchCartCount()).resolves.toBeNull();
+    });
+
+    it('does not parse redirected or unavailable cart counts', async () => {
+        const json = vi.fn();
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 0, type: 'opaqueredirect', json }));
+        await expect(fetchCartCount()).resolves.toBeNull();
+        expect(json).not.toHaveBeenCalled();
     });
 
     it('toasts success with a View cart action and errors plainly', () => {

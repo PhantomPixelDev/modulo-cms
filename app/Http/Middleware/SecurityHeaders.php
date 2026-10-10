@@ -35,7 +35,7 @@ class SecurityHeaders
         $headers->set('X-Content-Type-Options', 'nosniff', false);
         $headers->set('X-Frame-Options', 'SAMEORIGIN', false);
         $headers->set('Referrer-Policy', 'strict-origin-when-cross-origin', false);
-        $headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()', false);
+        $headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()', false);
         $headers->set('Cross-Origin-Opener-Policy', 'same-origin', false);
 
         $hsts = (int) config('security.hsts_max_age');

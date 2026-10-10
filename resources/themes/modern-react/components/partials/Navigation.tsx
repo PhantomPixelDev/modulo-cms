@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronDown, LayoutDashboard, LogOut, Menu as MenuIcon, Moon, ShoppingCart, Sun, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { subscribeCartUpdated } from '../Shop/shopCart';
+import { fetchCartCount, subscribeCartUpdated } from '../Shop/shopCart';
 import { MiniCart } from './MiniCart';
 import { buttonClass, Container, isExternalUrl, normalizeMenuItems, useThemeT, type MenuItem } from './ui';
 
@@ -85,23 +85,13 @@ const Navigation: React.FC<NavigationProps> = ({ className = '', site, menus, au
         if (!shopActive) return;
         let isMounted = true;
 
-        const fetchCartCount = async () => {
-            try {
-                // Explicit JSON accept: an auth/session failure answers 401
-                // JSON instead of an HTML page the poller would chase.
-                const response = await fetch('/shop/cart/count', { headers: { Accept: 'application/json' } });
-                if (!response.ok) return;
-                const data = await response.json();
-                if (isMounted && typeof data.count === 'number') {
-                    setCartCount(data.count);
-                }
-            } catch {
-                // Silently ignore cart count errors
-            }
+        const refreshCartCount = async () => {
+            const count = await fetchCartCount();
+            if (isMounted && count !== null) setCartCount(count);
         };
 
-        fetchCartCount();
-        const interval = window.setInterval(fetchCartCount, 30000);
+        refreshCartCount();
+        const interval = window.setInterval(refreshCartCount, 30000);
         // Instant update after any add-to-cart (toast flows dispatch this).
         const unsubscribe = subscribeCartUpdated(setCartCount);
 

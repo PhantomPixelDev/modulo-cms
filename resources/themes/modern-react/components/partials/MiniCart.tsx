@@ -40,8 +40,11 @@ export function MiniCart({ count }: { count: number }) {
 
         let alive = true;
         setLoading(true);
-        fetch('/shop/cart/mini', { headers: { Accept: 'application/json' } })
-            .then((r) => r.json())
+        fetch('/shop/cart/mini', { headers: { Accept: 'application/json' }, cache: 'no-store', redirect: 'manual' })
+            .then((r) => {
+                if (!r.ok) throw new Error('Cart summary unavailable');
+                return r.json();
+            })
             .then((d: MiniCartData) => {
                 if (!alive) return;
                 configureMoney(d.money);

@@ -20,7 +20,8 @@ class HandleRedirects
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->isMethod('GET') && ! $request->isMethod('HEAD')) {
+        // Content redirects belong to page visits, not session JSON endpoints.
+        if ($request->expectsJson() || (! $request->isMethod('GET') && ! $request->isMethod('HEAD'))) {
             return $next($request);
         }
 

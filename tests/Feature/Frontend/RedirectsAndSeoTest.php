@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Presenters\PostPresenter;
 use App\Services\SitemapBuilder;
 use App\Services\SiteSettingsService;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
 function redirectsAdmin(): User
@@ -31,6 +32,15 @@ it('never redirects the admin or other system paths', function () {
     Redirect::create(['from_path' => '/dashboard', 'to_url' => '/elsewhere', 'status_code' => 302]);
 
     $this->get('/dashboard')->assertRedirect(route('login'));
+});
+
+it('does not apply content redirects to JSON cart requests', function () {
+    Route::middleware('web')->get('/shop/cart/count', fn () => response()->json(['count' => 0]));
+    $redirect = Redirect::create([
+        'from_path' => '/shop/cart/count', 'to_url' => url('/shop/cart/count'), 'status_code' => 301,
+    ]);
+    $this->getJson('/shop/cart/count')->assertOk()->assertJsonPath('count', 0)->assertHeaderMissing('Location');
+    expect($redirect->fresh()->hits)->toBe(0);
 });
 
 it('adds a redirect when a published post changes its slug, and keeps chains short', function () {

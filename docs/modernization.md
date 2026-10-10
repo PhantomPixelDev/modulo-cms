@@ -73,6 +73,10 @@ queue worker when using asynchronous mail delivery. The Shop stores a checkout
 retry key so repeated submissions return the same order without reserving stock
 or sending its confirmation again.
 
+Cart counts and summaries bypass the browser cache and do not follow redirects.
+Content redirects apply to HTML page visits rather than JSON endpoints, so a
+legacy redirect cannot send session-data polling through a redirect loop.
+
 ## Database and cache images
 
 The shipped PostgreSQL image remains on 16.15. It replaces the upstream Go-based
@@ -122,7 +126,7 @@ and rejects fixable high/critical findings.
 Measured PHP line coverage is **71.30%**, recorded as a **71.3%** baseline rounded
 down. Reproduce it from a Clover report with
 `php scripts/measure-coverage.php storage/coverage-final.xml`.
-The JavaScript suite contains 102 tests; measured line coverage is 81.93%.
+The JavaScript suite contains 103 tests; the prior measured line coverage is 81.93%.
 
 The cold dashboard's static JavaScript dependency graph decreased from 451,349
 to 284,761 gzip bytes, **36.9% smaller**. Other admin sections load when opened.

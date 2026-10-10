@@ -9,7 +9,8 @@ it('sends security headers and a nonce-based policy on pages', function () {
 
     $response->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
-        ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+        ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
     $policy = (string) $response->headers->get('Content-Security-Policy');
     expect($policy)->toContain("object-src 'none'")

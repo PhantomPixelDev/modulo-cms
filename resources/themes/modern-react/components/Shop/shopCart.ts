@@ -69,7 +69,14 @@ export async function shopAddToCart(
 
 export async function fetchCartCount(): Promise<number | null> {
     try {
-        const response = await fetch('/shop/cart/count', { headers: { Accept: 'application/json' } });
+        // Counts are session data, not cached page URLs. A redirect must not
+        // send the poller through a cached content/auth redirect chain.
+        const response = await fetch('/shop/cart/count', {
+            headers: { Accept: 'application/json' },
+            cache: 'no-store',
+            redirect: 'manual',
+        });
+        if (!response.ok) return null;
         const data = (await response.json()) as { count?: unknown };
         return typeof data.count === 'number' ? data.count : null;
     } catch {
