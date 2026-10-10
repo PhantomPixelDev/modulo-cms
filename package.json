@@ -17,6 +17,7 @@
         "build": "vite build --config config/tooling/vite.config.ts",
         "build:ssr": "npm run build && vite build --ssr --config config/tooling/vite.config.ts",
         "build:shims": "node scripts/build-plugin-shims.mjs",
+        "build:plugin-fixture": "vite build --config tests/Fixtures/plugin-sdk/vite.config.mjs",
         "dev": "vite --config config/tooling/vite.config.ts",
         "format": "prettier --write resources/ --ignore-path .gitignore --ignore-path config/tooling/prettier.ignore",
         "format:check": "prettier --check resources/ --ignore-path .gitignore --ignore-path config/tooling/prettier.ignore",

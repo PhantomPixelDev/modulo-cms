@@ -44,6 +44,13 @@ cannot resolve, so that recipe never worked.)
 
 Use the preset in `packages/plugin-sdk` (`@modulo/plugin-sdk`):
 
+The current build uses Node 24 LTS, Vite 8, the React Vite plugin 6, and
+Inertia React 3. The preset also accepts Vite 6/7 configurations for existing
+plugin build pipelines. React and Inertia remain external imports: install
+updates to the core and its generated SDK shims together, then rebuild plugins
+independently. Existing component registration and import-map interfaces remain
+unchanged. Builds target ES2022; browsers must support that baseline.
+
 ```js
 // vite.config.js in your plugin
 import react from '@vitejs/plugin-react';

@@ -112,7 +112,7 @@ jobs:
           echo "MODULO_E2E_SETUP_TOKEN=$setup_token" >> "$GITHUB_ENV"
           # Deliberately not migrated or seeded: the wizard is what should
           # bring an empty database up, and that is the thing under test.
-          npm run build
+          npm run build:ssr
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
@@ -134,7 +134,33 @@ jobs:
           exit 1
 
       - name: Run the end-to-end tests
+        env:
+          MODULO_E2E_FIXTURES: 'true'
         run: npm run test:e2e --
+
+      - name: Verify server rendering and hydration
+        env:
+          INERTIA_SSR_ENABLED: 'true'
+          MODULO_E2E_SSR: '1'
+          MODULO_E2E_URL: http://127.0.0.1:8002
+          APP_URL: http://127.0.0.1:8002
+          ASSET_URL: http://127.0.0.1:8002
+        run: |
+          set -euo pipefail
+          node bootstrap/ssr/ssr.js >/tmp/modulo-e2e-ssr.log 2>&1 &
+          ssr_pid=$!
+          trap 'kill "$ssr_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 15); do
+            if curl -fsS http://127.0.0.1:13714/health >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          node scripts/check-ssr.mjs
+          php artisan serve --no-reload --host=127.0.0.1 --port=8002 &
+          for _ in $(seq 1 15); do
+            if curl -fsS http://127.0.0.1:8002/health >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          npm run test:e2e -- ssr.spec.ts
 
       - name: Seed and audit the compact disposable demo
         env:

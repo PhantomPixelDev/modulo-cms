@@ -19,5 +19,12 @@
         },
         "jsx": "react-jsx"
     },
-    "include": ["../../resources/js/**/*.ts", "../../resources/js/**/*.d.ts", "../../resources/js/**/*.tsx", "../../resources/themes/**/*.tsx"]
+    "include": [
+        "../../resources/js/**/*.ts",
+        "../../resources/js/**/*.d.ts",
+        "../../resources/js/**/*.tsx",
+        "../../resources/themes/**/*.tsx",
+        "../../tests/Fixtures/plugin-sdk/*.tsx",
+        "../../packages/plugin-sdk/ui.d.ts"
+    ]
 }

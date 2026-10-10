@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 
 const EMAIL = process.env.MODULO_E2E_EMAIL ?? 'e2e-admin@example.test';
 const PASSWORD = process.env.MODULO_E2E_PASSWORD ?? 'a-sufficiently-long-password';
+const hasFixtures = Boolean(process.env.MODULO_E2E_CONTAINER) || process.env.MODULO_E2E_FIXTURES === 'true';
 
 async function login(page: Page, email = EMAIL) {
     await page.goto('/login');
@@ -31,14 +32,20 @@ test.describe('editor submissions and recovery', () => {
     test.beforeAll(() => {
         const container = process.env.MODULO_E2E_CONTAINER;
         if (container) {
-            execFileSync('podman', ['exec', '-e', 'MODULO_E2E_FIXTURES=true', container, 'php', 'tests/e2e/editor-fixtures.php'], {
-                env: { ...process.env, MODULO_E2E_FIXTURES: 'true' },
-            });
+            execFileSync(
+                process.env.MODULO_CONTAINER_RUNTIME ?? 'docker',
+                ['exec', '-e', 'MODULO_E2E_FIXTURES=true', container, 'php', 'tests/e2e/editor-fixtures.php'],
+                {
+                    env: { ...process.env, MODULO_E2E_FIXTURES: 'true' },
+                },
+            );
+        } else if (hasFixtures) {
+            execFileSync('php', ['tests/e2e/editor-fixtures.php'], { env: process.env });
         }
     });
 
     test('writers can save drafts without publication controls and cannot read another user recovery', async ({ page, browser }) => {
-        test.skip(!process.env.MODULO_E2E_CONTAINER, 'Requires the isolated writer fixture.');
+        test.skip(!hasFixtures, 'Requires the isolated writer fixture.');
         await login(page);
         await newPost(page, `Private administrator recovery ${Date.now()}`);
         await expect(page.getByRole('status').filter({ hasText: /saved at/i })).toBeVisible();
@@ -58,7 +65,7 @@ test.describe('editor submissions and recovery', () => {
     });
 
     test('concurrent tabs show a recoverable revision conflict', async ({ page, context }) => {
-        test.skip(!process.env.MODULO_E2E_CONTAINER, 'Requires the isolated multi-tab fixture.');
+        test.skip(!hasFixtures, 'Requires the isolated multi-tab fixture.');
         await login(page);
         await newPost(page, `Concurrent work ${Date.now()}`);
         await expect(page.getByRole('status').filter({ hasText: /saved at/i })).toBeVisible();
@@ -84,7 +91,7 @@ test.describe('editor submissions and recovery', () => {
     });
 
     test('translation recovery is separate and the editor works on mobile', async ({ page }) => {
-        test.skip(!process.env.MODULO_E2E_CONTAINER, 'Requires the isolated translation fixture.');
+        test.skip(!hasFixtures, 'Requires the isolated translation fixture.');
         await page.setViewportSize({ width: 390, height: 844 });
         await login(page);
         const englishTitle = `English recovery ${Date.now()}`;
