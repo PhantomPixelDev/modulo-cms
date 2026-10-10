@@ -39,6 +39,9 @@ WORKDIR /var/www/html
 
 COPY docker/install-php-runtime.sh /tmp/install-php-runtime.sh
 RUN sh /tmp/install-php-runtime.sh && rm /tmp/install-php-runtime.sh
+# The Alpine base directory belongs to UID 82 and is sticky. Match the retained
+# application UID before copying its files and stamping the build as root.
+RUN chown www-data:www-data /var/www/html && chmod 0755 /var/www/html
 
 COPY docker/php.ini "$PHP_INI_DIR/conf.d/zz-modulo.ini"
 

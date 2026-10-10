@@ -49,11 +49,12 @@ Said plainly, because the gap matters more than the list above:
   establish that a publisher's code is safe; install extensions you trust.
 
 Container scans retain distribution advisories even when no stable package fix
-exists. In particular, Debian currently lists [CVE-2026-6653 in libxml2](https://security-tracker.debian.org/tracker/CVE-2026-6653)
+exists. Earlier Debian-based images included [CVE-2026-6653 in libxml2](https://security-tracker.debian.org/tracker/CVE-2026-6653), listed by Debian
 as a postponed parser denial-of-service issue. SVG uploads accept UTF-8 only and
 reject DTD/entity declarations before XML parsing, limiting exposure to that
 internal-subset parser path. This mitigation does not mean the underlying package
-is patched. Upgrade base images when Debian publishes fixes; CI retains the full
+is patched. PHP images now use Alpine, with OS packages upgraded during builds.
+Keep rebuilding supported base images as fixes arrive; CI retains the full
 report and gates every fixable high/critical finding.
 
 ## Public demos and setup
