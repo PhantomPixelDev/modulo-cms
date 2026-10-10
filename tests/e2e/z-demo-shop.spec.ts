@@ -35,9 +35,41 @@ test('demo shop search, sale price, sold out state, cart toast and checkout work
     }
     await page.locator('[name="billing_country"]').selectOption('US');
     await page.locator('[name="payment_method"][value="cod"]').check();
-    await page.getByRole('button', { name: 'Place Order', exact: true }).click();
+    let checkoutRequests = 0;
+    await page.route('**/shop/checkout', async (route) => {
+        if (route.request().method() === 'POST') {
+            checkoutRequests++;
+            await new Promise((resolve) => setTimeout(resolve, 700));
+        }
+        await route.continue();
+    });
+    const submitted = page.waitForRequest((request) => request.url().endsWith('/shop/checkout') && request.method() === 'POST');
+    const submit = page.getByRole('button', { name: 'Place Order', exact: true });
+    await submit.click();
+    const original = await submitted;
+    await expect(submit).toBeDisabled();
+    await submit.evaluate((button: HTMLButtonElement) => {
+        button.click();
+        button.click();
+    });
     await expect(page).toHaveURL(/\/shop\/order\//);
     await expect(page.locator('main')).toContainText('Ceramic Mug — Sand');
     await expect(page.locator('main')).not.toContainText('Order not found');
+    expect(checkoutRequests).toBe(1);
+    const payload = original.postDataJSON();
+    const csrf = original.headers()['x-xsrf-token'];
+    const headers = { Accept: 'application/json', ...(csrf ? { 'X-XSRF-TOKEN': csrf } : {}) };
+    // Two genuine requests with the same session and key must return the
+    // original order even though the first submission has emptied the cart.
+    const repeats = await Promise.all([
+        page.context().request.post('/shop/checkout', { data: payload, headers }),
+        page.context().request.post('/shop/checkout', { data: payload, headers }),
+    ]);
+    for (const response of repeats) expect(response.status()).toBe(200);
+    const [first, second] = await Promise.all(repeats.map((response) => response.json()));
+    expect(first.order.id).toBe(second.order.id);
+    expect(first.redirect).toBe(new URL(page.url()).pathname);
+    const changed = await page.context().request.post('/shop/checkout', { data: { ...payload, customer_name: 'Changed retry' }, headers });
+    expect(changed.status()).toBe(409);
     expect(errors).toEqual([]);
 });
