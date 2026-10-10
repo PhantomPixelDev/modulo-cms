@@ -45,7 +45,7 @@ function ThemeSettingsEditor({ settings }: { settings: ThemeSettingsData }) {
                             <legend className="px-2 text-sm font-semibold">{t(`dashboard.theme_settings.${group}`)}</legend>
                             <div className="grid gap-5 sm:grid-cols-2">
                                 {fields.map(([key, field]) => (
-                                    <div key={key} className="space-y-2">
+                                    <div key={key} className={field.type === 'boolean' ? 'flex items-center gap-3 self-end pb-2' : 'space-y-2'}>
                                         <Label htmlFor={`theme-${key}`}>{label(key, field.label)}</Label>
                                         {field.type === 'color' ? (
                                             <div className="flex gap-2">

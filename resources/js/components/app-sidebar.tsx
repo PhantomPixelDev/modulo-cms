@@ -220,12 +220,19 @@ export function AppSidebar() {
                     label={t('dashboard.nav.appearance')}
                     url={path}
                     items={[
-                        { label: t('dashboard.nav.themes'), href: '/dashboard/admin/themes', icon: Palette, show: can('view themes') },
+                        {
+                            label: t('dashboard.nav.themes'),
+                            href: '/dashboard/admin/themes',
+                            icon: Palette,
+                            show: can('view themes'),
+                            match: /^\/dashboard\/admin\/themes\/\d+\/settings$/.test(path) ? [] : undefined,
+                        },
                         {
                             label: t('dashboard.nav.theme_settings'),
                             href: '/dashboard/admin/theme-settings',
                             icon: Palette,
                             show: can('customize themes'),
+                            match: /^\/dashboard\/admin\/themes\/\d+\/settings$/.test(path) ? [path] : undefined,
                         },
                         {
                             label: t('dashboard.nav.partials'),
