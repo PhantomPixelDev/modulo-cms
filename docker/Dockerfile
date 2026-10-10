@@ -83,6 +83,11 @@ RUN if [ -n "$MODULO_VERSION" ]; then echo "${MODULO_VERSION#v}" > VERSION; \
 RUN set -eux; \
     rm -f .env bootstrap/cache/*.php; \
     mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache public/plugins; \
+    # Git checkouts created under a private deployment umask can contain 0600
+    # assets. nginx runs as a different user and must read public files.
+    # Normalize only public assets; private application/environment modes stay intact.
+    find public -type d -exec chmod 0755 {} +; \
+    find public -type f -exec chmod 0644 {} +; \
     # Discover only the installed (non-dev) packages; no database exists at build time
     DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan package:discover --ansi; \
     # public/plugins is a named volume; a new volume takes this directory's owner,
