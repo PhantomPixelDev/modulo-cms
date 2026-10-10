@@ -46,6 +46,9 @@ const getTemplatesSections = lazySections(['templates', 'templates.create', 'tem
 const getThemesSections = lazySections(['themes', 'themes.show', 'themes.customizer'], () =>
     import('./sections/themes/themesSections').then((module) => module.getThemesSections),
 );
+const getThemeSettingsSections = lazySections(['theme-settings'], () =>
+    import('./sections/themes/themeSettingsSection').then((module) => module.getThemeSettingsSections),
+);
 const getTranslationSections = lazySections(['translations'], () =>
     import('./sections/translations/translationSections').then((module) => module.getTranslationSections),
 );
@@ -69,6 +72,7 @@ export default function DashboardContent({
     discoveredThemes,
     activeTheme,
     theme,
+    themeSettings,
     allRoles,
     permissions = [],
     editPost,
@@ -267,6 +271,7 @@ export default function DashboardContent({
                 ROUTE,
                 t,
             }),
+            ...getThemeSettingsSections({ themeSettings }),
             ...getPostsSections({
                 postsProp,
                 editPost,

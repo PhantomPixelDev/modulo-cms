@@ -36,6 +36,7 @@ return [
         'roles' => 'Roles',
         'settings' => 'Settings',
         'themes' => 'Themes',
+        'theme_settings' => 'Theme settings',
         'partials' => 'Content partials',
         'plugins' => 'Plugins',
         'taxonomies' => 'Taxonomies',
@@ -964,6 +965,34 @@ return [
     ],
 
     // Themes section
+    'theme_settings' => [
+        'title' => 'Theme settings',
+        'description' => 'Change your site’s appearance without editing theme files.',
+        'colors' => 'Light colors', 'dark_colors' => 'Dark colors', 'layout' => 'Typography and layout',
+        'active' => 'Active theme', 'inactive' => 'Applies when this theme is activated',
+        'save' => 'Save settings', 'saving' => 'Saving…', 'saved' => 'Theme settings saved.',
+        'reset' => 'Reset to theme defaults', 'reset_done' => 'Theme defaults restored.',
+        'reset_confirm' => 'Restore this theme’s defaults? Your saved appearance settings will be removed.',
+        'discard' => 'Discard changes', 'picker' => 'picker',
+        'preview' => 'Preview', 'preview_title' => 'Your site, your style',
+        'preview_text' => 'See how colors, text and buttons look together.', 'preview_button' => 'Example button',
+        'preview_hint' => 'This sample updates as you edit. Save to apply changes to the site.',
+        'light_preview' => 'Light preview', 'dark_preview' => 'Dark preview', 'view_site' => 'Open site',
+        'no_theme' => 'Activate a theme before changing its settings.',
+        'no_controls' => 'This theme does not declare appearance settings.',
+        'fields' => [
+            'primary_color' => 'Brand color', 'background_color' => 'Background', 'text_color' => 'Text',
+            'surface_color' => 'Muted surfaces', 'border_color' => 'Borders',
+            'dark_primary_color' => 'Brand color', 'dark_background_color' => 'Background', 'dark_text_color' => 'Text',
+            'dark_surface_color' => 'Muted surfaces', 'dark_border_color' => 'Borders',
+            'font_family' => 'Font', 'container_width' => 'Content width', 'corner_style' => 'Corners', 'show_sidebar' => 'Show article sidebar',
+        ],
+        'options' => [
+            'system' => 'System sans serif', 'helvetica' => 'Helvetica / Arial', 'serif' => 'Georgia', 'mono' => 'Monospace',
+            'compact' => 'Compact', 'standard' => 'Standard', 'wide' => 'Wide',
+            'square' => 'Square', 'subtle' => 'Subtle', 'rounded' => 'Rounded', 'soft' => 'Soft',
+        ],
+    ],
     'themes' => [
         'title' => 'Themes',
         'description' => 'Customize your site\'s appearance.',

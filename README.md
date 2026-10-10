@@ -114,6 +114,7 @@ Then open <http://localhost:8000> (dashboard at `/dashboard`, test emails at <ht
 | [Security](docs/security.md)                           | Hardening checklist                                  |
 | [Plugins](docs/plugins.md)                             | Installing plugins and writing your own              |
 | [Themes](docs/theme-development.md)                    | Changing the design                                  |
+| [Theme settings](docs/theme-settings.md)               | Colors, typography and layout in the admin           |
 | [React content partials](docs/theme-partials.md)       | Reusable React modules in pages and posts            |
 | [Demo fixtures and testing](docs/demo-testing.md)      | Compact examples, safe replacement and link checks   |
 | [Contributing](.github/CONTRIBUTING.md)                | Development setup and quality gates                  |

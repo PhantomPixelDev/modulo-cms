@@ -36,6 +36,7 @@ return [
         'roles' => 'Roles',
         'settings' => 'Configuración',
         'themes' => 'Temas',
+        'theme_settings' => 'Ajustes del tema',
         'partials' => 'Módulos de contenido',
         'plugins' => 'Plugins',
         'taxonomies' => 'Taxonomías',
@@ -964,6 +965,34 @@ return [
     ],
 
     // Themes section
+    'theme_settings' => [
+        'title' => 'Ajustes del tema',
+        'description' => 'Cambia la apariencia del sitio sin editar los archivos del tema.',
+        'colors' => 'Colores claros', 'dark_colors' => 'Colores oscuros', 'layout' => 'Tipografía y diseño',
+        'active' => 'Tema activo', 'inactive' => 'Se aplica al activar este tema',
+        'save' => 'Guardar ajustes', 'saving' => 'Guardando…', 'saved' => 'Ajustes del tema guardados.',
+        'reset' => 'Restaurar valores del tema', 'reset_done' => 'Valores del tema restaurados.',
+        'reset_confirm' => '¿Restaurar los valores del tema? Se eliminarán los ajustes de apariencia guardados.',
+        'discard' => 'Descartar cambios', 'picker' => 'selector',
+        'preview' => 'Vista previa', 'preview_title' => 'Tu sitio, tu estilo',
+        'preview_text' => 'Comprueba cómo se ven los colores, el texto y los botones.', 'preview_button' => 'Botón de ejemplo',
+        'preview_hint' => 'La muestra cambia mientras editas. Guarda para aplicar los cambios al sitio.',
+        'light_preview' => 'Vista clara', 'dark_preview' => 'Vista oscura', 'view_site' => 'Abrir sitio',
+        'no_theme' => 'Activa un tema antes de cambiar sus ajustes.',
+        'no_controls' => 'Este tema no declara ajustes de apariencia.',
+        'fields' => [
+            'primary_color' => 'Color de marca', 'background_color' => 'Fondo', 'text_color' => 'Texto',
+            'surface_color' => 'Superficies suaves', 'border_color' => 'Bordes',
+            'dark_primary_color' => 'Color de marca', 'dark_background_color' => 'Fondo', 'dark_text_color' => 'Texto',
+            'dark_surface_color' => 'Superficies suaves', 'dark_border_color' => 'Bordes',
+            'font_family' => 'Fuente', 'container_width' => 'Ancho del contenido', 'corner_style' => 'Esquinas', 'show_sidebar' => 'Mostrar barra lateral de artículos',
+        ],
+        'options' => [
+            'system' => 'Fuente sans serif del sistema', 'helvetica' => 'Helvetica / Arial', 'serif' => 'Georgia', 'mono' => 'Monoespaciada',
+            'compact' => 'Compacto', 'standard' => 'Estándar', 'wide' => 'Amplio',
+            'square' => 'Rectas', 'subtle' => 'Sutiles', 'rounded' => 'Redondeadas', 'soft' => 'Suaves',
+        ],
+    ],
     'themes' => [
         'title' => 'Themes',
         'description' => 'Customize your site\'s appearance.',

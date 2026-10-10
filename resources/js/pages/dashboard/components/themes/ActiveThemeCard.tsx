@@ -1,19 +1,30 @@
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface ActiveThemeCardProps {
     activeTheme?: any | null;
     canPublishAssets?: boolean;
     onPublishAssets?: (themeId: number) => void;
     onView?: (themeId: number) => void;
+    canCustomize?: boolean;
+    onCustomize?: (themeId: number) => void;
 }
 
-export function ActiveThemeCard({ activeTheme, canPublishAssets = false, onPublishAssets, onView }: ActiveThemeCardProps) {
+export function ActiveThemeCard({
+    activeTheme,
+    canPublishAssets = false,
+    onPublishAssets,
+    onView,
+    canCustomize = false,
+    onCustomize,
+}: ActiveThemeCardProps) {
+    const { t } = useTranslation();
     return (
         <div>
             <h3 className="mb-3 font-semibold">Active Theme</h3>
             <div className="rounded-md border p-4">
                 {activeTheme ? (
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-start gap-3">
                             {(() => {
                                 const cfg = activeTheme?.config || {};
@@ -46,6 +57,11 @@ export function ActiveThemeCard({ activeTheme, canPublishAssets = false, onPubli
                             </div>
                         </div>
                         <div className="flex gap-2">
+                            {canCustomize && (
+                                <Button size="sm" onClick={() => activeTheme?.id && onCustomize?.(activeTheme.id)}>
+                                    {t('dashboard.theme_settings.title')}
+                                </Button>
+                            )}
                             {canPublishAssets && (
                                 <Button size="sm" variant="secondary" onClick={() => activeTheme?.id && onPublishAssets?.(activeTheme.id)}>
                                     Publish Assets

@@ -6,6 +6,40 @@
     "author": "Modulo CMS",
     "author_url": "https://github.com/PhantomPixelDev/modulo-cms",
     "tags": ["react", "modern", "typescript", "inertia"],
+    "settings": {
+        "primary_color": { "type": "color", "group": "colors", "label": "Brand color", "default": "#2563eb" },
+        "background_color": { "type": "color", "group": "colors", "label": "Background", "default": "#ffffff" },
+        "text_color": { "type": "color", "group": "colors", "label": "Text", "default": "#1e293b" },
+        "surface_color": { "type": "color", "group": "colors", "label": "Muted surfaces", "default": "#f5f5f5" },
+        "border_color": { "type": "color", "group": "colors", "label": "Borders", "default": "#e5e7eb" },
+        "dark_primary_color": { "type": "color", "group": "dark_colors", "label": "Brand color", "default": "#60a5fa" },
+        "dark_background_color": { "type": "color", "group": "dark_colors", "label": "Background", "default": "#171923" },
+        "dark_text_color": { "type": "color", "group": "dark_colors", "label": "Text", "default": "#f1f5f9" },
+        "dark_surface_color": { "type": "color", "group": "dark_colors", "label": "Muted surfaces", "default": "#252735" },
+        "dark_border_color": { "type": "color", "group": "dark_colors", "label": "Borders", "default": "#383b4a" },
+        "font_family": {
+            "type": "select",
+            "group": "layout",
+            "label": "Font",
+            "default": "system",
+            "options": { "system": "System sans serif", "helvetica": "Helvetica / Arial", "serif": "Georgia", "mono": "Monospace" }
+        },
+        "container_width": {
+            "type": "select",
+            "group": "layout",
+            "label": "Content width",
+            "default": "standard",
+            "options": { "compact": "Compact", "standard": "Standard", "wide": "Wide" }
+        },
+        "corner_style": {
+            "type": "select",
+            "group": "layout",
+            "label": "Corners",
+            "default": "rounded",
+            "options": { "square": "Square", "subtle": "Subtle", "rounded": "Rounded", "soft": "Soft" }
+        },
+        "show_sidebar": { "type": "boolean", "group": "layout", "label": "Show article sidebar", "default": true }
+    },
     "supports": {
         "post_thumbnails": true,
         "menus": true,

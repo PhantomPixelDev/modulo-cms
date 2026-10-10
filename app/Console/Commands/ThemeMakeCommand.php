@@ -82,13 +82,12 @@ class ThemeMakeCommand extends Command
                 'primary' => 'Primary Navigation',
                 'footer' => 'Footer Links',
             ],
-            'customizer' => [
-                'colors' => [
-                    'primary' => [
-                        'label' => 'Primary Color',
-                        'type' => 'color',
-                        'default' => '#3b82f6',
-                    ],
+            'settings' => [
+                'primary_color' => [
+                    'label' => 'Brand color',
+                    'type' => 'color',
+                    'group' => 'colors',
+                    'default' => '#3b82f6',
                 ],
             ],
         ];
@@ -113,14 +112,18 @@ class ThemeMakeCommand extends Command
     {
         $component = <<<TSX
 import React from 'react';
+import { Head, usePage } from '@inertiajs/react';
+import { themeSettingsCss, type ThemeSettingValues } from '@/theme-settings';
 
 interface {$name}Props {
     // Add your props here
 }
 
 export default function {$name}(props: {$name}Props) {
+    const theme = (usePage().props as { theme?: { settings?: ThemeSettingValues } }).theme;
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="theme-frontend mx-auto bg-background px-4 py-8 text-foreground">
+            <Head><style head-key="theme-settings">{themeSettingsCss(theme?.settings ?? {})}</style></Head>
             <h1 className="text-3xl font-bold">{$name} Component</h1>
             <p className="mt-4">Edit this component to build your theme.</p>
         </div>

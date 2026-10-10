@@ -32,6 +32,7 @@ Modulo is a self-hosted CMS for pages, posts, translations, and online shops. Th
 | [Plugin front ends](plugin-frontend.md)                                                         | Admin components and public templates                   |
 | [Hooks](hooks.md)                                                                               | Actions and filters                                     |
 | [Themes](theme-development.md)                                                                  | Components, settings, and translations                  |
+| [Theme settings](theme-settings.md)                                                            | Colors, fonts and layout without editing files          |
 | [React content partials](theme-partials.md)                                                     | Reusable modules inserted with shortcodes               |
 | [Headless API](api.md)                                                                          | Reading published content from another application      |
 | [Architecture](architecture.md)                                                                 | Application structure                                   |

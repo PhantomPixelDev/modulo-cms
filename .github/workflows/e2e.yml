@@ -193,7 +193,7 @@ jobs:
             sleep 1
           done
           curl -fsS http://127.0.0.1:8001/health >/dev/null
-          npm run test:e2e -- z-demo-integrity.spec.ts z-demo-shop.spec.ts demo-security.spec.ts
+          npm run test:e2e -- z-demo-integrity.spec.ts z-demo-shop.spec.ts demo-security.spec.ts theme-settings.spec.ts
 
       - name: Upload the trace when it fails
         if: failure()

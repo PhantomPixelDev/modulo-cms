@@ -1,5 +1,6 @@
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { cn } from '@/lib/utils';
+import { themeSettingsCss, type ThemeSettingValues } from '@/theme-settings';
 import { Head, usePage } from '@inertiajs/react';
 import React from 'react';
 import '../assets/css/theme.css';
@@ -32,6 +33,7 @@ interface LayoutProps {
     /** Keep the page out of search engines (cart, checkout, account pages). */
     noindex?: boolean;
     theme?: {
+        settings?: ThemeSettingValues;
         /** Stylesheets from theme.json "styles" (child themes restyle this one with these). */
         styles?: string[];
         colors?: {
@@ -120,6 +122,8 @@ export default function Layout({
     const themeOverrides = [customPrimary && `--primary: ${customPrimary}; --ring: ${customPrimary};`, customFont && `font-family: ${customFont};`]
         .filter(Boolean)
         .join(' ');
+    const settingsCss = themeSettingsCss(theme?.settings ?? {});
+    const showSidebar = sidebar && theme?.settings?.show_sidebar !== false;
 
     useDocumentTitle(pageTitle);
 
@@ -206,7 +210,7 @@ export default function Layout({
                     })}
                 </script>
 
-                {themeOverrides && <style>{`:root { ${themeOverrides} }`}</style>}
+                {(themeOverrides || settingsCss) && <style head-key="theme-settings">{`.theme-frontend { ${themeOverrides} }${settingsCss}`}</style>}
             </Head>
 
             <div className="theme-frontend flex min-h-screen flex-col bg-background text-foreground">
@@ -224,11 +228,11 @@ export default function Layout({
                     {bare ? (
                         <ErrorBoundary name="PageContent">{children}</ErrorBoundary>
                     ) : (
-                        <Container className={cn(sidebar && 'grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem]')}>
+                        <Container className={cn(showSidebar && 'grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem]')}>
                             <div className="min-w-0">
                                 <ErrorBoundary name="PageContent">{children}</ErrorBoundary>
                             </div>
-                            {sidebar && (
+                            {showSidebar && (
                                 <aside className="lg:sticky lg:top-24 lg:self-start">
                                     <ErrorBoundary name="Sidebar">
                                         <Sidebar />

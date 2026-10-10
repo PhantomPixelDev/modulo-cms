@@ -43,6 +43,11 @@ class ReactTemplateRenderer
         // Stylesheets and colours from theme.json; a child theme's win over its parent's.
         $themeData['styles'] = $this->themeManager->stylesheetUrls($theme);
         $themeData['colors'] = $this->themeColors($theme);
+        $themeData['settings'] = app(ThemeSettings::class)->values($theme);
+        // Legacy manifest colors remain authoritative until explicitly customized.
+        if (! isset($theme->settings['primary_color']) && isset($themeData['colors']['primary'])) {
+            unset($themeData['settings']['primary_color']);
+        }
 
         // Merge with template data - ensure all data is properly structured
         $siteData = $this->getSiteData();

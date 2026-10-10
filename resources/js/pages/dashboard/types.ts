@@ -307,6 +307,7 @@ export interface DashboardProps {
     editRole?: any;
     editTemplate?: Template;
     template?: Template;
+    themeSettings?: import('@/theme-settings').ThemeSettingsData | null;
     themes?: any[];
     activeTheme?: any;
     discoveredThemes?: any[];

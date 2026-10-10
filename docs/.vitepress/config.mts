@@ -49,6 +49,7 @@ export default defineConfig({
                     { text: 'Plugin front ends', link: '/plugin-frontend' },
                     { text: 'Hooks', link: '/hooks' },
                     { text: 'Themes', link: '/theme-development' },
+                    { text: 'Theme settings', link: '/theme-settings' },
                     { text: 'React content partials', link: '/theme-partials' },
                     { text: 'Headless API', link: '/api' },
                 ],

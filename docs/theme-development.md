@@ -1,5 +1,7 @@
 # Building a theme
 
+For configurable colors, fonts and layout controls in the admin, see [Theme settings](theme-settings.md).
+
 For reusable React modules inside page and post content, see [React content partials](theme-partials.md). `theme:partial` creates a component and its opt-in shortcode registration.
 
 A theme provides the React components the public site renders. There is one

@@ -222,6 +222,12 @@ export function AppSidebar() {
                     items={[
                         { label: t('dashboard.nav.themes'), href: '/dashboard/admin/themes', icon: Palette, show: can('view themes') },
                         {
+                            label: t('dashboard.nav.theme_settings'),
+                            href: '/dashboard/admin/theme-settings',
+                            icon: Palette,
+                            show: can('customize themes'),
+                        },
+                        {
                             label: t('dashboard.nav.partials'),
                             href: '/dashboard/admin/partials',
                             icon: Boxes,

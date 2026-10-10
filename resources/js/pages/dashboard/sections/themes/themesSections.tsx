@@ -69,6 +69,8 @@ export function getThemesSections({
             >
                 <div className="space-y-8">
                     <ActiveThemeCard
+                        canCustomize={can('customize themes')}
+                        onCustomize={(id) => router.visit(route('dashboard.admin.themes.settings.edit', id))}
                         activeTheme={activeTheme as any}
                         canPublishAssets={can('publish theme assets')}
                         onPublishAssets={async (themeId) => {
@@ -236,8 +238,8 @@ export function getThemesSections({
     );
 
     const renderThemeCustomizer = () => (
-        <SectionWrapper title="Theme Customizer" description="Theme customizer has been removed.">
-            <div className="text-sm text-muted-foreground">The theme customizer is no longer available. Edit theme files directly.</div>
+        <SectionWrapper title={t('dashboard.theme_settings.title')}>
+            <Button onClick={() => router.visit('/dashboard/admin/theme-settings')}>{t('dashboard.theme_settings.title')}</Button>
         </SectionWrapper>
     );
 

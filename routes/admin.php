@@ -30,6 +30,7 @@ use App\Http\Controllers\Content\TaxonomyTermController;
 use App\Http\Controllers\Content\TemplateController;
 use App\Http\Controllers\Content\ThemeController;
 use App\Http\Controllers\Content\ThemePartialController;
+use App\Http\Controllers\Content\ThemeSettingsController;
 use App\Http\Controllers\Content\TrashController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -90,6 +91,10 @@ Route::middleware('admin.access')
         Route::resource('templates', TemplateController::class)->where(['template' => '[0-9]+']);
         // Before the resource: "registry" would otherwise be taken for a {theme} id.
         Route::get('/themes/registry', [ThemeController::class, 'registry'])->name('themes.registry');
+        Route::get('/theme-settings', [ThemeSettingsController::class, 'index'])->name('themes.settings.index');
+        Route::get('/themes/{theme}/settings', [ThemeSettingsController::class, 'edit'])->whereNumber('theme')->name('themes.settings.edit');
+        Route::put('/themes/{theme}/settings', [ThemeSettingsController::class, 'update'])->whereNumber('theme')->name('themes.settings.update');
+        Route::delete('/themes/{theme}/settings', [ThemeSettingsController::class, 'reset'])->whereNumber('theme')->name('themes.settings.reset');
         Route::post('/themes/registry/install', [ThemeController::class, 'installFromRegistry'])->name('themes.registry.install');
         Route::resource('themes', ThemeController::class)->only(['index', 'show', 'update', 'destroy'])->where(['theme' => '[0-9]+']);
 
