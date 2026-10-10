@@ -1,11 +1,10 @@
 import '../css/app.css';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, type ResolvedComponent } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createElement, type ComponentType, type ReactNode } from 'react';
-import { createRoot } from 'react-dom/client';
-import ErrorBoundary from './ErrorBoundary';
-import { AdminToastProvider } from './components/admin/AdminToastProvider';
+import { createElement, type ReactNode } from 'react';
+import { createRoot, hydrateRoot } from 'react-dom/client';
+import ApplicationProviders from './ApplicationProviders';
 import { initializeTheme } from './hooks/use-appearance';
 import { resolvePluginComponent } from './plugin-runtime';
 
@@ -20,22 +19,22 @@ const appName = import.meta.env.VITE_APP_NAME || 'Modulo CMS';
 
 // Page components (standardized to a single `pages/` directory)
 // Use lazy imports to avoid evaluating every page at startup
-const pages = import.meta.glob(['./pages/**/*.tsx', '!./pages/**/*.test.tsx'], { eager: false });
-const themeComponents = import.meta.glob(['../themes/**/components/**/*.tsx', '!../themes/**/*.test.tsx'], { eager: false });
+const pages = import.meta.glob<PageModule>(['./pages/**/*.tsx', '!./pages/**/*.test.tsx'], { eager: false });
+const themeComponents = import.meta.glob<PageModule>(['../themes/**/components/**/*.tsx', '!../themes/**/*.test.tsx'], { eager: false });
 
-type PageModule = { default: ComponentType<unknown> & { layout?: unknown } };
+type PageModule = { default: ResolvedComponent };
 
 /**
  * A plugin's admin screen gets the admin frame (sidebar, header, toasts) unless
  * it brings its own layout, so plugins needn't import it.
  */
-async function withAdminLayout(module: PageModule): Promise<PageModule> {
+async function withAdminLayout(module: PageModule): Promise<ResolvedComponent> {
     const page = module.default;
     if (page.layout === undefined && /^\/dashboard(\/|$)/.test(window.location.pathname)) {
         const { default: AdminLayout } = await import('./layouts/admin-layout');
         page.layout = (content: ReactNode) => createElement(AdminLayout, null, content);
     }
-    return module;
+    return page;
 }
 
 createInertiaApp({
@@ -72,13 +71,13 @@ createInertiaApp({
             const themeComponentPath = `../themes/${themeSlug}/components/${componentPath}.tsx`;
 
             if (themeComponents[themeComponentPath]) {
-                return resolvePageComponent(themeComponentPath, themeComponents);
+                return resolvePageComponent(themeComponentPath, themeComponents).then((module) => module.default);
             }
 
             // Try index.tsx for directory-based components
             const indexPath = `../themes/${themeSlug}/components/${componentPath}/index.tsx`;
             if (themeComponents[indexPath]) {
-                return resolvePageComponent(indexPath, themeComponents);
+                return resolvePageComponent(indexPath, themeComponents).then((module) => module.default);
             }
         }
 
@@ -93,7 +92,7 @@ createInertiaApp({
         // Try to find the first matching path
         for (const path of possiblePaths) {
             if (pages[path]) {
-                return resolvePageComponent(path, pages);
+                return resolvePageComponent(path, pages).then((module) => module.default);
             }
         }
 
@@ -101,7 +100,6 @@ createInertiaApp({
         throw new Error(`Page not found: ./pages/${name}.tsx or ./pages/${name}/index.tsx or theme component ${name}`);
     },
     setup({ el, App, props }) {
-        const root = createRoot(el);
         // Attach global error hooks for visibility
         if (typeof window !== 'undefined') {
             window.addEventListener('error', (e) => {
@@ -113,13 +111,16 @@ createInertiaApp({
         }
 
         // Minimal initial render with global ErrorBoundary
-        root.render(
-            <ErrorBoundary>
-                <AdminToastProvider>
-                    <App {...props} />
-                </AdminToastProvider>
-            </ErrorBoundary>,
+        const content = (
+            <ApplicationProviders>
+                <App {...props} />
+            </ApplicationProviders>
         );
+        if (el.hasChildNodes()) {
+            hydrateRoot(el, content);
+        } else {
+            createRoot(el).render(content);
+        }
     },
     progress: {
         color: '#4B5563',

@@ -61,6 +61,7 @@ export default [
             'docs/.vitepress/dist',
             'docs/.vitepress/cache',
             'coverage',
+            'storage/validation',
         ],
     },
     prettier, // Turn off all rules that might conflict with Prettier

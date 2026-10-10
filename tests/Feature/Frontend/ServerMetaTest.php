@@ -14,7 +14,7 @@ beforeEach(function () {
  */
 function jsonLdIn(string $html): array
 {
-    preg_match_all('#<script inertia type="application/ld\+json">(.*?)</script>#s', $html, $m);
+    preg_match_all('#<script data-inertia type="application/ld\+json">(.*?)</script>#s', $html, $m);
 
     return array_map(fn ($json) => json_decode($json, true), $m[1]);
 }
@@ -29,11 +29,11 @@ it('puts the page title, description, canonical and article data in the HTML', f
 
     $html = $this->get('/news/launch')->assertOk()->getContent();
 
-    expect($html)->toContain('<title inertia>Launch day | Smoke Site</title>')
-        ->toContain('<meta inertia name="description" content="All about launch day.">')
-        ->toContain('<link inertia rel="canonical" href="'.url('/news/launch').'">')
-        ->toContain('<meta inertia property="og:image" content="'.url('/storage/launch.jpg').'">')
-        ->toContain('<meta inertia property="og:type" content="article">')
+    expect($html)->toContain('<title data-inertia>Launch day | Smoke Site</title>')
+        ->toContain('<meta data-inertia name="description" content="All about launch day.">')
+        ->toContain('<link data-inertia rel="canonical" href="'.url('/news/launch').'">')
+        ->toContain('<meta data-inertia property="og:image" content="'.url('/storage/launch.jpg').'">')
+        ->toContain('<meta data-inertia property="og:type" content="article">')
         ->toContain('content="index, follow');
 
     expect(jsonLdIn($html)[0])->toMatchArray(['@type' => 'Article', 'headline' => 'Launch day | Smoke Site', 'url' => url('/news/launch')]);
@@ -44,8 +44,8 @@ it('honours a post that hides itself from search engines and a custom canonical'
 
     $html = $this->get('/hidden')->assertOk()->getContent();
 
-    expect($html)->toContain('<meta inertia name="robots" content="noindex, follow">')
-        ->toContain('<link inertia rel="canonical" href="https://example.com/elsewhere">');
+    expect($html)->toContain('<meta data-inertia name="robots" content="noindex, follow">')
+        ->toContain('<link data-inertia rel="canonical" href="https://example.com/elsewhere">');
 });
 
 it('escapes titles and keeps json-ld from closing its script tag', function () {

@@ -78,7 +78,7 @@ export default defineConfig(({ command, isSsrBuild }) => ({
         port: 5173,
     },
     build: {
-        target: process.env.VITE_BUILD_TARGET || 'es2020',
+        target: process.env.VITE_BUILD_TARGET || 'es2022',
         minify: process.env.VITE_BUILD_MINIFY !== 'false',
         sourcemap: process.env.VITE_BUILD_SOURCEMAP === 'true',
         rolldownOptions: {

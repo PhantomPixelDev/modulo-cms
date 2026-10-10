@@ -49,39 +49,39 @@
 
     @isset($pageMeta)
     {{-- Public pages: the tags the theme sets in the browser, for crawlers and link previews.
-         `inertia` marks them for the theme to replace on load. --}}
-    <title inertia>{{ $pageMeta['title'] }}</title>
+         `data-inertia` marks them for the theme to replace on load. --}}
+    <title data-inertia>{{ $pageMeta['title'] }}</title>
     @if($pageMeta['description'])
-    <meta inertia name="description" content="{{ $pageMeta['description'] }}">
+    <meta data-inertia name="description" content="{{ $pageMeta['description'] }}">
     @endif
-    <meta inertia name="robots" content="{{ $pageMeta['robots'] }}">
-    <link inertia rel="canonical" href="{{ $pageMeta['canonical'] }}">
-    <meta inertia property="og:title" content="{{ $pageMeta['title'] }}">
+    <meta data-inertia name="robots" content="{{ $pageMeta['robots'] }}">
+    <link data-inertia rel="canonical" href="{{ $pageMeta['canonical'] }}">
+    <meta data-inertia property="og:title" content="{{ $pageMeta['title'] }}">
     @if($pageMeta['description'])
-    <meta inertia property="og:description" content="{{ $pageMeta['description'] }}">
-    <meta inertia name="twitter:description" content="{{ $pageMeta['description'] }}">
+    <meta data-inertia property="og:description" content="{{ $pageMeta['description'] }}">
+    <meta data-inertia name="twitter:description" content="{{ $pageMeta['description'] }}">
     @endif
-    <meta inertia property="og:url" content="{{ $pageMeta['canonical'] }}">
-    <meta inertia property="og:site_name" content="{{ $pageMeta['site'] }}">
-    <meta inertia property="og:type" content="{{ $pageMeta['type'] }}">
+    <meta data-inertia property="og:url" content="{{ $pageMeta['canonical'] }}">
+    <meta data-inertia property="og:site_name" content="{{ $pageMeta['site'] }}">
+    <meta data-inertia property="og:type" content="{{ $pageMeta['type'] }}">
     @if($pageMeta['image'])
-    <meta inertia property="og:image" content="{{ $pageMeta['image'] }}">
-    <meta inertia name="twitter:image" content="{{ $pageMeta['image'] }}">
+    <meta data-inertia property="og:image" content="{{ $pageMeta['image'] }}">
+    <meta data-inertia name="twitter:image" content="{{ $pageMeta['image'] }}">
     @endif
     @if($pageMeta['published'])
-    <meta inertia property="article:published_time" content="{{ $pageMeta['published'] }}">
+    <meta data-inertia property="article:published_time" content="{{ $pageMeta['published'] }}">
     @endif
-    <meta inertia name="twitter:card" content="{{ $pageMeta['image'] ? 'summary_large_image' : 'summary' }}">
-    <meta inertia name="twitter:title" content="{{ $pageMeta['title'] }}">
-    {{-- Not marked `inertia`: the theme doesn't manage these, so they stay for crawlers that render --}}
+    <meta data-inertia name="twitter:card" content="{{ $pageMeta['image'] ? 'summary_large_image' : 'summary' }}">
+    <meta data-inertia name="twitter:title" content="{{ $pageMeta['title'] }}">
+    {{-- Not marked `data-inertia`: the theme doesn't manage these, so they stay for crawlers that render --}}
     @foreach($pageMeta['alternates'] as $hreflang => $href)
     <link rel="alternate" hreflang="{{ $hreflang }}" href="{{ $href }}">
     @endforeach
     @foreach($pageMeta['json_ld'] as $schema)
-    <script inertia type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
+    <script data-inertia type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
     @endforeach
     @else
-    <title inertia>{{ config('app.name', 'Laravel') }}</title>
+    <title data-inertia>{{ config('app.name', 'Laravel') }}</title>
     @endisset
 
     <!-- Fonts -->

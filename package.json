@@ -17,6 +17,7 @@
         "build": "vite build --config config/tooling/vite.config.ts",
         "build:ssr": "npm run build && vite build --ssr --config config/tooling/vite.config.ts",
         "build:shims": "node scripts/build-plugin-shims.mjs",
+        "build:plugin-fixture": "vite build --config tests/Fixtures/plugin-sdk/vite.config.mjs",
         "dev": "vite --config config/tooling/vite.config.ts",
         "format": "prettier --write resources/ --ignore-path .gitignore --ignore-path config/tooling/prettier.ignore",
         "format:check": "prettier --check resources/ --ignore-path .gitignore --ignore-path config/tooling/prettier.ignore",
@@ -57,7 +58,7 @@
     },
     "dependencies": {
         "@headlessui/react": "^2.2.10",
-        "@inertiajs/react": "^2.1.4",
+        "@inertiajs/react": "^3.9.1",
         "@radix-ui/react-avatar": "^1.2.7",
         "@radix-ui/react-checkbox": "^1.3.12",
         "@radix-ui/react-collapsible": "^1.1.21",

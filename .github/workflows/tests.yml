@@ -372,7 +372,9 @@ jobs:
         run: npm run test:js
 
       - name: Build client and server assets
-        run: npm run build:ssr
+        run: |
+          npm run build:ssr
+          npm run build:plugin-fixture
 
       - name: Server rendering bundle starts
         run: |
@@ -382,6 +384,7 @@ jobs:
           trap 'kill "$ssr_pid" 2>/dev/null || true' EXIT
           for _ in $(seq 1 10); do
             if curl -fsS http://127.0.0.1:13714/health | grep -q '"status":"OK"'; then
+              node scripts/check-ssr.mjs
               exit 0
             fi
             if ! kill -0 "$ssr_pid" 2>/dev/null; then break; fi
@@ -413,3 +416,4 @@ jobs:
       - run: npm run types
       - run: npm run test:js
       - run: npm run build:ssr
+      - run: npm run build:plugin-fixture

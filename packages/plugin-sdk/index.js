@@ -13,6 +13,8 @@
  *   export default moduloPlugin({ plugins: [react()] });
  */
 
+import { version as viteVersion } from 'vite';
+
 /** Imports the core provides at runtime; never bundled into a plugin. */
 export const SHARED = ['react', 'react-dom', 'react/jsx-runtime', '@inertiajs/react', '@modulo/ui'];
 
@@ -25,10 +27,12 @@ export const SHARED = ['react', 'react-dom', 'react/jsx-runtime', '@inertiajs/re
  */
 export function moduloPlugin({ entry = 'resources/js/index.tsx', outDir = 'resources/dist', plugins = [] } = {}) {
     return {
+        publicDir: false,
         plugins,
         // Built for the browser: keep process.env out of the bundle.
         define: { 'process.env.NODE_ENV': JSON.stringify('production') },
         build: {
+            target: 'es2022',
             outDir,
             emptyOutDir: true,
             lib: {
@@ -36,7 +40,7 @@ export function moduloPlugin({ entry = 'resources/js/index.tsx', outDir = 'resou
                 formats: ['es'],
                 fileName: () => 'plugin.js',
             },
-            rollupOptions: {
+            [Number.parseInt(viteVersion, 10) >= 8 ? 'rolldownOptions' : 'rollupOptions']: {
                 external: (id) => SHARED.includes(id) || SHARED.some((shared) => id.startsWith(`${shared}/`)),
             },
         },

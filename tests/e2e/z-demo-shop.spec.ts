@@ -56,16 +56,12 @@ test('demo shop search, sale price, sold out state, cart toast and checkout work
         button.click();
         button.click();
     });
-    releaseCheckout();
-    await expect(page).toHaveURL(/\/shop\/order\//);
-    await expect(page.locator('main')).toContainText('Ceramic Mug — Sand');
-    await expect(page.locator('main')).not.toContainText('Order not found');
-    expect(checkoutRequests).toBe(1);
     const payload = original.postDataJSON();
     const csrf = original.headers()['x-csrf-token'];
     const headers = { Accept: 'application/json', ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}) };
-    // Two genuine requests with the same session and key must return the
-    // original order even though the first submission has emptied the cart.
+    // The browser submission remains gated while two genuine first requests
+    // race on the server. CI uses four PHP workers and the shared file cache.
+    // They must create one order; the released browser request then replays it.
     const repeats = await Promise.all([
         page.context().request.post('/shop/checkout', { data: payload, headers }),
         page.context().request.post('/shop/checkout', { data: payload, headers }),
@@ -73,6 +69,11 @@ test('demo shop search, sale price, sold out state, cart toast and checkout work
     for (const response of repeats) expect(response.status()).toBe(200);
     const [first, second] = await Promise.all(repeats.map((response) => response.json()));
     expect(first.order.id).toBe(second.order.id);
+    releaseCheckout();
+    await expect(page).toHaveURL(/\/shop\/order\//);
+    await expect(page.locator('main')).toContainText('Ceramic Mug — Sand');
+    await expect(page.locator('main')).not.toContainText('Order not found');
+    expect(checkoutRequests).toBe(1);
     expect(new URL(first.redirect, page.url()).href).toBe(page.url());
     expect(errors).toEqual([]);
 });

@@ -11,7 +11,8 @@ for (const width of [1280, 390]) {
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const app = doc.querySelector('#app');
             if (!app) throw new Error('Application shell is missing');
-            const data = JSON.parse(app.getAttribute('data-page') || '{}');
+            const pageData = doc.querySelector('script[data-page="app"][type="application/json"]');
+            const data = JSON.parse(pageData?.textContent || app.getAttribute('data-page') || '{}');
             data.component = 'Themes/ModernReact/Shop/Archive';
             data.url = '/shop';
             data.props.products = {
@@ -20,7 +21,8 @@ for (const width of [1280, 390]) {
                     { id: 2, title: 'Second product', slug: 'second-product', price: 20, in_stock: true },
                 ],
             };
-            app.setAttribute('data-page', JSON.stringify(data));
+            if (pageData) pageData.textContent = JSON.stringify(data);
+            else app.setAttribute('data-page', JSON.stringify(data));
             return '<!DOCTYPE html>' + doc.documentElement.outerHTML;
         }, html);
         await page.route('**/shop', (route) => route.fulfill({ contentType: 'text/html', body: fixtureHtml }));

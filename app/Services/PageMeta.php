@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
  *
  * The React theme sets the same tags in the browser, but crawlers that don't
  * run JavaScript and link previews (chat apps, social networks) only read the
- * HTML the server sends. These are printed with Inertia's `inertia` attribute,
+ * HTML the server sends. These are printed with Inertia's `data-inertia` attribute,
  * so the theme replaces them on load instead of doubling them. The rules
  * mirror the theme's Layout: keep the two in step.
  */

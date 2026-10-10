@@ -36,6 +36,7 @@ build/
 cookies.txt
 /storage/media-library/
 /storage/framework/phpstan
+/storage/validation/
 /playwright-report
 /test-results
 /blob-report
