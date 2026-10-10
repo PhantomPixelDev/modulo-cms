@@ -32,7 +32,7 @@ afterEach(function () {
 /**
  * Build a plugin package the way a release asset would look.
  */
-function packagePlugin(string $path, string $slug, string $namespace, string $version, array $overrides = []): string
+function packagePlugin(string $path, string $slug, string $namespace, string $version, array $overrides = [], array $files = []): string
 {
     $manifest = array_merge([
         'name' => ucfirst($slug),
@@ -49,6 +49,9 @@ function packagePlugin(string $path, string $slug, string $namespace, string $ve
     // archive always does -- named after the repo and ref, not the namespace.
     $zip->addFromString($slug.'-'.$version.'/plugin.json', json_encode($manifest, JSON_PRETTY_PRINT));
     $zip->addFromString($slug.'-'.$version.'/'.$namespace.'ServiceProvider.php', '<?php');
+    foreach ($files as $name => $contents) {
+        $zip->addFromString($slug.'-'.$version.'/'.$name, $contents);
+    }
     $zip->close();
 
     return $path;
@@ -77,7 +80,12 @@ function fakeRegistry(string $slug, string $version, string $sha, array $release
 }
 
 it('installs a plugin from the registry', function () {
-    $archive = packagePlugin($this->work.'/pkg.zip', 'fixture', 'Fixture', '1.0.0');
+    app()->usePublicPath($this->work.'/public');
+    $archive = packagePlugin($this->work.'/pkg.zip', 'fixture', 'Fixture', '1.0.0', files: [
+        'resources/dist/plugin.js' => 'export const version = "1.0.0";',
+        'resources/dist/plugin.css' => '.fixture { color: red; }',
+        'resources/dist/private.php' => '<?php echo "private";',
+    ]);
     $sha = hash_file('sha256', $archive);
     $bytes = File::get($archive);
 
@@ -101,7 +109,10 @@ it('installs a plugin from the registry', function () {
         // Placed by its declared namespace, not the archive's folder name.
         ->and(File::exists(config('plugins.path').'/Fixture/plugin.json'))->toBeTrue()
         ->and(Plugin::where('slug', 'fixture')->exists())->toBeTrue()
-        ->and(Plugin::where('slug', 'fixture')->value('source'))->toBe('registry');
+        ->and(Plugin::where('slug', 'fixture')->value('source'))->toBe('registry')
+        ->and(File::get(public_path('plugins/fixture/plugin.js')))->toBe('export const version = "1.0.0";')
+        ->and(File::get(public_path('plugins/fixture/plugin.css')))->toBe('.fixture { color: red; }')
+        ->and(File::exists(public_path('plugins/fixture/private.php')))->toBeFalse();
 });
 
 it('refuses a package whose checksum does not match the registry', function () {

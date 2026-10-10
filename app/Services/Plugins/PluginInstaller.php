@@ -5,6 +5,7 @@ namespace App\Services\Plugins;
 use App\Models\Plugin;
 use App\Services\PluginManager;
 use App\Support\Version;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -111,6 +112,12 @@ class PluginInstaller
             'last_checked_at' => now(),
             'available_version' => null,
         ]);
+
+        // Runtime installs must be usable immediately, including on bare metal.
+        // Use the same extension-filtered publisher as container startup.
+        if (Artisan::call('plugin:publish-assets', ['slug' => $slug]) !== 0) {
+            throw new RuntimeException('Plugin files were installed, but public assets could not be published. Run plugin:publish-assets '.$slug.' to retry.');
+        }
 
         // An active plugin's new version may add or drop routes.
         if (Plugin::where('slug', $slug)->where('is_active', true)->exists()) {

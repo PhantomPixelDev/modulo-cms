@@ -24,8 +24,8 @@ createServer((page) =>
             if (name.startsWith('Plugins/')) {
                 // Plugin components are client-only: their bundle is fetched
                 // over HTTP and registers itself on window, and this runs in
-                // Node with neither. Render nothing and let hydration fill it
-                // in, rather than failing the whole page.
+                // Node with neither. Render a placeholder; the browser mounts
+                // the actual plugin page without hydrating that placeholder.
                 return Promise.resolve(() => null);
             }
 
