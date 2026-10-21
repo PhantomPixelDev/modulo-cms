@@ -8,7 +8,8 @@
 
 # CI can select another Docker Official Images registry without changing tags.
 ARG DOCKER_LIBRARY=docker.io/library
-ARG PHP_VERSION=8.5
+# php2shell (CVE-2026-109618 / CVE-2026-109619): first patched PHP 8.5 release.
+ARG PHP_VERSION=8.5.12
 
 # --- Composer dependencies (no dev packages) ---------------------------------
 FROM --platform=$BUILDPLATFORM ${DOCKER_LIBRARY}/composer:2 AS vendor
